@@ -1,4 +1,5 @@
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
+import { executeGuardedQueryRows, executeTypedQuery, type Transaction } from '@stynx-nyx/data';
 import { FlowDesignService } from '../../src/flow-design.service.js';
 import {
   FlowDesignTableStore,
@@ -18,15 +19,34 @@ const FORM = '0190abcd-1234-7abc-89ab-000000000006';
 const POLICYSET = '0190abcd-1234-7abc-89ab-000000000007';
 const POLICYRULE = '0190abcd-1234-7abc-89ab-000000000008';
 
+// Complete SELECT * projection for the actual flow.nodes row, with DDL defaults.
+function physicalNode(overrides: Record<string, unknown> = {}) {
+  return {
+    id: NODE, tenant_id: '0190abcd-1234-7abc-89ab-000000000010', graph_id: GRAPH,
+    code: 'n', name: null, kind: 'start', decision_policy: 'any', quorum_ratio: null,
+    allowed_actions: [], sla_seconds: null, entry_rule: null, exit_rule: null,
+    sort_order: 0, meta: {}, created_by: null, updated_by: null,
+    created_at: new Date('2026-10-24T00:00:00Z'), updated_at: new Date('2026-10-24T00:00:00Z'),
+    ...overrides,
+  };
+}
+
 interface FakeTrx {
   query: Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
+  run: Transaction['run'];
+  runGuarded: Transaction['runGuarded'];
   softDelete: Mock<Promise<void>, [unknown, string]>;
 }
 
 function makeTrx(rowsByCall: Array<unknown[]> = []) {
   let i = 0;
+  const query = vi.fn(async () => ({ rows: rowsByCall[i++] ?? [] }));
+  const run: Transaction['run'] = (statement, params) => executeTypedQuery({ query }, statement, params);
+  const runGuarded: Transaction['runGuarded'] = (statement, params, guard) => executeGuardedQueryRows({ query }, statement, params, guard);
   return {
-    query: vi.fn(async () => ({ rows: rowsByCall[i++] ?? [] })),
+    query,
+    run,
+    runGuarded,
     softDelete: vi.fn(async () => undefined),
   } as FakeTrx;
 }
@@ -41,7 +61,7 @@ function makeDb(rowsByCall: Array<unknown[]> = []) {
 
 function makeService(
   rowsByCall: Array<unknown[]> = [],
-  ctx: { tenantId?: string; actorId?: string } = { tenantId: 't-1', actorId: 'u-1' },
+  ctx: { tenantId?: string; actorId?: string } = { tenantId: '0190abcd-1234-7abc-89ab-000000000010', actorId: '0190abcd-1234-7abc-89ab-000000000011' },
 ) {
   const { db, trx } = makeDb(rowsByCall);
   return { service: new FlowDesignService(db, ctx as never), trx, db };
@@ -81,20 +101,20 @@ describe('FlowDesignTableStore exact helper contracts', () => {
     });
     expect(withGraphPublishState({
       id: GRAPH,
-      meta: { publish: { publishedVersion: 2, publishedAt: 'at', publishedBy: 'u-1' } },
+      meta: { publish: { publishedVersion: 2, publishedAt: 'at', publishedBy: '0190abcd-1234-7abc-89ab-000000000011' } },
     })).toEqual({
       id: GRAPH,
-      meta: { publish: { publishedVersion: 2, publishedAt: 'at', publishedBy: 'u-1' } },
+      meta: { publish: { publishedVersion: 2, publishedAt: 'at', publishedBy: '0190abcd-1234-7abc-89ab-000000000011' } },
       status: 'published',
       publishedVersion: 2,
       publishedAt: 'at',
-      publishedBy: 'u-1',
+      publishedBy: '0190abcd-1234-7abc-89ab-000000000011',
     });
   });
 
   it('uses exact default SQL and reader policy for unfiltered lists', async () => {
     const { db, trx } = makeDb([[]]);
-    const store = new FlowDesignTableStore(db as never, { tenantId: 't-1', actorId: 'u-1' } as never);
+    const store = new FlowDesignTableStore(db as never, { tenantId: '0190abcd-1234-7abc-89ab-000000000010', actorId: '0190abcd-1234-7abc-89ab-000000000011' } as never);
     await store.listRows('scopes');
     expect(trx.query).toHaveBeenCalledWith(
       'select * from flow.scopes order by created_at DESC',
@@ -108,7 +128,7 @@ describe('FlowDesignTableStore exact helper contracts', () => {
 
   it('requires a tenant and an actual update field', async () => {
     const missingTenant = makeDb();
-    const noTenantStore = new FlowDesignTableStore(missingTenant.db as never, { actorId: 'u-1' } as never);
+    const noTenantStore = new FlowDesignTableStore(missingTenant.db as never, { actorId: '0190abcd-1234-7abc-89ab-000000000011' } as never);
     await expect(noTenantStore.createRow('scopes', { code: 'scope' })).rejects.toThrow(
       'Tenant context is required',
     );
@@ -116,7 +136,7 @@ describe('FlowDesignTableStore exact helper contracts', () => {
     const emptyUpdate = makeDb();
     const store = new FlowDesignTableStore(
       emptyUpdate.db as never,
-      { tenantId: 't-1', actorId: 'u-1' } as never,
+      { tenantId: '0190abcd-1234-7abc-89ab-000000000010', actorId: '0190abcd-1234-7abc-89ab-000000000011' } as never,
     );
     await expect(store.updateRow('scopes', SCOPE, {})).rejects.toThrow(
       'At least one update field is required',
@@ -267,7 +287,7 @@ describe('FlowDesignService — graphs / nodes / edges', () => {
       status: 'published',
       draftVersion: 'v2',
       publishedVersion: 1,
-      publishedBy: 'u-1',
+      publishedBy: '0190abcd-1234-7abc-89ab-000000000011',
       runtimeGraphRef: { graphId: GRAPH, version: 1 },
     });
     expect(trx.query.mock.calls[0]).toEqual([
@@ -289,19 +309,19 @@ describe('FlowDesignService — graphs / nodes / edges', () => {
       expect.objectContaining({
         publish: {
           publishedVersion: 1,
-          publishedBy: 'u-1',
+          publishedBy: '0190abcd-1234-7abc-89ab-000000000011',
           draftVersion: 'v2',
           notes: 'Ship',
           publishedAt: expect.any(String),
         },
       }),
-      'u-1',
+      '0190abcd-1234-7abc-89ab-000000000011',
       expect.any(Date),
     ]);
     expect(params?.[1]).toMatchObject({
       publish: {
         publishedVersion: 1,
-        publishedBy: 'u-1',
+        publishedBy: '0190abcd-1234-7abc-89ab-000000000011',
         draftVersion: 'v2',
         notes: 'Ship',
       },
@@ -330,7 +350,7 @@ describe('FlowDesignService — graphs / nodes / edges', () => {
         [{ id: EDGE, from_node_id: NODE, to_node_id: '0190abcd-1234-7abc-89ab-000000000009' }],
         [{ id: GRAPH }],
       ],
-      { tenantId: 't-1' },
+      { tenantId: '0190abcd-1234-7abc-89ab-000000000010' },
     );
 
     await expect(service.publishGraph(GRAPH, {})).resolves.toMatchObject({
@@ -441,7 +461,7 @@ describe('FlowDesignService — graphs / nodes / edges', () => {
   });
 
   it('createGraphNode attaches graphId to the input', async () => {
-    const { service, trx } = makeService([[{ id: NODE }]]);
+    const { service, trx } = makeService([[physicalNode()]]);
     await service.createGraphNode(GRAPH, { code: 'n', kind: 'start' });
     const params = trx.query.mock.calls[0]?.[1] as unknown[];
     expect(params).toContain(GRAPH);
@@ -632,7 +652,7 @@ describe('FlowDesignService — policySets / policyRules', () => {
   });
 
   it('createPolicySet records nullable audit actors when actor context is absent', async () => {
-    const { service, trx } = makeService([[{ id: POLICYSET }]], { tenantId: 't-1' });
+    const { service, trx } = makeService([[{ id: POLICYSET }]], { tenantId: '0190abcd-1234-7abc-89ab-000000000010' });
     await service.createPolicySet({ scopeId: SCOPE, version: 'v1' });
     expect((trx.query.mock.calls[0]?.[1] as unknown[]).slice(-2)).toEqual([null, null]);
   });
@@ -688,7 +708,7 @@ describe('FlowDesignService — policySets / policyRules', () => {
   });
 
   it('updatePolicySet records a nullable audit actor when actor context is absent', async () => {
-    const { service, trx } = makeService([[{ id: POLICYSET }]], { tenantId: 't-1' });
+    const { service, trx } = makeService([[{ id: POLICYSET }]], { tenantId: '0190abcd-1234-7abc-89ab-000000000010' });
     await service.updatePolicySet(POLICYSET, { name: 'Policy' });
     // The audit actor param (slot 2 from the end, before the row id) must be null.
     const params = trx.query.mock.calls[0]?.[1] as unknown[];
@@ -772,8 +792,8 @@ describe('FlowDesignService.importGraph', () => {
     const NODE_B = '0190abcd-1234-7abc-89ab-bbbbbbbbbbbb';
     const { service, trx } = makeService([
       [{ id: GRAPH, scope_id: SCOPE }], // insert graph
-      [{ id: NODE_A, code: 'a' }], // insert node a
-      [{ id: NODE_B, code: 'b' }], // insert node b
+      [physicalNode({ id: NODE_A, code: 'a' })], // insert node a
+      [physicalNode({ id: NODE_B, code: 'b', kind: 'end' })], // insert node b
       [{ id: EDGE }], // insert edge
       // exportGraphFromTransaction:
       [{ id: GRAPH, scope_id: SCOPE }], // get graph
@@ -795,19 +815,19 @@ describe('FlowDesignService.importGraph', () => {
     expect(result.graph).toMatchObject({ id: GRAPH });
     expect(trx.query.mock.calls[0]).toEqual([
       'insert into flow.graphs (tenant_id, scope_id, code, version, created_by, updated_by) values ($1, $2, $3, $4, $5, $6) returning *',
-      ['t-1', SCOPE, 'g', 'v1', 'u-1', 'u-1'],
+      ['0190abcd-1234-7abc-89ab-000000000010', SCOPE, 'g', 'v1', '0190abcd-1234-7abc-89ab-000000000011', '0190abcd-1234-7abc-89ab-000000000011'],
     ]);
     expect(trx.query.mock.calls[1]).toEqual([
       'insert into flow.nodes (tenant_id, graph_id, code, kind, created_by, updated_by) values ($1, $2, $3, $4, $5, $6) returning *',
-      ['t-1', GRAPH, 'a', 'start', 'u-1', 'u-1'],
+      ['0190abcd-1234-7abc-89ab-000000000010', GRAPH, 'a', 'start', '0190abcd-1234-7abc-89ab-000000000011', '0190abcd-1234-7abc-89ab-000000000011'],
     ]);
     expect(trx.query.mock.calls[2]).toEqual([
       'insert into flow.nodes (tenant_id, graph_id, code, kind, created_by, updated_by) values ($1, $2, $3, $4, $5, $6) returning *',
-      ['t-1', GRAPH, 'b', 'end', 'u-1', 'u-1'],
+      ['0190abcd-1234-7abc-89ab-000000000010', GRAPH, 'b', 'end', '0190abcd-1234-7abc-89ab-000000000011', '0190abcd-1234-7abc-89ab-000000000011'],
     ]);
     expect(trx.query.mock.calls[3]).toEqual([
       'insert into flow.edges (tenant_id, graph_id, from_node_id, to_node_id, action, created_by, updated_by) values ($1, $2, $3, $4, $5, $6, $7) returning *',
-      ['t-1', GRAPH, NODE_A, NODE_B, 'go', 'u-1', 'u-1'],
+      ['0190abcd-1234-7abc-89ab-000000000010', GRAPH, NODE_A, NODE_B, 'go', '0190abcd-1234-7abc-89ab-000000000011', '0190abcd-1234-7abc-89ab-000000000011'],
     ]);
   });
 
@@ -816,8 +836,8 @@ describe('FlowDesignService.importGraph', () => {
     const NODE_B = '0190abcd-1234-7abc-89ab-bbbbbbbbbbbb';
     const { service, trx } = makeService([
       [{ id: GRAPH, scope_id: SCOPE }],
-      [{ id: NODE_A, code: 'a' }],
-      [{ id: NODE_B, code: 'b' }],
+      [physicalNode({ id: NODE_A, code: 'a' })],
+      [physicalNode({ id: NODE_B, code: 'b', kind: 'end' })],
       [{ id: 'te-1' }],
       [{ id: 'ar-1' }],
       [{ id: 'fr-1' }],
@@ -843,15 +863,15 @@ describe('FlowDesignService.importGraph', () => {
 
     expect(trx.query.mock.calls[3]).toEqual([
       'insert into flow.transition_effects (tenant_id, graph_id, node_code, effect_key, created_by, updated_by) values ($1, $2, $3, $4, $5, $6) returning *',
-      ['t-1', GRAPH, 'a', 'notify', 'u-1', 'u-1'],
+      ['0190abcd-1234-7abc-89ab-000000000010', GRAPH, 'a', 'notify', '0190abcd-1234-7abc-89ab-000000000011', '0190abcd-1234-7abc-89ab-000000000011'],
     ]);
     expect(trx.query.mock.calls[4]).toEqual([
       'insert into flow.agent_rules (tenant_id, node_id, rule_type, permission_key, created_by, updated_by) values ($1, $2, $3, $4, $5, $6) returning *',
-      ['t-1', NODE_A, 'permission', 'doc:read', 'u-1', 'u-1'],
+      ['0190abcd-1234-7abc-89ab-000000000010', NODE_A, 'permission', 'doc:read', '0190abcd-1234-7abc-89ab-000000000011', '0190abcd-1234-7abc-89ab-000000000011'],
     ]);
     expect(trx.query.mock.calls[5]).toEqual([
       'insert into flow.node_form_rules (tenant_id, node_id, form_id, gating_mode, created_by, updated_by) values ($1, $2, $3, $4, $5, $6) returning *',
-      ['t-1', NODE_B, FORM, 'any', 'u-1', 'u-1'],
+      ['0190abcd-1234-7abc-89ab-000000000010', NODE_B, FORM, 'any', '0190abcd-1234-7abc-89ab-000000000011', '0190abcd-1234-7abc-89ab-000000000011'],
     ]);
   });
 
@@ -873,7 +893,7 @@ describe('FlowDesignService.importGraph', () => {
   });
 
   it('throws when import node insertion returns a non-string node id', async () => {
-    const { service } = makeService([[{ id: GRAPH, scope_id: SCOPE }], [{ id: null, code: 'a' }]]);
+    const { service } = makeService([[{ id: GRAPH, scope_id: SCOPE }], [physicalNode({ id: null, code: 'a' })]]);
     await expect(
       service.importGraph({
         graph: { scopeId: SCOPE, code: 'g' },
@@ -883,7 +903,69 @@ describe('FlowDesignService.importGraph', () => {
   });
 });
 
+describe('Flow node mutation checked-row preservation', () => {
+  it.each([undefined, null, 17, false, {}])('retains import required-ID error for %s', async (id) => {
+    const row = physicalNode({ id, code: 'a' });
+    if (id === undefined) delete row.id;
+    const { service, trx } = makeService([[{ id: GRAPH, scope_id: SCOPE }], [row]]);
+    await expect(service.importGraph({ graph: { scopeId: SCOPE, code: 'g' }, nodes: [{ code: 'a', kind: 'start' }] }))
+      .rejects.toThrow(new BadRequestException('node a is required'));
+    expect(trx.query).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([{ kind: 'invalid' }, { tenant_id: 'invalid' }, { allowed_actions: [7] }, { sort_order: 'invalid' }])(
+      'rejects malformed physical field %j before export', async (invalid) => {
+      const { service, trx } = makeService([[{ id: GRAPH, scope_id: SCOPE }], [physicalNode({ code: 'a', ...invalid })]]);
+      await expect(service.importGraph({ graph: { scopeId: SCOPE, code: 'g' }, nodes: [{ code: 'a', kind: 'start' }] }))
+        .rejects.toMatchObject({ name: 'QueryRowValidationError', rowIndex: 0 });
+      expect(trx.query).toHaveBeenCalledTimes(2);
+    });
+
+  it('preserves node selected own keys and nested identity for create and update', async () => {
+    const nested = { opaque: undefined, date: new Date(NaN) };
+    const row = physicalNode({ opaque_value: nested });
+    Object.defineProperty(row, '__proto__', { value: nested, enumerable: true });
+    const created = makeService([[row]]);
+    const updated = makeService([[row]]);
+    const first = await created.service.createGraphNode(GRAPH, { code: 'n', kind: 'start' });
+    const second = await updated.service.updateNode(NODE, { name: 'New' });
+    for (const value of [first, second]) {
+      expect(value.opaqueValue).toBe(nested);
+      expect(Object.hasOwn(value, '_Proto__')).toBe(true);
+      expect(value._Proto__).toBe(nested);
+    }
+    expect(created.trx.query).toHaveBeenCalledTimes(1);
+    expect(updated.trx.query).toHaveBeenCalledTimes(1);
+    expect(row.name).toBe(null);
+  });
+});
+
 describe('FlowDesignService.exportGraph', () => {
+  it('preserves opaque selected extensions and nested identities', async () => {
+    const opaque = { date: new Date(NaN), missing: undefined, binary: Buffer.from('opaque') };
+    const node = { id: NODE, code: 'a', opaque_value: opaque };
+    Object.defineProperty(node, '__proto__', { value: opaque, enumerable: true });
+    const { service } = makeService([
+      [{ id: GRAPH, scope_id: SCOPE }], [node], [], [], [], [], [],
+    ]);
+    const result = await service.exportGraph(GRAPH);
+    expect(result.nodes[0]?.opaqueValue).toBe(opaque);
+    // Retain the existing camelizer's spelling of this own key.
+    expect(Object.hasOwn(result.nodes[0]!, '_Proto__')).toBe(true);
+    expect(Object.getOwnPropertyDescriptor(result.nodes[0]!, '_Proto__')?.value).toBe(opaque);
+    expect(node.opaque_value).toBe(opaque);
+  });
+
+  it.each([null, false, 7, []])('rejects a non-object selected node envelope %j', async (row) => {
+    const { service, trx } = makeService([
+      [{ id: GRAPH, scope_id: SCOPE }], [row], [], [], [], [], [],
+    ]);
+    await expect(service.exportGraph(GRAPH)).rejects.toMatchObject({
+      code: 'QUERY_ROW_INVALID', query: 'flow.graph-package.export-nodes', rowIndex: 0,
+    });
+    expect(trx.query).toHaveBeenCalledTimes(7);
+  });
+
   it('queries graph + nodes + edges + transitionEffects + agentRules + nodeFormRules + policySets', async () => {
     const { service, trx } = makeService([
       [{ id: GRAPH, scope_id: SCOPE }], // getRow
@@ -972,7 +1054,7 @@ describe('FlowDesignService.exportGraph', () => {
 
 describe('FlowDesignService — tenant + input validation', () => {
   it('requireTenantId throws when no tenant in context', async () => {
-    const { service } = makeService([], { actorId: 'u-1' });
+    const { service } = makeService([], { actorId: '0190abcd-1234-7abc-89ab-000000000011' });
     await expect(service.createScope({ code: 'c', label: 'L', adapterKey: 'foo' })).rejects.toThrow(
       new BadRequestException('Tenant context is required'),
     );

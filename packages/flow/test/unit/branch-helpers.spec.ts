@@ -1,7 +1,10 @@
+import { executeGuardedQueryRows, executeTypedQuery, type Transaction } from '@stynx-nyx/data';
+import { analyticsTaskRow, analyticsTaskView } from '../fixtures/analytics-rows.js';
 import { BadRequestException } from '@nestjs/common';
 import { FlowAdapterRegistry, type FlowDomainAdapter } from '../../src/adapters.js';
 import { FlowAnalyticsService } from '../../src/flow-analytics.service.js';
 import { FlowPolicyService } from '../../src/flow-policy.service.js';
+import { evaluatePolicyConditionQuery } from '../../src/policy-queries.repository.js';
 import { camelizeKey, camelizeRow, pageLimitOffset, requireObject } from '../../src/row-utils.js';
 import {
   addTextFilter,
@@ -27,9 +30,10 @@ function makeAdapter(overrides: Partial<FlowDomainAdapter> = {}): FlowDomainAdap
 
 function makeDb(rowsByCall: Array<unknown[]> = []) {
   let call = 0;
-  const trx = {
-    query: vi.fn(async () => ({ rows: rowsByCall[call++] ?? [] })),
-  };
+  const query = vi.fn(async (_sql: string, _params?: unknown[]) => ({ rows: rowsByCall[call++] ?? [] }));
+  const run: Transaction['run'] = (statement, params) => executeTypedQuery({ query }, statement, params);
+  const runGuarded: Transaction['runGuarded'] = (statement, params, guard) => executeGuardedQueryRows({ query }, statement, params, guard);
+  const trx = { query, run, runGuarded };
   const db = {
     tx: vi.fn(async (fn: (input: typeof trx) => unknown, _options?: unknown) => fn(trx)),
   };
@@ -242,7 +246,7 @@ describe('FlowAdapterRegistry', () => {
 describe('FlowAnalyticsService', () => {
   it('assembles open task filters and maps snake_case rows', async () => {
     const { db, trx } = makeDb([
-      [{ id: 'task-1', target_type: 'document', node_code: 'review' }],
+      [analyticsTaskRow],
       [{ total: '7' }],
     ]);
     const result = await new FlowAnalyticsService(db as never).openTasks({
@@ -255,7 +259,7 @@ describe('FlowAnalyticsService', () => {
       ignored: 123,
     });
     expect(result).toEqual({
-      data: [{ id: 'task-1', targetType: 'document', nodeCode: 'review' }],
+      data: [analyticsTaskView],
       meta: { page: 2, pageSize: 2, total: 7 },
     });
     const [sql, params] = trx.query.mock.calls[0]!;
@@ -267,10 +271,10 @@ describe('FlowAnalyticsService', () => {
   });
 
   it('omits runs summary WHERE when no filters and defaults total to zero', async () => {
-    const { db, trx } = makeDb([[{ run_count: 2 }], []]);
+    const { db, trx } = makeDb([[{ scope_id: SCOPE, graph_id: SCOPE, status: 'active', run_count: 2, first_created_at: '2026-10-24', last_updated_at: '2026-10-25' }], []]);
     const result = await new FlowAnalyticsService(db as never).runsSummary();
     expect(result).toEqual({
-      data: [{ runCount: 2 }],
+      data: [{ scopeId: SCOPE, graphId: SCOPE, status: 'active', runCount: 2, firstCreatedAt: '2026-10-24', lastUpdatedAt: '2026-10-25' }],
       meta: { page: 1, pageSize: 50, total: 0 },
     });
     const [sql, params] = trx.query.mock.calls[0]!;
@@ -339,6 +343,133 @@ describe('FlowAnalyticsService', () => {
 });
 
 describe('FlowPolicyService', () => {
+  it.each(['action', 'capability'])('keeps exact %s policy SQL, parser trimming, binds and direct-ID precedence', async (targetColumn) => {
+    const { db, trx } = makeDb([[]]);
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({
+      policySetId: POLICY_SET, scopeId: SCOPE, scopeCode: 'other',
+      [targetColumn]: '  chosen  ', nodeCode: ' node ', statusCode: ' status ',
+    })).resolves.toEqual({ allowed: true, effect: 'allow', reasonCode: null, matchedRuleId: null, defaulted: true });
+    expect(trx.query).toHaveBeenCalledExactlyOnceWith(`
+          select id, effect, priority, reason_code, conditions
+          from flow.policy_rules
+          where policy_set_id = $1::uuid
+            and ${targetColumn} = $2
+            and (node_code is null or node_code = $3)
+            and (status_code is null or status_code = $4)
+          order by priority desc, case effect when 'deny' then 0 else 1 end, id
+        `, [POLICY_SET, 'chosen', 'node', 'status']);
+    expect(db.tx).toHaveBeenCalledExactlyOnceWith(expect.any(Function), { role: 'reader', readonly: true });
+  });
+
+  it.each([
+    {}, { action: 'approve', capability: 'read' }, { action: ' ' }, { capability: ' ' },
+    { action: 17 }, { capability: false },
+  ])('rejects invalid target selector %j before any transaction', async (target) => {
+    const { db, trx } = makeDb();
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({ policySetId: POLICY_SET, ...target }))
+      .rejects.toBeInstanceOf(BadRequestException);
+    expect(db.tx).not.toHaveBeenCalled(); expect(trx.query).not.toHaveBeenCalled();
+  });
+
+  it('rejects missing policy scope before any transaction', async () => {
+    const { db, trx } = makeDb();
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({ action: 'approve' })).rejects.toBeInstanceOf(BadRequestException);
+    expect(db.tx).not.toHaveBeenCalled(); expect(trx.query).not.toHaveBeenCalled();
+  });
+
+  it('resolves the policy set first and preserves null optional bindings', async () => {
+    const { db, trx } = makeDb([[{ id: POLICY_SET }], []]);
+    await new FlowPolicyService({} as never, db as never).evaluate({ scopeId: SCOPE, scopeCode: 'scope', action: 'approve' });
+    expect(trx.query).toHaveBeenCalledTimes(2);
+    expect(trx.query.mock.calls[0]?.[1]).toEqual([SCOPE, 'scope']);
+    expect(trx.query.mock.calls[1]?.[1]).toEqual([POLICY_SET, 'approve', null, null]);
+  });
+
+  it('uses returned priority order and the first matching opaque condition without reordering', async () => {
+    const nested = { date: new Date(NaN), absent: undefined };
+    const ruleId = 'opaque-rule';
+    const rows = [
+      { id: 'not-matching', effect: 'deny', priority: 99, conditions: { key: 'other' } },
+      { id: ruleId, effect: 'allow', priority: 10, conditions: { nested } },
+      { id: 'later-deny', effect: 'deny', priority: 100, conditions: { jsonpath: '$.mustNotRun' } },
+    ];
+    const { db, trx } = makeDb([rows]);
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({ policySetId: POLICY_SET, action: 'approve', facts: { nested } }))
+      .resolves.toEqual({ allowed: true, effect: 'allow', reasonCode: null, matchedRuleId: ruleId, defaulted: false });
+    expect(trx.query).toHaveBeenCalledTimes(1);
+    expect(rows[1]?.conditions.nested).toBe(nested);
+  });
+
+  it('propagates the exact selection query error without further calls', async () => {
+    const { db, trx } = makeDb(); const error = new Error('policy database failure');
+    trx.query.mockRejectedValueOnce(error);
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({ policySetId: POLICY_SET, capability: 'read' })).rejects.toBe(error);
+    expect(trx.query).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { label: 'no row', rows: [] },
+    { label: 'absent field', rows: [{}] },
+    { label: 'null', rows: [{ matched: null }] },
+    { label: 'false', rows: [{ matched: false }] },
+  ])('keeps $label JSON-path results unmatched and facts opaque', async ({ rows }) => {
+    const nested = { date: new Date(NaN), absent: undefined };
+    const facts = { nested };
+    const { db, trx } = makeDb([
+      [{ id: 'opaque-rule', effect: 'deny', conditions: { jsonpath: '$.nested' } }], rows,
+    ]);
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({
+      policySetId: POLICY_SET, capability: 'view', facts,
+    })).resolves.toMatchObject({ defaulted: true, matchedRuleId: null });
+    expect(trx.query).toHaveBeenCalledTimes(2);
+    expect(trx.query.mock.calls[1]?.[0]).toBe('select flow.eval_rule($1::text, $2::jsonb) as matched');
+    const boundFacts = trx.query.mock.calls[1]?.[1]?.[1];
+    // Existing DTO parsing copies the outer record before checked execution.
+    expect(boundFacts).not.toBe(facts);
+    expect(boundFacts).toEqual(facts);
+    if (typeof boundFacts !== 'object' || boundFacts === null || !('nested' in boundFacts))
+      throw new Error('bound facts record is missing');
+    expect(boundFacts.nested).toBe(nested);
+    expect(facts.nested).toBe(nested);
+    expect(db.tx.mock.calls[0]?.[1]).toEqual({ role: 'reader', readonly: true });
+  });
+
+  it('retains the actual post-DTO facts object at the checked query boundary', async () => {
+    const nested = { date: new Date(NaN), missing: undefined };
+    const facts = { nested };
+    const query = vi.fn(async () => ({ rows: [{ matched: true }] }));
+    await expect(executeTypedQuery({ query }, evaluatePolicyConditionQuery, ['$.nested', facts]))
+      .resolves.toEqual([{ matched: true }]);
+    expect(query).toHaveBeenCalledExactlyOnceWith(
+      'select flow.eval_rule($1::text, $2::jsonb) as matched', ['$.nested', facts],
+    );
+    expect(query.mock.calls[0]?.[1]?.[1]).toBe(facts);
+    expect(facts.nested).toBe(nested);
+  });
+
+  it.each([1, 'true', {}])('rejects malformed declared matched output %j', async (matched) => {
+    const { db, trx } = makeDb([
+      [{ id: 'opaque-rule', effect: 'deny', conditions: { jsonpath: '$.approved' } }], [{ matched }],
+    ]);
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({
+      policySetId: POLICY_SET, capability: 'view', facts: {},
+    })).rejects.toMatchObject({ code: 'QUERY_ROW_INVALID', query: 'flow.policy.evaluate-condition', rowIndex: 0 });
+    expect(trx.query).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps a missing policy-set id as absence and rejects malformed present ids', async () => {
+    const absent = makeDb([[{}]]);
+    await expect(new FlowPolicyService({} as never, absent.db as never).evaluate({
+      scopeCode: 'custom text', capability: 'view',
+    })).resolves.toMatchObject({ defaulted: true });
+    expect(absent.trx.query.mock.calls[0]?.[1]).toEqual([null, 'custom text']);
+    const malformed = makeDb([[{ id: 7 }]]);
+    await expect(new FlowPolicyService({} as never, malformed.db as never).evaluate({
+      scopeCode: 'custom text', capability: 'view',
+    })).rejects.toMatchObject({ code: 'QUERY_ROW_INVALID', query: 'flow.policy.resolve-policy-set-id' });
+    expect(malformed.trx.query).toHaveBeenCalledTimes(1);
+  });
+
   it('delegates policy set and rule CRUD to the design service', async () => {
     const design = {
       listPolicySets: vi.fn(async () => []),

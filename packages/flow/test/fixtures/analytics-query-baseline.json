@@ -1,0 +1,1158 @@
+{
+  "provenance": "Exact authored SQL/parameter tuples captured before Map-to-switch refactor; original eight service SQL templates independently reviewed.",
+  "sourceSha256": "fbff773059604bac1d4c9f2790f1c1b84d64af9dc9c7278c8e33acb99e08aae1",
+  "queries": {
+    "flow.analytics.open-tasks.mask.0": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open'\n          order by t.due_at nulls last, t.created_at asc\n          limit $1 offset $2\n        ",
+      "params": ["number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.1": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.2": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.3": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.4": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and s.code = $1\n          order by t.due_at nulls last, t.created_at asc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.5": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.6": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.7": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.8": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.target_type = $1\n          order by t.due_at nulls last, t.created_at asc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.9": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_type = $2\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.10": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_type = $2\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.11": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.12": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and s.code = $1 and r.target_type = $2\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.13": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.14": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.15": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.16": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.target_id = $1\n          order by t.due_at nulls last, t.created_at asc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.17": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_id = $2\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.18": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_id = $2\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.19": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_id = $3\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.20": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and s.code = $1 and r.target_id = $2\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.21": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_id = $3\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.22": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_id = $3\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.23": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_id = $4\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.24": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.target_type = $1 and r.target_id = $2\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.25": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_type = $2 and r.target_id = $3\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.26": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_type = $2 and r.target_id = $3\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.27": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and r.target_id = $4\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.28": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and s.code = $1 and r.target_type = $2 and r.target_id = $3\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.29": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.30": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.31": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and r.target_id = $5\n          order by t.due_at nulls last, t.created_at asc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.32": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and t.assignee_user_id = $1::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.33": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and t.assignee_user_id = $2::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.34": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and t.assignee_user_id = $2::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.35": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and t.assignee_user_id = $3::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.36": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and s.code = $1 and t.assignee_user_id = $2::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.37": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and t.assignee_user_id = $3::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.38": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and t.assignee_user_id = $3::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.39": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and t.assignee_user_id = $4::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.40": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.target_type = $1 and t.assignee_user_id = $2::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.41": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_type = $2 and t.assignee_user_id = $3::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.42": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_type = $2 and t.assignee_user_id = $3::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.43": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and t.assignee_user_id = $4::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.44": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and s.code = $1 and r.target_type = $2 and t.assignee_user_id = $3::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.45": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and t.assignee_user_id = $4::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.46": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and t.assignee_user_id = $4::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.47": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and t.assignee_user_id = $5::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.48": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.target_id = $1 and t.assignee_user_id = $2::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.49": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_id = $2 and t.assignee_user_id = $3::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.50": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_id = $2 and t.assignee_user_id = $3::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.51": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_id = $3 and t.assignee_user_id = $4::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.52": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and s.code = $1 and r.target_id = $2 and t.assignee_user_id = $3::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.53": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_id = $3 and t.assignee_user_id = $4::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.54": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_id = $3 and t.assignee_user_id = $4::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.55": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_id = $4 and t.assignee_user_id = $5::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.56": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.target_type = $1 and r.target_id = $2 and t.assignee_user_id = $3::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.57": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_type = $2 and r.target_id = $3 and t.assignee_user_id = $4::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.58": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_type = $2 and r.target_id = $3 and t.assignee_user_id = $4::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.59": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and r.target_id = $4 and t.assignee_user_id = $5::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.60": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and s.code = $1 and r.target_type = $2 and r.target_id = $3 and t.assignee_user_id = $4::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.61": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4 and t.assignee_user_id = $5::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.62": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4 and t.assignee_user_id = $5::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-tasks.mask.63": {
+      "text": "\n          select t.*, r.target_type, r.target_id, n.code as node_code, n.name as node_name\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          join flow.nodes n on n.id = t.node_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and r.target_id = $5 and t.assignee_user_id = $6::uuid\n          order by t.due_at nulls last, t.created_at asc\n          limit $7 offset $8\n        ",
+      "params": ["text", "text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.open-task-count.mask.0": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open'\n        ",
+      "params": []
+    },
+    "flow.analytics.open-task-count.mask.1": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.open-task-count.mask.2": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.open-task-count.mask.3": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.4": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and s.code = $1\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.open-task-count.mask.5": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.6": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.7": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.8": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.target_type = $1\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.open-task-count.mask.9": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_type = $2\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.10": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_type = $2\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.11": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.12": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and s.code = $1 and r.target_type = $2\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.13": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.14": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.15": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.16": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.target_id = $1\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.open-task-count.mask.17": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_id = $2\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.18": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_id = $2\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.19": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_id = $3\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.20": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and s.code = $1 and r.target_id = $2\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.21": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_id = $3\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.22": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_id = $3\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.23": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_id = $4\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.24": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.target_type = $1 and r.target_id = $2\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.25": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_type = $2 and r.target_id = $3\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.26": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_type = $2 and r.target_id = $3\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.27": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and r.target_id = $4\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.28": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and s.code = $1 and r.target_type = $2 and r.target_id = $3\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.29": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.30": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.31": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and r.target_id = $5\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.32": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and t.assignee_user_id = $1::uuid\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.open-task-count.mask.33": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and t.assignee_user_id = $2::uuid\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.34": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and t.assignee_user_id = $2::uuid\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.35": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and t.assignee_user_id = $3::uuid\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.36": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and s.code = $1 and t.assignee_user_id = $2::uuid\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.37": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and t.assignee_user_id = $3::uuid\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.38": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and t.assignee_user_id = $3::uuid\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.39": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and t.assignee_user_id = $4::uuid\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.40": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.target_type = $1 and t.assignee_user_id = $2::uuid\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.41": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_type = $2 and t.assignee_user_id = $3::uuid\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.42": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_type = $2 and t.assignee_user_id = $3::uuid\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.43": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and t.assignee_user_id = $4::uuid\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.44": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and s.code = $1 and r.target_type = $2 and t.assignee_user_id = $3::uuid\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.45": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and t.assignee_user_id = $4::uuid\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.46": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and t.assignee_user_id = $4::uuid\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.47": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and t.assignee_user_id = $5::uuid\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.48": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.target_id = $1 and t.assignee_user_id = $2::uuid\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.49": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_id = $2 and t.assignee_user_id = $3::uuid\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.50": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_id = $2 and t.assignee_user_id = $3::uuid\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.51": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_id = $3 and t.assignee_user_id = $4::uuid\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.52": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and s.code = $1 and r.target_id = $2 and t.assignee_user_id = $3::uuid\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.53": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_id = $3 and t.assignee_user_id = $4::uuid\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.54": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_id = $3 and t.assignee_user_id = $4::uuid\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.55": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_id = $4 and t.assignee_user_id = $5::uuid\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.56": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.target_type = $1 and r.target_id = $2 and t.assignee_user_id = $3::uuid\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.57": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.target_type = $2 and r.target_id = $3 and t.assignee_user_id = $4::uuid\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.58": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and r.target_type = $2 and r.target_id = $3 and t.assignee_user_id = $4::uuid\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.59": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and r.target_id = $4 and t.assignee_user_id = $5::uuid\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.60": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and s.code = $1 and r.target_type = $2 and r.target_id = $3 and t.assignee_user_id = $4::uuid\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.61": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4 and t.assignee_user_id = $5::uuid\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.62": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4 and t.assignee_user_id = $5::uuid\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.open-task-count.mask.63": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and r.target_id = $5 and t.assignee_user_id = $6::uuid\n        ",
+      "params": ["text", "text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary.mask.0": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            \n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $1 offset $2\n        ",
+      "params": ["number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.1": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.2": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.3": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.4": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.5": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.6": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.7": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.8": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_type = $1\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.9": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_type = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.10": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_type = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.11": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.12": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_type = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.13": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.14": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.15": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.16": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_id = $1\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.17": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_id = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.18": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_id = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.19": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.20": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_id = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.21": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.22": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.23": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_id = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.24": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_type = $1 and r.target_id = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.25": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_type = $2 and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.26": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_type = $2 and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.27": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and r.target_id = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.28": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_type = $2 and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.29": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.30": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.31": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and r.target_id = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.32": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.status = $1\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $2 offset $3\n        ",
+      "params": ["text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.33": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.status = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.34": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.status = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.35": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.36": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.status = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.37": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.38": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.39": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.40": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_type = $1 and r.status = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.41": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_type = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.42": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_type = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.43": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.44": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_type = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.45": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.46": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.47": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and r.status = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.48": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_id = $1 and r.status = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $3 offset $4\n        ",
+      "params": ["text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.49": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_id = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.50": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_id = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.51": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.52": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_id = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.53": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.54": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.55": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_id = $4 and r.status = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.56": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_type = $1 and r.target_id = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $4 offset $5\n        ",
+      "params": ["text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.57": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_type = $2 and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.58": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_type = $2 and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.59": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and r.target_id = $4 and r.status = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.60": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_type = $2 and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $5 offset $6\n        ",
+      "params": ["text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.61": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4 and r.status = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.62": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4 and r.status = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $6 offset $7\n        ",
+      "params": ["text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary.mask.63": {
+      "text": "\n          with grouped as (\n            select\n              r.scope_id,\n              r.graph_id,\n              r.status,\n              count(*)::int as run_count,\n              min(r.created_at) as first_created_at,\n              max(r.updated_at) as last_updated_at\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and r.target_id = $5 and r.status = $6\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select * from grouped\n          order by last_updated_at desc\n          limit $7 offset $8\n        ",
+      "params": ["text", "text", "text", "text", "text", "text", "number", "number"]
+    },
+    "flow.analytics.runs-summary-count.mask.0": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            \n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": []
+    },
+    "flow.analytics.runs-summary-count.mask.1": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.runs-summary-count.mask.2": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.runs-summary-count.mask.3": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.4": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.runs-summary-count.mask.5": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.6": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.7": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.8": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_type = $1\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.runs-summary-count.mask.9": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_type = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.10": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_type = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.11": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.12": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_type = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.13": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.14": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.15": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.16": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_id = $1\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.runs-summary-count.mask.17": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_id = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.18": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_id = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.19": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.20": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_id = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.21": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.22": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.23": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_id = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.24": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_type = $1 and r.target_id = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.25": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_type = $2 and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.26": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_type = $2 and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.27": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and r.target_id = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.28": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_type = $2 and r.target_id = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.29": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.30": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.31": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and r.target_id = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.32": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.status = $1\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.runs-summary-count.mask.33": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.status = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.34": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.status = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.35": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.36": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.status = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.37": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.38": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.39": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.40": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_type = $1 and r.status = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.41": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_type = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.42": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_type = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.43": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.44": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_type = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.45": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.46": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.47": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and r.status = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.48": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_id = $1 and r.status = $2\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.49": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_id = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.50": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_id = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.51": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.52": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_id = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.53": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.54": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.55": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_id = $4 and r.status = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.56": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.target_type = $1 and r.target_id = $2 and r.status = $3\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.57": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.target_type = $2 and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.58": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.target_type = $2 and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.59": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.target_type = $3 and r.target_id = $4 and r.status = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.60": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.target_type = $2 and r.target_id = $3 and r.status = $4\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.61": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4 and r.status = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.62": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.target_type = $3 and r.target_id = $4 and r.status = $5\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.runs-summary-count.mask.63": {
+      "text": "\n          with grouped as (\n            select r.scope_id, r.graph_id, r.status\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.target_type = $4 and r.target_id = $5 and r.status = $6\n            group by r.scope_id, r.graph_id, r.status\n          )\n          select count(*)::text as total from grouped\n        ",
+      "params": ["text", "text", "text", "text", "text", "text"]
+    },
+    "flow.analytics.dashboard-open-tasks.mask.0": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open'\n        ",
+      "params": []
+    },
+    "flow.analytics.dashboard-open-tasks.mask.1": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and t.status = 'open'\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-open-tasks.mask.2": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.graph_id = $1::uuid and t.status = 'open'\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-open-tasks.mask.3": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and r.graph_id = $2::uuid and t.status = 'open'\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-open-tasks.mask.4": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where s.code = $1 and t.status = 'open'\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-open-tasks.mask.5": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and s.code = $2 and t.status = 'open'\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-open-tasks.mask.6": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.graph_id = $1::uuid and s.code = $2 and t.status = 'open'\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-open-tasks.mask.7": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and t.status = 'open'\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.dashboard-cycle-time.mask.0": {
+      "text": "\n          select\n            percentile_cont(0.5) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p50_seconds,\n            percentile_cont(0.95) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p95_seconds\n          from flow.runs r\n          join flow.scopes s on s.id = r.scope_id\n          where r.status = 'completed'\n        ",
+      "params": []
+    },
+    "flow.analytics.dashboard-cycle-time.mask.1": {
+      "text": "\n          select\n            percentile_cont(0.5) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p50_seconds,\n            percentile_cont(0.95) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p95_seconds\n          from flow.runs r\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and r.status = 'completed'\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-cycle-time.mask.2": {
+      "text": "\n          select\n            percentile_cont(0.5) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p50_seconds,\n            percentile_cont(0.95) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p95_seconds\n          from flow.runs r\n          join flow.scopes s on s.id = r.scope_id\n          where r.graph_id = $1::uuid and r.status = 'completed'\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-cycle-time.mask.3": {
+      "text": "\n          select\n            percentile_cont(0.5) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p50_seconds,\n            percentile_cont(0.95) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p95_seconds\n          from flow.runs r\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.status = 'completed'\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-cycle-time.mask.4": {
+      "text": "\n          select\n            percentile_cont(0.5) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p50_seconds,\n            percentile_cont(0.95) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p95_seconds\n          from flow.runs r\n          join flow.scopes s on s.id = r.scope_id\n          where s.code = $1 and r.status = 'completed'\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-cycle-time.mask.5": {
+      "text": "\n          select\n            percentile_cont(0.5) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p50_seconds,\n            percentile_cont(0.95) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p95_seconds\n          from flow.runs r\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and s.code = $2 and r.status = 'completed'\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-cycle-time.mask.6": {
+      "text": "\n          select\n            percentile_cont(0.5) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p50_seconds,\n            percentile_cont(0.95) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p95_seconds\n          from flow.runs r\n          join flow.scopes s on s.id = r.scope_id\n          where r.graph_id = $1::uuid and s.code = $2 and r.status = 'completed'\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-cycle-time.mask.7": {
+      "text": "\n          select\n            percentile_cont(0.5) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p50_seconds,\n            percentile_cont(0.95) within group (order by extract(epoch from (r.updated_at - r.created_at)))::text as p95_seconds\n          from flow.runs r\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.status = 'completed'\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.dashboard-completion.mask.0": {
+      "text": "\n          select window, completed::text, total::text\n          from (\n            select\n              'last7Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.created_at >= clock_timestamp() - interval '7 days'\n            union all\n            select\n              'last30Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.created_at >= clock_timestamp() - interval '30 days'\n          ) completion\n        ",
+      "params": []
+    },
+    "flow.analytics.dashboard-completion.mask.1": {
+      "text": "\n          select window, completed::text, total::text\n          from (\n            select\n              'last7Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.created_at >= clock_timestamp() - interval '7 days'\n            union all\n            select\n              'last30Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.created_at >= clock_timestamp() - interval '30 days'\n          ) completion\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-completion.mask.2": {
+      "text": "\n          select window, completed::text, total::text\n          from (\n            select\n              'last7Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.created_at >= clock_timestamp() - interval '7 days'\n            union all\n            select\n              'last30Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and r.created_at >= clock_timestamp() - interval '30 days'\n          ) completion\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-completion.mask.3": {
+      "text": "\n          select window, completed::text, total::text\n          from (\n            select\n              'last7Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.created_at >= clock_timestamp() - interval '7 days'\n            union all\n            select\n              'last30Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and r.created_at >= clock_timestamp() - interval '30 days'\n          ) completion\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-completion.mask.4": {
+      "text": "\n          select window, completed::text, total::text\n          from (\n            select\n              'last7Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.created_at >= clock_timestamp() - interval '7 days'\n            union all\n            select\n              'last30Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where s.code = $1 and r.created_at >= clock_timestamp() - interval '30 days'\n          ) completion\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-completion.mask.5": {
+      "text": "\n          select window, completed::text, total::text\n          from (\n            select\n              'last7Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.created_at >= clock_timestamp() - interval '7 days'\n            union all\n            select\n              'last30Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and s.code = $2 and r.created_at >= clock_timestamp() - interval '30 days'\n          ) completion\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-completion.mask.6": {
+      "text": "\n          select window, completed::text, total::text\n          from (\n            select\n              'last7Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.created_at >= clock_timestamp() - interval '7 days'\n            union all\n            select\n              'last30Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.graph_id = $1::uuid and s.code = $2 and r.created_at >= clock_timestamp() - interval '30 days'\n          ) completion\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-completion.mask.7": {
+      "text": "\n          select window, completed::text, total::text\n          from (\n            select\n              'last7Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.created_at >= clock_timestamp() - interval '7 days'\n            union all\n            select\n              'last30Days' as window,\n              count(*) filter (where r.status = 'completed') as completed,\n              count(*) as total\n            from flow.runs r\n            join flow.scopes s on s.id = r.scope_id\n            where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and r.created_at >= clock_timestamp() - interval '30 days'\n          ) completion\n        ",
+      "params": ["text", "text", "text"]
+    },
+    "flow.analytics.dashboard-sla-breaches.mask.0": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where t.status = 'open' and t.due_at < clock_timestamp()\n        ",
+      "params": []
+    },
+    "flow.analytics.dashboard-sla-breaches.mask.1": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and t.status = 'open' and t.due_at < clock_timestamp()\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-sla-breaches.mask.2": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.graph_id = $1::uuid and t.status = 'open' and t.due_at < clock_timestamp()\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-sla-breaches.mask.3": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and r.graph_id = $2::uuid and t.status = 'open' and t.due_at < clock_timestamp()\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-sla-breaches.mask.4": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where s.code = $1 and t.status = 'open' and t.due_at < clock_timestamp()\n        ",
+      "params": ["text"]
+    },
+    "flow.analytics.dashboard-sla-breaches.mask.5": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and s.code = $2 and t.status = 'open' and t.due_at < clock_timestamp()\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-sla-breaches.mask.6": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.graph_id = $1::uuid and s.code = $2 and t.status = 'open' and t.due_at < clock_timestamp()\n        ",
+      "params": ["text", "text"]
+    },
+    "flow.analytics.dashboard-sla-breaches.mask.7": {
+      "text": "\n          select count(*)::text as total\n          from flow.tasks t\n          join flow.runs r on r.id = t.run_id\n          join flow.scopes s on s.id = r.scope_id\n          where r.scope_id = $1::uuid and r.graph_id = $2::uuid and s.code = $3 and t.status = 'open' and t.due_at < clock_timestamp()\n        ",
+      "params": ["text", "text", "text"]
+    }
+  }
+}

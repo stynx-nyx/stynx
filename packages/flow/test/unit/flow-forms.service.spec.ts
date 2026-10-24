@@ -1,9 +1,12 @@
+import { executeGuardedQueryRows, executeTypedQuery, type Transaction } from '@stynx-nyx/data';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { FlowFormsService } from '../../src/flow-forms.service.js';
 import type { Mock } from 'vitest';
 
 interface FakeTrx {
   query: Mock<Promise<{ rows: unknown[] }>, [string, unknown[]?]>;
+  run: Transaction['run'];
+  runGuarded: Transaction['runGuarded'];
   softDelete: Mock<Promise<void>, [unknown, string]>;
 }
 
@@ -17,8 +20,11 @@ const SCORE = '0190abcd-1234-7abc-89ab-000000000007';
 
 function makeTrx(rowsByCall: Array<unknown[]> = []) {
   let callIdx = 0;
+  const query = vi.fn(async (_sql: string, _params?: unknown[]) => ({ rows: rowsByCall[callIdx++] ?? [] }));
+  const run: Transaction['run'] = (statement, params) => executeTypedQuery({ query }, statement, params);
+  const runGuarded: Transaction['runGuarded'] = (statement, params, guard) => executeGuardedQueryRows({ query }, statement, params, guard);
   return {
-    query: vi.fn(async () => ({ rows: rowsByCall[callIdx++] ?? [] })),
+    query, run, runGuarded,
     softDelete: vi.fn(async () => undefined),
   } as FakeTrx;
 }

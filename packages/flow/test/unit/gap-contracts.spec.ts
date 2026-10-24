@@ -1,3 +1,5 @@
+import { executeGuardedQueryRows, executeTypedQuery, type Transaction } from '@stynx-nyx/data';
+import { analyticsTaskRow } from '../fixtures/analytics-rows.js';
 import { ForbiddenException } from '@nestjs/common';
 import { FlowAdapterRegistry, type FlowDomainAdapter } from '../../src/adapters.js';
 import { FlowAnalyticsService } from '../../src/flow-analytics.service.js';
@@ -27,9 +29,11 @@ function requestContext(actor = actorId) {
 }
 
 function dbWithQuery(query: Mock) {
+  const run: Transaction['run'] = (statement, params) => executeTypedQuery({ query }, statement, params);
+  const runGuarded: Transaction['runGuarded'] = (statement, params, guard) => executeGuardedQueryRows({ query }, statement, params, guard);
   return {
-    tx: vi.fn(async (callback: (trx: { query: Mock }) => Promise<unknown>) =>
-      callback({ query }),
+    tx: vi.fn(async (callback: (trx: { query: Mock; run: typeof run; runGuarded: typeof runGuarded }) => Promise<unknown>) =>
+      callback({ query, run, runGuarded }),
     ),
   };
 }
@@ -171,6 +175,9 @@ describe('Flow backend gap contracts', () => {
       resolveAgents,
     };
     const query = vi.fn(async (sql: string) => {
+      if (sql.includes('t.assignee_user_id as assignee_user_id')) {
+        return { rows: [{ assignee_user_id: null, adapter_key: 'test', target_type: 'generic', target_id: 'target-1', is_user_candidate: true }] };
+      }
       if (sql.includes('flow.resolve_agents')) {
         return {
           rows: [{
@@ -256,6 +263,7 @@ describe('Flow backend gap contracts', () => {
       }
       return {
         rows: [{
+          ...analyticsTaskRow,
           id: taskId,
           run_id: runId,
           status: 'open',
