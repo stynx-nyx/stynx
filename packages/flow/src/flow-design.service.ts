@@ -3,7 +3,7 @@ import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
 import { FlowGraphPackage } from './internal/design/graph-package.js';
 import { FlowDesignTableStore } from './internal/design/design-table-store.js';
-import type { FlowGraphExportDocument, FlowGraphImportDocument, FlowJsonObject } from './types.js';
+import type { FlowGraphExportDocument, FlowJsonObject } from './types.js';
 import { requireObject } from './row-utils.js';
 import {
   createAgentRuleSchema,
@@ -240,7 +240,7 @@ export class FlowDesignService {
   }
 
   importGraph(input: unknown): Promise<FlowGraphExportDocument> {
-    return this.graphPackage.importGraph(parseDto(graphImportSchema, input) as FlowGraphImportDocument);
+    return this.graphPackage.importGraph(parseDto(graphImportSchema, input));
   }
 
   exportGraph(id: string): Promise<FlowGraphExportDocument> {

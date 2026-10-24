@@ -1,4 +1,5 @@
 import { buildRunFactsQuery, updateRunStatusQuery, isRunLifecycleRow } from './run-lifecycle.repository.js';
+import { executeNodeRunsList } from './node-runs-list.repository.js';
 import { ensureFlowRun } from './runtime-queries.repository.js';
 import { recordAdapterFailure } from './effect-commands.repository.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
@@ -144,31 +145,14 @@ export class FlowRunLifecycle {
 
   listNodeRuns(query: RuntimeFilterInput = {}): Promise<Record<string, unknown>> {
     const { limit, offset, page, pageSize } = pageLimitOffset(query);
-    const where: string[] = [];
-    const values: unknown[] = [];
-    addUuidFilter(where, values, 'nr.run_id', query.runId);
-    addTextFilter(where, values, 'nr.status', query.status);
-    const whereSql = where.length > 0 ? ` where ${where.join(' and ')}` : '';
+    const runId = optionalString(query.runId);
+    const status = optionalString(query.status);
 
     return this.db.tx(async (trx) => {
-      const rows = await trx.query<FlowRow>(
-        `
-          select nr.*, n.code as node_code, n.name as node_name, n.kind
-          from flow.node_runs nr
-          join flow.nodes n on n.id = nr.node_id
-          ${whereSql}
-          order by nr.opened_at desc, nr.id desc
-          limit $${values.length + 1} offset $${values.length + 2}
-        `,
-        [...values, limit, offset],
-      );
-      const total = await trx.query<{ total: string }>(
-        `select count(*)::text as total from flow.node_runs nr${whereSql}`,
-        values,
-      );
+      const { rows, total } = await executeNodeRunsList(trx, runId, status, limit, offset);
       return {
-        data: rows.rows.map(camelizeRow),
-        meta: { page, pageSize, total: Number(total.rows[0]?.total ?? 0) },
+        data: rows.map(camelizeRow),
+        meta: { page, pageSize, total: Number(total[0]?.total ?? 0) },
       };
     }, {
       role: 'reader',

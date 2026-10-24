@@ -352,7 +352,7 @@ export class FlowFormsService {
     const config = FORM_TABLES[key];
     return this.db.tx(async (trx) => {
       await this.assertExists(trx, config.sqlName, id, 'Flow row not found');
-      await trx.softDelete(config.softDeleteTable as never, id);
+      await trx.softDelete(config.softDeleteTable, id);
       return { id, deleted: true };
     });
   }

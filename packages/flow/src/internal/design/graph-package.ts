@@ -15,7 +15,9 @@ import {
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database, Transaction } from '@stynx-nyx/data';
-import type { FlowGraphExportDocument, FlowGraphImportDocument, FlowJsonObject } from '../../types.js';
+import type { z } from 'zod';
+import type { graphImportSchema } from '../../validation.js';
+import type { FlowGraphExportDocument, FlowJsonObject } from '../../types.js';
 import {
   camelizeDesignRow,
   graphPublishMeta,
@@ -25,6 +27,8 @@ import {
   withGraphPublishState,
   FlowDesignTableStore,
 } from './design-table-store.js';
+
+type GraphImportInput = z.output<typeof graphImportSchema>;
 
 type PublishGraphInput = {
   expectedDraftVersion?: string | undefined;
@@ -90,7 +94,7 @@ export class FlowGraphPackage {
     });
   }
 
-  importGraph(document: FlowGraphImportDocument): Promise<FlowGraphExportDocument> {
+  importGraph(document: GraphImportInput): Promise<FlowGraphExportDocument> {
     this.validateImport(document);
 
     return this.db.tx(async (trx) => {
@@ -191,7 +195,7 @@ export class FlowGraphPackage {
     };
   }
 
-  private validateImport(document: FlowGraphImportDocument): void {
+  private validateImport(document: GraphImportInput): void {
     const nodeCodes = new Set<string>();
     let hasStart = false;
     for (const node of document.nodes) {

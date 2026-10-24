@@ -282,7 +282,7 @@ export class FlowDesignTableStore {
     const config = TABLES[key];
     return this.db.tx(async (trx) => {
       await this.getRowFromTransaction(trx, config, id);
-      await trx.softDelete(config.softDeleteTable as never, id);
+      await trx.softDelete(config.softDeleteTable, id);
       return { id, deleted: true };
     });
   }
