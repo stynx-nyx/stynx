@@ -2900,11 +2900,245 @@ function assertCampaignVersionStage(root) {
   };
 }
 
-test('final registry policy candidate equals the root and all 47 publishable manifest versions', () => {
-  const observation = assertCampaignVersionStage(repoRoot);
-  assert.ok(['PREVERSION', 'VERSIONED'].includes(observation.stage));
-  assert.equal(observation.target, currentCandidate);
+// ADR0036: this is a consumed-campaign predicate fixture, not evidence that
+// today's development checkout has consumed its next release's changesets.
+test('consumed campaign fixture retains final registry policy root and all 47 manifest equalities', () => {
+  const fixture = createCampaignStageFixture({ version: currentCandidate, pending: false });
+  try {
+    const observation = assertCampaignVersionStage(fixture.root);
+    assert.ok(['PREVERSION', 'VERSIONED'].includes(observation.stage));
+    assert.equal(observation.stage, 'VERSIONED');
+    assert.equal(observation.target, currentCandidate);
+    assert.equal(observation.packageCount, 47);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+function observeDevelopmentWorkspace(root) {
+  const candidate = currentCandidate;
+  const rootManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  const publishablePackages = collectPublicPackages(root);
+  const config = JSON.parse(readFileSync(join(root, '.changeset/config.json'), 'utf8'));
+  const roster = JSON.parse(
+    readFileSync(join(root, 'law/policy/stynx-package-roster.json'), 'utf8'),
+  );
+  const anomaly = JSON.parse(
+    readFileSync(join(root, 'law/policy/registry-version-anomalies.json'), 'utf8'),
+  );
+
+  // Retain the live policy identities and actual census without assigning a
+  // final publication stage from version equality.
+  assert.equal(registryVersionPolicyConstants.candidate, candidate);
+  assert.equal(registryVersionPolicyConstants.previousCandidate, previousCandidate);
+  assert.equal(anomaly.next_unified_version, candidate);
+  assert.equal(anomaly.anomalies[0].allowed_candidate, candidate);
+  assert.deepEqual(validateReleaseVersionPolicy(root, config), []);
+  assert.equal(publishablePackages.length, 47);
+  const names = publishablePackages.map(({ manifest }) => manifest.name).sort();
+  const governedNames = [...packageRoster.publishable_packages].sort();
+  assert.equal(new Set(names).size, 47);
+  assert.deepEqual(names, governedNames);
+  assert.equal(roster.counts.publishable, 47);
+  assert.deepEqual([...roster.publishable_packages].sort(), governedNames);
+  assert.equal(new Set(roster.publishable_packages).size, 47);
+  assert.deepEqual(config.fixed, [config.fixed[0]]);
+  assert.equal(new Set(config.fixed[0]).size, 47);
+  assert.deepEqual([...config.fixed[0]].sort(), governedNames);
+  assert.equal(fixedGroupVersion.readPreState(root), null);
+  const pending = readPendingChangesets(root);
+  for (const { file, releases, summary } of pending) {
+    if (file === '.changeset/smart-friends-grab.md') {
+      // This campaign's reviewed CLI-produced acknowledgement declares no release.
+      // It remains in the full consumption census and cannot satisfy the patch plan.
+      assert.deepEqual(readFileSync(join(root, file)), Buffer.from('---\n---\n'));
+      assert.deepEqual(releases, []);
+      assert.equal(summary, '');
+    } else if (releases.length === 0) {
+      // A no-release acknowledgement (e.g. curly-parts-fly, DEVAI v3 wave-1 tool items): exactly
+      // empty front matter plus a stated reason. It declares nothing and cannot satisfy a patch plan.
+      assert.ok(
+        readFileSync(join(root, file), 'utf8').startsWith('---\n---\n'),
+        `${file}: a no-release acknowledgement must have exactly empty front matter`,
+      );
+      assert.ok(summary.trim().length > 0, `${file}: a no-release acknowledgement must state why`);
+    } else {
+      assert.ok(releases.length > 0, `${file}: a stable changeset must declare a release`);
+    }
+    assert.equal(new Set(releases.map(({ name }) => name)).size, releases.length);
+    for (const { name, type } of releases) {
+      assert.ok(names.includes(name), `${file}: unsupported package ${name}`);
+      assert.ok(!config.ignore?.includes(name), `${file}: ignored package ${name}`);
+      assert.ok(['patch', 'minor', 'major'].includes(type), `${file}: unsupported bump ${type}`);
+    }
+  }
+  const plan = planFixedGroupVersion(root, config);
+  assert.equal(plan.current, rootManifest.version);
+  assert.deepEqual(
+    plan.changesets,
+    pending.map(({ file, releases }) => ({
+      file,
+      types: [...new Set(releases.map(({ type }) => type))],
+    })),
+  );
+  const changesets = pending.map(({ file, releases, summary }) => ({
+    file,
+    releases,
+    summary,
+    sha256: createHash('sha256')
+      .update(readFileSync(join(root, file)))
+      .digest('hex'),
+  }));
+
+  assert.equal(rootManifest.version, currentCandidate);
+  for (const { manifest } of publishablePackages) {
+    assert.equal(manifest.version, rootManifest.version);
+  }
+  assert.equal(
+    plan.expected,
+    plan.bump === null ? rootManifest.version : incrementVersion(rootManifest.version, plan.bump),
+  );
+  assert.equal(plan.bump, computeFixedGroupBump(pending, names));
+  return {
+    purpose: 'DEVELOPMENT_OBSERVATION',
+    publicationReady: false,
+    current: rootManifest.version,
+    registryPolicyCandidate: candidate,
+    packageCount: publishablePackages.length,
+    names,
+    plan,
+    changesets,
+  };
+}
+
+function observationInputBytes(root) {
+  const paths = [
+    'package.json',
+    '.changeset/config.json',
+    'law/policy/stynx-package-roster.json',
+    'law/policy/registry-version-anomalies.json',
+    'tools/create-stynx-app/template/package.json',
+    ...collectPublicPackages(root).map(({ manifestPath }) => relative(root, manifestPath)),
+    ...readPendingChangesets(root).map(({ file }) => file),
+  ];
+  return new Map(paths.map((path) => [path, readFileSync(join(root, path))]));
+}
+
+test('live development observation retains actual 47 manifests and the complete pending security plan without publication credit', () => {
+  const before = observationInputBytes(repoRoot);
+  const observation = observeDevelopmentWorkspace(repoRoot);
+  assert.equal(observation.purpose, 'DEVELOPMENT_OBSERVATION');
+  assert.equal(observation.publicationReady, false);
+  assert.equal(Object.hasOwn(observation, 'stage'), false);
+  assert.equal(observation.current, currentCandidate);
   assert.equal(observation.packageCount, 47);
+  assert.deepEqual(observation.names, [...packageRoster.publishable_packages].sort());
+  assert.equal(observation.registryPolicyCandidate, currentCandidate);
+  const security = observation.changesets.find(
+    ({ file }) => file === '.changeset/s8-dependency-security-remediation.md',
+  );
+  assert.ok(security, 'the required security changeset must remain unconsumed');
+  assert.deepEqual(security.releases.map(({ name }) => name).sort(), observation.names);
+  assert.ok(security.releases.every(({ type }) => type === 'patch'));
+  assert.equal(
+    security.sha256,
+    createHash('sha256').update(before.get(security.file)).digest('hex'),
+  );
+  assert.equal(observation.plan.bump, 'patch');
+  assert.equal(observation.plan.expected, incrementVersion(currentCandidate, 'patch'));
+  assert.deepEqual(observationInputBytes(repoRoot), before);
+});
+
+for (const bump of ['patch', 'minor', 'major', null]) {
+  test(`development observation computes ${bump ?? 'no effective'} release arithmetic without choosing a campaign`, () => {
+    const fixture = createCampaignStageFixture({ version: currentCandidate, pending: false });
+    try {
+      if (bump !== null)
+        writeFileSync(
+          fixture.changesetPath,
+          `---\n'${fixture.names[0]}': ${bump}\n---\n\nFuture work.\n`,
+        );
+      else writeFileSync(fixture.changesetPath, '---\n---\n\nDocumentation only.\n');
+      const before = observationInputBytes(fixture.root);
+      const observation = observeDevelopmentWorkspace(fixture.root);
+      assert.equal(observation.purpose, 'DEVELOPMENT_OBSERVATION');
+      assert.equal(observation.publicationReady, false);
+      assert.equal(observation.current, currentCandidate);
+      assert.equal(observation.plan.bump, bump);
+      assert.equal(
+        observation.plan.expected,
+        bump === null ? currentCandidate : incrementVersion(currentCandidate, bump),
+      );
+      assert.equal(observation.changesets.length, 1);
+      assert.equal(
+        observation.changesets[0].sha256,
+        createHash('sha256').update(before.get('.changeset/feature.md')).digest('hex'),
+      );
+      assert.deepEqual(observationInputBytes(fixture.root), before);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+}
+
+test('the same pending security bytes are development input but cannot be a consumed final candidate or publication', async () => {
+  const { assertNoPendingPreChangesets } =
+    await import('../../scripts/lib/publication-dist-tag.mjs');
+  const fixture = createCampaignStageFixture({ version: currentCandidate, pending: false });
+  try {
+    const bytes = readFileSync(join(repoRoot, '.changeset/s8-dependency-security-remediation.md'));
+    writeFileSync(fixture.changesetPath, bytes);
+    const before = observationInputBytes(fixture.root);
+    assert.equal(observeDevelopmentWorkspace(fixture.root).plan.bump, 'patch');
+    assert.throws(
+      () => assertCampaignVersionStage(fixture.root),
+      /versioned candidate must consume/,
+    );
+    assert.throws(
+      () => assertNoPendingPreChangesets({ preState: null, changesetIds: ['feature'] }),
+      (error) =>
+        error?.code === 'PUBLICATION_DIST_TAG_INVALID' &&
+        /stable publication has pending changesets/.test(error.message),
+    );
+    assert.deepEqual(observationInputBytes(fixture.root), before);
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test('actual ordinary release policy permits development while registry mode refuses pending changesets before registry access', () => {
+  const before = observationInputBytes(repoRoot);
+  const env = { ...process.env };
+  for (const key of ['NODE_AUTH_TOKEN', 'NPM_TOKEN', 'GH_TOKEN', 'GITHUB_TOKEN']) delete env[key];
+  const script = join(repoRoot, 'scripts/verify-release-policy.mjs');
+  const ordinary = spawnSync(process.execPath, [script], {
+    cwd: repoRoot,
+    env,
+    encoding: 'utf8',
+    timeout: 10_000,
+  });
+  assert.ifError(ordinary.error);
+  assert.equal(ordinary.status, 0, ordinary.stderr);
+  assert.equal(ordinary.signal, null);
+  assert.match(ordinary.stdout, /Verified release policy for 47 publishable packages/);
+  const publication = spawnSync(
+    process.execPath,
+    [script, '--registry-monotonicity', '--candidate-from-policy'],
+    { cwd: repoRoot, env, encoding: 'utf8', timeout: 10_000 },
+  );
+  assert.ifError(publication.error);
+  assert.equal(publication.status, 1);
+  assert.equal(publication.signal, null);
+  assert.match(
+    publication.stderr,
+    /PUBLICATION_DIST_TAG_INVALID: stable publication has pending changesets/,
+  );
+  assert.doesNotMatch(publication.stdout, /Verified release policy/);
+  assert.match(
+    repositorySource('scripts/publish-release-plan.mjs'),
+    /assertNoPendingPreChangesets/,
+  );
+  assert.deepEqual(observationInputBytes(repoRoot), before);
 });
 
 function createCampaignStageFixture({ version = preflightLatest, pending = true } = {}) {
@@ -3193,6 +3427,38 @@ for (const [label, mutate] of campaignStageRefusals) {
     }
   });
 }
+
+// Reuse each existing malformed-data mutation against the independent live
+// observer. Only campaign-purpose requirements differ: development may have no
+// changeset, or a valid patch/minor plan, without becoming a final candidate.
+for (const [label, mutate] of campaignStageRefusals.filter(
+  ([label]) => !['missing changesets', 'minor plan', 'patch plan'].includes(label),
+)) {
+  test(`development observation refuses ${label}`, () => {
+    const fixture = createCampaignStageFixture({ version: currentCandidate });
+    try {
+      mutate(fixture);
+      assert.throws(() => observeDevelopmentWorkspace(fixture.root));
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  });
+}
+
+test('development observation refuses duplicate release declarations and preserves an empty pending census', () => {
+  const fixture = createCampaignStageFixture({ version: currentCandidate, pending: false });
+  try {
+    assert.equal(observeDevelopmentWorkspace(fixture.root).plan.bump, null);
+    assert.deepEqual(observeDevelopmentWorkspace(fixture.root).changesets, []);
+    writeFileSync(
+      fixture.changesetPath,
+      `---\n'${fixture.names[0]}': patch\n'${fixture.names[0]}': minor\n---\n`,
+    );
+    assert.throws(() => observeDevelopmentWorkspace(fixture.root));
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
 
 test('campaign version stages refuse a wrong uniform source and unconsumed final changesets', () => {
   for (const options of [
