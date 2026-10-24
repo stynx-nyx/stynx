@@ -73,15 +73,12 @@ function applyRolePrefix(sql: string, prefix: string): string {
     : sql.replace(PLATFORM_ROLE_IDENTIFIER, (_identifier, role: string) => `${prefix}_${role}`);
 }
 
-function defaultClientFactory(options: MigrationClientFactoryOptions): MigrationClient {
-  const client = new Client(
+type InternalMigrationClient = Client | MigrationClient;
+
+function defaultClientFactory(options: MigrationClientFactoryOptions) {
+  return new Client(
     options.connectionString === undefined ? {} : { connectionString: options.connectionString },
   );
-  return {
-    connect: async () => { await client.connect(); },
-    end: () => client.end(),
-    query: client.query.bind(client),
-  };
 }
 
 function migrationDirectory(rootDir: string, options?: MigrationOptions): string {
@@ -104,7 +101,7 @@ function listMigrationSpecs(rootDir: string, options?: MigrationOptions): Migrat
 async function withClient<T>(
   connectionString: string | undefined,
   options: MigrationOptions | undefined,
-  fn: (client: MigrationClient) => Promise<T>,
+  fn: (client: InternalMigrationClient) => Promise<T>,
 ): Promise<T> {
   const client = (options?.clientFactory ?? defaultClientFactory)(
     connectionString === undefined ? {} : { connectionString },
@@ -117,7 +114,7 @@ async function withClient<T>(
   }
 }
 
-async function ensureMigrationTables(client: MigrationClient): Promise<void> {
+async function ensureMigrationTables(client: InternalMigrationClient): Promise<void> {
   await executeRawScript(client, 'create schema if not exists core');
   await executeRawScript(client, `
     create table if not exists core.schema_migrations (
@@ -137,12 +134,12 @@ async function ensureMigrationTables(client: MigrationClient): Promise<void> {
   `);
 }
 
-async function appliedMigrationIds(client: MigrationClient): Promise<string[]> {
+async function appliedMigrationIds(client: InternalMigrationClient): Promise<string[]> {
   const rows = await executeTypedQuery(client, appliedMigrationIdsQuery, []);
   return rows.map((row) => row.id);
 }
 
-async function promoteBootstrapObjectsToOwner(client: MigrationClient, prefix: string): Promise<void> {
+async function promoteBootstrapObjectsToOwner(client: InternalMigrationClient, prefix: string): Promise<void> {
   // `prefix` is a validated lower-case identifier (rolePrefixOf).
   const owner = `${prefix}_owner`;
   await executeRawScript(client, `ALTER SCHEMA core OWNER TO ${owner}`);
@@ -151,7 +148,7 @@ async function promoteBootstrapObjectsToOwner(client: MigrationClient, prefix: s
   await executeRawScript(client, `SET ROLE ${owner}`);
 }
 
-async function latestAppliedIds(client: MigrationClient, limit: number): Promise<string[]> {
+async function latestAppliedIds(client: InternalMigrationClient, limit: number): Promise<string[]> {
   const rows = await executeTypedQuery(client, latestAppliedIdsQuery, [limit]);
   return rows.map((row) => row.id);
 }
@@ -160,7 +157,7 @@ function checksum(sql: string): string {
   return `${sql.length}:${Buffer.from(sql, 'utf8').toString('base64url').slice(0, 24)}`;
 }
 
-async function applyMigrationUp(client: MigrationClient, spec: MigrationSpec, prefix: string): Promise<void> {
+async function applyMigrationUp(client: InternalMigrationClient, spec: MigrationSpec, prefix: string): Promise<void> {
   // The checksum stays the file's: the prefix is applied, never recorded.
   const sql = readFileSync(spec.upPath, 'utf8');
   await executeRawScript(client, 'begin');
@@ -175,7 +172,7 @@ async function applyMigrationUp(client: MigrationClient, spec: MigrationSpec, pr
   }
 }
 
-async function applyMigrationDown(client: MigrationClient, spec: MigrationSpec, prefix: string): Promise<void> {
+async function applyMigrationDown(client: InternalMigrationClient, spec: MigrationSpec, prefix: string): Promise<void> {
   if (!spec.downPath) {
     throw new Error(`Migration ${spec.id} is not rollbackable: missing .down.sql pair`);
   }

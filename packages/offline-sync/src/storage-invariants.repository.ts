@@ -88,20 +88,6 @@ export const finiteNumberingReconciliations = defineQuery({
   params: z.tuple([]), row: findingRow, expects: 'many',
 });
 
-export const finiteInstantQueries = [
-  { table: 'numbering_ranges', query: finiteNumberingRanges },
-  { table: 'numbering_reservations', query: finiteNumberingReservations },
-  { table: 'sync_queue_items', query: finiteSyncQueueItems },
-  { table: 'sync_conflicts', query: finiteSyncConflicts },
-  { table: 'sync_batches', query: finiteSyncBatches },
-  { table: 'sync_batch_transport_keys', query: finiteSyncBatchTransportKeys },
-  { table: 'sync_item_receipts', query: finiteSyncItemReceipts },
-  { table: 'sync_item_attempts', query: finiteSyncItemAttempts },
-  { table: 'numbering_consumption', query: finiteNumberingConsumption },
-  { table: 'sync_conflict_evidence', query: finiteSyncConflictEvidence },
-  { table: 'sync_conflict_actions', query: finiteSyncConflictActions },
-  { table: 'numbering_reconciliations', query: finiteNumberingReconciliations },
-] as const;
 
 // These envelopes retain evidence payloads for the existing integrity validators.
 // The diagnostic reader must report corrupt evidence rather than normalize it away.

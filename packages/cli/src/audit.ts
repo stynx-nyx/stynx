@@ -31,13 +31,8 @@ export interface AuditVerifyResult {
   tenants: AuditVerifyTenantResult[];
 }
 
-function defaultClientFactory(options: AuditVerifyClientFactoryOptions): AuditVerifyClient {
-  const client = new Client({ connectionString: options.connectionString });
-  return {
-    connect: async () => { await client.connect(); },
-    end: () => client.end(),
-    query: client.query.bind(client),
-  };
+function defaultClientFactory(options: AuditVerifyClientFactoryOptions) {
+  return new Client({ connectionString: options.connectionString });
 }
 
 function sanitizeLimit(limit: number | undefined): number {
@@ -48,7 +43,7 @@ function sanitizeLimit(limit: number | undefined): number {
 }
 
 async function verifyTenant(
-  client: AuditVerifyClient,
+  client: Client | AuditVerifyClient,
   tenantId: string,
   limit: number,
 ): Promise<AuditVerifyTenantResult> {

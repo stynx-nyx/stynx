@@ -45,7 +45,7 @@ export const enterItemReadOnly = defineQuery({name:'outbox.enterItemReadOnly',te
 export const readOwnershipWaiting = defineQuery({name:'outbox.readOwnershipWaiting',text:sql`select state from outbox.legacy_ownership where id = true for share `,params:z.tuple([]),row:z.object({state:z.enum(['LEGACY','NEW'])}),expects:'many'});
 export const readOwnershipNowait = defineQuery({name:'outbox.readOwnershipNowait',text:sql`select state from outbox.legacy_ownership where id = true for share nowait`,params:z.tuple([]),row:z.object({state:z.enum(['LEGACY','NEW'])}),expects:'many'});
 
-export const cutoverLockQueries = [
+export const cutoverLockQueries = Object.freeze([
  defineQuery({name:'outbox.cutoverLock.messages',text:sql`lock table outbox.messages in share row exclusive mode`,params:z.tuple([]),row:z.object({}),expects:'none'}),
  defineQuery({name:'outbox.cutoverLock.events',text:sql`lock table outbox.events in share row exclusive mode`,params:z.tuple([]),row:z.object({}),expects:'none'}),
  defineQuery({name:'outbox.cutoverLock.event_delivery',text:sql`lock table outbox.event_delivery in share row exclusive mode`,params:z.tuple([]),row:z.object({}),expects:'none'}),
@@ -54,7 +54,7 @@ export const cutoverLockQueries = [
  defineQuery({name:'outbox.cutoverLock.event_acks',text:sql`lock table outbox.event_acks in share row exclusive mode`,params:z.tuple([]),row:z.object({}),expects:'none'}),
  defineQuery({name:'outbox.cutoverLock.tenant_clock',text:sql`lock table outbox.tenant_clock in share row exclusive mode`,params:z.tuple([]),row:z.object({}),expects:'none'}),
  defineQuery({name:'outbox.cutoverLock.legacy_ownership',text:sql`lock table outbox.legacy_ownership in share row exclusive mode`,params:z.tuple([]),row:z.object({}),expects:'none'}),
-] as const;
+] as const);
 
 export const cutoverAuditedRelations = defineQuery({name:'outbox.cutoverAuditedRelations',text:sql`with recursive target(oid) as (
            select c.oid from pg_class c join pg_namespace n on n.oid=c.relnamespace

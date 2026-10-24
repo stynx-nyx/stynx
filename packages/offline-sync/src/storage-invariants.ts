@@ -1,6 +1,6 @@
-import { overlayInspectInvariantFindings, overlayInspectRangeCreationEvidence, overlayInspectReconciliationEvidence, overlayInspectReservationScopes, overlayInspectImportLedger, overlayInspectArchivedResponses, overlayFiniteInstantQueries, type OfflineImportOverlayParams } from './import-overlay.repository.js';
+import { overlayInspectInvariantFindings, overlayInspectRangeCreationEvidence, overlayInspectReconciliationEvidence, overlayInspectReservationScopes, overlayInspectImportLedger, overlayInspectArchivedResponses, finiteInstantQueryPairs, type OfflineImportOverlayParams } from './import-overlay.repository.js';
 import { executeTypedQuery, type StorageVerifierTransaction } from '@stynx-nyx/data';
-import { finiteInstantQueries, inspectInvariantFindings, inspectRangeCreationEvidence, inspectReconciliationEvidence, inspectReservationScopes, inspectImportLedger, inspectArchivedResponses } from './storage-invariants.repository.js';
+import { inspectInvariantFindings, inspectRangeCreationEvidence, inspectReconciliationEvidence, inspectReservationScopes, inspectImportLedger, inspectArchivedResponses } from './storage-invariants.repository.js';
 import {
   validRangeCreationEvidence,
   validReconciliationEvidence,
@@ -18,8 +18,7 @@ export async function inspectOfflineRows(
   const result = await (overlay ? executeTypedQuery(trx, overlayInspectInvariantFindings, overlay) : executeTypedQuery(trx, inspectInvariantFindings, []));
   const findings: { tenantId?: string; finding: string; count: string }[] = [...result];
   // Every persisted instant used by a public mapper must be finite, including old unkeyed rows.
-  for (const [index, { table, query }] of finiteInstantQueries.entries()) {
-    const overlayQuery = overlayFiniteInstantQueries[index];
+  for (const { table, query, overlayQuery } of finiteInstantQueryPairs) {
     if (overlay && !overlayQuery) throw new TypeError('Missing finite invariant overlay');
     const finiteFindings = await (overlay && overlayQuery ? executeTypedQuery(trx, overlayQuery, overlay) : executeTypedQuery(trx, query, []));
     for (const row of finiteFindings)

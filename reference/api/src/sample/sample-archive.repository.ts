@@ -42,10 +42,10 @@ const lookupWorkItemLockArchive = defineQuery({
   expects: 'zero-or-one',
 });
 
-export const sampleArchiveLookups = {
+export const sampleArchiveLookups = Object.freeze({
   'archive.sample_record': lookupRecordArchive,
   'archive.sample_record_note': lookupRecordNoteArchive,
   'archive.sample_work_item': lookupWorkItemArchive,
   'archive.sample_work_item_entry': lookupWorkItemEntryArchive,
   'archive.sample_work_item_lock': lookupWorkItemLockArchive,
-} as const;
+} as const);

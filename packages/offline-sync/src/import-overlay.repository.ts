@@ -769,17 +769,17 @@ export const overlayInspectArchivedResponses = defineQuery({
   params: overlayParams, row: inspectArchivedResponses.row, expects: 'many',
 });
 
-export const overlayFiniteInstantQueries = [
-  overlayFiniteNumberingRanges,
-  overlayFiniteNumberingReservations,
-  overlayFiniteSyncQueueItems,
-  overlayFiniteSyncConflicts,
-  overlayFiniteSyncBatches,
-  overlayFiniteSyncBatchTransportKeys,
-  overlayFiniteSyncItemReceipts,
-  overlayFiniteSyncItemAttempts,
-  overlayFiniteNumberingConsumption,
-  overlayFiniteSyncConflictEvidence,
-  overlayFiniteSyncConflictActions,
-  overlayFiniteNumberingReconciliations,
-];
+export const finiteInstantQueryPairs = Object.freeze([
+  Object.freeze({ table: 'numbering_ranges', query: finiteNumberingRanges, overlayQuery: overlayFiniteNumberingRanges }),
+  Object.freeze({ table: 'numbering_reservations', query: finiteNumberingReservations, overlayQuery: overlayFiniteNumberingReservations }),
+  Object.freeze({ table: 'sync_queue_items', query: finiteSyncQueueItems, overlayQuery: overlayFiniteSyncQueueItems }),
+  Object.freeze({ table: 'sync_conflicts', query: finiteSyncConflicts, overlayQuery: overlayFiniteSyncConflicts }),
+  Object.freeze({ table: 'sync_batches', query: finiteSyncBatches, overlayQuery: overlayFiniteSyncBatches }),
+  Object.freeze({ table: 'sync_batch_transport_keys', query: finiteSyncBatchTransportKeys, overlayQuery: overlayFiniteSyncBatchTransportKeys }),
+  Object.freeze({ table: 'sync_item_receipts', query: finiteSyncItemReceipts, overlayQuery: overlayFiniteSyncItemReceipts }),
+  Object.freeze({ table: 'sync_item_attempts', query: finiteSyncItemAttempts, overlayQuery: overlayFiniteSyncItemAttempts }),
+  Object.freeze({ table: 'numbering_consumption', query: finiteNumberingConsumption, overlayQuery: overlayFiniteNumberingConsumption }),
+  Object.freeze({ table: 'sync_conflict_evidence', query: finiteSyncConflictEvidence, overlayQuery: overlayFiniteSyncConflictEvidence }),
+  Object.freeze({ table: 'sync_conflict_actions', query: finiteSyncConflictActions, overlayQuery: overlayFiniteSyncConflictActions }),
+  Object.freeze({ table: 'numbering_reconciliations', query: finiteNumberingReconciliations, overlayQuery: overlayFiniteNumberingReconciliations }),
+]);

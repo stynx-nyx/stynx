@@ -459,7 +459,12 @@ export class ReferenceSampleService {
 
   private async hardDelete(id: string, config: ArchiveDeleteConfig) {
     return this.database.tx(async (trx) => {
-      const archived = await trx.run(sampleArchiveLookups[config.archiveTable], [id, this.requireTenantId()]);
+      const archiveTable = config.archiveTable;
+      const tenantId = this.requireTenantId();
+      if (typeof archiveTable !== 'string' || !Object.hasOwn(sampleArchiveLookups, archiveTable)) {
+        throw new TypeError('Unknown sample archive table');
+      }
+      const archived = await trx.run(sampleArchiveLookups[archiveTable], [id, tenantId]);
       const archiveId = archived?.archive_id;
       if (!archiveId) {
         throw new NotFoundException('RESOURCE_NOT_FOUND');
