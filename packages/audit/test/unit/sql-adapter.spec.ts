@@ -1,15 +1,54 @@
+import { NotFoundError, QueryArgumentError, QueryRowValidationError } from '@stynx-nyx/data';
 import { AuditSqlReader, AuditSqlSink } from '../../src/sql-adapter.js';
 
-function makeExecutor(responses: unknown[] = []) {
+function makeExecutor(responses: unknown[] = [], fallback: unknown = { rows: [] }) {
   let i = 0;
-  const query = vi.fn(async () => responses[i++] ?? { rows: [] });
+  const query = vi.fn(async () => responses[i++] ?? fallback);
   return { query };
 }
 
 describe('AuditSqlSink', () => {
+  describe.each(['legacy', 'transaction'] as const)('%s checked function results', (kind) => {
+    const event = { occurredAt: 'now', action: 'a', entity: 'e' };
+    function write(executor: ReturnType<typeof makeExecutor>) {
+      const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
+      return kind === 'legacy' ? sink.write(event) : sink.writeInTransaction(event, executor);
+    }
+
+    it('rejects an absent physical SELECT-void row', async () => {
+      const executor = makeExecutor([{ rows: [] }]);
+      await expect(write(executor)).rejects.toBeInstanceOf(NotFoundError);
+      expect(executor.query).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects a populated malformed row without leaking its contents', async () => {
+      const key = kind === 'legacy' ? 'write' : 'write_command_event';
+      const executor = makeExecutor([{ rows: [{ [key]: 'private-driver-payload' }] }]);
+      const result = write(executor);
+      await expect(result).rejects.toBeInstanceOf(QueryRowValidationError);
+      await expect(result).rejects.not.toThrow('private-driver-payload');
+      expect(executor.query).toHaveBeenCalledTimes(1);
+    });
+
+    it('retains the exact driver error identity and one invocation', async () => {
+      const failure = new Error('driver failure');
+      const executor = { query: vi.fn(async () => { throw failure; }) };
+      await expect(write(executor)).rejects.toBe(failure);
+      expect(executor.query).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it.each(['tenantId', 'actorId'] as const)('rejects malformed %s before legacy SQL execution', async (field) => {
+    const executor = makeExecutor([], { rows: [{ write: '' }] });
+    const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
+    await expect(sink.write({ occurredAt: 'now', action: 'a', entity: 'e', [field]: 'not-a-uuid' }))
+      .rejects.toBeInstanceOf(QueryArgumentError);
+    expect(executor.query).not.toHaveBeenCalled();
+  });
+
   it('writes a command audit event through the supplied transaction, never its legacy executor', async () => {
     const legacy = makeExecutor();
-    const transaction = makeExecutor();
+    const transaction = makeExecutor([], { rows: [{ write_command_event: '' }] });
     const sink = new AuditSqlSink(legacy, { mode: 'audit_write_function' });
     const event = {
       occurredAt: '2026-09-28T12:00:00.000Z',
@@ -51,7 +90,7 @@ describe('AuditSqlSink', () => {
   });
 
   it('sends nulls for absent optional command fields and uses explicit composite keys', async () => {
-    const transaction = makeExecutor();
+    const transaction = makeExecutor([], { rows: [{ write_command_event: '' }] });
     const sink = new AuditSqlSink(makeExecutor(), { mode: 'audit_write_function' });
 
     await sink.writeInTransaction({ occurredAt: 'now', action: 'updated', entity: 'item' }, transaction);
@@ -80,15 +119,15 @@ describe('AuditSqlSink', () => {
 
   describe('mode: audit_write_function', () => {
     it('calls SELECT audit.write with the 13 expected params', async () => {
-      const executor = makeExecutor();
+      const executor = makeExecutor([], { rows: [{ write: '' }] });
       const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
       await sink.write({
         occurredAt: '2026-05-18T00:00:00Z',
         action: 'document.created',
         entity: 'document',
         entityId: 'doc-1',
-        tenantId: 't-1',
-        actorId: 'u-1',
+        tenantId: '11111111-1111-1111-1111-111111111111',
+        actorId: '22222222-2222-2222-2222-222222222222',
         actorRole: 'admin',
         requestId: 'req-1',
         ipAddress: '1.2.3.4',
@@ -100,7 +139,7 @@ describe('AuditSqlSink', () => {
       const [sql, params] = executor.query.mock.calls[0]!;
       expect(sql).toContain('SELECT audit.write');
       expect(params).toHaveLength(13);
-      expect((params as unknown[])[0]).toBe('t-1');
+      expect((params as unknown[])[0]).toBe('11111111-1111-1111-1111-111111111111');
       expect((params as unknown[])[3]).toBe('document.created');
       expect((params as unknown[])[4]).toBe('document');
       // metadata, oldData, newData get stringified
@@ -110,7 +149,7 @@ describe('AuditSqlSink', () => {
     });
 
     it('synthesizes pk from entityId when pk not provided', async () => {
-      const executor = makeExecutor();
+      const executor = makeExecutor([], { rows: [{ write: '' }] });
       const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
       await sink.write({
         occurredAt: 'now',
@@ -123,7 +162,7 @@ describe('AuditSqlSink', () => {
     });
 
     it('passes pk through when provided explicitly', async () => {
-      const executor = makeExecutor();
+      const executor = makeExecutor([], { rows: [{ write: '' }] });
       const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
       await sink.write({
         occurredAt: 'now',
@@ -136,7 +175,7 @@ describe('AuditSqlSink', () => {
     });
 
     it('uses correlationId when requestId is absent', async () => {
-      const executor = makeExecutor();
+      const executor = makeExecutor([], { rows: [{ write: '' }] });
       const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
       await sink.write({
         occurredAt: 'now',
@@ -149,7 +188,7 @@ describe('AuditSqlSink', () => {
     });
 
     it('sends nulls for absent fields', async () => {
-      const executor = makeExecutor();
+      const executor = makeExecutor([], { rows: [{ write: '' }] });
       const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
       await sink.write({ occurredAt: 'now', action: 'a', entity: 'e' });
       const [, params] = executor.query.mock.calls[0]!;
@@ -182,7 +221,7 @@ describe('AuditSqlSink', () => {
         pk: { id: 'eid-1' },
       });
       const [sql, params] = executor.query.mock.calls[0]!;
-      expect(sql).toContain('INSERT INTO public.audit_event');
+      expect(sql).toContain('INSERT INTO "public"."audit_event"');
       expect(params).toHaveLength(8);
       const meta = JSON.parse((params as string[])[7]);
       expect(meta.tenantId).toBe('t-1');
@@ -203,10 +242,47 @@ describe('AuditSqlSink', () => {
       });
       await sink.write({ occurredAt: 'now', action: 'a', entity: 'e' });
       const [sql] = executor.query.mock.calls[0]!;
-      expect(sql).toContain('INSERT INTO my_schema.my_table');
+      expect(sql).toContain('INSERT INTO "my_schema"."my_table"');
     });
   });
 });
+
+describe.each(['audit_log', 'stynx_events', 'porm_logged_actions'] as const)(
+  'AuditSqlReader %s timestamp representation preservation',
+  (mode) => {
+    it.each([
+      { value: new Date('2026-05-18T00:00:00.789Z'), expected: '2026-05-18T00:00:00.789Z' },
+      { value: 'custom-parser-timestamp', expected: 'custom-parser-timestamp' },
+      { value: Number.POSITIVE_INFINITY, expected: Number.POSITIVE_INFINITY },
+      { value: Number.NEGATIVE_INFINITY, expected: Number.NEGATIVE_INFINITY },
+    ])('maps only Date instances and retains other driver values: $expected', async ({ value, expected }) => {
+      const opaque = { extension: [null, true, { nested: 'preserved' }] };
+      const executor = makeExecutor([{ rows: [{
+        occurred_at: value, total: '9007199254740993',
+        operation: 'INSERT', op: 'INSERT', table_schema: 'app', schema_name: 'app',
+        table_name: 'users', entity: 'app.users', tags: opaque, payload: opaque,
+        metadata: opaque, old_data: opaque, new_data: opaque,
+      }] }]);
+      const result = await new AuditSqlReader(executor, { mode }).list();
+      expect(result.items[0]?.occurredAt).toBe(expected);
+      // This is the existing numeric conversion, including its precision limit.
+      expect(result.total).toBe(Number('9007199254740993'));
+      if (mode === 'audit_log') {
+        expect(result.items[0]?.metadata).toEqual({ tags: opaque, payload: opaque });
+      } else {
+        expect(result.items[0]?.oldData).toBe(opaque);
+        expect(result.items[0]?.newData).toBe(opaque);
+      }
+      expect(executor.query).toHaveBeenCalledTimes(1);
+    });
+
+    it('preserves InvalidDate RangeError after the driver returns', async () => {
+      const executor = makeExecutor([{ rows: [{ occurred_at: new Date(Number.NaN), total: 1 }] }]);
+      await expect(new AuditSqlReader(executor, { mode }).list()).rejects.toBeInstanceOf(RangeError);
+      expect(executor.query).toHaveBeenCalledTimes(1);
+    });
+  },
+);
 
 describe('AuditSqlReader.list', () => {
   describe('mode: audit_log', () => {
@@ -512,15 +588,15 @@ describe('AuditSqlReader.list', () => {
 // =============================================================================
 
 describe('AuditSqlSink — ?? null params (LogicalOperator survivors at src/sql-adapter.ts:88-100 + 130-135)', () => {
-  function makeExecutor(responses: unknown[] = []) {
+  function makeExecutor(responses: unknown[] = [], fallback: unknown = { rows: [] }) {
     let i = 0;
-    const query = vi.fn(async () => responses[i++] ?? { rows: [] });
+    const query = vi.fn(async () => responses[i++] ?? fallback);
     return { query };
   }
 
   describe('mode: audit_write_function — full param tuple', () => {
     it('coalesces undefined optionals to null (not undefined) at every slot', async () => {
-      const executor = makeExecutor();
+      const executor = makeExecutor([], { rows: [{ write: '' }] });
       const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
       // All optionals omitted; action, entity, occurredAt are required.
       await sink.write({ occurredAt: '2026-05-18T00:00:00Z', action: 'a', entity: 'e' });
@@ -546,14 +622,14 @@ describe('AuditSqlSink — ?? null params (LogicalOperator survivors at src/sql-
     });
 
     it('passes truthy optionals through verbatim (not nulled out)', async () => {
-      const executor = makeExecutor();
+      const executor = makeExecutor([], { rows: [{ write: '' }] });
       const sink = new AuditSqlSink(executor, { mode: 'audit_write_function' });
       await sink.write({
         occurredAt: '2026-05-18T00:00:00Z',
         action: 'a',
         entity: 'e',
-        tenantId: 'tenant-1',
-        actorId: 'actor-1',
+        tenantId: '11111111-1111-1111-1111-111111111111',
+        actorId: '22222222-2222-2222-2222-222222222222',
         actorRole: 'admin',
         entityId: 'entity-1',
         ipAddress: '1.2.3.4',
@@ -562,8 +638,8 @@ describe('AuditSqlSink — ?? null params (LogicalOperator survivors at src/sql-
       const [, params] = executor.query.mock.calls[0]!;
       // Mutation `?? null` → `&& null` on truthy operands collapses to null;
       // asserting the original value at each slot kills the mutation.
-      expect((params as unknown[])[0]).toBe('tenant-1');
-      expect((params as unknown[])[1]).toBe('actor-1');
+      expect((params as unknown[])[0]).toBe('11111111-1111-1111-1111-111111111111');
+      expect((params as unknown[])[1]).toBe('22222222-2222-2222-2222-222222222222');
       expect((params as unknown[])[2]).toBe('admin');
       expect((params as unknown[])[5]).toBe('entity-1');
       expect((params as unknown[])[7]).toBe('1.2.3.4');
