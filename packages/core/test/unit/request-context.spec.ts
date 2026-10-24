@@ -118,11 +118,13 @@ describe('RequestContext', () => {
     const seen = await mutator.runWithSystemContext('scheduled repair', async (context) => context);
     expect(seen.actorId).toBe(undefined);
     expect(seen).not.toHaveProperty('actorId');
-    expect(seen).toEqual(expect.objectContaining({
-      reason: 'scheduled repair',
-      requestId: expect.stringMatching(/^[0-9a-f-]{36}$/u),
-      startedAt: expect.any(Date),
-    }));
+    expect(seen).toEqual(
+      expect.objectContaining({
+        reason: 'scheduled repair',
+        requestId: expect.stringMatching(/^[0-9a-f-]{36}$/u),
+        startedAt: expect.any(Date),
+      }),
+    );
   });
 
   it('inherits actor id when opening a system context from an active request', async () => {
@@ -172,5 +174,48 @@ describe('RequestContext', () => {
     });
     expect(mutator.currentRequestId()).toBe('018f5502-9f95-7c6b-8c74-d1173ec95f14');
     expect(requestContext.snapshot()).toStrictEqual(first);
+  });
+
+  it('distinguishes omitted patch values from explicit clearing and keeps snapshots structurally strict', () => {
+    const cls = new FakeClsService();
+    const current = new RequestContext(cls as never);
+    const mutator = new RequestContextMutator(cls as never);
+    const required = { requestId: 'request-1', startedAt: new Date('2026-01-01T00:00:00.000Z') };
+    mutator.initialize({
+      ...required,
+      tenantId: 'tenant-1',
+      actorId: 'actor-1',
+      sessionId: 'session-1',
+      locale: 'pt-BR',
+      roles: ['reader'],
+    });
+    const populated = current.snapshot();
+    mutator.patch({});
+    expect(current.snapshot()).toStrictEqual(populated);
+    mutator.patch({
+      tenantId: undefined,
+      actorId: undefined,
+      sessionId: undefined,
+      locale: undefined,
+      roles: undefined,
+    });
+    expect(current.snapshot()).toStrictEqual(required);
+    for (const field of ['tenantId', 'actorId', 'sessionId', 'locale', 'roles']) {
+      expect(current.snapshot()).not.toHaveProperty(field);
+    }
+    expect(current.tenantId).toBeUndefined();
+    expect(current.actorId).toBeUndefined();
+    expect(current.sessionId).toBeUndefined();
+    expect(current.locale).toBeUndefined();
+    expect(current.roles).toBeUndefined();
+    mutator.patch({ tenantId: 'tenant-2', roles: [] });
+    expect(current.snapshot()).toStrictEqual({ ...required, tenantId: 'tenant-2', roles: [] });
+    mutator.patch({ actorId: 'actor-2' });
+    expect(current.snapshot()).toStrictEqual({
+      ...required,
+      tenantId: 'tenant-2',
+      actorId: 'actor-2',
+      roles: [],
+    });
   });
 });

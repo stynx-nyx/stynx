@@ -30,7 +30,8 @@ function context(overrides: Partial<IdempotencyDecisionContext> = {}): Idempoten
     headerName: 'Idempotency-Key',
     headerValue: 'k1',
     requestFingerprint: 'fp-1',
-    tenantId: 'tenant-1',
+    // Durable statements cast this value to uuid; the cache key remains opaque.
+    tenantId: '11111111-1111-1111-1111-111111111111',
     routeKey: 'POST:/items',
     ttlMs: 2500,
     ...overrides,
@@ -40,9 +41,11 @@ function context(overrides: Partial<IdempotencyDecisionContext> = {}): Idempoten
 function databaseWithRows(rows: unknown[], rowCount = rows.length) {
   const query = vi.fn(async () => ({ rows, rowCount }));
   const tx = vi.fn(async (callback: (trx: { query: typeof query }) => Promise<unknown>) =>
-    callback({ query }));
+    callback({ query }),
+  );
   const withSystemContext = vi.fn(async (_label: string, callback: () => Promise<unknown>) =>
-    callback());
+    callback(),
+  );
   return {
     database: { withSystemContext, tx },
     query,
@@ -64,18 +67,24 @@ describe('DatabaseIdempotencyStore', () => {
     const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1000);
     try {
       const empty = databaseWithRows([]);
-      await expect(new DatabaseIdempotencyStore(empty.database as never).lookup(context())).resolves.toBe(null);
+      await expect(
+        new DatabaseIdempotencyStore(empty.database as never).lookup(context()),
+      ).resolves.toBe(null);
 
-      const completed = databaseWithRows([{
-        request_fingerprint: 'fp-1',
-        response: { statusCode: 201, body: { ok: true } },
-        response_headers: { 'x-test': '1' },
-        status: 'completed',
-        expires_at: null,
-      }]);
-      await expect(new DatabaseIdempotencyStore(completed.database as never, {
-        ttlMs: 5000,
-      }).lookup(context())).resolves.toEqual({
+      const completed = databaseWithRows([
+        {
+          request_fingerprint: 'fp-1',
+          response: { statusCode: 201, body: { ok: true } },
+          response_headers: { 'x-test': '1' },
+          status: 'completed',
+          expires_at: null,
+        },
+      ]);
+      await expect(
+        new DatabaseIdempotencyStore(completed.database as never, {
+          ttlMs: 5000,
+        }).lookup(context()),
+      ).resolves.toEqual({
         requestFingerprint: 'fp-1',
         statusCode: 201,
         body: { ok: true },
@@ -96,16 +105,22 @@ describe('DatabaseIdempotencyStore', () => {
   it('maps null durable row fields and default expiry fallbacks', async () => {
     const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(2000);
     try {
-      const pending = databaseWithRows([{
-        request_fingerprint: null,
-        response: null,
-        response_headers: null,
-        status: 'pending',
-        expires_at: '2026-01-01T00:00:00.000Z',
-      }]);
-      await expect(new DatabaseIdempotencyStore(pending.database as never).lookup(context({
-        tenantId: undefined,
-      }))).resolves.toMatchObject({
+      const pending = databaseWithRows([
+        {
+          request_fingerprint: null,
+          response: null,
+          response_headers: null,
+          status: 'pending',
+          expires_at: '2026-01-01T00:00:00.000Z',
+        },
+      ]);
+      await expect(
+        new DatabaseIdempotencyStore(pending.database as never).lookup(
+          context({
+            tenantId: undefined,
+          }),
+        ),
+      ).resolves.toMatchObject({
         requestFingerprint: '',
         statusCode: null,
         body: null,
@@ -115,29 +130,41 @@ describe('DatabaseIdempotencyStore', () => {
       });
       expect(pending.query).toHaveBeenCalledWith(expect.any(String), [null, 'tenant-1:k1']);
 
-      const defaultTtl = databaseWithRows([{
-        request_fingerprint: 'fp-1',
-        response: {},
-        response_headers: {},
-        status: 'completed',
-        expires_at: null,
-      }]);
-      await expect(new DatabaseIdempotencyStore(defaultTtl.database as never).lookup(context({
-        ttlMs: undefined as never,
-      }))).resolves.toMatchObject({
+      const defaultTtl = databaseWithRows([
+        {
+          request_fingerprint: 'fp-1',
+          response: {},
+          response_headers: {},
+          status: 'completed',
+          expires_at: null,
+        },
+      ]);
+      await expect(
+        new DatabaseIdempotencyStore(defaultTtl.database as never).lookup(
+          context({
+            ttlMs: undefined as never,
+          }),
+        ),
+      ).resolves.toMatchObject({
         expiresAt: 86_402_000,
       });
 
-      const defaultOptionsTtl = databaseWithRows([{
-        request_fingerprint: 'fp-1',
-        response: {},
-        response_headers: {},
-        status: 'completed',
-        expires_at: null,
-      }]);
-      await expect(new DatabaseIdempotencyStore(defaultOptionsTtl.database as never, {}).lookup(context({
-        ttlMs: undefined as never,
-      }))).resolves.toMatchObject({
+      const defaultOptionsTtl = databaseWithRows([
+        {
+          request_fingerprint: 'fp-1',
+          response: {},
+          response_headers: {},
+          status: 'completed',
+          expires_at: null,
+        },
+      ]);
+      await expect(
+        new DatabaseIdempotencyStore(defaultOptionsTtl.database as never, {}).lookup(
+          context({
+            ttlMs: undefined as never,
+          }),
+        ),
+      ).resolves.toMatchObject({
         expiresAt: 86_402_000,
       });
     } finally {
@@ -155,19 +182,23 @@ describe('DatabaseIdempotencyStore', () => {
     );
 
     const persisted = databaseWithRows([], 1);
-    await expect(new DatabaseIdempotencyStore(persisted.database as never).persistResponse(
-      context(),
-      202,
-      { id: 1n },
-      { replay: 'true' },
-    )).resolves.toBe(true);
+    await expect(
+      new DatabaseIdempotencyStore(persisted.database as never).persistResponse(
+        context(),
+        202,
+        { id: 1n },
+        { replay: 'true' },
+      ),
+    ).resolves.toBe(true);
     expect(persisted.query).toHaveBeenCalledWith(
       expect.stringContaining('update core.idempotency_keys'),
       expect.arrayContaining(['{"statusCode":202,"body":{"id":"1"}}', '{"replay":"true"}']),
     );
 
     const cleared = databaseWithRows([], 0);
-    await expect(new DatabaseIdempotencyStore(cleared.database as never).clearReservation(context())).resolves.toBe(undefined);
+    await expect(
+      new DatabaseIdempotencyStore(cleared.database as never).clearReservation(context()),
+    ).resolves.toBe(undefined);
     expect(cleared.query).toHaveBeenCalledWith(
       expect.stringContaining('delete from core.idempotency_keys'),
       expect.arrayContaining(['tenant-1:k1']),
@@ -176,10 +207,14 @@ describe('DatabaseIdempotencyStore', () => {
 
   it('returns false for skipped durable writes and uses null tenant parameters', async () => {
     const unreserved = databaseWithRows([], 0);
-    await expect(new DatabaseIdempotencyStore(unreserved.database as never).reserve(context({
-      tenantId: undefined,
-      ttlMs: 0,
-    }))).resolves.toBe(false);
+    await expect(
+      new DatabaseIdempotencyStore(unreserved.database as never).reserve(
+        context({
+          tenantId: undefined,
+          ttlMs: 0,
+        }),
+      ),
+    ).resolves.toBe(false);
     expect(unreserved.query).toHaveBeenCalledWith(expect.any(String), [
       null,
       'tenant-1:k1',
@@ -188,35 +223,38 @@ describe('DatabaseIdempotencyStore', () => {
     ]);
 
     const notPersisted = databaseWithRows([], undefined);
-    await expect(new DatabaseIdempotencyStore(notPersisted.database as never).persistResponse(
-      context({ tenantId: undefined, ttlMs: 0 }),
-      200,
-      { ok: true },
-    )).resolves.toBe(false);
-    expect(notPersisted.query).toHaveBeenCalledWith(expect.any(String), expect.arrayContaining([
-      null,
-      'tenant-1:k1',
-      1,
-    ]));
+    await expect(
+      new DatabaseIdempotencyStore(notPersisted.database as never).persistResponse(
+        context({ tenantId: undefined, ttlMs: 0 }),
+        200,
+        { ok: true },
+      ),
+    ).resolves.toBe(false);
+    expect(notPersisted.query).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.arrayContaining([null, 'tenant-1:k1', 1]),
+    );
 
     const persisted = databaseWithRows([], 1);
-    await expect(new DatabaseIdempotencyStore(persisted.database as never).persistResponse(
-      context(),
-      200,
-      { ok: true },
-    )).resolves.toBe(true);
+    await expect(
+      new DatabaseIdempotencyStore(persisted.database as never).persistResponse(context(), 200, {
+        ok: true,
+      }),
+    ).resolves.toBe(true);
 
     const nullRowCount = databaseWithRows([], null as never);
-    await expect(new DatabaseIdempotencyStore(nullRowCount.database as never).persistResponse(
-      context(),
-      200,
-      { ok: true },
-    )).resolves.toBe(false);
+    await expect(
+      new DatabaseIdempotencyStore(nullRowCount.database as never).persistResponse(context(), 200, {
+        ok: true,
+      }),
+    ).resolves.toBe(false);
 
     const cleared = databaseWithRows([], 0);
-    await new DatabaseIdempotencyStore(cleared.database as never).clearReservation(context({
-      tenantId: undefined,
-    }));
+    await new DatabaseIdempotencyStore(cleared.database as never).clearReservation(
+      context({
+        tenantId: undefined,
+      }),
+    );
     expect(cleared.query).toHaveBeenCalledWith(expect.any(String), [null, 'tenant-1:k1']);
   });
 });
@@ -233,14 +271,16 @@ describe('RedisIdempotencyBackend', () => {
     await expect(backend.get(context())).resolves.toBe(null);
     await expect(backend.acquireLock(context(), 'token')).resolves.toBe(false);
     await expect(backend.isLocked(context())).resolves.toBe(false);
-    await expect(backend.set(context(), {
-      requestFingerprint: 'fp-1',
-      statusCode: 200,
-      body: {},
-      headers: {},
-      expiresAt: 1,
-      status: 'completed',
-    })).resolves.toBe(undefined);
+    await expect(
+      backend.set(context(), {
+        requestFingerprint: 'fp-1',
+        statusCode: 200,
+        body: {},
+        headers: {},
+        expiresAt: 1,
+        status: 'completed',
+      }),
+    ).resolves.toBe(undefined);
     await expect(backend.releaseLock(context(), 'token')).resolves.toBe(undefined);
     await backend.onModuleDestroy();
     expect(redisMock.createClient).not.toHaveBeenCalledTimes(1);
@@ -255,14 +295,16 @@ describe('RedisIdempotencyBackend', () => {
     expect(redisMock.client.on).toHaveBeenCalledWith('error', expect.any(Function));
     expect(redisMock.client.connect).toHaveBeenCalledTimes(1);
 
-    redisMock.client.get.mockResolvedValueOnce(JSON.stringify({
-      requestFingerprint: 'fp-1',
-      statusCode: 200,
-      body: { ok: true },
-      headers: {},
-      expiresAt: 1,
-      status: 'completed',
-    }));
+    redisMock.client.get.mockResolvedValueOnce(
+      JSON.stringify({
+        requestFingerprint: 'fp-1',
+        statusCode: 200,
+        body: { ok: true },
+        headers: {},
+        expiresAt: 1,
+        status: 'completed',
+      }),
+    );
     await expect(backend.get(context())).resolves.toMatchObject({ body: { ok: true } });
     await backend.set(context(), {
       requestFingerprint: 'fp-1',
@@ -302,7 +344,10 @@ describe('RedisIdempotencyBackend', () => {
     });
     await backend.onModuleInit();
 
-    const [event, listener] = redisMock.client.on.mock.calls[0] as [string, (error: unknown) => unknown];
+    const [event, listener] = redisMock.client.on.mock.calls[0] as [
+      string,
+      (error: unknown) => unknown,
+    ];
     expect(event).toBe('error');
     expect(listener(new Error('connection reset'))).toBe(undefined);
   });
@@ -319,9 +364,114 @@ describe('RedisIdempotencyBackend', () => {
 
     redisMock.client.set.mockResolvedValueOnce('OK');
     await expect(backend.acquireLock(context(), 'token')).resolves.toBe(true);
-    expect(redisMock.client.set).toHaveBeenCalledWith('stynx:idempotency:lock:tenant-1:k1', 'token', {
-      PX: 2500,
-      NX: true,
-    });
+    expect(redisMock.client.set).toHaveBeenCalledWith(
+      'stynx:idempotency:lock:tenant-1:k1',
+      'token',
+      {
+        PX: 2500,
+        NX: true,
+      },
+    );
+  });
+  it('preserves opaque legal entry extensions and pending entries without a response body', async () => {
+    const backend = new RedisIdempotencyBackend({ redis: { url: 'redis://localhost:6379' } });
+    await backend.onModuleInit();
+    const pending = {
+      requestFingerprint: 'fp',
+      statusCode: null,
+      headers: {},
+      expiresAt: 10,
+      status: 'pending',
+    };
+    const complete = {
+      ...pending,
+      status: 'completed',
+      statusCode: 201,
+      body: { nested: [null, true, { value: 'retained' }] },
+      extension: { audit: ['opaque'] },
+    };
+    redisMock.client.get
+      .mockResolvedValueOnce(JSON.stringify(pending))
+      .mockResolvedValueOnce(JSON.stringify(complete));
+    await expect(backend.get(context())).resolves.toEqual({ ...pending, body: undefined });
+    await expect(backend.get(context())).resolves.toEqual(complete);
+  });
+
+  it.each([
+    'driver-private-secret invalid JSON',
+    'null',
+    '[]',
+    '{}',
+    JSON.stringify({
+      requestFingerprint: 42,
+      statusCode: 200,
+      headers: {},
+      expiresAt: 10,
+      status: 'completed',
+    }),
+    JSON.stringify({
+      requestFingerprint: 'fp',
+      statusCode: '200',
+      headers: {},
+      expiresAt: 10,
+      status: 'completed',
+    }),
+    JSON.stringify({
+      requestFingerprint: 'fp',
+      statusCode: 200,
+      headers: { authorization: 42 },
+      expiresAt: 10,
+      status: 'completed',
+    }),
+    JSON.stringify({
+      requestFingerprint: 'fp',
+      statusCode: 200,
+      headers: {},
+      expiresAt: 10,
+      status: 'unknown',
+    }),
+    '{"requestFingerprint":"fp","statusCode":200,"headers":{},"expiresAt":1e400,"status":"completed"}',
+  ])('rejects malformed persisted entry without exposing driver content: %s', async (raw) => {
+    const backend = new RedisIdempotencyBackend({ redis: { url: 'redis://localhost:6379' } });
+    await backend.onModuleInit();
+    redisMock.client.get.mockResolvedValueOnce(raw);
+    const error = await backend.get(context()).catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toHaveProperty('message', 'Invalid persisted idempotency entry');
+    expect(String(error)).not.toContain('driver-private-secret');
+    expect(redisMock.client.set).not.toHaveBeenCalled();
+    expect(redisMock.client.del).not.toHaveBeenCalled();
+  });
+});
+
+it.each([
+  ['stock Date string coercion', new Date('2026-10-23T12:34:56.789Z'), 1792758896000],
+  ['supported parser string', '2026-10-23T12:34:56.789Z', 1792758896789],
+  ['Invalid Date', new Date(Number.NaN), Number.NaN],
+  ['positive infinity', Number.POSITIVE_INFINITY, Number.NaN],
+  ['negative infinity', Number.NEGATIVE_INFINITY, Number.NaN],
+])('retains durable expiry mapper semantics for %s', async (_label, expires_at, expected) => {
+  const fixture = databaseWithRows([
+    {
+      request_fingerprint: 'fp-1',
+      response: {
+        statusCode: 201,
+        body: { opaque: { extension: ['retained', null] } },
+        custom: [true],
+      },
+      response_headers: {},
+      status: 'completed',
+      expires_at,
+    },
+  ]);
+  const result = await new DatabaseIdempotencyStore(fixture.database as never).lookup(context());
+  expect(result?.expiresAt).toBe(expected);
+  expect(result?.body).toEqual({ opaque: { extension: ['retained', null] } });
+  expect(fixture.query).toHaveBeenCalledTimes(1);
+  expect(fixture.withSystemContext).toHaveBeenCalledTimes(1);
+  expect(fixture.tx).toHaveBeenCalledWith(expect.any(Function), {
+    role: 'owner',
+    readonly: true,
+    replica: false,
   });
 });

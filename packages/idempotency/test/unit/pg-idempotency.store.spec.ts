@@ -152,3 +152,31 @@ describe('PgIdempotencyStore', () => {
     ).toThrow('Invalid SQL identifier');
   });
 });
+
+it.each([
+  [
+    'stock Date loses milliseconds through existing string coercion',
+    new Date('2026-10-23T12:34:56.789Z'),
+    1792758896000,
+  ],
+  ['custom parser string retains milliseconds', '2026-10-23T12:34:56.789Z', 1792758896789],
+  ['Invalid Date preserves NaN', new Date(Number.NaN), Number.NaN],
+  ['positive infinity preserves NaN', Number.POSITIVE_INFINITY, Number.NaN],
+  ['negative infinity preserves NaN', Number.NEGATIVE_INFINITY, Number.NaN],
+])('preserves configured lookup expiry mapping: %s', async (_label, expiresAt, expected) => {
+  const query = vi.fn(async () => ({
+    rows: [
+      {
+        requestFingerprint: 'fp-1',
+        statusCode: 200,
+        responseBody: { opaque: { extension: ['retained', null] } },
+        expiresAt,
+      },
+    ],
+  }));
+  const store = new PgIdempotencyStore({ executor: { query } });
+  const result = await store.lookup(context());
+  expect(result?.expiresAt).toBe(expected);
+  expect(result?.body).toEqual({ opaque: { extension: ['retained', null] } });
+  expect(query).toHaveBeenCalledTimes(1);
+});
