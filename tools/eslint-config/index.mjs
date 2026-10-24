@@ -11,6 +11,7 @@ import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import { stynxPlugin } from './plugin.mjs';
+import { withLegacyTestingAssertions } from './legacy-testing-assertions.mjs';
 
 const currentPackageName = () => process.env.npm_package_name ?? '';
 
@@ -224,7 +225,20 @@ const createConfig = ({
       globals: browser ? globals.browser : globals.node,
     },
     plugins: {
-      '@typescript-eslint': tsPlugin,
+      // ADR0033 F2 is workspace-only; published profiles retain the installed
+      // rule unchanged. The wrapper admits only the two original projections.
+      '@typescript-eslint': workspaceQuery
+        ? {
+            ...tsPlugin,
+            rules: {
+              ...tsPlugin.rules,
+              'no-unsafe-type-assertion': withLegacyTestingAssertions(
+                tsPlugin.rules['no-unsafe-type-assertion'],
+                workspaceQuery.rootDir,
+              ),
+            },
+          }
+        : tsPlugin,
       '@angular-eslint': angularPlugin,
       '@angular-eslint/template': angularTemplatePlugin,
       boundaries: boundariesPlugin,
@@ -248,6 +262,11 @@ const createConfig = ({
       'boundaries/dependencies': boundaryDependenciesRule(strictBoundaries, allow),
       ...typeSafetyRules(strict),
       ...authoredCommonJsRule(strict),
+      // Preserve duplicate-declaration enforcement while recognizing valid
+      // TypeScript overload signatures in the workspace implementation.
+      ...(workspaceQuery
+        ? { 'no-redeclare': 'off', '@typescript-eslint/no-redeclare': 'error' }
+        : {}),
       ...(workspaceQuery?.packageRoots.includes(
         relative(workspaceQuery.rootDir, rootDir).replaceAll('\\', '/'),
       )
