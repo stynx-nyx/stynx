@@ -5,6 +5,7 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { RequestContext } from '@stynx-nyx/core';
 import { Database, type Transaction } from '@stynx-nyx/data';
 import { FlowAdapterRegistry } from '../../adapters.js';
+import { executeTaskList } from './task-list.repository.js';
 import {
   assignTaskSchema,
   parseDto,
@@ -12,13 +13,10 @@ import {
   taskNoteSchema,
 } from '../../validation.js';
 import {
-  addTextFilter,
-  addUuidFilter,
   asJsonObject,
   camelizeRow,
   optionalString,
   pageLimitOffset,
-  type FlowRow,
   type RuntimeFilterInput,
   type TaskAccessRow,
 } from './runtime-filters.js';
@@ -35,36 +33,19 @@ export class FlowTaskDispatch {
 
   listTasks(query: RuntimeFilterInput = {}): Promise<Record<string, unknown>> {
     const { limit, offset, page, pageSize } = pageLimitOffset(query);
-    const where: string[] = [];
-    const values: unknown[] = [];
-    addUuidFilter(where, values, 't.run_id', query.runId);
-    addUuidFilter(where, values, 't.assignee_user_id', query.assigneeUserId);
-    addTextFilter(where, values, 't.status', query.status);
+    const runId = optionalString(query.runId);
+    const assigneeUserId = optionalString(query.assigneeUserId);
+    const status = optionalString(query.status);
+    let mineActorId: string | undefined;
     if (query.mine === 'true' || query.mine === true) {
-      values.push(this.requestContext.actorId ?? '');
-      where.push(`t.assignee_user_id = $${values.length}::uuid`);
+      mineActorId = this.requestContext.actorId ?? '';
     }
-    const whereSql = where.length > 0 ? ` where ${where.join(' and ')}` : '';
 
     return this.db.tx(async (trx) => {
-      const rows = await trx.query<FlowRow>(
-        `
-          select t.*, n.code as node_code, n.name as node_name, n.kind
-          from flow.tasks t
-          join flow.nodes n on n.id = t.node_id
-          ${whereSql}
-          order by t.created_at desc, t.id desc
-          limit $${values.length + 1} offset $${values.length + 2}
-        `,
-        [...values, limit, offset],
-      );
-      const total = await trx.query<{ total: string }>(
-        `select count(*)::text as total from flow.tasks t${whereSql}`,
-        values,
-      );
+      const { rows, total } = await executeTaskList(trx, runId, assigneeUserId, status, mineActorId, limit, offset);
       return {
-        data: rows.rows.map(camelizeRow),
-        meta: { page, pageSize, total: Number(total.rows[0]?.total ?? 0) },
+        data: rows.map(camelizeRow),
+        meta: { page, pageSize, total: Number(total[0]?.total ?? 0) },
       };
     }, {
       role: 'reader',
