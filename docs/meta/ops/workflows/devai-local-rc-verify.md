@@ -56,3 +56,7 @@ signer allowlist, exact-tree binding, inert candidate handling and package
 integrity checks. The exact generated workflow commit needs its Owner receipt;
 rebase landing requires the corresponding exact landed receipt under the same
 recorded mandate. See [ADOPTION-0020](../../../../law/adr/2026-10-11-devai-2.5.0-adoption.md).
+
+## Proposed exact A+B auxiliary transition
+
+[ADR0038](../../../../law/adr/2026-10-24-s10-ab-trusted-descriptor-transition.md) records the distinct candidate-specific proposal for C677b7770 and protected controlaa2c1130. Only the isolated unmerged auxiliary workflow adds its closed guard for the three approved database prefix selectors. W0, its workflow blob, independent37-case evidence and reviewed B must be fixed before the new Owner decision. The earlier S8 approval does not cover this transition. No auxiliary receipt, push or dispatch is authorized by this reference page; all generated product, signature, artifact, policy and protected-merge obligations above remain unchanged.

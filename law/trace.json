@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.48",
+  "version": "1.3.49",
   "meta": {
-    "last_updated": "2026-10-24T18:10:50.580426Z",
+    "last_updated": "2026-10-24T18:36:02.469067Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-24 Architect auxiliary-only ADR0038 review after Engineer W0 887a055de968c586c0149829b82bb9fc547c1445 and Inspector 030644a4bc20447037afcf410ead174ad80c3231: bind actual workflow guard35 assertion projections under unchanged INV-CORE-001. Inspector actual extracted guard37/37 passes with real Git identities and trusted canonical helpers, exact three-selector reconstruction, preserved verifier core and negative/counterfactual controls. Preserve all715 product corpus entries, prior history, invariants and thresholds. This unmerged auxiliary proposal records no Owner receipt, remote push/dispatch, product RC, publication or downstream acceptance.",
       "2026-10-24 Architect final A+B ordinary-budget binding after Engineer 95bd605c and Inspector 26beddf4c12d01f0f0a4136a567f008b5a4259e5: retain the historical S8 budget fixture and all S7 controls, and bind the exact three approved database selector additions with independent omission refusals. Official assertion projection changes only ordinary-unit-budget from 24 to 27 under unchanged INV-CORE-001. All 715 corpus entries, invariant links, prior provenance and thresholds remain intact. Inspector budget 27/27 and local-RC 12/12 passed; Engineer release-scope binding 65/65 passed. This trace checkpoint does not establish official public API baseline verification, a full A+B RC, integration, publication or downstream acceptance.",
       "2026-10-24 Architect final S10 A+B replay binding of original 545e119bea70639a8acfe90d12785127eea96fdb after all nine preceding role commits at d4e4eb98a39495ff4dac5999406c86e06532757e: preserve all S8/S7 history and trace entries, and retain the A+B role-context, domain-boundary and bookmark-idempotency sensors with their existing invariant links. Official current executable projection passes 715/715. The current local-RC, release-version and release-evidence projections retain the integrated S8/S7 assertions; no older source-branch projection replaces them. All historical provenance and thresholds remain. This records actual replayed test bytes only; the forthcoming ordinary-budget descriptor overlay, official public API baseline, final gates and A+B RC remain separate checkpoints. No source execution, runtime qualification, publication or consumer acceptance is claimed.",
       "2026-10-24 Architect intermediate S10 A+B replay of original 4ef31dd4649f0dc7c86acdcab431f3c952f34a05 after Inspector ec79c6786016bae0630404ce9e7a1726fc2cb139 onto qualified and protected S7 landing: retain all S8/S7 trace history, invariant links and thresholds, and bind only the existing first A+B executable cohort. Official current projection passes 713/713; later A+B Inspector/source commits have not replayed and no future projection is selected. Retain the three approved database descriptor selectors together with every existing ordinary-unit and RLS selector; no runtime test, final A+B qualification, publication or consumer acceptance is claimed.",
@@ -1259,6 +1260,15 @@
           ],
           "assertions": [
             "Exact consumed patch admission preserves the uniform44-package group, sole changeset, version-only generated storage, exact DEVAI root dependency and101 closed net path/status entries; existing historical release and registry/anomaly witnesses remain."
+          ],
+          "mode": "white_box"
+        },
+        {
+          "suite": "contract",
+          "path": "test/scripts/s10-ab-aux-descriptor-admission.test.mjs",
+          "names": ["INV-CORE-001"],
+          "assertions": [
+            "The auxiliary-only verifier admits exact reviewed candidate/control identities and the three approved selector appends while preserving trusted verification and refusing all other observed deltas."
           ],
           "mode": "white_box"
         }
@@ -7651,6 +7661,14 @@
       "lifecycle": "supported",
       "assertion_count": 3,
       "assertion_digest_sha256": "043c818fccb26d30405a8bf7128fe017dd5623acd68dbe858a1be7fe1934ec31"
+    },
+    {
+      "path": "test/scripts/s10-ab-aux-descriptor-admission.test.mjs",
+      "suite": "contract",
+      "invariant_ids": ["INV-CORE-001"],
+      "lifecycle": "supported",
+      "assertion_count": 35,
+      "assertion_digest_sha256": "2712cc327fe1fd3fa06b029ecccdd5b9eaa79f2d55d03c8414d71ad6347e833e"
     }
   ],
   "suites": {

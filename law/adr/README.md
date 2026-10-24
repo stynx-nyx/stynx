@@ -3,6 +3,10 @@
 Architecture Decision Records capture durable stynx engineering decisions that
 shape package boundaries, generated diagnostics, or adoption policy.
 
+## Proposed Decisions
+
+- [ADR0038 — Exact S10 A+B auxiliary descriptor admission](2026-10-24-s10-ab-trusted-descriptor-transition.md) — candidate-specific proposal; no receipt, remote auxiliary push or dispatch authority yet.
+
 ## Accepted Decisions
 
 - [ADR0036 — Post-publication workspace and final release observations](2026-10-24-post-publication-version-observation-proposal.md) — Architect applicability clarification under existing verification authorization; Inspector policy cohort 137/137 passed, full root/RC pending.
