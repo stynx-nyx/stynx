@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { Command } from 'commander';
 import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
+import { z } from 'zod';
 import {
   adoptApply,
   adoptApplyProposedPermissions,
@@ -26,6 +27,13 @@ import {
   type CheckOptions,
 } from './checks.js';
 
+interface MigrationCommandOptions {
+  databaseUrl?: string;
+  rolePrefix?: string;
+  dry?: boolean;
+  steps?: string;
+}
+
 export function buildProgram(): Command {
   const program = new Command();
   program.name('stynx');
@@ -35,7 +43,7 @@ export function buildProgram(): Command {
     .argument('<app-name>')
     .option('--angular', 'Scaffold Angular workspace files', false)
     .option('--dir <dir>', 'Output directory', process.cwd())
-    .action((appName, options) => {
+    .action((appName: string, options: { dir: string; angular: boolean }) => {
       const targetDir = resolve(options.dir, appName);
       mkdirSync(targetDir, { recursive: true });
       scaffoldApp(targetDir, appName, options.angular);
@@ -48,7 +56,7 @@ export function buildProgram(): Command {
   migrate
     .command('status')
     .option('--database-url <url>', 'PostgreSQL URL (default: the PG* environment)')
-    .action(async (options) => {
+    .action(async (options: MigrationCommandOptions) => {
       console.log(JSON.stringify(await migrationStatus(process.cwd(), options.databaseUrl), null, 2));
     });
   migrate
@@ -56,7 +64,7 @@ export function buildProgram(): Command {
     .option('--database-url <url>', 'PostgreSQL URL (default: the PG* environment)')
     .option('--dry', 'Dry-run pending list', false)
     .option('--role-prefix <prefix>', 'Product role prefix for the platform roles (default stynx)')
-    .action(async (options) => {
+    .action(async (options: MigrationCommandOptions) => {
       console.log(JSON.stringify(await migrateUp(process.cwd(), options.databaseUrl, options.dry, ...roleOptions(options)), null, 2));
     });
   migrate
@@ -65,7 +73,7 @@ export function buildProgram(): Command {
     .option('--steps <n>', 'How many applied migrations to roll back', '1')
     .option('--dry', 'Dry-run rollback list', false)
     .option('--role-prefix <prefix>', 'Product role prefix for the platform roles (default stynx)')
-    .action(async (options) => {
+    .action(async (options: MigrationCommandOptions) => {
       console.log(JSON.stringify(await migrateDown(process.cwd(), options.databaseUrl, Number(options.steps), options.dry, ...roleOptions(options)), null, 2));
     });
   migrate
@@ -73,14 +81,14 @@ export function buildProgram(): Command {
     .option('--database-url <url>', 'PostgreSQL URL (default: the PG* environment)')
     .option('--dry', 'Dry-run redo plan', false)
     .option('--role-prefix <prefix>', 'Product role prefix for the platform roles (default stynx)')
-    .action(async (options) => {
+    .action(async (options: MigrationCommandOptions) => {
       console.log(JSON.stringify(await migrateRedo(process.cwd(), options.databaseUrl, options.dry, ...roleOptions(options)), null, 2));
     });
 
   program
     .command('doctor')
     .option('--dir <dir>', 'Workspace directory', process.cwd())
-    .action((options) => {
+    .action((options: { dir: string }) => {
       const result = runDoctor(resolve(options.dir));
       process.stdout.write(result.stdout);
       process.stderr.write(result.stderr);
@@ -91,7 +99,7 @@ export function buildProgram(): Command {
   privacy
     .command('ropa')
     .option('--dir <dir>', 'App directory', process.cwd())
-    .action((options) => {
+    .action((options: { dir: string }) => {
       process.stdout.write(generateRopaFromApp(resolve(options.dir)));
     });
 
@@ -102,9 +110,9 @@ export function buildProgram(): Command {
     .option('--tenant-id <uuid>', 'Verify a single tenant chain')
     .option('--limit <n>', 'Maximum events to verify per tenant', '1000')
     .option('--format <format>', 'human or json', 'human')
-    .action(async (options) => {
+    .action(async (options: { databaseUrl: string; tenantId?: string; limit: string; format: string }) => {
       const result = await verifyAuditChain(options.databaseUrl, {
-        tenantId: options.tenantId,
+        ...(options.tenantId === undefined ? {} : { tenantId: options.tenantId }),
         limit: Number(options.limit),
       });
       if (options.format === 'json') {
@@ -123,7 +131,7 @@ export function buildProgram(): Command {
     .command('scan')
     .option('--format <format>', 'json or human', 'json')
     .option('--dir <dir>', 'Target directory', process.cwd())
-    .action((options) => {
+    .action((options: { dir: string; format: string }) => {
       const report = adoptScan(resolve(options.dir));
       if (options.format === 'human') {
         console.log(formatAdoptScanHuman(report));
@@ -135,33 +143,36 @@ export function buildProgram(): Command {
     .command('apply')
     .option('--dir <dir>', 'Target directory', process.cwd())
     .option('--dry-run', 'Report without writing', false)
-    .action((options) => {
+    .action((options: { dir: string; dryRun: boolean }) => {
       console.log(JSON.stringify(adoptApply(resolve(options.dir), options.dryRun), null, 2));
     });
   adopt
     .command('apply-proposed-permissions')
-    .requiredOption('--replacement <placeholder=value...>', 'Replacement pairs', (value, acc: string[] = []) => {
+    .requiredOption('--replacement <placeholder=value...>', 'Replacement pairs', (value: string, acc: string[] = []) => {
       acc.push(value);
       return acc;
     })
     .option('--dir <dir>', 'Target directory', process.cwd())
-    .action((options) => {
-      const replacements = Object.fromEntries(
-        (options.replacement as string[]).map((entry) => {
-          const [key, value] = entry.split('=');
-          return [key, value];
-        }),
-      );
-      console.log(adoptApplyProposedPermissions(resolve(options.dir), replacements));
+    .action((options: { dir: string; replacement: string[] }) => {
+      const replacements = new Map<string, string>();
+      for (const entry of options.replacement) {
+        const [key, value] = entry.split('=');
+        if (key === undefined || value === undefined)
+          throw new Error('Replacement must have placeholder=value form');
+        replacements.set(key, value);
+      }
+      console.log(adoptApplyProposedPermissions(resolve(options.dir), Object.fromEntries(replacements)));
     });
   adopt
     .command('link-cognito-users')
     .requiredOption('--users-json <path>')
     .requiredOption('--cognito-json <path>')
     .option('--dry-run', 'Only report matches', false)
-    .action((options) => {
-      const users = parse(readFileSync(resolve(options.usersJson), 'utf8')) as Array<{ id: string; email: string }>;
-      const cognitoUsers = parse(readFileSync(resolve(options.cognitoJson), 'utf8')) as Array<{ sub: string; email: string }>;
+    .action((options: { usersJson: string; cognitoJson: string }) => {
+      const users = z.array(z.object({ id: z.string(), email: z.string() }).passthrough())
+        .parse(parse(readFileSync(resolve(options.usersJson), 'utf8')));
+      const cognitoUsers = z.array(z.object({ sub: z.string(), email: z.string() }).passthrough())
+        .parse(parse(readFileSync(resolve(options.cognitoJson), 'utf8')));
       console.log(JSON.stringify(linkCognitoUsers(users, cognitoUsers), null, 2));
     });
 
@@ -203,7 +214,7 @@ export function buildProgram(): Command {
     .requiredOption('--blueprint <json>', 'UTF-8 JSON blueprint')
     .requiredOption('--out <directory>', 'New output directory')
     .option('--check', 'Compare an existing output without writing', false)
-    .action((options) => {
+    .action((options: { blueprint: string; out: string; check: boolean }) => {
       generateModule(options.blueprint, options.out, options.check);
     });
 

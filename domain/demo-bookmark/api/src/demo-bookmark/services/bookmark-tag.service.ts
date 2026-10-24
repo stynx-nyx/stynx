@@ -35,12 +35,11 @@ export class BookmarkTagService {
               : and(eq(bookmarks.tenantId, tenantId), isNull(bookmarks.deletedAt)),
           );
         if (tenantBookmarks.length === 0) return [];
-        // softDeletable wrapper obscures column inference here; cast explicitly.
-        const ids = tenantBookmarks.map((b) => (b as { id: string }).id);
+        const ids = tenantBookmarks.map((b) => b.id);
         if (bookmarkId !== undefined) {
           return trx.select().from(bookmarkTags).where(eq(bookmarkTags.bookmarkId, bookmarkId));
         }
-        const allTags = (await trx.select().from(bookmarkTags)) as Array<{ bookmarkId: string; tag: string; createdAt: Date }>;
+        const allTags = await trx.select().from(bookmarkTags);
         return allTags.filter((t) => ids.includes(t.bookmarkId));
       },
       { role: 'reader', readonly: true },

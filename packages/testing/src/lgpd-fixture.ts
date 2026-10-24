@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { StynxPgClient } from '@stynx-nyx/data';
+import { executeRawScript, type StynxPgClient } from '@stynx-nyx/data';
 import type { TestSqlStep } from './types.js';
 
 export interface LgpdFixtureIds {
@@ -106,14 +106,16 @@ export async function seedLgpdFixture(client: StynxPgClient, input: Partial<Lgpd
     archivedAttachmentId: input.archivedAttachmentId ?? randomUUID(),
   };
 
-  await client.query(
+  await executeRawScript(
+          client,
     `
       insert into tenancy.tenants (id, slug, name, is_active, created_at, updated_at)
       values ($1::uuid, $2, 'LGPD Fixture', true, clock_timestamp(), clock_timestamp())
     `,
     [ids.tenantId, `lgpd-${ids.tenantId.slice(0, 8)}`],
   );
-  await client.query(
+  await executeRawScript(
+          client,
     `
       insert into auth.users (id, email, external_subject, created_at, updated_at)
       values
@@ -122,7 +124,8 @@ export async function seedLgpdFixture(client: StynxPgClient, input: Partial<Lgpd
     `,
     [ids.subjectUserId, ids.actorId],
   );
-  await client.query(
+  await executeRawScript(
+          client,
     `
       insert into core.pii_map (table_schema, table_name, column_name, strategy, category, notes)
       values
@@ -133,9 +136,10 @@ export async function seedLgpdFixture(client: StynxPgClient, input: Partial<Lgpd
         ('privacy_fixture', 'attachments', 'blob_key', 'delete_row', 'storage', 'fixture blob reference')
     `,
   );
-  await client.query(`select set_config('app.tenant_id', $1, false)`, [ids.tenantId]);
-  await client.query(`select set_config('app.actor_id', $1, false)`, [ids.actorId]);
-  await client.query(
+  await executeRawScript(client, `select set_config('app.tenant_id', $1, false)`, [ids.tenantId]);
+  await executeRawScript(client, `select set_config('app.actor_id', $1, false)`, [ids.actorId]);
+  await executeRawScript(
+          client,
     `
       insert into privacy_fixture.subjects (id, tenant_id, subject_user_id, email, phone, note, profile_json, created_at)
       values
@@ -144,7 +148,8 @@ export async function seedLgpdFixture(client: StynxPgClient, input: Partial<Lgpd
     `,
     [ids.liveSubjectId, ids.tenantId, ids.subjectUserId, ids.archivedSubjectId],
   );
-  await client.query(
+  await executeRawScript(
+          client,
     `
       insert into privacy_fixture.attachments (id, tenant_id, subject_user_id, blob_key, created_at)
       values
@@ -153,9 +158,10 @@ export async function seedLgpdFixture(client: StynxPgClient, input: Partial<Lgpd
     `,
     [ids.liveAttachmentId, ids.tenantId, ids.subjectUserId, ids.archivedAttachmentId],
   );
-  await client.query(`select set_config('app.archive_move', 'in_progress', false)`);
-  await client.query(`select set_config('app.archive_reason', 'soft_delete', false)`);
-  await client.query(
+  await executeRawScript(client, `select set_config('app.archive_move', 'in_progress', false)`);
+  await executeRawScript(client, `select set_config('app.archive_reason', 'soft_delete', false)`);
+  await executeRawScript(
+          client,
     `
       insert into archive.privacy_fixture_subjects (
         id, tenant_id, subject_user_id, email, phone, note, profile_json, created_at, archived_at, deleted_at, deleted_by
@@ -166,8 +172,9 @@ export async function seedLgpdFixture(client: StynxPgClient, input: Partial<Lgpd
     `,
     [ids.actorId, ids.archivedSubjectId],
   );
-  await client.query(`delete from privacy_fixture.subjects where id = $1::uuid`, [ids.archivedSubjectId]);
-  await client.query(
+  await executeRawScript(client, `delete from privacy_fixture.subjects where id = $1::uuid`, [ids.archivedSubjectId]);
+  await executeRawScript(
+          client,
     `
       insert into archive.privacy_fixture_attachments (
         id, tenant_id, subject_user_id, blob_key, created_at, archived_at, deleted_at, deleted_by
@@ -178,7 +185,7 @@ export async function seedLgpdFixture(client: StynxPgClient, input: Partial<Lgpd
     `,
     [ids.actorId, ids.archivedAttachmentId],
   );
-  await client.query(`delete from privacy_fixture.attachments where id = $1::uuid`, [ids.archivedAttachmentId]);
+  await executeRawScript(client, `delete from privacy_fixture.attachments where id = $1::uuid`, [ids.archivedAttachmentId]);
 
   return ids;
 }

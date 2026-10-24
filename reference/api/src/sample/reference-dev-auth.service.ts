@@ -1,7 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { PermissionCache, PermissionQueryService } from '@stynx-nyx/auth';
-import { Database } from '@stynx-nyx/data';
+import { Database, executeTypedQuery } from '@stynx-nyx/data';
+import * as queries from './reference-dev-auth.repository.js';
 import { SessionService, type SessionBundle } from '@stynx-nyx/sessions';
 
 type DemoTenant = {
@@ -54,14 +55,7 @@ export class ReferenceDevAuthService {
         const membershipId = await this.ensureMembership(trx, tenant.id, userId);
         const adminRoleId = await this.ensureAdminRole(trx, tenant.id);
         await this.ensureAdminRolePerms(trx, adminRoleId);
-        await trx.query(
-          `
-            insert into auth.membership_roles (membership_id, role_id)
-            values ($1::uuid, $2::uuid)
-            on conflict do nothing
-          `,
-          [membershipId, adminRoleId],
-        );
+        await executeTypedQuery(trx, queries.assignMembershipRole, [membershipId, adminRoleId]);
 
         return { userId, membershipId };
       }, { role: 'owner', readonly: false }),
@@ -138,14 +132,14 @@ export class ReferenceDevAuthService {
 
   private get permissionCache(): PermissionCache | null {
     try {
-      return this.moduleRef.get(PermissionCache, { strict: false }) ?? null;
+      return this.moduleRef.get<PermissionCache>(PermissionCache, { strict: false }) ?? null;
     } catch {
       return null;
     }
   }
 
   private requireProvider<T>(token: new (...args: never[]) => T, label: string): T {
-    const provider = this.moduleRef.get(token, { strict: false });
+    const provider = this.moduleRef.get<T>(token, { strict: false });
     if (!provider) {
       throw new Error(`${label} provider is unavailable to ReferenceDevAuthService`);
     }
@@ -153,134 +147,43 @@ export class ReferenceDevAuthService {
   }
 
   private async ensureTenant(trx: QueryLike, tenant: DemoTenant): Promise<void> {
-    await trx.query(
-      `
-        insert into tenancy.tenants (id, slug, name, state, is_active, created_at, updated_at)
-        values ($1::uuid, $2, $3, 'active', true, clock_timestamp(), clock_timestamp())
-        on conflict (id)
-        do update set
-          slug = excluded.slug,
-          name = excluded.name,
-          state = 'active',
-          is_active = true,
-          archived_at = null,
-          suspended_reason = null,
-          updated_at = clock_timestamp()
-      `,
-      [tenant.id, tenant.slug, tenant.name],
-    );
+    await executeTypedQuery(trx, queries.ensureTenant, [tenant.id, tenant.slug, tenant.name]);
 
-    await trx.query(
-      `
-        insert into tenancy.tenant_settings (tenant_id, locale, timezone, settings, updated_at)
-        values ($1::uuid, 'en-US', 'UTC', '{}'::jsonb, clock_timestamp())
-        on conflict (tenant_id)
-        do update set updated_at = clock_timestamp()
-      `,
-      [tenant.id],
-    );
+    await executeTypedQuery(trx, queries.ensureTenantSettings, [tenant.id]);
   }
 
   private async ensureUser(trx: QueryLike, email: string): Promise<string> {
-    const existing = await trx.query(
-      `select id::text as id from auth.users where email = $1::citext limit 1`,
-      [email],
-    );
-    const existingId = typeof existing.rows[0]?.id === 'string' ? existing.rows[0].id : null;
+    const existing = await executeTypedQuery(trx, queries.findUser, [email]);
+    const existingId = existing?.id ?? null;
     if (existingId) {
-      await trx.query(
-        `
-          update auth.users
-             set external_subject = $2,
-                 updated_at = clock_timestamp()
-           where id = $1::uuid
-        `,
-        [existingId, `reference-dev:${email}`],
-      );
+      await executeTypedQuery(trx, queries.updateUser, [existingId, `reference-dev:${email}`]);
       return existingId;
     }
 
-    const inserted = await trx.query(
-      `
-        insert into auth.users (id, email, external_subject, locale, created_at, updated_at)
-        values (gen_random_uuid(), $1::citext, $2, 'en-US', clock_timestamp(), clock_timestamp())
-        returning id::text as id
-      `,
-      [email, `reference-dev:${email}`],
-    );
-    return typeof inserted.rows[0]?.id === 'string' ? inserted.rows[0].id : '';
+    const inserted = await executeTypedQuery(trx, queries.insertUser, [email, `reference-dev:${email}`]);
+    return inserted?.id ?? '';
   }
 
   private async ensureMembership(trx: QueryLike, tenantId: string, userId: string): Promise<string> {
-    const existing = await trx.query(
-      `
-        select id::text as id
-          from auth.memberships
-         where tenant_id = $1::uuid
-           and user_id = $2::uuid
-         limit 1
-      `,
-      [tenantId, userId],
-    );
-    const existingId = typeof existing.rows[0]?.id === 'string' ? existing.rows[0].id : null;
+    const existing = await executeTypedQuery(trx, queries.findMembership, [tenantId, userId]);
+    const existingId = existing?.id ?? null;
     if (existingId) {
-      await trx.query(
-        `
-          update auth.memberships
-             set is_active = true
-           where id = $1::uuid
-        `,
-        [existingId],
-      );
+      await executeTypedQuery(trx, queries.reactivateMembership, [existingId]);
       return existingId;
     }
 
-    const inserted = await trx.query(
-      `
-        insert into auth.memberships (id, tenant_id, user_id, effective_hash, effective_hash_generation, is_active, created_at)
-        values (gen_random_uuid(), $1::uuid, $2::uuid, null, 0, true, clock_timestamp())
-        returning id::text as id
-      `,
-      [tenantId, userId],
-    );
-    return typeof inserted.rows[0]?.id === 'string' ? inserted.rows[0].id : '';
+    const inserted = await executeTypedQuery(trx, queries.insertMembership, [tenantId, userId]);
+    return inserted?.id ?? '';
   }
 
   private async ensureAdminRole(trx: QueryLike, tenantId: string): Promise<string> {
-    await trx.query(
-      `
-        insert into auth.roles (id, tenant_id, key, name, created_at)
-        values (gen_random_uuid(), $1::uuid, 'admin', 'Admin', clock_timestamp())
-        on conflict (tenant_id, key)
-        do update set name = excluded.name
-      `,
-      [tenantId],
-    );
+    await executeTypedQuery(trx, queries.ensureAdminRole, [tenantId]);
 
-    const role = await trx.query(
-      `
-        select id::text as id
-          from auth.roles
-         where tenant_id = $1::uuid
-           and key = 'admin'
-         limit 1
-      `,
-      [tenantId],
-    );
-    return typeof role.rows[0]?.id === 'string' ? role.rows[0].id : '';
+    const role = await executeTypedQuery(trx, queries.findAdminRole, [tenantId]);
+    return role?.id ?? '';
   }
 
   private async ensureAdminRolePerms(trx: QueryLike, roleId: string): Promise<void> {
-    await trx.query(
-      `
-        insert into auth.role_perms (role_id, perm_id)
-        select $1::uuid, perm.id
-         from auth.perms perm
-         where (perm.key like 'sample:%' or perm.key like 'flow:%')
-           and (perm.key not like '%:hard-delete' or perm.key = 'sample:document:hard-delete')
-        on conflict do nothing
-      `,
-      [roleId],
-    );
+    await executeTypedQuery(trx, queries.grantAdminRolePermissions, [roleId]);
   }
 }

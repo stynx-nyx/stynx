@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import type { StynxPgClient } from '@stynx-nyx/data';
+import { executeRawScript, type StynxPgClient } from '@stynx-nyx/data';
 import type {
   DocumentFixture,
   MembershipFixture,
@@ -26,7 +26,8 @@ export function createStynxFixtures(adminClient: () => Promise<StynxPgClient>): 
       };
       const client = await adminClient();
       try {
-        await client.query(
+        await executeRawScript(
+          client,
           `
             insert into tenancy.tenants (id, slug, name, is_active, created_at, updated_at)
             values ($1::uuid, $2, $3, true, $4::timestamptz, $4::timestamptz)
@@ -48,7 +49,8 @@ export function createStynxFixtures(adminClient: () => Promise<StynxPgClient>): 
       };
       const client = await adminClient();
       try {
-        await client.query(
+        await executeRawScript(
+          client,
           `
             insert into auth.users (id, email, external_subject, locale, created_at, updated_at)
             values ($1::uuid, $2, $3, $4, $5::timestamptz, $5::timestamptz)
@@ -76,7 +78,8 @@ export function createStynxFixtures(adminClient: () => Promise<StynxPgClient>): 
       };
       const client = await adminClient();
       try {
-        await client.query(
+        await executeRawScript(
+          client,
           `
             insert into auth.memberships (
               id,
@@ -112,7 +115,8 @@ export function createStynxFixtures(adminClient: () => Promise<StynxPgClient>): 
       };
       const client = await adminClient();
       try {
-        await client.query(
+        await executeRawScript(
+          client,
           `
             insert into storage.documents (
               id,

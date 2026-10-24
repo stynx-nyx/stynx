@@ -1,6 +1,8 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { isRecord, isStringArray } from './value-validation.js';
+import { listRoutesEngine, boundaryEngine, apiCoverageEngine, openApiContractEngine, publicApiEngine, rlsEngine } from './check-engine-validation.js';
 
 /**
  * The six read-only check entry points (D-057; DEVAI v3 08 B.9, B.16, B.17, B.19, B.20).
@@ -98,122 +100,12 @@ export async function runCheck(
 // Engines: plain ESM modules shipped in the package's `engines/` directory and shared with the
 // STYNX repository scripts, so the published entry point and `pnpm api:*` run the same code.
 
-interface ListRoutesEngine {
-  inventoryRoutes(options: { repoRoot: string; scanRoots: string[] }): {
-    scanned: string[];
-    routes: Array<{
-      package: string;
-      controller: string;
-      method: string;
-      path: string;
-      permissions: string;
-      rateLimitClass: string;
-      file: string;
-      handler: string;
-      position: { line: number };
-    }>;
-    findings: CheckFinding[];
-  };
-}
-
-interface BoundaryViolation {
-  kind: string;
-  file: string;
-  line: number;
-  specifier: string;
-  message: string;
-}
-
-interface BoundaryEngine {
-  readBoundaryConfig(root: string): { source: string; config: Record<string, unknown> } | null;
-  verifyStynxBoundary(
-    root: string,
-    config: Record<string, unknown>,
-  ): { roots: string[]; scanned: string[]; seams: string[]; violations: BoundaryViolation[] };
-}
-
-interface CoverageOperation {
-  method: string;
-  path: string;
-  source: string;
-  sourceLine: number;
-}
-
-interface CoverageDrift {
-  method?: string;
-  path?: string;
-  reason: string;
-  compositionId?: string;
-}
-
-interface CoverageSummary {
-  openapiPath: string | null;
-  openapiPaths: number;
-  implementedOperations: number;
-  implementedRoutes: number;
-  parameterNameMismatches: Array<{ openapiPath: string; openapiParam: string; routeParam: string }>;
-  missingInCode: Array<{ path: string }>;
-  missingInOpenApi: Array<{ path: string }>;
-  operationDrift: CoverageDrift[];
-  compositionDrift: CoverageDrift[];
-}
-
-interface ApiCoverageEngine {
-  verifyApiCoverage(options: { root: string }): {
-    summary: CoverageSummary;
-    drift: boolean;
-    operations: CoverageOperation[];
-    openapiPath: string;
-  };
-}
-
-interface OpenApiContractEngine {
-  verifyOpenApiContract(options: {
-    root: string;
-    openapiPath?: string;
-    genericResponseAllowlistPath?: string | undefined;
-  }): {
-    paths: number;
-    operations: number;
-    failures: string[];
-    lineOf(path: string | undefined): number;
-  };
-}
-
-interface PackageSpec {
-  name: string;
-  dir: string;
-}
-
-interface Baselines {
-  packages: Record<string, unknown>;
-}
-
-interface PublicApiEngine {
-  discoverPackages(root: string, packageRoots: string[]): PackageSpec[];
-  currentBaselines(root: string, specs: PackageSpec[]): Baselines;
-  compareBaselines(expected: Baselines, current: Baselines, specs: PackageSpec[]): string[];
-}
-
-interface RlsEngine {
-  verifyRlsNegative(options: {
-    root: string;
-    ddlRoots: string[];
-    runtimeDir?: string | null;
-    runtimeEvidence?: Array<[string, RegExp]>;
-    coveragePath?: string | null;
-    coverageRequired?: boolean;
-  }): {
-    files: string[];
-    tables: string[];
-    failures: Array<{ message: string; locator: string | null }>;
-  };
-}
-
 const engineDirectory = locateEngines(dirname(fileURLToPath(import.meta.url)));
 
-async function loadEngine<T>(name: string): Promise<T> {
-  return (await import(pathToFileURL(join(engineDirectory, `${name}.mjs`)).href)) as T;
+type EngineName = 'list-routes' | 'stynx-boundary' | 'api-coverage' | 'openapi-contract' | 'public-api-baselines' | 'rls-negative';
+
+async function loadEngine(name: EngineName): Promise<unknown> {
+  return import(pathToFileURL(join(engineDirectory, `${name}.mjs`)).href);
 }
 
 function locateEngines(start: string): string {
@@ -229,7 +121,7 @@ function locateEngines(start: string): string {
 // ---------------------------------------------------------------------------------------------
 
 async function listRoutes(root: string, rootsOption: string): Promise<CheckReport> {
-  const engine = await loadEngine<ListRoutesEngine>('list-routes');
+  const engine = listRoutesEngine(await loadEngine('list-routes'));
   const patterns = splitList(rootsOption);
   const scanRoots = expandPatterns(root, patterns);
   const inventory = engine.inventoryRoutes({ repoRoot: root, scanRoots });
@@ -267,7 +159,7 @@ async function listRoutes(root: string, rootsOption: string): Promise<CheckRepor
 }
 
 async function verifyBoundary(root: string): Promise<CheckReport> {
-  const engine = await loadEngine<BoundaryEngine>('stynx-boundary');
+  const engine = boundaryEngine(await loadEngine('stynx-boundary'));
   const configured = engine.readBoundaryConfig(root);
   if (!configured) {
     return report(
@@ -316,7 +208,7 @@ async function verifyBoundary(root: string): Promise<CheckReport> {
 }
 
 async function verifyApiCoverage(root: string, strict: boolean): Promise<CheckReport> {
-  const engine = await loadEngine<ApiCoverageEngine>('api-coverage');
+  const engine = apiCoverageEngine(await loadEngine('api-coverage'));
   const { summary, drift, operations, openapiPath } = engine.verifyApiCoverage({ root });
   const documentPath = portable(relative(root, openapiPath));
   const documentText = existsSync(openapiPath) ? readFileSync(openapiPath, 'utf8') : '';
@@ -366,7 +258,7 @@ async function verifyApiCoverage(root: string, strict: boolean): Promise<CheckRe
 }
 
 async function verifyOpenApiContract(root: string): Promise<CheckReport> {
-  const engine = await loadEngine<OpenApiContractEngine>('openapi-contract');
+  const engine = openApiContractEngine(await loadEngine('openapi-contract'));
   const config = readStynxrc(root);
   const openapiPath = stringAt(config, 'apiCoverage', 'openapiPath') ?? defaultOpenApiPath;
   if (!existsSync(resolve(root, openapiPath))) {
@@ -410,7 +302,7 @@ async function verifyOpenApiContract(root: string): Promise<CheckReport> {
 }
 
 async function verifyPublicApiBaselines(root: string): Promise<CheckReport> {
-  const engine = await loadEngine<PublicApiEngine>('public-api-baselines');
+  const engine = publicApiEngine(await loadEngine('public-api-baselines'));
   const config = readStynxrc(root);
   const baselinePath = stringAt(config, 'publicApi', 'baselinePath') ?? defaultBaselinePath;
   const packageRoots = stringListAt(config, 'publicApi', 'packageRoots') ?? [
@@ -440,8 +332,11 @@ async function verifyPublicApiBaselines(root: string): Promise<CheckReport> {
     );
   }
   const baselineText = readFileSync(absoluteBaseline, 'utf8');
-  const expected = JSON.parse(baselineText) as Baselines;
-  const failures = engine.compareBaselines(expected, engine.currentBaselines(root, specs), specs);
+  const expected: unknown = JSON.parse(baselineText);
+  if (!isRecord(expected) || !isRecord(expected.packages))
+    throw new ConfigError('public-API baseline must contain a packages object');
+  const baseline = { packages: expected.packages };
+  const failures = engine.compareBaselines(baseline, engine.currentBaselines(root, specs), specs);
   const findings = failures.map((failure) => ({
     locator: `${baselinePath}:${jsonKeyLine(baselineText, specs.find((spec) => failure.startsWith(`${spec.name}:`))?.name)}`,
     message: failure,
@@ -458,7 +353,7 @@ async function verifyPublicApiBaselines(root: string): Promise<CheckReport> {
 }
 
 async function verifyRlsNegative(root: string, ddlOption: string): Promise<CheckReport> {
-  const engine = await loadEngine<RlsEngine>('rls-negative');
+  const engine = rlsEngine(await loadEngine('rls-negative'));
   const config = readStynxrc(root);
   const patterns = splitList(ddlOption);
   const ddlRoots = expandPatterns(root, patterns);
@@ -467,7 +362,7 @@ async function verifyRlsNegative(root: string, ddlOption: string): Promise<Check
   const evidence = objectAt(config, 'rlsNegative')?.['runtimeEvidence'];
   const runtimeEvidence: Array<[string, RegExp]> = Array.isArray(evidence)
     ? evidence.map((entry: unknown) => {
-        const { label, pattern } = (entry ?? {}) as { label?: unknown; pattern?: unknown };
+        const { label, pattern } = isRecord(entry) ? entry : {};
         if (typeof label !== 'string' || typeof pattern !== 'string')
           throw new ConfigError(
             '.stynxrc.json rlsNegative.runtimeEvidence entries need label and pattern',
@@ -529,7 +424,7 @@ function report(
 
 function failureFromError(command: CheckCommandName, root: string, error: unknown): CheckReport {
   const message = error instanceof Error ? error.message : String(error);
-  const code = (error as { code?: unknown } | null)?.code;
+  const code = isRecord(error) ? error.code : undefined;
   const counts = { expected: 0, observed: 0, evaluated: 0 };
   if (error instanceof ConfigError || error instanceof SyntaxError)
     return report(
@@ -541,7 +436,7 @@ function failureFromError(command: CheckCommandName, root: string, error: unknow
       'config-invalid',
     );
   if (code === 'declarations-missing') {
-    const locator = (error as { locator?: unknown }).locator;
+    const locator = isRecord(error) ? error.locator : undefined;
     return report(
       command,
       'UNKNOWN',
@@ -620,16 +515,14 @@ function readStynxrc(root: string): Record<string, unknown> {
   const path = join(root, '.stynxrc.json');
   if (!existsSync(path)) return {};
   const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed))
+  if (!isRecord(parsed))
     throw new ConfigError('.stynxrc.json must be a JSON object');
-  return parsed as Record<string, unknown>;
+  return parsed;
 }
 
 function objectAt(config: Record<string, unknown>, key: string): Record<string, unknown> | null {
   const value = config[key];
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : null;
+  return isRecord(value) ? value : null;
 }
 
 function stringAt(config: Record<string, unknown>, section: string, key: string): string | null {
@@ -647,9 +540,9 @@ function stringListAt(
 ): string[] | null {
   const value = objectAt(config, section)?.[key];
   if (value === undefined) return null;
-  if (!Array.isArray(value) || !value.every((item) => typeof item === 'string'))
+  if (!isStringArray(value))
     throw new ConfigError(`.stynxrc.json ${section}.${key} must be a list of strings`);
-  return value as string[];
+  return value;
 }
 
 function jsonKeyLine(text: string, key: string | undefined): number {

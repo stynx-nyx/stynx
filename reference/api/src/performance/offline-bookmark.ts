@@ -5,6 +5,7 @@ import { AuditSqlSink } from '@stynx-nyx/audit';
 import { Transaction } from '@stynx-nyx/data';
 import {
   canonicalOfflineSyncPayload,
+  OfflineSyncError,
   canonicalOfflineSyncPayloadHash,
   type CTG9SyncBatchItemInput,
   type OfflineSyncEvent,
@@ -13,6 +14,7 @@ import {
   type OfflineSyncItemContext,
   type OfflineSyncPayloadHashPort,
 } from '@stynx-nyx/offline-sync';
+import * as queries from './offline-bookmark.repository.js';
 
 interface BookmarkPayload {
   operation: 'create';
@@ -24,6 +26,7 @@ interface AppliedBookmark {
   serverEntityId: string;
   localEntityId: string;
   canonicalPayload: string;
+  canonicalValue: Record<string, unknown>;
   context: OfflineSyncItemContext & { receiptId: string };
   transactionId: string;
 }
@@ -42,25 +45,35 @@ class OfflineBookmarkApplicationError extends HttpException {
   }
 }
 
-function payload(item: CTG9SyncBatchItemInput): { value: BookmarkPayload; canonical: string } {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isBookmarkPayload(value: unknown): value is BookmarkPayload & Record<string, unknown> {
+  return isRecord(value) &&
+    Object.keys(value).every((key) => ['operation', 'url', 'title', 'notes'].includes(key)) &&
+    value.operation === 'create' &&
+    typeof value.url === 'string' && value.url.length >= 1 && maxLength(value.url, 2048) &&
+    (value.title === undefined || value.title === null ||
+      (typeof value.title === 'string' && maxLength(value.title, 256))) &&
+    (value.notes === undefined || value.notes === null || typeof value.notes === 'string');
+}
+
+function canonicalEventPayload(value: unknown): string {
+  if (!isRecord(value))
+    throw new OfflineSyncError('OFFLINE_SYNC_INVALID_INPUT', 400, 'Payload must contain only unambiguous JSON values.');
+  return canonicalOfflineSyncPayload(value);
+}
+
+function payload(item: CTG9SyncBatchItemInput): { value: BookmarkPayload & Record<string, unknown>; canonical: string } {
   if (item.entityType !== 'demo.bookmark')
     reject(
       'OFFLINE_SYNC_BOOKMARK_ENTITY_UNSUPPORTED',
       'This application mapping supports demo.bookmark only.',
     );
   const canonical = canonicalOfflineSyncPayload(item.payloadJson);
-  const value = JSON.parse(canonical) as Record<string, unknown>;
-  if (
-    Object.keys(value).some((key) => !['operation', 'url', 'title', 'notes'].includes(key)) ||
-    value.operation !== 'create' ||
-    typeof value.url !== 'string' ||
-    value.url.length < 1 ||
-    !maxLength(value.url, 2048) ||
-    (value.title !== undefined &&
-      value.title !== null &&
-      (typeof value.title !== 'string' || !maxLength(value.title, 256))) ||
-    (value.notes !== undefined && value.notes !== null && typeof value.notes !== 'string')
-  )
+  const value: unknown = JSON.parse(canonical);
+  if (!isBookmarkPayload(value))
     reject(
       'OFFLINE_SYNC_BOOKMARK_PAYLOAD_UNSUPPORTED',
       'A canonical bookmark create payload is required.',
@@ -73,7 +86,7 @@ function payload(item: CTG9SyncBatchItemInput): { value: BookmarkPayload; canoni
   }
   if (!['http:', 'https:'].includes(url.protocol) || !url.hostname || url.username || url.password)
     reject('OFFLINE_SYNC_BOOKMARK_URL_INVALID', 'A valid HTTP or HTTPS bookmark URL is required.');
-  return { value: value as unknown as BookmarkPayload, canonical };
+  return { value, canonical };
 }
 
 async function transactionIdentity(
@@ -96,25 +109,9 @@ async function transactionIdentity(
       'A real strict item transaction and effective application context are required.',
     );
   }
-  const result = await trx.query<{
-    actor: string;
-    tenant: string;
-    sql_role: string;
-    role: string;
-    isolation: string;
-    readonly: string;
-    transaction_id: string;
-  }>(`select current_user::text as sql_role,
-      current_setting('app.role',true) as role,
-      current_setting('app.tenant_id',true) as tenant,
-      current_setting('app.actor_id',true) as actor,
-      current_setting('transaction_isolation') as isolation,
-      current_setting('transaction_read_only') as readonly,
-      pg_current_xact_id()::text as transaction_id`);
-  const live = result.rows[0];
+  const live = await trx.run(queries.bookmarkTransactionIdentityQuery, []);
   if (
-    result.rows.length !== 1 ||
-    live?.sql_role !== 'stynx_app' ||
+    live.sql_role !== 'stynx_app' ||
     live.role !== 'app' ||
     live.tenant !== context.tenantId ||
     live.actor !== context.actorId ||
@@ -145,9 +142,10 @@ export function createOfflineBookmarkApplicationPorts(): {
     const rows = applications.get(trx);
     const applied = rows?.get(event.entityId);
     if (
+      !rows ||
       !applied ||
       event.entity !== 'demo.bookmark' ||
-      canonicalOfflineSyncPayload(event.payload as Record<string, unknown>) !==
+      canonicalEventPayload(event.payload) !==
         applied.canonicalPayload ||
       (await transactionIdentity(trx, applied.context)) !== applied.transactionId
     ) {
@@ -156,16 +154,12 @@ export function createOfflineBookmarkApplicationPorts(): {
         'The event must belong to the bookmark application in this exact transaction.',
       );
     }
-    const receipt = await trx.query<{ attempts: number }>(
-      `select (context_json->'stynx'->>'attempts')::integer as attempts
-       from offline.sync_item_receipts where tenant_id=$1::uuid and idempotency_key=$2`,
-      [applied.context.tenantId, applied.context.receiptId],
-    );
-    const attempts = receipt.rows[0]?.attempts;
+    const receipt = await trx.run(queries.bookmarkReceiptAttemptsQuery, [applied.context.tenantId, applied.context.receiptId]);
+    const attempts = receipt?.attempts;
     if (
-      receipt.rows.length !== 1 ||
+      attempts === undefined || attempts === null ||
       !Number.isSafeInteger(attempts) ||
-      attempts! < 1 ||
+      attempts < 1 ||
       ![applied.context.receiptId, `${applied.context.receiptId}:retry:${attempts}`].includes(
         event.idempotencyKey,
       )
@@ -184,7 +178,7 @@ export function createOfflineBookmarkApplicationPorts(): {
         entityId: applied.serverEntityId,
         tenantId: context.tenantId,
         actorId: context.actorId,
-        newData: JSON.parse(applied.canonicalPayload) as Record<string, unknown>,
+        newData: structuredClone(applied.canonicalValue),
         metadata: {
           offlineReceiptId: context.receiptId,
           offlineEventKey: event.idempotencyKey,
@@ -204,8 +198,8 @@ export function createOfflineBookmarkApplicationPorts(): {
       },
       trx,
     );
-    rows!.delete(event.entityId);
-    if (!rows!.size) applications.delete(trx);
+    rows.delete(event.entityId);
+    if (!rows.size) applications.delete(trx);
   };
   return {
     payloadHashPort: {
@@ -217,11 +211,7 @@ export function createOfflineBookmarkApplicationPorts(): {
         const transactionId = await transactionIdentity(trx, context);
         const serverEntityId = randomUUID();
         try {
-          const inserted = await trx.query<{ id: string }>(
-            `insert into demo.demo__bookmark_bookmark
-             (id,tenant_id,owner_id,url,title,notes,created_at,updated_at)
-             values($1::uuid,$2::uuid,$3::uuid,$4,$5,$6,$7::timestamptz,$7::timestamptz)
-             returning id::text`,
+          const inserted = await trx.run(queries.insertOfflineBookmarkQuery,
             [
               serverEntityId,
               context.tenantId,
@@ -232,13 +222,13 @@ export function createOfflineBookmarkApplicationPorts(): {
               context.now,
             ],
           );
-          if (inserted.rows.length !== 1 || inserted.rows[0]!.id !== serverEntityId)
+          if (!inserted || inserted.id !== serverEntityId)
             reject(
               'OFFLINE_SYNC_BOOKMARK_EFFECT_MISSING',
               'The canonical bookmark application did not return its actual row.',
             );
         } catch (error) {
-          if ((error as { code?: string }).code === '23505')
+          if (isRecord(error) && error.code === '23505')
             throw new OfflineBookmarkApplicationError(
               'OFFLINE_SYNC_BOOKMARK_URL_CONFLICT',
               409,
@@ -246,14 +236,16 @@ export function createOfflineBookmarkApplicationPorts(): {
             );
           throw error;
         }
-        const retainedContext = structuredClone(context) as OfflineSyncItemContext & {
-          receiptId: string;
-        };
+        const receiptId = context.receiptId;
+        if (!receiptId)
+          reject('OFFLINE_SYNC_BOOKMARK_CONTEXT_REQUIRED', 'A real strict item transaction and effective application context are required.');
+        const retainedContext = { ...structuredClone(context), receiptId };
         const rows = applications.get(trx) ?? new Map<string, AppliedBookmark>();
         rows.set(serverEntityId, {
           serverEntityId,
           localEntityId: item.localEntityId,
           canonicalPayload: decoded.canonical,
+          canonicalValue: decoded.value,
           context: retainedContext,
           transactionId,
         });

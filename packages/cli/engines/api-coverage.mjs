@@ -33,14 +33,17 @@ export function verifyApiCoverage({ root, writeOpenApi = false }) {
   schemaRegistry = buildSchemaRegistry(
     sourceRootPaths,
     implementedOperations
-      .flatMap((operation) => [operation.bodyType, operation.responseType])
+      .flatMap((operation) => [operation.bodyType, operation.jsonResponseType ?? operation.responseType])
       .filter(Boolean),
+    implementedOperations.filter((operation) => operation.jsonResponseType),
   );
   // Resolve the entire declaration population before projecting any document.
   // A secondary composition may introduce types absent from the primary contract.
   for (const operation of implementedOperations) {
     if (operation.bodyType) requestBodySchema(operation.bodyType, schemaRegistry);
-    if (operation.responseType) responseBodySchema(operation.responseType, schemaRegistry);
+    if (operation.jsonResponseType) validateJsonResponseType(operation, schemaRegistry);
+    const responseType = operation.jsonResponseType ?? operation.responseType;
+    if (responseType) responseBodySchema(responseType, schemaRegistry);
   }
 
   if (writeOpenApi) {
@@ -125,10 +128,16 @@ function discoverNestOperations(roots, prefix, returnTypes) {
   const operations = [];
   for (const file of roots.flatMap(walk).filter((path) => path.endsWith('.controller.ts'))) {
     const text = readFileSync(file, 'utf8');
+    const jsonResponseTypes = jsonResponseAnnotations(text, file);
     for (const controller of parseNestControllerDeclarations(text, { file })) {
       const serviceProperties = constructorProperties(controller.source);
       for (const member of controller.methods) {
         const fragment = member.signature;
+        const jsonResponseType = jsonResponseTypes.get(member.position.offset) ?? null;
+        if (jsonResponseType && member.registrations.length === 0) {
+          throw new Error(`${relative(repoRoot, file)}:${member.position.line}: JSON response annotation requires an HTTP route`);
+        }
+        jsonResponseTypes.delete(member.position.offset);
         const bodyParameters = member.parameters.filter((parameter) =>
           parameter.decorators.some((decorator) => decorator.name === 'Body'),
         );
@@ -169,6 +178,7 @@ function discoverNestOperations(roots, prefix, returnTypes) {
               responseType:
                 member.returnType ??
                 responseTypeName(fragment, member.source, serviceProperties, returnTypes),
+              jsonResponseType,
               hasQueryObject: queries.some((decorator) => decorator.selector.kind === 'whole'),
               isPublic: attached.some((decorator) =>
                 ['Public', 'PublicTenantRoute'].includes(decorator.name),
@@ -186,6 +196,9 @@ function discoverNestOperations(roots, prefix, returnTypes) {
         }
       }
     }
+    if (jsonResponseTypes.size > 0) {
+      throw new Error(`${relative(repoRoot, file)}: JSON response annotation requires a discovered controller route`);
+    }
   }
 
   return operations.sort(
@@ -194,6 +207,69 @@ function discoverNestOperations(roots, prefix, returnTypes) {
       left.method.localeCompare(right.method) ||
       left.source.localeCompare(right.source),
   );
+}
+
+/** Read only actual method JSDoc, never a signature/body text match. */
+function jsonResponseAnnotations(text, file) {
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+  const annotations = new Map();
+  const visit = (node) => {
+    const tags = (node.jsDoc ?? []).flatMap((doc) => [...(doc.tags ?? [])])
+      .filter((tag) => tag.tagName.text === 'stynx-json-response-type');
+    if (tags.length > 0) {
+      const line = source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
+      const refuse = (reason) => {
+        throw new Error(`${relative(repoRoot, file)}:${line}: ${reason}`);
+      };
+      if (!ts.isMethodDeclaration(node)) refuse('JSON response annotation is method-only, never a request-body annotation');
+      if (tags.length !== 1) refuse('duplicate JSON response annotation');
+      const comment = tags[0].comment;
+      const name = typeof comment === 'string' ? comment.trim() : '';
+      if (!/^[A-Za-z_$][\w$]*$/u.test(name) || name === 'UnknownJson') {
+        refuse('JSON response annotation requires a named non-generic declaration');
+      }
+      annotations.set(node.getStart(source), name);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return annotations;
+}
+
+function validateJsonResponseDeclaration(operation, registry) {
+  const name = operation.jsonResponseType;
+  const declaration = registry.declarations.get(name);
+  if (!declaration || registry.ambiguousDeclarations.has(name) || declaration.node.typeParameters?.length) {
+    throw new Error(`${operation.source}:${operation.sourceLine}: unresolved, ambiguous or generic JSON response declaration ${name}`);
+  }
+}
+
+function validateJsonResponseType(operation, registry) {
+  validateJsonResponseDeclaration(operation, registry);
+  const name = operation.jsonResponseType;
+  const visited = new Set();
+  const validate = (schema) => {
+    if (!schema || typeof schema !== 'object') return;
+    if (schema.$ref) {
+      const ref = schema.$ref;
+      if (ref === '#/components/schemas/UnknownJson') {
+        throw new Error(`${operation.source}:${operation.sourceLine}: unresolved JSON response schema ${name}`);
+      }
+      const component = ref.match(/^#\/components\/schemas\/(.+)$/u)?.[1];
+      if (component && !visited.has(component)) {
+        visited.add(component);
+        if (registry.ambiguousDeclarations.has(component)) {
+          throw new Error(`${operation.source}:${operation.sourceLine}: ambiguous JSON response schema ${component}`);
+        }
+        validate(registry.schemas[component]);
+      }
+    }
+    for (const value of Object.values(schema)) {
+      if (Array.isArray(value)) value.forEach(validate);
+      else validate(value);
+    }
+  };
+  validate(responseBodySchema(name, registry));
 }
 
 function walk(dir) {
@@ -564,7 +640,7 @@ function requestBodySchema(typeName, registry) {
 }
 
 function operationResponses(operation, registry) {
-  const schema = responseBodySchema(operation.responseType, registry);
+  const schema = responseBodySchema(operation.jsonResponseType ?? operation.responseType, registry);
   return {
     200: {
       description: 'OK',
@@ -572,6 +648,9 @@ function operationResponses(operation, registry) {
         'application/json': {
           schema,
           'x-stynx-source-type': operation.responseType,
+          ...(operation.jsonResponseType
+            ? { 'x-stynx-json-response-type': operation.jsonResponseType }
+            : {}),
           examples: {
             default: {
               value: exampleForSchema(schema, registry),
@@ -658,13 +737,14 @@ function openApiComponents(registry) {
   };
 }
 
-function buildSchemaRegistry(roots, seedTypeNames) {
+function buildSchemaRegistry(roots, seedTypeNames, jsonResponseOperations) {
   const sourceFiles = roots
     .flatMap(walk)
     .filter(
       (path) => path.endsWith('.ts') && !path.endsWith('.spec.ts') && !path.endsWith('.test.ts'),
     );
   const declarations = new Map();
+  const ambiguousDeclarations = new Set();
   for (const file of sourceFiles) {
     const source = ts.createSourceFile(
       file,
@@ -676,6 +756,8 @@ function buildSchemaRegistry(roots, seedTypeNames) {
       if ((ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name?.text) {
         if (!declarations.has(node.name.text)) {
           declarations.set(node.name.text, { node, sourceFile: source });
+        } else {
+          ambiguousDeclarations.add(node.name.text);
         }
       }
     });
@@ -683,9 +765,15 @@ function buildSchemaRegistry(roots, seedTypeNames) {
 
   const state = {
     declarations,
+    ambiguousDeclarations,
     schemas: Object.create(null),
     building: new Set(),
   };
+  // Refuse invalid wire declarations at their annotation before schema construction
+  // can emit a context-free generic-declaration diagnostic.
+  for (const operation of jsonResponseOperations) {
+    validateJsonResponseDeclaration(operation, state);
+  }
   for (const name of seedTypeNames.map(schemaNameForBodyType).filter(Boolean)) {
     schemaForTypeName(name, state);
   }

@@ -4,6 +4,7 @@ import {
   realpathSync, renameSync, rmSync, statSync, writeFileSync,
 } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { isRecord } from './value-validation.js';
 
 const namePattern = /^[A-Z][A-Za-z0-9]*$/;
 const identifierPattern = /^[a-z][a-z0-9_]*$/;
@@ -48,8 +49,8 @@ type Blueprint = { id: string; namespace: string; moduleName: string; slug: stri
 
 function fail(path: string, reason: string): never { throw new Error(`${path}: ${reason}`); }
 function object(value: unknown, path: string): JsonObject {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) fail(path, 'expected object');
-  return value as JsonObject;
+  if (!isRecord(value)) fail(path, 'expected object');
+  return value;
 }
 function keys(value: JsonObject, required: string[], optional: string[], path: string): void {
   for (const key of required) if (!(key in value)) fail(`${path}/${key}`, 'required');
@@ -307,32 +308,75 @@ function renderModule(blueprint: Blueprint, header: string): string {
   return `${header}import { Module } from '@nestjs/common';\nimport { ${blueprint.moduleName}Repository } from './${blueprint.slug}.repository';\n${controllerImport}\n@Module({ controllers: ${controllers}, providers: [${blueprint.moduleName}Repository], exports: [${blueprint.moduleName}Repository] })\nexport class ${blueprint.moduleName}Module {}\n`;
 }
 function renderRepository(blueprint: Blueprint, header: string): string {
-  const lines = [header, `import { Injectable } from '@nestjs/common';`, `import { RequestContext } from '@stynx-nyx/core';`, `import { Database } from '@stynx-nyx/data';`, ''];
+  const typedEntities = blueprint.entities;
+  const lines = [header, `import { Injectable } from '@nestjs/common';`, `import { RequestContext } from '@stynx-nyx/core';`,
+    typedEntities.length ? `import { Database, defineQuery, sql } from '@stynx-nyx/data';` : `import { Database } from '@stynx-nyx/data';`,
+    ...(typedEntities.length ? [`import { z } from 'zod';`] : []), ''];
+  if (blueprint.entities.some((entity) => entity.fields.some((field) => field.type === 'timestamptz'))) {
+    lines.push('/** Raw PostgreSQL timestamp; numeric values are only positive/negative Infinity. Date includes Invalid Date. */', 'export type TimestampResult = Date | string | number;', '');
+  }
   for (const entity of blueprint.entities) {
     lines.push(`export interface ${entity.name}Record extends Record<string, unknown> {`);
     for (const field of entity.fields) {
-      const type = field.type === 'integer' ? 'number' : field.type === 'boolean' ? 'boolean' : 'string';
+      const type = field.type === 'integer' ? 'number' : field.type === 'boolean' ? 'boolean' : field.type === 'timestamptz' ? 'TimestampResult' : 'string';
       lines.push(`  ${field.name}: ${type}${field.nullable ? ' | null' : ''};`);
     }
     lines.push('}', '');
   }
+  if (typedEntities.length) {
+    lines.push(`const queryUuid = z.string().regex(/^(?:(?:[0-9a-f]{4}-?){7}[0-9a-f]{4}|\\{(?:[0-9a-f]{4}-?){7}[0-9a-f]{4}\\})$/iu);`, '');
+  }
+  for (const entity of typedEntities) {
+    const table = `${q(blueprint.namespace)}.${q(entity.table)}`;
+    lines.push(`const query${entity.name}Row = z.object({`);
+    for (const field of entity.fields) {
+      const validator = field.type === 'integer' ? 'z.number().int().min(-2147483648).max(2147483647)'
+        : field.type === 'boolean' ? 'z.boolean()'
+        : field.type === 'uuid' ? 'queryUuid'
+        : field.type === 'timestamptz' ? 'z.union([z.instanceof(Date), z.string(), z.custom<number>((value) => value === Number.POSITIVE_INFINITY || value === Number.NEGATIVE_INFINITY)])'
+        : field.type.startsWith('varchar(') ? `z.string().refine((value) => [...value].length <= ${Number(field.type.slice(8, -1))})`
+        : 'z.string()';
+      lines.push(`  ${field.name}: ${validator}${field.nullable ? '.nullable()' : ''},`);
+    }
+    lines.push('}).passthrough();', '');
+    for (const operation of ['list', 'get', 'delete']) {
+      const text = operation === 'list' ? `SELECT * FROM ${table} WHERE ${q('tenant_id')} = $1`
+        : `${operation === 'delete' ? 'DELETE' : 'SELECT *'} FROM ${table} WHERE ${q('id')} = $1 AND ${q('tenant_id')} = $2${operation === 'delete' ? ' RETURNING *' : ''}`;
+      lines.push(`const query${entity.name}${operation} = defineQuery({`,
+        `  name: '${blueprint.namespace}.${entity.table}.${operation}',`,
+        `  text: sql\`${text}\`,`,
+        `  params: z.tuple([${operation === 'list' ? '' : 'queryUuid, '}queryUuid.nullish()]),`,
+        `  row: query${entity.name}Row,`,
+        `  expects: '${operation === 'list' ? 'many' : 'zero-or-one'}',`,
+        '});', '');
+    }
+  }
   lines.push('@Injectable()', `export class ${blueprint.moduleName}Repository {`, `  constructor(private readonly database: Database, private readonly context: RequestContext) {}`, '');
   for (const entity of blueprint.entities) {
+    const typed = typedEntities.includes(entity);
     const table = `${q(blueprint.namespace)}.${q(entity.table)}`;
     const writable = entity.fields.filter((field) => field.name !== 'id' && field.name !== 'tenant_id');
     const columnMap = Object.fromEntries(writable.map((field) => [field.name, q(field.name)]));
     lines.push(`  private readonly ${entity.name}Columns: Record<string, string> = ${JSON.stringify(columnMap)};`, '');
     lines.push(`  async list${entity.name}(): Promise<${entity.name}Record[]> {`);
     lines.push(`    const tenantId = this.context.tenantId;`);
-    lines.push(`    return this.database.tx(async (trx) => (await trx.query<${entity.name}Record>(`);
-    lines.push(`      'SELECT * FROM ${table} WHERE ${q('tenant_id')} = $1', [tenantId],`);
-    lines.push(`    )).rows, { role: 'app' });`);
+    if (typed) {
+      lines.push(`    return this.database.tx(async (trx) => [...await trx.run(query${entity.name}list, [tenantId])], { role: 'app' });`);
+    } else {
+      lines.push(`    return this.database.tx(async (trx) => (await trx.query<${entity.name}Record>(`);
+      lines.push(`      'SELECT * FROM ${table} WHERE ${q('tenant_id')} = $1', [tenantId],`);
+      lines.push(`    )).rows, { role: 'app' });`);
+    }
     lines.push('  }', '');
     lines.push(`  async get${entity.name}(id: string): Promise<${entity.name}Record | null> {`);
     lines.push(`    const tenantId = this.context.tenantId;`);
-    lines.push(`    return this.database.tx(async (trx) => (await trx.query<${entity.name}Record>(`);
-    lines.push(`      'SELECT * FROM ${table} WHERE ${q('id')} = $1 AND ${q('tenant_id')} = $2', [id, tenantId],`);
-    lines.push(`    )).rows[0] ?? null, { role: 'app' });`);
+    if (typed) {
+      lines.push(`    return this.database.tx(async (trx) => trx.run(query${entity.name}get, [id, tenantId]), { role: 'app' });`);
+    } else {
+      lines.push(`    return this.database.tx(async (trx) => (await trx.query<${entity.name}Record>(`);
+      lines.push(`      'SELECT * FROM ${table} WHERE ${q('id')} = $1 AND ${q('tenant_id')} = $2', [id, tenantId],`);
+      lines.push(`    )).rows[0] ?? null, { role: 'app' });`);
+    }
     lines.push('  }', '');
     lines.push(`  async create${entity.name}(input: Record<string, unknown>): Promise<${entity.name}Record> {`);
     lines.push(`    const names = Object.keys(input);`);
@@ -360,9 +404,13 @@ function renderRepository(blueprint: Blueprint, header: string): string {
     lines.push('  }', '');
     lines.push(`  async delete${entity.name}(id: string): Promise<${entity.name}Record | null> {`);
     lines.push(`    const tenantId = this.context.tenantId;`);
-    lines.push(`    return this.database.tx(async (trx) => (await trx.query<${entity.name}Record>(`);
-    lines.push(`      'DELETE FROM ${table} WHERE ${q('id')} = $1 AND ${q('tenant_id')} = $2 RETURNING *', [id, tenantId],`);
-    lines.push(`    )).rows[0] ?? null, { role: 'app' });`);
+    if (typed) {
+      lines.push(`    return this.database.tx(async (trx) => trx.run(query${entity.name}delete, [id, tenantId]), { role: 'app' });`);
+    } else {
+      lines.push(`    return this.database.tx(async (trx) => (await trx.query<${entity.name}Record>(`);
+      lines.push(`      'DELETE FROM ${table} WHERE ${q('id')} = $1 AND ${q('tenant_id')} = $2 RETURNING *', [id, tenantId],`);
+      lines.push(`    )).rows[0] ?? null, { role: 'app' });`);
+    }
     lines.push('  }', '');
   }
   lines.push('}', '');

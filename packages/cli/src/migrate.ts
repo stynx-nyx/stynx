@@ -1,6 +1,14 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { Client } from 'pg';
+import { executeRawScript, executeTypedQuery } from '@stynx-nyx/data';
+import {
+  appliedMigrationIdsQuery,
+  latestAppliedIdsQuery,
+  recordMigrationQuery,
+  recordMigrationJournalQuery,
+  removeMigrationQuery,
+} from './migration.repository.js';
 
 export interface MigrationClient {
   connect(): Promise<void>;
@@ -40,10 +48,6 @@ export interface MigrationSpec {
   downPath?: string;
 }
 
-interface JournalRow {
-  id: string;
-}
-
 /** Role prefix the platform migration files are written with. */
 const DEFAULT_ROLE_PREFIX = 'stynx';
 const ROLE_PREFIX_PATTERN = /^[a-z_][a-z0-9_]*$/u;
@@ -70,9 +74,14 @@ function applyRolePrefix(sql: string, prefix: string): string {
 }
 
 function defaultClientFactory(options: MigrationClientFactoryOptions): MigrationClient {
-  return new Client(
+  const client = new Client(
     options.connectionString === undefined ? {} : { connectionString: options.connectionString },
-  ) as unknown as MigrationClient;
+  );
+  return {
+    connect: async () => { await client.connect(); },
+    end: () => client.end(),
+    query: client.query.bind(client),
+  };
 }
 
 function migrationDirectory(rootDir: string, options?: MigrationOptions): string {
@@ -109,15 +118,15 @@ async function withClient<T>(
 }
 
 async function ensureMigrationTables(client: MigrationClient): Promise<void> {
-  await client.query('create schema if not exists core');
-  await client.query(`
+  await executeRawScript(client, 'create schema if not exists core');
+  await executeRawScript(client, `
     create table if not exists core.schema_migrations (
       id text primary key,
       checksum text,
       applied_at timestamptz not null default clock_timestamp()
     )
   `);
-  await client.query(`
+  await executeRawScript(client, `
     create table if not exists core.schema_migration_journal (
       seq bigserial primary key,
       id text not null,
@@ -129,30 +138,22 @@ async function ensureMigrationTables(client: MigrationClient): Promise<void> {
 }
 
 async function appliedMigrationIds(client: MigrationClient): Promise<string[]> {
-  const appliedRows = await client.query('select id from core.schema_migrations order by id');
-  return (appliedRows.rows as Array<{ id: string }>).map((row) => row.id);
+  const rows = await executeTypedQuery(client, appliedMigrationIdsQuery, []);
+  return rows.map((row) => row.id);
 }
 
 async function promoteBootstrapObjectsToOwner(client: MigrationClient, prefix: string): Promise<void> {
   // `prefix` is a validated lower-case identifier (rolePrefixOf).
   const owner = `${prefix}_owner`;
-  await client.query(`ALTER SCHEMA core OWNER TO ${owner}`);
-  await client.query(`ALTER TABLE core.schema_migrations OWNER TO ${owner}`);
-  await client.query(`ALTER TABLE core.schema_migration_journal OWNER TO ${owner}`);
-  await client.query(`SET ROLE ${owner}`);
+  await executeRawScript(client, `ALTER SCHEMA core OWNER TO ${owner}`);
+  await executeRawScript(client, `ALTER TABLE core.schema_migrations OWNER TO ${owner}`);
+  await executeRawScript(client, `ALTER TABLE core.schema_migration_journal OWNER TO ${owner}`);
+  await executeRawScript(client, `SET ROLE ${owner}`);
 }
 
 async function latestAppliedIds(client: MigrationClient, limit: number): Promise<string[]> {
-  const result = await client.query(
-    `
-      select id
-      from core.schema_migrations
-      order by applied_at desc, id desc
-      limit $1
-    `,
-    [limit],
-  );
-  return (result.rows as JournalRow[]).map((row) => row.id);
+  const rows = await executeTypedQuery(client, latestAppliedIdsQuery, [limit]);
+  return rows.map((row) => row.id);
 }
 
 function checksum(sql: string): string {
@@ -162,24 +163,14 @@ function checksum(sql: string): string {
 async function applyMigrationUp(client: MigrationClient, spec: MigrationSpec, prefix: string): Promise<void> {
   // The checksum stays the file's: the prefix is applied, never recorded.
   const sql = readFileSync(spec.upPath, 'utf8');
-  await client.query('begin');
+  await executeRawScript(client, 'begin');
   try {
-    await client.query(applyRolePrefix(sql, prefix));
-    await client.query(
-      `
-        insert into core.schema_migrations (id, checksum, applied_at)
-        values ($1, $2, clock_timestamp())
-        on conflict (id) do update set checksum = excluded.checksum, applied_at = excluded.applied_at
-      `,
-      [spec.id, checksum(sql)],
-    );
-    await client.query(
-      'insert into core.schema_migration_journal (id, checksum, direction) values ($1, $2, $3)',
-      [spec.id, checksum(sql), 'up'],
-    );
-    await client.query('commit');
+    await executeRawScript(client, applyRolePrefix(sql, prefix));
+    await executeTypedQuery(client, recordMigrationQuery, [spec.id, checksum(sql)]);
+    await executeTypedQuery(client, recordMigrationJournalQuery, [spec.id, checksum(sql), 'up']);
+    await executeRawScript(client, 'commit');
   } catch (error) {
-    await client.query('rollback');
+    await executeRawScript(client, 'rollback');
     throw error;
   }
 }
@@ -189,17 +180,14 @@ async function applyMigrationDown(client: MigrationClient, spec: MigrationSpec, 
     throw new Error(`Migration ${spec.id} is not rollbackable: missing .down.sql pair`);
   }
   const sql = readFileSync(spec.downPath, 'utf8');
-  await client.query('begin');
+  await executeRawScript(client, 'begin');
   try {
-    await client.query(applyRolePrefix(sql, prefix));
-    await client.query('delete from core.schema_migrations where id = $1', [spec.id]);
-    await client.query(
-      'insert into core.schema_migration_journal (id, checksum, direction) values ($1, $2, $3)',
-      [spec.id, checksum(sql), 'down'],
-    );
-    await client.query('commit');
+    await executeRawScript(client, applyRolePrefix(sql, prefix));
+    await executeTypedQuery(client, removeMigrationQuery, [spec.id]);
+    await executeTypedQuery(client, recordMigrationJournalQuery, [spec.id, checksum(sql), 'down']);
+    await executeRawScript(client, 'commit');
   } catch (error) {
-    await client.query('rollback');
+    await executeRawScript(client, 'rollback');
     throw error;
   }
 }

@@ -1,8 +1,9 @@
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { types } from 'node:util';
 import { Injectable } from '@nestjs/common';
-import { createStynxPgClient, Database } from '@stynx-nyx/data';
+import { createStynxPgClient, Database, executeTypedQuery } from '@stynx-nyx/data';
 import type { OfflineSyncAgentResolver, TrustedOfflineSyncScope } from '@stynx-nyx/offline-sync';
+import * as queries from './offline-agent.repository.js';
 
 const purpose = 'stynx-http-reference-offline-agent';
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/u;
@@ -57,9 +58,7 @@ function fixture() {
     refuse();
   context ??= current;
   if (
-    Object.keys(current).some(
-      (key) => current[key as keyof typeof current] !== context![key as keyof typeof current],
-    )
+    (['fixtureId', 'secret', 'databaseUrl'] as const).some((key) => current[key] !== context?.[key])
   )
     refuse();
   return context;
@@ -130,7 +129,7 @@ function verify(value: unknown, scope: TrustedOfflineSyncScope): AgentBinding {
   )
     refuse();
   const expected = binding(scope, value.agentId);
-  if (Object.keys(expected).some((name) => value[name] !== expected[name as keyof AgentBinding]))
+  if (Object.entries(expected).some(([name, expectedValue]) => value[name] !== expectedValue))
     refuse();
   const received = Buffer.from(value.mac, 'hex');
   const wanted = mac(expected);
@@ -159,22 +158,11 @@ export class OfflineReferenceAgentBindings {
       () =>
         this.database.txIndependent(
           async (trx) => {
-            const role = await trx.query<{ role: string }>('select current_user::text as role');
-            if (role.rows.length !== 1 || role.rows[0]!.role !== 'stynx_owner') refuse();
-            await trx.query(
-              `insert into core.config(key,tenant_id,value) values($1,$2,$3::jsonb)
-          on conflict(key) do nothing`,
-              [key(scope), scope.tenantId, JSON.stringify(value)],
-            );
-            const stored = await trx.query<{ value: unknown; tenant_id: string }>(
-              'select value, tenant_id::text from core.config where key=$1',
-              [key(scope)],
-            );
-            if (
-              stored.rows.length !== 1 ||
-              stored.rows[0]!.tenant_id !== scope.tenantId ||
-              verify(stored.rows[0]!.value, scope).agentId !== agentId
-            )
+            const role = await trx.run(queries.offlineAgentRoleQuery, []);
+            if (role.role !== 'stynx_owner') refuse();
+            await trx.run(queries.insertOfflineAgentBindingQuery, [key(scope), scope.tenantId, JSON.stringify(value)]);
+            const stored = await trx.run(queries.offlineAgentStoredBindingQuery, [key(scope)]);
+            if (!stored || stored.tenant_id !== scope.tenantId || verify(stored.value, scope).agentId !== agentId)
               refuse();
           },
           { role: 'owner', retry: false },
@@ -203,39 +191,21 @@ export function createReferenceOfflineAgentResolver(): OfflineSyncAgentResolver 
       });
       try {
         await client.connect();
-        await client.query('begin read only');
-        await client.query(
-          `select set_config('app.tenant_id',$1,true),set_config('app.actor_id',$2,true),set_config('app.role','app',true)`,
-          [scope.tenantId, scope.actorId],
-        );
-        const result = await client.query<{
-          value: unknown;
-          tenant_id: string;
-          role: string;
-          tenant: string;
-          actor: string;
-          readonly: string;
-          application_role: string;
-        }>(
-          `select value, tenant_id::text, current_user::text as role,
-          current_setting('app.tenant_id') as tenant,current_setting('app.actor_id') as actor,
-          current_setting('transaction_read_only') as readonly,current_setting('app.role') as application_role
-          from core.config where key=$1 and tenant_id=$2`,
-          [key(scope), scope.tenantId],
-        );
-        const row = result.rows[0];
+        await executeTypedQuery(client, queries.beginOfflineAgentReadQuery, []);
+        await executeTypedQuery(client, queries.setOfflineAgentScopeQuery, [scope.tenantId, scope.actorId]);
+        const row = await executeTypedQuery(client, queries.resolveOfflineAgentBindingQuery, [key(scope), scope.tenantId]);
         if (
-          result.rows.length !== 1 ||
-          row!.role !== 'stynx_app' ||
-          row!.application_role !== 'app' ||
-          row!.tenant !== scope.tenantId ||
-          row!.actor !== scope.actorId ||
-          row!.tenant_id !== scope.tenantId ||
-          row!.readonly !== 'on'
+          !row ||
+          row.role !== 'stynx_app' ||
+          row.application_role !== 'app' ||
+          row.tenant !== scope.tenantId ||
+          row.actor !== scope.actorId ||
+          row.tenant_id !== scope.tenantId ||
+          row.readonly !== 'on'
         )
           refuse();
-        const verified = verify(row!.value, scope);
-        await client.query('commit');
+        const verified = verify(row.value, scope);
+        await executeTypedQuery(client, queries.commitOfflineAgentReadQuery, []);
         return verified.agentId;
       } finally {
         await client.end();

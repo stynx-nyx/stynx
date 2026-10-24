@@ -314,8 +314,8 @@ function extractForeignKeys(table: TableDescriptor): ForeignKeyDescriptor[] {
     if (nullable !== undefined) {
       descriptor.nullable = nullable;
     }
-    const annotation = annotationMatch?.[1]?.toLowerCase() as ForeignKeyDescriptor['annotation'] | undefined;
-    if (annotation) {
+    const annotation = annotationMatch?.[1]?.toLowerCase();
+    if (annotation === 'hide' || annotation === 'cascade' || annotation === 'block') {
       descriptor.annotation = annotation;
     }
     descriptors.push(descriptor);

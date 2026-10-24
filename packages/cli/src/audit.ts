@@ -1,4 +1,6 @@
 import { Client } from 'pg';
+import { executeTypedQuery } from '@stynx-nyx/data';
+import { auditTenantIdsQuery, verifyTenantChainQuery } from './audit.repository.js';
 
 export interface AuditVerifyClient {
   connect(): Promise<void>;
@@ -29,17 +31,13 @@ export interface AuditVerifyResult {
   tenants: AuditVerifyTenantResult[];
 }
 
-interface TenantRow {
-  tenant_id: string;
-}
-
-interface AuditVerifyRow {
-  event_id: string;
-  chain_valid: boolean;
-}
-
 function defaultClientFactory(options: AuditVerifyClientFactoryOptions): AuditVerifyClient {
-  return new Client({ connectionString: options.connectionString }) as unknown as AuditVerifyClient;
+  const client = new Client({ connectionString: options.connectionString });
+  return {
+    connect: async () => { await client.connect(); },
+    end: () => client.end(),
+    query: client.query.bind(client),
+  };
 }
 
 function sanitizeLimit(limit: number | undefined): number {
@@ -54,21 +52,12 @@ async function verifyTenant(
   tenantId: string,
   limit: number,
 ): Promise<AuditVerifyTenantResult> {
-  const result = await client.query<AuditVerifyRow>(
-    `
-      select
-        event_id::text as event_id,
-        chain_valid
-      from audit.verify_chain($1::uuid, $2::int)
-      order by occurred_at, event_id
-    `,
-    [tenantId, limit],
-  );
-  const firstBroken = result.rows.find((row) => !row.chain_valid);
+  const rows = await executeTypedQuery(client, verifyTenantChainQuery, [tenantId, limit]);
+  const firstBroken = rows.find((row) => !row.chain_valid);
   return {
     tenantId,
     valid: firstBroken === undefined,
-    totalChecked: result.rows.length,
+    totalChecked: rows.length,
     ...(firstBroken ? { firstBrokenEventId: firstBroken.event_id } : {}),
   };
 }
@@ -83,14 +72,7 @@ export async function verifyAuditChain(
     const limit = sanitizeLimit(options.limit);
     const tenantIds = options.tenantId
       ? [options.tenantId]
-      : (await client.query<TenantRow>(
-        `
-          select distinct tenancy_id::text as tenant_id
-          from audit.events
-          where tenancy_id is not null
-          order by tenancy_id::text
-        `,
-      )).rows.map((row) => row.tenant_id);
+      : (await executeTypedQuery(client, auditTenantIdsQuery, [])).map((row) => row.tenant_id);
 
     const tenants: AuditVerifyTenantResult[] = [];
     for (const tenantId of tenantIds) {

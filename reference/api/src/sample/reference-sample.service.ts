@@ -6,6 +6,7 @@ import {
 import { RequestContext } from '@stynx-nyx/core';
 import { Database, type SoftDeletableTable } from '@stynx-nyx/data';
 import { DocumentsService } from '@stynx-nyx/storage';
+import { sampleArchiveLookups } from './sample-archive.repository.js';
 import { and, desc, eq } from 'drizzle-orm';
 import type {
   CompleteDocumentDto,
@@ -38,7 +39,7 @@ type SampleTable =
   | typeof workItemLocks;
 
 type ArchiveDeleteConfig = {
-  archiveTable: string;
+  archiveTable: keyof typeof sampleArchiveLookups;
 };
 
 const HARD_DELETE_CONFIRMATION = 'I understand this is irrecoverable';
@@ -458,11 +459,8 @@ export class ReferenceSampleService {
 
   private async hardDelete(id: string, config: ArchiveDeleteConfig) {
     return this.database.tx(async (trx) => {
-      const archived = await trx.query<{ archive_id: string }>(
-        `select archive_id::text as archive_id from ${config.archiveTable} where id = $1::uuid and tenant_id = $2::uuid limit 1`,
-        [id, this.requireTenantId()],
-      );
-      const archiveId = archived.rows[0]?.archive_id;
+      const archived = await trx.run(sampleArchiveLookups[config.archiveTable], [id, this.requireTenantId()]);
+      const archiveId = archived?.archive_id;
       if (!archiveId) {
         throw new NotFoundException('RESOURCE_NOT_FOUND');
       }

@@ -23,6 +23,7 @@ export function scaffoldApp(targetDir: string, appName: string, angular = false)
       '@stynx-nyx/storage': 'workspace:*',
       '@stynx-nyx/privacy': 'workspace:*',
       '@stynx-nyx/i18n': 'workspace:*',
+      zod: '^4.3.6',
     },
   }, null, 2) + '\n');
   write(resolve(targetDir, 'tsconfig.json'), JSON.stringify({

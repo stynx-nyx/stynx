@@ -1,3 +1,4 @@
+import { readonlyWriteProbeQuery } from './reference-probes.repository.js';
 import { randomUUID } from 'node:crypto';
 import { BadRequestException, Controller, Get, Headers, Post, Query, Res, UseGuards } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
@@ -134,15 +135,7 @@ export class ReferenceProbesController {
   async readonlyWrite() {
     await this.database.tx(
       async (trx) => {
-        await trx.query(
-          `
-            insert into tenancy.tenant_settings (tenant_id, updated_at)
-            values ($1::uuid, clock_timestamp())
-            on conflict (tenant_id)
-            do update set updated_at = clock_timestamp()
-          `,
-          ['00000000-0000-0000-0000-000000000000'],
-        );
+        await trx.run(readonlyWriteProbeQuery, ['00000000-0000-0000-0000-000000000000']);
       },
       { role: 'reader', readonly: true },
     );

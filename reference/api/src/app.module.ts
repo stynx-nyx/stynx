@@ -10,7 +10,8 @@ import {
   AuditInterceptor,
   STYNX_AUDIT_SINK,
 } from '@stynx-nyx/backend';
-import { Database, StynxDataModule } from '@stynx-nyx/data';
+import { Database, StynxDataModule, createScopedQueryExecutor, executeRawScript, executeTypedQuery } from '@stynx-nyx/data';
+import { appliedReferenceMigrationsQuery, legacySampleTablesQuery, recordLegacyMigrationQuery, recordReferenceMigrationQuery } from './migration.repository.js';
 import { StynxFlowModule } from '@stynx-nyx/flow';
 import { StynxHealthModule } from '@stynx-nyx/health';
 import { StynxLoggingModule } from '@stynx-nyx/logging';
@@ -80,27 +81,9 @@ async function bootstrapLegacyReferenceMigrationState(
   },
   scope: string,
 ): Promise<void> {
-  const existingSampleTables = await owner.query<{ table_name: string }>(
-    `
-      select table_name
-      from information_schema.tables
-      where table_schema = 'sample'
-        and table_name in ('record', 'record_note', 'work_item', 'work_item_entry', 'work_item_lock')
-    `,
-  );
-
-  if (existingSampleTables.rows.length !== 5) {
-    return;
-  }
-
-  await owner.query(
-    `
-      insert into core.app_schema_migrations (scope, id, checksum, applied_at)
-      values ($1, '0001_reference.sql', 'legacy-bootstrap', clock_timestamp())
-      on conflict (scope, id) do nothing
-    `,
-    [scope],
-  );
+  const existingSampleTables = await executeTypedQuery(owner, legacySampleTablesQuery, []);
+  if (existingSampleTables.length !== 5) return;
+  await executeTypedQuery(owner, recordLegacyMigrationQuery, [scope]);
 }
 
 async function runReferenceApiMigrations(
@@ -119,7 +102,7 @@ async function runReferenceApiMigrations(
 ): Promise<void> {
   const owner = await pools.owner.connect();
   try {
-    await owner.query(`
+    await executeRawScript(owner, `
       create schema if not exists core;
       create table if not exists core.app_schema_migrations (
         scope text not null,
@@ -136,15 +119,8 @@ async function runReferenceApiMigrations(
       .sort();
     const scope = 'reference-api';
     await bootstrapLegacyReferenceMigrationState(owner, scope);
-    const applied = await owner.query<{ id: string }>(
-      `
-        select id
-        from core.app_schema_migrations
-        where scope = $1
-      `,
-      [scope],
-    );
-    const appliedIds = new Set(applied.rows.map((row) => row.id));
+    const applied = await executeTypedQuery(owner, appliedReferenceMigrationsQuery, [scope]);
+    const appliedIds = new Set(applied.map((row) => row.id));
 
     for (const filename of filenames) {
       if (appliedIds.has(filename)) {
@@ -152,20 +128,13 @@ async function runReferenceApiMigrations(
       }
 
       const sql = readFileSync(resolve(migrationDir, filename), 'utf8');
-      await owner.query('BEGIN');
+      await executeRawScript(owner, 'BEGIN');
       try {
-        await owner.query(sql);
-        await owner.query(
-          `
-            insert into core.app_schema_migrations (scope, id, checksum, applied_at)
-            values ($1, $2, md5($3), clock_timestamp())
-            on conflict (scope, id) do nothing
-          `,
-          [scope, filename, sql],
-        );
-        await owner.query('COMMIT');
+        await executeRawScript(owner, sql);
+        await executeTypedQuery(owner, recordReferenceMigrationQuery, [scope, filename, sql]);
+        await executeRawScript(owner, 'COMMIT');
       } catch (error) {
-        await owner.query('ROLLBACK').catch(() => undefined);
+        await executeRawScript(owner, 'ROLLBACK').catch(() => undefined);
         throw error;
       }
     }
@@ -302,15 +271,14 @@ export class GuardedPreferencesController extends PreferencesController {}
       inject: [Database],
       useFactory: (database: Database) =>
         new AuditSqlSink(
-          {
-            query: async (sql: string, params?: unknown[]) =>
-              database.withSystemContext('reference-api audit sink', async () =>
-                database.tx(async (trx) => trx.query(sql, params), {
-                  role: 'owner',
-                  readonly: false,
-                }),
-              ),
-          },
+          createScopedQueryExecutor((consume) =>
+            database.withSystemContext('reference-api audit sink', async () =>
+              database.tx((trx) => consume(trx), {
+                role: 'owner',
+                readonly: false,
+              }),
+            ),
+          ),
           { mode: 'audit_write_function' },
         ),
     },

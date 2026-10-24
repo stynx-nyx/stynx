@@ -3,16 +3,18 @@ import { getTableConfig } from 'drizzle-orm/pg-core';
 import { getTableColumns } from 'drizzle-orm/utils';
 import type { Database, SoftDeletableTable } from '@stynx-nyx/data';
 import {
+  executeConfiguredQuery,
   ReadOnlyViolationError,
   RestoreConflictError,
   SoftDeleteBlockedError,
 } from '@stynx-nyx/data';
+import { archiveColumnsQuery, archiveMirrorCountQuery, auditRowsQuery } from './matchers.repository.js';
 
 function tableMeta(table: AnyPgTable) {
   const config = getTableConfig(table);
   const schema = config.schema ?? 'public';
   const name = config.name;
-  const columns = Object.values(getTableColumns(table)).map((column) => (column as { name: string }).name);
+  const columns = Object.values(getTableColumns(table)).map((column) => column.name);
   return {
     schema,
     name,
@@ -22,13 +24,20 @@ function tableMeta(table: AnyPgTable) {
   };
 }
 
-async function scalar(database: Database, query: string, values: unknown[]): Promise<number> {
+async function countRows(
+  database: Database,
+  relation: 'archive' | 'live',
+  meta: ReturnType<typeof tableMeta>,
+  id: string,
+): Promise<number> {
   return database.withSystemContext('testing matcher scalar', async () =>
     database.tx(
       async (trx) => {
-        const result = await trx.query<{ value: string | number }>(query, values);
-        const row = result.rows[0];
-        return Number(row?.value ?? 0);
+        const identifiers = { schema: meta.schema, table: meta.name };
+        const result = relation === 'archive'
+          ? await executeConfiguredQuery(trx, 'testing.archive-count', identifiers, [id])
+          : await executeConfiguredQuery(trx, 'testing.live-count', identifiers, [id]);
+        return result.rows[0]?.value ?? 0;
       },
       { role: 'owner', readonly: true, replica: false },
     ),
@@ -41,7 +50,7 @@ export async function expectRLSIsolated<T extends Record<string, unknown>>(
 ): Promise<void> {
   const rows = await query(options.tenantA);
   const leaked = rows.filter((row) => {
-    const tenantId = (row.tenantId ?? row.tenant_id) as string | undefined;
+    const tenantId = row.tenantId ?? row.tenant_id;
     return tenantId === options.tenantB;
   });
 
@@ -71,22 +80,11 @@ export async function auditExpect(
   await database.withSystemContext('testing audit expectation', async () =>
     database.tx(
       async (trx) => {
-        const result = await trx.query<{
-          tags: Record<string, unknown> | null;
-        }>(
-          `
-            select tags
-            from audit.log
-            where operation = $1
-              and ($2::text is null or table_schema = $2)
-              and table_name = $3
-              and ($4::text is null or row_id = $4)
-            order by occurred_at desc, id desc
-          `,
-          [operation, options.schema ?? null, entity, options.rowId ?? null],
-        );
+        const rows = await trx.run(auditRowsQuery, [
+          operation, options.schema ?? null, entity, options.rowId ?? null,
+        ]);
 
-        const matching = result.rows.filter((row) =>
+        const matching = rows.filter((row) =>
           Object.entries(options.tags ?? {}).every(([key, value]) => row.tags?.[key] === value),
         );
 
@@ -104,12 +102,8 @@ export async function expectInArchive<T extends AnyPgTable>(
   table: SoftDeletableTable<T>,
   id: string,
 ): Promise<void> {
-  const meta = tableMeta(table as AnyPgTable);
-  const count = await scalar(
-    database,
-    `select count(*)::int as value from ${meta.archive} where id = $1::uuid`,
-    [id],
-  );
+  const meta = tableMeta(table);
+  const count = await countRows(database, 'archive', meta, id);
   if (count === 0) {
     throw new Error(`Expected ${meta.archive} to contain row ${id}`);
   }
@@ -120,12 +114,8 @@ export async function expectNotInLive<T extends AnyPgTable>(
   table: SoftDeletableTable<T>,
   id: string,
 ): Promise<void> {
-  const meta = tableMeta(table as AnyPgTable);
-  const count = await scalar(
-    database,
-    `select count(*)::int as value from ${meta.qualified} where id = $1::uuid`,
-    [id],
-  );
+  const meta = tableMeta(table);
+  const count = await countRows(database, 'live', meta, id);
   if (count !== 0) {
     throw new Error(`Expected ${meta.qualified} to not contain row ${id}`);
   }
@@ -136,17 +126,9 @@ export async function expectRestored<T extends AnyPgTable>(
   table: SoftDeletableTable<T>,
   id: string,
 ): Promise<void> {
-  const meta = tableMeta(table as AnyPgTable);
-  const liveCount = await scalar(
-    database,
-    `select count(*)::int as value from ${meta.qualified} where id = $1::uuid`,
-    [id],
-  );
-  const archiveCount = await scalar(
-    database,
-    `select count(*)::int as value from ${meta.archive} where id = $1::uuid`,
-    [id],
-  );
+  const meta = tableMeta(table);
+  const liveCount = await countRows(database, 'live', meta, id);
+  const archiveCount = await countRows(database, 'archive', meta, id);
   if (liveCount === 0 || archiveCount !== 0) {
     throw new Error(`Expected ${id} to be restored into ${meta.qualified}`);
   }
@@ -156,17 +138,12 @@ export async function expectArchiveMirrorExists<T extends AnyPgTable>(
   database: Database,
   table: SoftDeletableTable<T>,
 ): Promise<void> {
-  const meta = tableMeta(table as AnyPgTable);
-  const count = await scalar(
-    database,
-    `
-      select count(*)::int as value
-      from pg_class c
-      join pg_namespace n on n.oid = c.relnamespace
-      where n.nspname = 'archive'
-        and c.relname = $1
-    `,
-    [`${meta.schema}_${meta.name}`],
+  const meta = tableMeta(table);
+  const count = await database.withSystemContext('testing matcher scalar', async () =>
+    database.tx(
+      async (trx) => (await trx.run(archiveMirrorCountQuery, [`${meta.schema}_${meta.name}`])).value,
+      { role: 'owner', readonly: true, replica: false },
+    ),
   );
   if (count === 0) {
     throw new Error(`Expected archive mirror ${meta.archive} to exist`);
@@ -177,21 +154,13 @@ export async function expectArchiveMirrorInSync<T extends AnyPgTable>(
   database: Database,
   table: SoftDeletableTable<T>,
 ): Promise<void> {
-  const meta = tableMeta(table as AnyPgTable);
+  const meta = tableMeta(table);
   const liveColumns = new Set(meta.columns);
   const mirroredColumns = await database.withSystemContext('testing archive mirror parity', async () =>
     database.tx(
       async (trx) => {
-        const result = await trx.query<{ column_name: string }>(
-          `
-            select column_name
-            from information_schema.columns
-            where table_schema = 'archive'
-              and table_name = $1
-          `,
-          [`${meta.schema}_${meta.name}`],
-        );
-        return result.rows
+        const rows = await trx.run(archiveColumnsQuery, [`${meta.schema}_${meta.name}`]);
+        return rows
           .map((row) => row.column_name)
           .filter((column) => !['archive_id', 'archived_at', 'deleted_at', 'deleted_by', 'last_erasure_at'].includes(column));
       },

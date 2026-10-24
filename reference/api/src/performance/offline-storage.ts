@@ -2,8 +2,9 @@ import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Injectable, type OnApplicationBootstrap } from '@nestjs/common';
-import { Database, type StorageVerificationReport } from '@stynx-nyx/data';
+import { Database, executeRawScript, type StorageVerificationReport } from '@stynx-nyx/data';
 import { renderOfflineStorage, verifyOfflineStorage } from '@stynx-nyx/offline-sync';
+import { offlineInstallationAdmissionQuery, recordOfflineInstallationQuery } from './offline-storage.repository.js';
 
 const migrations = [
   '0001_offline_sync.sql',
@@ -72,25 +73,18 @@ export class OfflinePerformanceStorageInstaller implements OnApplicationBootstra
       async () => {
         await this.database.txIndependent(
           async (trx) => {
-            const admission = await trx.query<{ actor: string; schema_exists: boolean }>(
-              `select current_user::text as actor, to_regnamespace('offline') is not null as schema_exists`,
-            );
+            const admission = await trx.run(offlineInstallationAdmissionQuery, []);
             if (
-              admission.rows.length !== 1 ||
-              admission.rows[0]!.actor !== binding.ownerRole ||
-              admission.rows[0]!.schema_exists
+              admission.actor !== binding.ownerRole ||
+              admission.schema_exists
             ) {
               throw new Error(
                 'Offline performance installation requires the actual owner and an absent schema',
               );
             }
-            await trx.query(artifact.objectsSql);
-            await trx.query(artifact.roleBindingsSql);
-            await trx.query(
-              `insert into core.app_schema_migrations(scope,id,checksum)
-             values('http-performance-offline-storage',$1,$2)`,
-              [artifact.contractVersion, renderedSqlSha256],
-            );
+            await executeRawScript(trx, artifact.objectsSql);
+            await executeRawScript(trx, artifact.roleBindingsSql);
+            await trx.run(recordOfflineInstallationQuery, [artifact.contractVersion, renderedSqlSha256]);
           },
           { role: 'owner', retry: false },
         );

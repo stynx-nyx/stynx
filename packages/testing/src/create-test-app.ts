@@ -4,6 +4,7 @@ import { type INestApplication } from '@nestjs/common';
 import { RequestContextMutator } from '@stynx-nyx/core';
 import {
   createStynxPgClient,
+  executeRawScript,
   Database,
   StynxDataModule,
   type StynxPgClient,
@@ -28,7 +29,7 @@ import type {
 async function applySqlSteps(client: StynxPgClient, steps: TestSqlStep[]): Promise<void> {
   for (const step of steps) {
     if (typeof step === 'string') {
-      await client.query(step);
+      await executeRawScript(client, step);
       continue;
     }
     await step(client);
@@ -118,19 +119,19 @@ async function bindApplicationRoleLogin(
   password: string,
 ): Promise<void> {
   await withClient(maintenanceUrl, async (client) => {
-    await client.query('begin');
+    await executeRawScript(client, 'begin');
     try {
-      await client.query(`select pg_advisory_xact_lock(hashtext('@stynx-nyx/testing:role-login'))`);
-      await client.query(`do $$
+      await executeRawScript(client, `select pg_advisory_xact_lock(hashtext('@stynx-nyx/testing:role-login'))`);
+      await executeRawScript(client, `do $$
       begin
         if not exists (select 1 from pg_catalog.pg_roles where rolname = '${appRole}') then
           create role ${appRole} login noinherit nobypassrls;
         end if;
       end $$`);
-      await client.query(`alter role ${appRole} with login password ${sqlLiteral(password)}`);
-      await client.query('commit');
+      await executeRawScript(client, `alter role ${appRole} with login password ${sqlLiteral(password)}`);
+      await executeRawScript(client, 'commit');
     } catch (error) {
-      await client.query('rollback').catch(() => undefined);
+      await executeRawScript(client, 'rollback').catch(() => undefined);
       throw error;
     }
   });
@@ -138,17 +139,18 @@ async function bindApplicationRoleLogin(
 
 async function createDatabase(maintenanceUrl: string, database: string): Promise<void> {
   await withClient(maintenanceUrl, async (client) => {
-    await client.query(`create database "${database}"`);
+    await executeRawScript(client, `create database "${database}"`);
   });
 }
 
 async function dropDatabase(maintenanceUrl: string, database: string): Promise<void> {
   await withClient(maintenanceUrl, async (client) => {
-    await client.query(
+    await executeRawScript(
+          client,
       'select pg_terminate_backend(pid) from pg_stat_activity where datname = $1 and pid <> pg_backend_pid()',
       [database],
     );
-    await client.query(`drop database if exists "${database}"`);
+    await executeRawScript(client, `drop database if exists "${database}"`);
   });
 }
 

@@ -18,10 +18,10 @@ export async function runDoctorForApp(cwd: string): Promise<DoctorRunResult> {
 
     let stdout = '';
     let stderr = '';
-    child.stdout.on('data', (chunk) => {
+    child.stdout.on('data', (chunk: Buffer) => {
       stdout += chunk.toString();
     });
-    child.stderr.on('data', (chunk) => {
+    child.stderr.on('data', (chunk: Buffer) => {
       stderr += chunk.toString();
     });
     child.on('error', reject);

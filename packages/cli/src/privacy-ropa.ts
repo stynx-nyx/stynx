@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parse } from 'yaml';
+import { isRecord } from './value-validation.js';
 
 interface PrivacyRule {
   tableSchema: string;
@@ -16,8 +17,23 @@ interface PrivacyRule {
   notes?: string;
 }
 
-interface PrivacyMapOverrideFile {
-  rules: PrivacyRule[];
+function isOptionalString(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === 'string';
+}
+
+function isPrivacyRule(value: unknown): value is PrivacyRule {
+  return isRecord(value) &&
+    typeof value.tableSchema === 'string' &&
+    typeof value.tableName === 'string' &&
+    typeof value.columnName === 'string' &&
+    typeof value.strategy === 'string' &&
+    isOptionalString(value.subjectColumn) &&
+    isOptionalString(value.notes) &&
+    (value.retention === undefined ||
+      (isRecord(value.retention) &&
+        typeof value.retention.timestampColumn === 'string' &&
+        typeof value.retention.olderThanDays === 'number' &&
+        isOptionalString(value.retention.target)));
 }
 
 function generateRopaMarkdown(rules: PrivacyRule[]): string {
@@ -44,6 +60,10 @@ export function generateRopaFromApp(appRoot: string): string {
   if (!existsSync(mapPath)) {
     return generateRopaMarkdown([]);
   }
-  const parsed = parse(readFileSync(mapPath, 'utf8')) as PrivacyMapOverrideFile;
-  return generateRopaMarkdown(parsed.rules ?? []);
+  const parsed: unknown = parse(readFileSync(mapPath, 'utf8'));
+  if (!isRecord(parsed)) throw new Error('Privacy map must be an object');
+  const rules: unknown = parsed.rules ?? [];
+  if (!Array.isArray(rules) || !rules.every(isPrivacyRule))
+    throw new Error('Privacy map contains an invalid rule');
+  return generateRopaMarkdown(rules);
 }
