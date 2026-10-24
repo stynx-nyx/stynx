@@ -5,6 +5,10 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR-DEVAI-ADOPTION-0031 — Generated partial writes and adoption SQL disposition](2026-10-23-s10-generated-sql-disposition-proposal.md)
+
+- [ADR-DEVAI-ADOPTION-0030 — Honest pool lifecycle and symbol-backed table types](2026-10-23-s10-public-type-soundness-proposal.md)
+
 - [ADR-DEVAI-ADOPTION-0029 — Bounded compatibility operations for existing configurable SQL APIs](2026-10-23-s10-configurable-sql-compatibility-proposal.md)
 
 - [ADR-DEVAI-ADOPTION-0028 — Typed-query adoption, strict workspace lint and bounded legacy archive compatibility (S10 SM-09, SM-11)](2026-10-23-s10-typed-query-adoption.md)
