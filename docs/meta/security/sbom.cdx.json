@@ -9,13 +9,13 @@
       {
         "vendor": "stynx",
         "name": "scripts/generate-sbom.mjs",
-        "version": "3.0.0"
+        "version": "3.0.1"
       }
     ],
     "component": {
       "type": "application",
       "name": "stynx-workspace",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "licenses": [
         {
           "license": {
@@ -748,7 +748,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular-audit",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -757,7 +757,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular-audit@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-audit@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -768,7 +768,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular-auth",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -777,7 +777,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular-auth@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-auth@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -788,7 +788,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular-flow",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -797,7 +797,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular-flow@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-flow@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -808,7 +808,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular-i18n",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -817,7 +817,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular-i18n@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-i18n@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -828,7 +828,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular-iam",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -837,7 +837,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular-iam@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-iam@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -848,7 +848,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular-profile",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -857,7 +857,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular-profile@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-profile@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -868,7 +868,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular-sessions",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -877,7 +877,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular-sessions@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-sessions@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -888,7 +888,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular-storage",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -897,7 +897,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular-storage@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-storage@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -908,7 +908,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular-tenancy",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -917,7 +917,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular-tenancy@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-tenancy@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -928,7 +928,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular-trash",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -937,7 +937,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular-trash@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-trash@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -948,7 +948,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular-ui",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -957,7 +957,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular-ui@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular-ui@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -968,7 +968,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/angular",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -977,7 +977,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fangular@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fangular@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -988,7 +988,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/audit",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -997,7 +997,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2faudit@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2faudit@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1008,7 +1008,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/auth",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1017,7 +1017,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fauth@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fauth@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1028,7 +1028,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/backend",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1037,7 +1037,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fbackend@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fbackend@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1048,7 +1048,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/cli",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1057,7 +1057,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fcli@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fcli@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1068,7 +1068,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/contracts",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1077,7 +1077,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fcontracts@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fcontracts@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1088,7 +1088,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/core",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1097,7 +1097,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fcore@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fcore@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1108,7 +1108,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/data",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1117,7 +1117,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fdata@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fdata@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1141,7 +1141,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/eslint-config",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1150,7 +1150,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2feslint-config@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2feslint-config@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1161,7 +1161,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/feature-flags",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1170,7 +1170,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2ffeature-flags@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2ffeature-flags@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1181,7 +1181,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/flow",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1190,7 +1190,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fflow@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fflow@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1201,7 +1201,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/health",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1210,7 +1210,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fhealth@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fhealth@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1221,7 +1221,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/i18n",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1230,7 +1230,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fi18n@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fi18n@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1241,7 +1241,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/idempotency",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1250,7 +1250,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fidempotency@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fidempotency@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1261,7 +1261,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/integration-adapter",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1270,7 +1270,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fintegration-adapter@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fintegration-adapter@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1281,7 +1281,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/jobs",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1290,7 +1290,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fjobs@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fjobs@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1301,7 +1301,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/logging",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1310,7 +1310,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2flogging@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2flogging@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1321,7 +1321,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/migration-linter",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1330,7 +1330,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fmigration-linter@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fmigration-linter@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1341,7 +1341,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/mobile-runtime",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1350,7 +1350,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fmobile-runtime@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fmobile-runtime@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1361,7 +1361,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/notifications",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1370,7 +1370,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fnotifications@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fnotifications@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1381,7 +1381,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/offline-sync",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1390,7 +1390,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2foffline-sync@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2foffline-sync@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1401,7 +1401,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/outbox",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1410,7 +1410,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2foutbox@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2foutbox@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1421,7 +1421,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/pdf-a-vera-docker",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1430,7 +1430,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fpdf-a-vera-docker@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fpdf-a-vera-docker@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1441,7 +1441,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/pdf-a",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1450,7 +1450,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fpdf-a@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fpdf-a@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1461,7 +1461,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/pdf",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1470,7 +1470,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fpdf@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fpdf@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1481,7 +1481,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/preferences",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1490,7 +1490,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fpreferences@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fpreferences@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1501,7 +1501,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/privacy",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1510,7 +1510,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fprivacy@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fprivacy@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1521,7 +1521,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/ratelimit",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1530,7 +1530,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fratelimit@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fratelimit@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1567,7 +1567,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/sdk",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1576,7 +1576,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fsdk@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fsdk@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1587,7 +1587,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/sessions",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1596,7 +1596,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fsessions@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fsessions@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1607,7 +1607,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/signature",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1616,7 +1616,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fsignature@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fsignature@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1627,7 +1627,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/storage",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1636,7 +1636,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fstorage@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fstorage@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1647,7 +1647,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/tenancy",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1656,7 +1656,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2ftenancy@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2ftenancy@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1667,7 +1667,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/testing",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1676,7 +1676,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2ftesting@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2ftesting@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1687,7 +1687,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/tsconfig",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1696,7 +1696,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2ftsconfig@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2ftsconfig@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -1707,7 +1707,7 @@
     {
       "type": "library",
       "name": "@stynx-nyx/worklist",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "required",
       "licenses": [
         {
@@ -1716,7 +1716,7 @@
           }
         }
       ],
-      "purl": "pkg:npm/@stynx-nyx%2fworklist@3.0.0",
+      "purl": "pkg:npm/@stynx-nyx%2fworklist@3.0.1",
       "properties": [
         {
           "name": "stynx:workspacePath",
@@ -2565,7 +2565,7 @@
     {
       "type": "library",
       "name": "stynx-workspace",
-      "version": "3.0.0",
+      "version": "3.0.1",
       "scope": "excluded",
       "licenses": [
         {

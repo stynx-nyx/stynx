@@ -1,6 +1,6 @@
 {
   "name": "@stynx-nyx/preferences",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "license": "BUSL-1.1",
   "description": "Closed tenant-subject profile and preference contracts for stynx",
   "type": "module",
