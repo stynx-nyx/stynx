@@ -56,3 +56,16 @@ signer allowlist, exact-tree binding, inert candidate handling and package
 integrity checks. The exact generated workflow commit needs its Owner receipt;
 rebase landing requires the corresponding exact landed receipt under the same
 recorded mandate. See [ADOPTION-0020](../../../../law/adr/2026-10-11-devai-2.5.0-adoption.md).
+
+## Proposed S8 auxiliary transition
+
+[ADR0037](../../../../law/adr/2026-10-24-s8-trusted-descriptor-transition.md)
+records this auxiliary branch's exact14-selector transition for frozen product
+`f3e4d91051ae9d3259c35c244cae8e6a2c3258db`. W0 is
+`4f9c1327cfdda4e2c2c3706c8386d54e2b6a9cd9`; its workflow blob is
+`4542195c27ffde9b3448bae4ba7ca8efb2f1fa22`. The trusted provider policies match
+across2.4.0/2.6.2 on equal inputs, and actual guard tests pass31/31. The generated
+product workflow remains unchanged. This auxiliary workflow is not claimed to
+pass product Doctor or a product RC, and no auxiliary CI/test/law/receipt commit
+may land in product. Exact Owner authority for the receipt and one dispatch is
+still pending; neither old ADOPTION0022 consent nor these focused tests grant it.
