@@ -225,3 +225,34 @@ describe('StynxJwtValidator key-source edge cases', () => {
     expect(service.getJwks).toHaveBeenCalledTimes(3);
   });
 });
+
+
+describe('native RSA opaque-key preservation', () => {
+  it.each(['ordinary', 'key_ops and opaque extras', 'irrelevant EC fields', 'object-shaped array'])('keeps native %s acceptance and original key identity through cache', async (kind) => {
+    vi.restoreAllMocks(); vi.clearAllMocks();
+    const native = await vi.importActual<typeof import('node:crypto')>('node:crypto');
+    const actual = await vi.importActual<typeof import('../../src/utils.js')>('../../src/utils.js');
+    (verifyJwtWithJwk as Mock).mockImplementation((token, key) => actual.verifyJwtWithJwk(token, key));
+    const { privateKey, jwk } = await keyPair('opaque');
+    const opaque = { date: new Date(NaN), nested: [undefined] };
+    const extras = kind === 'key_ops and opaque extras' ? { key_ops: ['verify'], opaque } : kind === 'irrelevant EC fields' ? { crv: 17, x: null, y: false } : {};
+    const key = kind === 'object-shaped array' ? Object.assign([], jwk) : { ...jwk, ...extras };
+    let nativeFailure: unknown;
+    try { native.createPublicKey({ key, format: 'jwk' }); } catch (error) { nativeFailure = error; }
+    const service = { getJwks: vi.fn(async () => ({ keys: [key] })) }; const validator = validatorFor(service);
+    const token = await signedToken(privateKey, 'opaque');
+    if (nativeFailure) {
+      expect(kind).toBe('object-shaped array');
+      await expect(validator.validate(token)).rejects.toThrow('STYNX JWKS contains no usable verification keys');
+      expect(verifyJwtWithJwk).not.toHaveBeenCalled();
+    } else {
+      await expect(validator.validate(token)).resolves.toMatchObject({ sub: 'user-1' });
+      await expect(validator.validate(token)).resolves.toMatchObject({ sub: 'user-1' });
+      expect(service.getJwks).toHaveBeenCalledTimes(1);
+      expect((verifyJwtWithJwk as Mock).mock.calls.every(([, actualKey]) => actualKey === key)).toBe(true);
+      expect((verifyJwtWithJwk as Mock).mock.calls).toHaveLength(2);
+      if (kind === 'key_ops and opaque extras') expect(Reflect.get(key, 'opaque')).toBe(opaque);
+    }
+    console.info('native RSA key observation', kind, nativeFailure ? 'native rejected' : 'native accepted');
+  });
+});

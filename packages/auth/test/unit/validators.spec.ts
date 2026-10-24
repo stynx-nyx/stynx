@@ -727,3 +727,16 @@ describe('auth validators', () => {
     nowSpy.mockRestore();
   });
 });
+
+
+describe('verified payload array completeness', () => {
+  it.each(['perms', 'roles'])('refuses sparse %s without refresh (new malformed-boundary requirement)', async (field) => {
+    const sparse: string[] = ['valid']; sparse.length = 2;
+    const jwk = usableJwk('sparse');
+    const service = { getJwks: vi.fn(async () => ({ keys: [jwk] })) };
+    (verifyJwtWithJwk as Mock).mockReturnValue({ iss: 'https://stynx.test', sub: 'user', sid: 'session', tenant_id: 'tenant', exp: Math.floor(Date.now() / 1000) + 300, roles: ['role'], perms: ['read'], [field]: sparse });
+    const validator = new StynxJwtValidator({ get: vi.fn(() => service) } as unknown as ModuleRef, { stynx: { issuer: 'https://stynx.test' }, permissions: { dbFallbackOnRedisDown: true } } as never);
+    await expect(validator.validate(STRUCTURAL_TOKEN)).rejects.toBeInstanceOf(InvalidCredentialError);
+    expect(service.getJwks).toHaveBeenCalledTimes(1);
+  });
+});

@@ -416,7 +416,7 @@ describe('FlowPolicyService', () => {
     const nested = { date: new Date(NaN), absent: undefined };
     const facts = { nested };
     const { db, trx } = makeDb([
-      [{ id: 'opaque-rule', effect: 'deny', conditions: { jsonpath: '$.nested' } }], rows,
+      [{ id: 'opaque-rule', effect: 'deny', priority: 1, conditions: { jsonpath: '$.nested' } }], rows,
     ]);
     await expect(new FlowPolicyService({} as never, db as never).evaluate({
       policySetId: POLICY_SET, capability: 'view', facts,
@@ -449,7 +449,7 @@ describe('FlowPolicyService', () => {
 
   it.each([1, 'true', {}])('rejects malformed declared matched output %j', async (matched) => {
     const { db, trx } = makeDb([
-      [{ id: 'opaque-rule', effect: 'deny', conditions: { jsonpath: '$.approved' } }], [{ matched }],
+      [{ id: 'opaque-rule', effect: 'deny', priority: 1, conditions: { jsonpath: '$.approved' } }], [{ matched }],
     ]);
     await expect(new FlowPolicyService({} as never, db as never).evaluate({
       policySetId: POLICY_SET, capability: 'view', facts: {},
@@ -595,5 +595,126 @@ describe('FlowPolicyService', () => {
       policySetId: POLICY_SET,
       action: 'approve',
     })).resolves.toMatchObject({ allowed: true, matchedRuleId: 'rule-null' });
+  });
+});
+
+
+describe('FlowPolicyService checked selected rule fields', () => {
+  it.each([
+    { label: 'missing id', patch: { id: undefined } },
+    { label: 'number id', patch: { id: 17 } },
+    { label: 'missing effect', patch: { effect: undefined } },
+    { label: 'unknown effect', patch: { effect: 'secret-effect' } },
+    { label: 'missing priority', patch: { priority: undefined } },
+    { label: 'fractional priority', patch: { priority: 1.5 } },
+    { label: 'text priority', patch: { priority: '1' } },
+    { label: 'malformed reason', patch: { reason_code: { secret: 'must-not-leak' } } },
+  ])('refuses $label in a later row before exposing the first match', async ({ patch }) => {
+    const first = { id: 'opaque-first', effect: 'allow', priority: 1, conditions: {} };
+    const { db, trx } = makeDb([[first, { ...first, ...patch }]]);
+    const result = new FlowPolicyService({} as never, db as never).evaluate({ policySetId: POLICY_SET, action: 'read' });
+    await expect(result).rejects.toMatchObject({ code: 'QUERY_ROW_INVALID', query: 'flow.policy.select-action-rules', rowIndex: 1 });
+    await expect(result).rejects.not.toThrow('must-not-leak');
+    expect(trx.query).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([null, false, [], 'secret-row'])('refuses a malformed selected row envelope %j', async (row) => {
+    const { db, trx } = makeDb([[row]]);
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({ policySetId: POLICY_SET, capability: 'read' })).rejects.toMatchObject({ code: 'QUERY_ROW_INVALID', query: 'flow.policy.select-capability-rules', rowIndex: 0 });
+    expect(trx.query).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves empty reason and opaque own keys with original rule identity', async () => {
+    const nested = { value: new Date(NaN) };
+    const row = { id: 'opaque', effect: 'allow', priority: 1, reason_code: '', conditions: {} };
+    Object.defineProperty(row, '__proto__', { value: nested, enumerable: true });
+    const { db, trx } = makeDb([[row]]); const run = vi.spyOn(trx, 'runGuarded');
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({ policySetId: POLICY_SET, action: 'read' })).resolves.toMatchObject({ reasonCode: '', matchedRuleId: 'opaque' });
+    const returned = await run.mock.results[0]?.value;
+    expect(returned?.[0]).toBe(row); expect(Reflect.get(row, '__proto__')).toBe(nested);
+  });
+});
+
+describe('FlowPolicyService opaque read-condition preservation', () => {
+  const cases: Array<{ label: string; conditions: unknown; facts?: Record<string, unknown>; matches: boolean }> = [
+    { label: 'omitted', conditions: undefined, matches: true },
+    { label: 'null', conditions: null, matches: true },
+    { label: 'empty object', conditions: {}, matches: true },
+    { label: 'empty array', conditions: [], matches: true },
+    { label: 'false', conditions: false, matches: true },
+    { label: 'true', conditions: true, matches: true },
+    { label: 'zero', conditions: 0, matches: true },
+    { label: 'number', conditions: 17, matches: true },
+    { label: 'empty string', conditions: '', matches: true },
+    { label: 'matching string', conditions: 'ab', facts: { 0: 'a', 1: 'b' }, matches: true },
+    { label: 'nonmatching string', conditions: 'ab', facts: { 0: 'a', 1: 'c' }, matches: false },
+    { label: 'matching array', conditions: [17, false], facts: { 0: 17, 1: false }, matches: true },
+    { label: 'nonmatching array', conditions: [17], facts: { 0: '17' }, matches: false },
+  ];
+  for (const target of ['action', 'capability']) {
+    it.each(cases)(`preserves ${target} $label condition semantics without JSONPath execution`, async ({ conditions, facts, matches }) => {
+      const rule = { id: 'opaque-rule', effect: 'deny', priority: 1, conditions };
+      const { db, trx } = makeDb([[rule]]);
+      await expect(new FlowPolicyService({} as never, db as never).evaluate({
+        policySetId: POLICY_SET, [target]: 'read', facts: facts ?? {},
+      })).resolves.toMatchObject({ allowed: !matches, matchedRuleId: matches ? rule.id : null, defaulted: !matches });
+      expect(trx.query).toHaveBeenCalledTimes(1);
+      expect(trx.query.mock.calls[0]?.[1]).toEqual([POLICY_SET, 'read', null, null]);
+      expect(db.tx.mock.calls[0]?.[1]).toEqual({ role: 'reader', readonly: true });
+    });
+  }
+
+  it.each([true, false])('compares nested array elements by original identity: %s', async (same) => {
+    const nested = { opaque: new Date(NaN) };
+    const { db, trx } = makeDb([[{ id: 'nested', effect: 'deny', priority: 1, conditions: [nested] }]]);
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({
+      policySetId: POLICY_SET, action: 'read', facts: { 0: same ? nested : { ...nested } },
+    })).resolves.toMatchObject({ defaulted: !same, allowed: !same });
+    expect(trx.query).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([false, true])('enumerates before two original-receiver JSONPath reads; malformed second=%s', async (malformed) => {
+    const events: string[] = [];
+    const receivers: unknown[] = [];
+    let reads = 0;
+    const target = { get jsonpath() { receivers.push(this); events.push('get'); return ++reads === 1 ? '$.first' : malformed ? 17 : '$.second'; } };
+    const conditions = new Proxy(target, { ownKeys(value) { events.push('keys'); return Reflect.ownKeys(value); } });
+    const { db, trx } = makeDb([[{ id: 'getter', effect: 'deny', priority: 1, conditions }], [{ matched: true }]]);
+    const run = vi.spyOn(trx, 'run');
+    const nested = { opaque: undefined };
+    const result = new FlowPolicyService({} as never, db as never).evaluate({ policySetId: POLICY_SET, action: 'read', facts: { nested } });
+    if (malformed) {
+      await expect(result).rejects.toMatchObject({ code: 'QUERY_ARGUMENT_INVALID', query: 'flow.policy.evaluate-condition' });
+      expect(trx.query).toHaveBeenCalledTimes(1);
+    } else {
+      await expect(result).resolves.toMatchObject({ allowed: false, matchedRuleId: 'getter' });
+      expect(trx.query.mock.calls[1]?.[1]?.[0]).toBe('$.second');
+      expect(trx.query.mock.calls[1]?.[1]?.[1]).toBe(run.mock.calls[0]?.[1]?.[1]);
+    }
+    expect(events).toEqual(['keys', 'get', 'get']);
+    expect(receivers).toEqual([conditions, conditions]);
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps empty-key short circuit ahead of a throwing JSONPath getter', async () => {
+    const get = vi.fn(() => { throw new Error('must not read'); });
+    const conditions = Object.defineProperty({}, 'jsonpath', { get, enumerable: false });
+    const { db, trx } = makeDb([[{ id: 'empty', effect: 'deny', priority: 1, conditions }]]);
+    await expect(new FlowPolicyService({} as never, db as never).evaluate({ policySetId: POLICY_SET, action: 'read' })).resolves.toMatchObject({ allowed: false });
+    expect(get).not.toHaveBeenCalled(); expect(trx.query).toHaveBeenCalledTimes(1);
+  });
+
+  it('retains primitive getter receiver and two reads for a nonempty string', async () => {
+    const previous = Object.getOwnPropertyDescriptor(String.prototype, 'jsonpath');
+    const receivers: unknown[] = [];
+    Object.defineProperty(String.prototype, 'jsonpath', { configurable: true, get: function (this: unknown) { receivers.push(this); return '$.primitive'; } });
+    try {
+      const { db, trx } = makeDb([[{ id: 'primitive', effect: 'deny', priority: 1, conditions: 'x' }], [{ matched: true }]]);
+      await expect(new FlowPolicyService({} as never, db as never).evaluate({ policySetId: POLICY_SET, capability: 'read' })).resolves.toMatchObject({ allowed: false });
+      expect(receivers).toEqual(['x', 'x']); expect(trx.query).toHaveBeenCalledTimes(2);
+    } finally {
+      if (previous) Object.defineProperty(String.prototype, 'jsonpath', previous);
+      else Reflect.deleteProperty(String.prototype, 'jsonpath');
+    }
   });
 });

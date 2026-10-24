@@ -496,6 +496,77 @@ describe('StynxAuthGuard', () => {
     expect(f.revocations.isRevoked).not.toHaveBeenCalled();
     expect(f.attempts).toEqual([]);
   });
+
+  it.each(['roles', 'permissions'])('refuses sparse %s from a verified result (new malformed-boundary requirement)', async (field) => {
+    const { guard, validator, attempts, revocations } = createGuard();
+    const sparse: string[] = ['valid']; sparse.length = 2;
+    validator.validate.mockResolvedValueOnce({ sid: 'sid-1', sub: 'user-1', tenantId: 'tenant-1', roles: ['role'], permissions: ['read'], expiresAt: futureExp(), claims: {}, [field]: sparse });
+    await expect(guard.canActivate(createExecutionContext({ headers: { authorization: 'Bearer token' } }))).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(revocations.isRevoked).not.toHaveBeenCalled(); expect(attempts).toEqual([]);
+  });
+
+  it('reads response setter twice during setup and calls the second with its original receiver', async () => {
+    const { guard, validator } = createGuard(); const events: string[] = []; const receivers: unknown[] = [];
+    const first = vi.fn(); const second = vi.fn(function (this: unknown) { receivers.push(this); events.push('call'); });
+    let reads = 0;
+    const response = { get setHeader() { events.push('get'); return ++reads === 1 ? first : second; } };
+    const claims = { sid: 'sid-1', sub: 'user-1', tenantId: 'tenant-1', roles: [], permissions: [], expiresAt: futureExp(), claims: {} };
+    validator.validate.mockImplementationOnce(async () => { events.push('verify'); return claims; });
+    await expect(guard.canActivate(createExecutionContext({ headers: { authorization: 'Bearer token' }, res: response }))).resolves.toBe(true);
+    expect(events).toEqual(['get', 'get', 'verify', 'call']); expect(receivers).toEqual([response]);
+    expect(first).not.toHaveBeenCalled(); expect(second).toHaveBeenCalledExactlyOnceWith('X-Stynx-Auth-Verify-Ms', expect.any(String));
+  });
+
+  it.each([false, 0, null, undefined])('keeps falsy response setter %s a no-op', async (setHeader) => {
+    const { guard } = createGuard();
+    await expect(guard.canActivate(createExecutionContext({ headers: { authorization: 'Bearer token' }, res: { setHeader } }))).resolves.toBe(true);
+  });
+
+  it.each([17, true, 'call'])('fails truthy noncallable response setter %s before verification', async (setHeader) => {
+    const { guard, validator } = createGuard();
+    await expect(guard.canActivate(createExecutionContext({ headers: { authorization: 'Bearer token' }, res: { setHeader } }))).rejects.toBeInstanceOf(TypeError);
+    expect(validator.validate).not.toHaveBeenCalled();
+  });
+
+  it('propagates second response getter failure before verification', async () => {
+    const { guard, validator } = createGuard(); const failure = new Error('setter accessor'); let reads = 0;
+    const res = { get setHeader() { if (++reads === 2) throw failure; return () => undefined; } };
+    await expect(guard.canActivate(createExecutionContext({ headers: { authorization: 'Bearer token' }, res }))).rejects.toBe(failure);
+    expect(reads).toBe(2); expect(validator.validate).not.toHaveBeenCalled();
+  });
+
+  it('writes the public flag before a null metadata property failure', async () => {
+    const { guard, reflector, validator } = createGuard(); reflector.getAllAndOverride.mockReturnValueOnce(null as never);
+    const request = { headers: {} };
+    await expect(guard.canActivate(createExecutionContext(request))).rejects.toBeInstanceOf(TypeError);
+    expect(request).toHaveProperty('publicTenantRoute', true); expect(request).not.toHaveProperty('publicTenantOptionalAuth');
+    expect(validator.validate).not.toHaveBeenCalled();
+  });
+
+  it('retains inherited metadata getter receiver, two reads and flag ordering', async () => {
+    const { guard, reflector, validator } = createGuard(); const request = { headers: {} }; const seen: unknown[] = [];
+    const prototype = { get optionalAuth() { seen.push(this); expect(request).toHaveProperty('publicTenantRoute', true); return true; } };
+    const metadata = Object.create(prototype);
+    reflector.getAllAndOverride.mockReturnValueOnce(metadata);
+    await expect(guard.canActivate(createExecutionContext(request))).resolves.toBe(true);
+    expect(seen).toEqual([metadata, metadata]); expect(request).toHaveProperty('publicTenantOptionalAuth', true);
+    expect(validator.validate).not.toHaveBeenCalled();
+  });
+
+  it.each(['publicTenantRoute', 'publicTenantOptionalAuth'])('preserves strict failed %s assignment', async (field) => {
+    const { guard, validator } = createGuard({ publicTenantRoute: true });
+    const request = Object.defineProperty({ headers: {} }, field, { value: false, writable: false, configurable: true });
+    await expect(guard.canActivate(createExecutionContext(request))).rejects.toBeInstanceOf(TypeError);
+    expect(validator.validate).not.toHaveBeenCalled(); expect(request[field]).toBe(false);
+  });
+
+  it.each(['verifiedSessionId', 'verifiedTenantClaim', 'verifiedTenantEntitlement', 'principalContext'])('preserves strict failed stale %s deletion', async (field) => {
+    const { guard, validator } = createGuard({ publicTenantRoute: true });
+    const request = Object.defineProperty({ headers: {} }, field, { value: 'stale', configurable: false });
+    await expect(guard.canActivate(createExecutionContext(request))).rejects.toBeInstanceOf(TypeError);
+    expect(request[field]).toBe('stale'); expect(request).not.toHaveProperty('publicTenantRoute'); expect(validator.validate).not.toHaveBeenCalled();
+  });
+
 });
 
 
