@@ -11,14 +11,20 @@ const key = ({ file, scope, member }) => `${file}:${scope}:${member}`;
 function declarations(file, source) {
   const parsed = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true);
   const found = new Map();
+  // Named/indexed/typeof callable aliases must receive review too. Their
+  // declaration can move to another module without retaining a `query` name.
+  const potentiallyCallable = (type) => type && (
+    ts.isFunctionTypeNode(type) || ts.isTypeReferenceNode(type) ||
+    ts.isIndexedAccessTypeNode(type) || ts.isTypeQueryNode(type) ||
+    (ts.isParenthesizedTypeNode(type) && potentiallyCallable(type.type)) ||
+    ((ts.isUnionTypeNode(type) || ts.isIntersectionTypeNode(type)) && type.types.some(potentiallyCallable))
+  );
   function visit(node) {
-    const member =
-      node.name && (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name))
-        ? node.name.text
-        : undefined;
+    const name = node.name && ts.isComputedPropertyName(node.name) ? node.name.expression : node.name;
+    const member = name && (ts.isIdentifier(name) || ts.isStringLiteral(name)) ? name.text : undefined;
     const callableProperty =
       (ts.isPropertySignature(node) || ts.isPropertyDeclaration(node)) &&
-      ((node.type && ts.isFunctionTypeNode(node.type)) ||
+      (potentiallyCallable(node.type) ||
         (node.initializer &&
           (ts.isArrowFunction(node.initializer) || ts.isFunctionExpression(node.initializer))));
     if (
@@ -107,4 +113,21 @@ test('the census catches added and renamed SQL receivers without treating data q
     declarations(file, 'interface SearchInput { query: string; execute: boolean }'),
     [],
   );
+});
+
+
+test('callable aliases and computed literal member declarations cannot escape census review', () => {
+  const file = 'packages/health/src/new-sql-port.ts';
+  const found = declarations(file, `
+import type { ImportedCallable } from './external.js';
+interface ImportedPort { query: ImportedCallable }
+interface IndexedPort { query: ImportedPort['query'] }
+declare const call: (text: string) => Promise<unknown>;
+interface TypeofPort { execute: typeof call }
+interface ComputedPort { ['query'](text: string): Promise<unknown> }
+`);
+  assert.deepEqual(unresolved(found), [
+    `${file}:ComputedPort:query`, `${file}:ImportedPort:query`,
+    `${file}:IndexedPort:query`, `${file}:TypeofPort:execute`,
+  ]);
 });

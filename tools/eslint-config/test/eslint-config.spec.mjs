@@ -1,10 +1,33 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { ESLint } from 'eslint';
 import { createLibConfig } from '../index.mjs';
+
+test('the required ordinary command executes every authored ESLint contract suite', () => {
+  const manifest = JSON.parse(readFileSync(join(import.meta.dirname, '../package.json'), 'utf8'));
+  const authored = readdirSync(import.meta.dirname)
+    .filter((name) => name.endsWith('.spec.mjs'))
+    .map((name) => `test/${name}`)
+    .sort();
+  const tokens = manifest.scripts.test.split(/\s+/u);
+  expectOrdinaryPopulation(tokens, authored);
+  const coverage = manifest.scripts['test:coverage'].split(/\s+/u);
+  assert.deepEqual(coverage.slice(0, 2), ['node', '../../scripts/node-test-coverage.mjs']);
+  assert.deepEqual(coverage.slice(2).sort(), authored);
+});
+
+function expectOrdinaryPopulation(tokens, authored) {
+  assert.deepEqual(tokens.slice(0, 3), ['node', '--test', '--test-concurrency=1']);
+  assert.deepEqual(tokens.slice(3).sort(), authored);
+  assert.ok(authored.includes('test/eslint-config.spec.mjs'));
+  assert.ok(authored.includes('test/rule-families.spec.mjs'));
+  assert.ok(authored.includes('test/typed-query-lint.spec.mjs'));
+  assert.ok(authored.includes('test/query-declaration-census.spec.mjs'));
+  assert.ok(authored.includes('test/legacy-testing-assertions.spec.mjs'));
+}
 
 const tsconfig = {
   compilerOptions: {
