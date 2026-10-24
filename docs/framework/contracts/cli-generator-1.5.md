@@ -2,6 +2,22 @@
 
 **Authority:** Architect. **Status:** accepted for CTG-0008 implementation after public API checkpoint. **Source:** DETRAN C-0002 §6.10 and OD-S15-01 (U1–U15 MUST). DETRAN's blueprint and generator are read-only precedents, not implementation sources.
 
+## S10 continuation disposition (2026-10-23)
+
+[ADR0031](../../../law/adr/2026-10-23-s10-generated-sql-disposition-proposal.md)
+preserves generated partial create/update and arbitrary adoption SQL rewrites
+as explicit legacy consumer-output deferrals. Their existing runtime behavior,
+blueprint limits, omitted defaults and selected-column update semantics stay
+in force; full static-query / SM-09 acceptance for those two populations remains
+incomplete. Independently eligible generated list/get/delete operations move
+to literal `*.repository.ts` definitions only with compatible result contracts
+and materialized-output evidence. Timestamp-bearing result types have a
+separate pending disposition; this amendment authorizes no conversion or new
+rejection. See the [S10 migration checklist](s10-api-migration.md). The historical
+generator requirements below remain binding except for this explicit S10
+acceptance disposition. No downstream consumer acceptance or publication is
+inferred.
+
 ## Boundary
 
 `stynx generate module --blueprint <json> --out <directory>` is an opt-in CLI command in `@stynx-nyx/cli`. It accepts the safe **STYNX 1.5 blueprint subset** below and emits a reusable Nest module with a repository, controller, and PostgreSQL DDL with tenant RLS. It does not generate a DETRAN package, business logic, handwritten integration, RBAC grants, migrations applied to a database, or a replacement for the DETRAN local generator. The public CLI entry point is `buildProgram()` in `packages/cli/src/cli.ts`; it owns option parsing and delegates generation to separately testable internal functions. `packages/cli/src/index.ts` exports remain unchanged; Inspector tests may import internal functions by source path, while the external fixture uses only the packed CLI binary and public STYNX exports.
