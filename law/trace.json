@@ -1,8 +1,8 @@
 {
   "schemaVersion": "1.0.0",
-  "version": "1.3.47",
+  "version": "1.3.48",
   "meta": {
-    "last_updated": "2026-10-24T18:03:53.853461Z",
+    "last_updated": "2026-10-24T18:10:50.580426Z",
     "completeness": {
       "min_invariants_with_tests_ratio": 1,
       "min_must_invariants_with_tests_ratio": 1,
@@ -10,6 +10,7 @@
       "require_test_links": true
     },
     "provenance": [
+      "2026-10-24 Architect final A+B ordinary-budget binding after Engineer 95bd605c and Inspector 26beddf4c12d01f0f0a4136a567f008b5a4259e5: retain the historical S8 budget fixture and all S7 controls, and bind the exact three approved database selector additions with independent omission refusals. Official assertion projection changes only ordinary-unit-budget from 24 to 27 under unchanged INV-CORE-001. All 715 corpus entries, invariant links, prior provenance and thresholds remain intact. Inspector budget 27/27 and local-RC 12/12 passed; Engineer release-scope binding 65/65 passed. This trace checkpoint does not establish official public API baseline verification, a full A+B RC, integration, publication or downstream acceptance.",
       "2026-10-24 Architect final S10 A+B replay binding of original 545e119bea70639a8acfe90d12785127eea96fdb after all nine preceding role commits at d4e4eb98a39495ff4dac5999406c86e06532757e: preserve all S8/S7 history and trace entries, and retain the A+B role-context, domain-boundary and bookmark-idempotency sensors with their existing invariant links. Official current executable projection passes 715/715. The current local-RC, release-version and release-evidence projections retain the integrated S8/S7 assertions; no older source-branch projection replaces them. All historical provenance and thresholds remain. This records actual replayed test bytes only; the forthcoming ordinary-budget descriptor overlay, official public API baseline, final gates and A+B RC remain separate checkpoints. No source execution, runtime qualification, publication or consumer acceptance is claimed.",
       "2026-10-24 Architect intermediate S10 A+B replay of original 4ef31dd4649f0dc7c86acdcab431f3c952f34a05 after Inspector ec79c6786016bae0630404ce9e7a1726fc2cb139 onto qualified and protected S7 landing: retain all S8/S7 trace history, invariant links and thresholds, and bind only the existing first A+B executable cohort. Official current projection passes 713/713; later A+B Inspector/source commits have not replayed and no future projection is selected. Retain the three approved database descriptor selectors together with every existing ordinary-unit and RLS selector; no runtime test, final A+B qualification, publication or consumer acceptance is claimed.",
       "2026-10-24 Architect S7 rebase binding onto verified S8 landing d47a57a7e9770aa18ca59ec42d5cdedd43105b93: preserve S8 security, bounded ordinary-unit scheduling, release applicability controls and all 712 trace entries. Inspector replays 3d27b34ddd74c3a1eb43e459a4f13bf1a6a14126 and aa5aabe2641a15123cb51f4ee8d0ab77b8659811 retain the S8 normalized root freeze and bind S7 owner exit plus GitHub-only API reuse to actual Playwright bytes. Official projection derives the intermediate 913 assertions and final 918 assertions under unchanged INV-CORE-001; only this final local-RC-contract binding changes from the preceding S7 checkpoint. All historical provenance, other corpus entries, invariant statements, links and thresholds remain intact. This is trace custody, not a runtime test, signed S7 RC, receipt-follow-up integration, publication or downstream acceptance claim.",
@@ -7632,8 +7633,8 @@
       "suite": "contract",
       "invariant_ids": ["INV-CORE-001"],
       "lifecycle": "supported",
-      "assertion_count": 24,
-      "assertion_digest_sha256": "4db7d63d544ea683dc02075feb11766d48842ba2db5f07e5d69ddc86b01f8557"
+      "assertion_count": 27,
+      "assertion_digest_sha256": "6cea1597536067b9c506bf368653fd9e9e141a86dbcde483f7811835e1c81d3e"
     },
     {
       "path": "domain/demo-bookmark/api/test/bookmark-idempotency-contract.spec.ts",
