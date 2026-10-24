@@ -2,7 +2,7 @@
   "name": "stynx-script-tests",
   "private": true,
   "scripts": {
-    "test": "node --test ./*.test.mjs && node validate.js",
+    "test": "node --test --test-concurrency=1 ./*.test.mjs && node validate.js",
     "lint": "eslint --config ../../tools/eslint-config/scripts.mjs \"./**/*.js\" \"./**/*.mjs\""
   }
 }

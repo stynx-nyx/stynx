@@ -5,7 +5,7 @@
     "node": ">=24 <25"
   },
   "scripts": {
-    "test": "vitest run --config ./vitest.config.ts",
+    "test": "vitest run --maxWorkers=1 --config ./vitest.config.ts",
     "test:db": "vitest run --config ./vitest.config.ts",
     "lint": "eslint --config ../../tools/eslint-config/test.mjs \"./**/*.ts\""
   },

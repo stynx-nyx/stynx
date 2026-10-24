@@ -11,7 +11,7 @@
   "scripts": {
     "test:coverage": "node ../../scripts/node-test-coverage.mjs test/eslint-config.spec.mjs test/rule-families.spec.mjs",
     "clean": "node -e \"for (const path of ['dist', 'coverage']) require('node:fs').rmSync(path, { recursive: true, force: true })\"",
-    "test": "node --test test/eslint-config.spec.mjs test/rule-families.spec.mjs"
+    "test": "node --test --test-concurrency=1 test/eslint-config.spec.mjs test/rule-families.spec.mjs"
   },
   "files": [
     "*.mjs",
