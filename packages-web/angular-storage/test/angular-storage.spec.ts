@@ -84,6 +84,29 @@ function makeResponse(body: BodyInit, init?: ResponseInit): Response {
   });
 }
 
+async function selectFileThroughInput(
+  component: StynxDocumentUploadComponent,
+  file: File | null,
+): Promise<void> {
+  const input = document.createElement('input');
+  input.type = 'file';
+  const files = input.files;
+  if (!files) throw new Error('File inputs must expose a native FileList');
+  // JSDOM does not provide a user-facing file chooser. Keep the actual input,
+  // FileList, File, and dispatched Event; substitute only the chooser result.
+  const selection = file ? vi.spyOn(files, 'item').mockReturnValue(file) : undefined;
+  let pending: Promise<void> | undefined;
+  input.addEventListener('change', (event) => { pending = component.onFileSelected(event); });
+  try {
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    if (!pending) throw new Error('The change event must reach the upload handler');
+    await pending;
+    if (selection) expect(selection).toHaveBeenCalledWith(0);
+  } finally {
+    selection?.mockRestore();
+  }
+}
+
 function createDragEvent(file: File | null = null): DragEvent {
   return {
     preventDefault: vi.fn(),
@@ -853,13 +876,7 @@ describe('@stynx-nyx/angular-storage', () => {
     component.collection = 'attachments';
     component.completed.subscribe((value) => completed.push(value));
 
-    await component.onFileSelected({
-      target: {
-        files: {
-          item: () => ({ name: 'note.txt', type: 'text/plain', size: 5 }),
-        },
-      },
-    } as never);
+    await selectFileThroughInput(component, new File(['hello'], 'note.txt', { type: 'text/plain' }));
 
     expect(component.status).toBe('completed');
     expect(component.progress).toBe(55);
@@ -1202,7 +1219,7 @@ describe('@stynx-nyx/angular-storage', () => {
       { upload: vi.fn(async () => undefined) },
     );
 
-    await component.onFileSelected({ target: { files: { item: () => null } } } as never);
+    await selectFileThroughInput(component, null);
     expect(component.status).toBe('idle');
   });
 

@@ -511,3 +511,35 @@ describe('@stynx-nyx/sdk runtime helpers', () => {
     await expect(client.get('/malformed')).rejects.toBeInstanceOf(SyntaxError);
   });
 });
+
+
+it.each([
+  null, [], 'private-token-payload', 42, {}, { accessToken: 42 },
+  { accessToken: 'a', idToken: 1 }, { accessToken: 'a', idToken: null },
+  { accessToken: 'a', refreshToken: [] }, { accessToken: 'a', refreshToken: null },
+  { accessToken: 'a', expiresAt: '100' }, { accessToken: 'a', expiresAt: null },
+].map((value) => [value]))('refuses malformed persisted token fields without modifying storage: %j', (value) => {
+  const storage = { getItem: vi.fn(() => JSON.stringify(value)), setItem: vi.fn(), removeItem: vi.fn() };
+  expect(new BrowserLocalStorageTokenStore('tokens', storage).read()).toBe(null);
+  expect(storage.getItem).toHaveBeenCalledWith('tokens');
+  expect(storage.setItem).not.toHaveBeenCalled();
+  expect(storage.removeItem).not.toHaveBeenCalled();
+});
+
+it('retains declared tokens and opaque persisted extension fields without new numeric bounds', () => {
+  const value = { accessToken: '', idToken: '', refreshToken: 'refresh', expiresAt: -0.5,
+    extension: { nested: ['opaque', null, 42], tenant: { a: true } } };
+  const storage = { getItem: vi.fn(() => JSON.stringify(value)), setItem: vi.fn(), removeItem: vi.fn() };
+  expect(new BrowserLocalStorageTokenStore('tokens', storage).read()).toEqual(value);
+});
+
+
+it.each([null, [], ['claim'], 'private-claim', 42, true].map((payload) => [payload]))('refuses non-record JWT payload %j', (payload) => {
+  const encoded = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  expect(parseJwtPayload(`header.${encoded}.signature`)).toBe(null);
+});
+
+it('preserves opaque JWT claim values without coercion', () => {
+  const payload = { sub: 42, extension: { nested: [null, { a: true }] }, permission: ['read', 7], flag: null };
+  expect(parseJwtPayload(token(payload))).toEqual(payload);
+});

@@ -2203,3 +2203,14 @@ describe('@stynx-nyx/angular-auth', () => {
   // depends on signal subscriptions that the fake session-service stub did
   // not satisfy. Residual mutants in this file remain as a known acceptable.
 });
+
+
+it.each([null, [], ['claim'], 'private-claim', 42, true].map((payload) => [payload]))('refuses non-record Angular JWT payload %j', (payload) => {
+  const encoded = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  expect(parseJwtPayload(`header.${encoded}.signature`)).toBe(null);
+});
+
+it('preserves opaque Angular JWT claim values without coercion', () => {
+  const payload = { sub: 42, extension: { nested: [null, { a: true }] }, permission: ['read', 7], flag: null };
+  expect(parseJwtPayload(createJwt(payload))).toEqual(payload);
+});
