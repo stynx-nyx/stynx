@@ -3,7 +3,13 @@ import { Database, type Transaction } from '@stynx-nyx/data';
 import { FlowDesignService } from './flow-design.service.js';
 import type { FlowJsonObject } from './types.js';
 import { parseDto, policyEvaluationSchema } from './validation.js';
-import { resolvePolicySetIdQuery, evaluatePolicyConditionQuery } from './policy-queries.repository.js';
+import {
+  resolvePolicySetIdQuery,
+  evaluatePolicyConditionQuery,
+  selectActionPolicyRulesQuery,
+  selectCapabilityPolicyRulesQuery,
+  isPolicyRuleRow,
+} from './policy-queries.repository.js';
 
 @Injectable()
 export class FlowPolicyService {
@@ -60,28 +66,14 @@ export class FlowPolicyService {
         return this.defaultDecision();
       }
 
-      const targetColumn = dto.action ? 'action' : 'capability';
       const targetValue = dto.action ?? dto.capability;
-      const rules = await trx.query<{
-        id: string;
-        effect: 'allow' | 'deny';
-        priority: number;
-        reason_code?: string | null;
-        conditions: FlowJsonObject;
-      }>(
-        `
-          select id, effect, priority, reason_code, conditions
-          from flow.policy_rules
-          where policy_set_id = $1::uuid
-            and ${targetColumn} = $2
-            and (node_code is null or node_code = $3)
-            and (status_code is null or status_code = $4)
-          order by priority desc, case effect when 'deny' then 0 else 1 end, id
-        `,
+      const rules = await trx.runGuarded(
+        dto.action ? selectActionPolicyRulesQuery : selectCapabilityPolicyRulesQuery,
         [policySetId, targetValue, dto.nodeCode ?? null, dto.statusCode ?? null],
+        isPolicyRuleRow,
       );
 
-      for (const rule of rules.rows) {
+      for (const rule of rules) {
         if (await this.conditionsMatch(trx, rule.conditions, dto.facts ?? {})) {
           return {
             allowed: rule.effect === 'allow',
@@ -97,7 +89,7 @@ export class FlowPolicyService {
     }, {
       role: 'reader',
       readonly: true,
-    }) as Promise<FlowJsonObject>;
+    });
   }
 
   private async resolvePolicySetId(
@@ -110,18 +102,27 @@ export class FlowPolicyService {
 
   private async conditionsMatch(
     trx: Transaction,
-    conditions: FlowJsonObject | null | undefined,
+    conditions: unknown,
     facts: FlowJsonObject,
   ): Promise<boolean> {
     const value = conditions ?? {};
     if (Object.keys(value).length === 0) {
       return true;
     }
-    if (typeof value.jsonpath === 'string') {
-      const rows = await trx.run(evaluatePolicyConditionQuery, [value.jsonpath, facts]);
+    if (typeof this.conditionJsonPath(value) === 'string') {
+      const rows = await trx.run(evaluatePolicyConditionQuery, [this.conditionJsonPath(value), facts]);
       return rows[0]?.matched === true;
     }
-    return Object.entries(value).every(([key, expected]) => facts[key] === expected);
+    const entries: Array<[string, unknown]> = Object.entries(value);
+    return entries.every(([key, expected]) => facts[key] === expected);
+  }
+
+  private conditionJsonPath(value: unknown): unknown {
+    const boxed: unknown = Object(value);
+    if ((typeof boxed === 'object' && boxed !== null) || typeof boxed === 'function') {
+      return Reflect.get(boxed, 'jsonpath', value);
+    }
+    return undefined;
   }
 
   private defaultDecision(): FlowJsonObject {
