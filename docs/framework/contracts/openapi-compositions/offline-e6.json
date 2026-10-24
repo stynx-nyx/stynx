@@ -50,7 +50,7 @@
         "required": ["exportKey", "tenant"],
         "x-stynx-source": "packages/tenancy/src/types.ts"
       },
-      "AuditLogItem": {
+      "AuditLogWireItem": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
@@ -69,7 +69,15 @@
             "type": "number"
           },
           "occurredAt": {
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null",
+                "const": null
+              }
+            ]
           },
           "operation": {
             "type": "string"
@@ -148,14 +156,14 @@
         ],
         "x-stynx-source": "packages/audit/src/types.ts"
       },
-      "AuditLogPage": {
+      "AuditLogWirePage": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/AuditLogItem"
+              "$ref": "#/components/schemas/AuditLogWireItem"
             }
           },
           "nextCursor": {
@@ -4307,9 +4315,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AuditLogPage"
+                  "$ref": "#/components/schemas/AuditLogWirePage"
                 },
                 "x-stynx-source-type": "Promise<AuditLogPage>",
+                "x-stynx-json-response-type": "AuditLogWirePage",
                 "examples": {
                   "default": {
                     "value": {
