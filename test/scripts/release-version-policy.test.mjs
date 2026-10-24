@@ -2990,7 +2990,6 @@ function observeDevelopmentWorkspace(root) {
       .digest('hex'),
   }));
 
-  assert.equal(rootManifest.version, currentCandidate);
   for (const { manifest } of publishablePackages) {
     assert.equal(manifest.version, rootManifest.version);
   }
@@ -3024,28 +3023,35 @@ function observationInputBytes(root) {
   return new Map(paths.map((path) => [path, readFileSync(join(root, path))]));
 }
 
-test('live development observation retains actual 47 manifests and the complete pending security plan without publication credit', () => {
+// Exact historical bytes from S8 Engineer c0f98c3f, retained after the real
+// changeset is legitimately consumed; this fixture cannot select a release.
+function historicalSecurityChangeset() {
+  const bytes = readFileSync(join(repoRoot, 'test/fixtures/release-policy/s8-security-patch.md'));
+  assert.equal(
+    createHash('sha256').update(bytes).digest('hex'),
+    '8dc47832c71444e0e61a443b752bc99649d4fdb3ff1d7678afe8faf66baf6df0',
+  );
+  return bytes;
+}
+
+test('live development observation retains actual 47 manifests and the complete current plan without publication credit', () => {
   const before = observationInputBytes(repoRoot);
+  const actualRoot = JSON.parse(before.get('package.json'));
   const observation = observeDevelopmentWorkspace(repoRoot);
   assert.equal(observation.purpose, 'DEVELOPMENT_OBSERVATION');
   assert.equal(observation.publicationReady, false);
   assert.equal(Object.hasOwn(observation, 'stage'), false);
-  assert.equal(observation.current, currentCandidate);
+  assert.equal(observation.current, actualRoot.version);
   assert.equal(observation.packageCount, 47);
   assert.deepEqual(observation.names, [...packageRoster.publishable_packages].sort());
   assert.equal(observation.registryPolicyCandidate, currentCandidate);
-  const security = observation.changesets.find(
-    ({ file }) => file === '.changeset/s8-dependency-security-remediation.md',
-  );
-  assert.ok(security, 'the required security changeset must remain unconsumed');
-  assert.deepEqual(security.releases.map(({ name }) => name).sort(), observation.names);
-  assert.ok(security.releases.every(({ type }) => type === 'patch'));
+  assert.equal(observation.plan.current, actualRoot.version);
   assert.equal(
-    security.sha256,
-    createHash('sha256').update(before.get(security.file)).digest('hex'),
+    observation.plan.expected,
+    observation.plan.bump === null
+      ? actualRoot.version
+      : incrementVersion(actualRoot.version, observation.plan.bump),
   );
-  assert.equal(observation.plan.bump, 'patch');
-  assert.equal(observation.plan.expected, incrementVersion(currentCandidate, 'patch'));
   assert.deepEqual(observationInputBytes(repoRoot), before);
 });
 
@@ -3086,7 +3092,7 @@ test('the same pending security bytes are development input but cannot be a cons
     await import('../../scripts/lib/publication-dist-tag.mjs');
   const fixture = createCampaignStageFixture({ version: currentCandidate, pending: false });
   try {
-    const bytes = readFileSync(join(repoRoot, '.changeset/s8-dependency-security-remediation.md'));
+    const bytes = historicalSecurityChangeset();
     writeFileSync(fixture.changesetPath, bytes);
     const before = observationInputBytes(fixture.root);
     assert.equal(observeDevelopmentWorkspace(fixture.root).plan.bump, 'patch');
@@ -3106,39 +3112,141 @@ test('the same pending security bytes are development input but cannot be a cons
   }
 });
 
-test('actual ordinary release policy permits development while registry mode refuses pending changesets before registry access', () => {
+function createRegistryRefusalFixture() {
+  const root = mkdtempSync(join(tmpdir(), 'stynx registry pending fixture '));
+  const sourcePaths = [
+    'package.json',
+    '.changeset/config.json',
+    'tools/create-stynx-app/template/package.json',
+    'law/policy/stynx-package-roster.json',
+    'law/policy/registry-version-anomalies.json',
+    'scripts/verify-release-policy.mjs',
+    'scripts/lib/release-version-policy.mjs',
+    'scripts/lib/registry-version-policy.mjs',
+    'scripts/lib/publishable-packages.mjs',
+    'scripts/lib/fixed-group-version.mjs',
+    'scripts/lib/publication-dist-tag.mjs',
+    ...collectPublicPackages(repoRoot).flatMap(({ manifestPath, dirPath }) => [
+      relative(repoRoot, manifestPath),
+      relative(repoRoot, join(dirPath, 'LICENSE')),
+    ]),
+  ];
+  for (const path of sourcePaths) {
+    const target = join(root, path);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, readFileSync(join(repoRoot, path)));
+  }
+  writeFileSync(join(root, '.changeset/historical-security.md'), historicalSecurityChangeset());
+  const networkMarker = join(root, 'unexpected-network');
+  const guard = join(root, 'no-network.mjs');
+  writeFileSync(
+    guard,
+    `import { writeFileSync } from 'node:fs';\nglobalThis.fetch = () => { writeFileSync(${JSON.stringify(networkMarker)}, 'attempt'); throw new Error('Unexpected registry network access'); };\n`,
+  );
+  return { root, sourcePaths, networkMarker, guard };
+}
+
+test('actual ordinary release policy permits development while an isolated pending fixture refuses registry mode before network', () => {
   const before = observationInputBytes(repoRoot);
   const env = { ...process.env };
-  for (const key of ['NODE_AUTH_TOKEN', 'NPM_TOKEN', 'GH_TOKEN', 'GITHUB_TOKEN']) delete env[key];
-  const script = join(repoRoot, 'scripts/verify-release-policy.mjs');
-  const ordinary = spawnSync(process.execPath, [script], {
-    cwd: repoRoot,
-    env,
-    encoding: 'utf8',
-    timeout: 10_000,
-  });
-  assert.ifError(ordinary.error);
-  assert.equal(ordinary.status, 0, ordinary.stderr);
-  assert.equal(ordinary.signal, null);
-  assert.match(ordinary.stdout, /Verified release policy for 47 publishable packages/);
-  const publication = spawnSync(
-    process.execPath,
-    [script, '--registry-monotonicity', '--candidate-from-policy'],
-    { cwd: repoRoot, env, encoding: 'utf8', timeout: 10_000 },
-  );
-  assert.ifError(publication.error);
-  assert.equal(publication.status, 1);
-  assert.equal(publication.signal, null);
-  assert.match(
-    publication.stderr,
-    /PUBLICATION_DIST_TAG_INVALID: stable publication has pending changesets/,
-  );
-  assert.doesNotMatch(publication.stdout, /Verified release policy/);
-  assert.match(
-    repositorySource('scripts/publish-release-plan.mjs'),
-    /assertNoPendingPreChangesets/,
-  );
-  assert.deepEqual(observationInputBytes(repoRoot), before);
+  for (const key of [
+    'NODE_AUTH_TOKEN',
+    'NPM_TOKEN',
+    'GH_TOKEN',
+    'GITHUB_TOKEN',
+    'PACKAGES_READ_TOKEN',
+  ])
+    delete env[key];
+  const fixture = createRegistryRefusalFixture();
+  try {
+    const ordinary = spawnSync(
+      process.execPath,
+      ['--import', fixture.guard, join(repoRoot, 'scripts/verify-release-policy.mjs')],
+      { cwd: repoRoot, env, encoding: 'utf8', timeout: 10_000 },
+    );
+    assert.ifError(ordinary.error);
+    assert.equal(ordinary.status, 0, ordinary.stderr);
+    assert.equal(ordinary.signal, null);
+    assert.match(ordinary.stdout, /Verified release policy for 47 publishable packages/);
+    const script = join(fixture.root, 'scripts/verify-release-policy.mjs');
+    const ordinaryFixture = spawnSync(process.execPath, ['--import', fixture.guard, script], {
+      cwd: fixture.root,
+      env,
+      encoding: 'utf8',
+      timeout: 10_000,
+    });
+    assert.ifError(ordinaryFixture.error);
+    assert.equal(ordinaryFixture.status, 0, ordinaryFixture.stderr);
+    assert.match(ordinaryFixture.stdout, /Verified release policy for 47 publishable packages/);
+    const publication = spawnSync(
+      process.execPath,
+      ['--import', fixture.guard, script, '--registry-monotonicity', '--candidate-from-policy'],
+      { cwd: fixture.root, env, encoding: 'utf8', timeout: 10_000 },
+    );
+    assert.ifError(publication.error);
+    assert.equal(publication.status, 1);
+    assert.equal(publication.signal, null);
+    assert.match(
+      publication.stderr,
+      /PUBLICATION_DIST_TAG_INVALID: stable publication has pending changesets/,
+    );
+    assert.doesNotMatch(publication.stdout, /Verified release policy/);
+    assert.equal(existsSync(fixture.networkMarker), false);
+    for (const path of fixture.sourcePaths)
+      assert.deepEqual(readFileSync(join(fixture.root, path)), readFileSync(join(repoRoot, path)));
+    assert.match(
+      repositorySource('scripts/publish-release-plan.mjs'),
+      /assertNoPendingPreChangesets/,
+    );
+    assert.deepEqual(observationInputBytes(repoRoot), before);
+    const guardControl = spawnSync(
+      process.execPath,
+      [
+        '--import',
+        fixture.guard,
+        '--input-type=module',
+        '-e',
+        "await fetch('https://registry.invalid/never-contacted')",
+      ],
+      { cwd: fixture.root, env, encoding: 'utf8', timeout: 10_000 },
+    );
+    assert.ifError(guardControl.error);
+    assert.notEqual(guardControl.status, 0);
+    assert.match(guardControl.stderr, /Unexpected registry network access/);
+    assert.equal(readFileSync(fixture.networkMarker, 'utf8'), 'attempt');
+  } finally {
+    rmSync(fixture.root, { recursive: true, force: true });
+  }
+});
+
+test('development observations remain valid before and after changeset consumption without assigning publication purpose', () => {
+  for (const version of [
+    preflightLatest,
+    currentCandidate,
+    incrementVersion(currentCandidate, 'patch'),
+  ]) {
+    const fixture = createCampaignStageFixture({ version, pending: false });
+    try {
+      const empty = observeDevelopmentWorkspace(fixture.root);
+      assert.equal(empty.current, version);
+      assert.equal(empty.plan.expected, version);
+      assert.equal(empty.plan.bump, null);
+      assert.equal(empty.publicationReady, false);
+      writeFileSync(fixture.changesetPath, historicalSecurityChangeset());
+      const pending = observeDevelopmentWorkspace(fixture.root);
+      assert.equal(pending.plan.bump, 'patch');
+      assert.equal(pending.plan.expected, incrementVersion(version, 'patch'));
+      assert.deepEqual(
+        pending.changesets[0].releases.map(({ name }) => name).sort(),
+        fixture.names,
+      );
+      assert.ok(pending.changesets[0].releases.every(({ type }) => type === 'patch'));
+      rmSync(fixture.changesetPath);
+      assert.deepEqual(observeDevelopmentWorkspace(fixture.root), empty);
+    } finally {
+      rmSync(fixture.root, { recursive: true, force: true });
+    }
+  }
 });
 
 function createCampaignStageFixture({ version = preflightLatest, pending = true } = {}) {
