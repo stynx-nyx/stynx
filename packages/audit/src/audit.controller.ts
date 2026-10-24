@@ -7,6 +7,7 @@ import type { AuditLogQuery } from './types.js';
 export class StynxAuditController {
   constructor(private readonly auditService: StynxAuditService) {}
 
+  /** @stynx-json-response-type AuditLogWirePage */
   @UseGuards(StynxAuthGuard, PermissionGuard)
   @Permission('platform:audit:read:*')
   @Get('/_audit/log')

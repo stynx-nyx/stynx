@@ -1,9 +1,9 @@
+import { createQueue, readQueue, readQueueByCode, listQueues, countQueues, assertCanWork, setWorkerState } from './worklist.repository.js';
 import { Injectable } from '@nestjs/common';
 import { Database } from '@stynx-nyx/data';
 import { WorklistNotFoundError } from './errors.js';
 import {
   QUEUE_COLUMNS,
-  WORKER_STATE_COLUMNS,
   mapQueueRow,
   mapWorkerStateRow,
   pageLimitOffset,
@@ -35,17 +35,7 @@ export class WorklistQueuesService {
     const defaultDeadline = value.defaultDeadline;
     try {
       return await this.database.tx(async (trx) => {
-        const result = await trx.query<WorklistRow>(
-          `insert into worklist.queues (
-             tenant_id, code, name, description, strategy, strategy_config,
-             required_permission, supervisor_permission, claim_limit,
-             default_sla_seconds, default_sla_business_days, default_calendar_key,
-             meta, created_by, updated_by
-           ) values (
-             current_setting('app.tenant_id')::uuid, $1, $2, $3, $4, $5::jsonb,
-             $6, $7, $8, $9, $10, $11, $12::jsonb,
-             current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid
-           ) returning ${QUEUE_COLUMNS}`,
+        const result = await trx.run(createQueue,
           [
             value.code,
             value.name,
@@ -63,7 +53,7 @@ export class WorklistQueuesService {
             JSON.stringify(value.meta ?? {}),
           ],
         );
-        return mapQueueRow(result.rows[0] ?? {});
+        return mapQueueRow(result[0] ?? {});
       });
     } catch (error) {
       throw mapWorklistSqlError(error);
@@ -128,10 +118,10 @@ export class WorklistQueuesService {
   async get(id: string): Promise<WorklistQueueRecord> {
     const result = await this.database.tx(
       (trx) =>
-        trx.query<WorklistRow>(`select ${QUEUE_COLUMNS} from worklist.queues where id = $1`, [id]),
+        trx.run(readQueue, [id]),
       { role: 'reader', readonly: true },
     );
-    const row = result.rows[0];
+    const row = result[0];
     if (!row) throw new WorklistNotFoundError('queue', id);
     return mapQueueRow(row);
   }
@@ -139,12 +129,12 @@ export class WorklistQueuesService {
   async getByCode(code: string): Promise<WorklistQueueRecord> {
     const result = await this.database.tx(
       (trx) =>
-        trx.query<WorklistRow>(`select ${QUEUE_COLUMNS} from worklist.queues where code = $1`, [
+        trx.run(readQueueByCode, [
           code,
         ]),
       { role: 'reader', readonly: true },
     );
-    const row = result.rows[0];
+    const row = result[0];
     if (!row) throw new WorklistNotFoundError('queue', code);
     return mapQueueRow(row);
   }
@@ -155,18 +145,17 @@ export class WorklistQueuesService {
     return this.database.tx(
       async (trx) => {
         const [rows, count] = await Promise.all([
-          trx.query<WorklistRow>(
-            `select ${QUEUE_COLUMNS} from worklist.queues order by code, id limit $1 offset $2`,
+          trx.run(listQueues,
             [limit, offset],
           ),
-          trx.query<{ total: string }>(`select count(*)::text as total from worklist.queues`),
+          trx.run(countQueues, []),
         ]);
         return {
-          data: rows.rows.map(mapQueueRow),
+          data: rows.map(mapQueueRow),
           meta: {
             page: query.page,
             pageSize: query.pageSize,
-            total: Number(count.rows[0]?.total ?? 0),
+            total: Number(count[0]?.total ?? 0),
           },
         };
       },
@@ -181,21 +170,8 @@ export class WorklistQueuesService {
     const value = parseWorklistInput(workerStateSchema, input);
     try {
       return await this.database.tx(async (trx) => {
-        await trx.query(`select worklist.assert_can_work($1, $2, true)`, [queueId, value.userId]);
-        const result = await trx.query<WorklistRow>(
-          `insert into worklist.worker_state (
-             tenant_id, queue_id, user_id, is_available, weight, meta, created_by, updated_by
-           ) values (
-             current_setting('app.tenant_id')::uuid, $1, $2, $3, $4, $5::jsonb,
-             current_setting('app.actor_id')::uuid, current_setting('app.actor_id')::uuid
-           )
-           on conflict (tenant_id, queue_id, user_id) do update set
-             is_available = excluded.is_available,
-             weight = excluded.weight,
-             meta = excluded.meta,
-             updated_by = excluded.updated_by,
-             updated_at = clock_timestamp()
-           returning ${WORKER_STATE_COLUMNS}`,
+        await trx.run(assertCanWork, [queueId, value.userId]);
+        const result = await trx.run(setWorkerState,
           [
             queueId,
             value.userId,
@@ -204,7 +180,7 @@ export class WorklistQueuesService {
             JSON.stringify(value.meta ?? {}),
           ],
         );
-        return mapWorkerStateRow(result.rows[0] ?? {});
+        return mapWorkerStateRow(result[0] ?? {});
       });
     } catch (error) {
       throw mapWorklistSqlError(error);

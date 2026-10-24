@@ -1,3 +1,4 @@
+import { readOverrideSettings, writeOverrideSettings } from './i18n.repository.js';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
@@ -26,11 +27,10 @@ export class I18nAdminService {
     const database = this.moduleRef.get(Database, { strict: false });
     return database.txIndependent(
       async (trx) => {
-        const result = await trx.query<{ settings: Record<string, unknown> | null }>(
-          `select settings from tenancy.tenant_settings where tenant_id = $1::uuid limit 1`,
+        const result = await trx.run(readOverrideSettings,
           [tenantId],
         );
-        const settings = result.rows[0]?.settings ?? {};
+        const settings = result[0]?.settings ?? {};
         return Object.fromEntries(
           Object.entries(settings).filter(([key]) => key.startsWith('i18n.override.')),
         ) as Record<string, string>;
@@ -63,12 +63,11 @@ export class I18nAdminService {
     const database = this.moduleRef.get(Database, { strict: false });
     const overrides = await database.txIndependent(
       async (trx) => {
-        const result = await trx.query<{ settings: Record<string, unknown> | null }>(
-          `select settings from tenancy.tenant_settings where tenant_id = $1::uuid limit 1`,
+        const result = await trx.run(readOverrideSettings,
           [tenantId],
         );
         const nextSettings: Record<string, unknown> = {
-          ...(result.rows[0]?.settings ?? {}),
+          ...(result[0]?.settings ?? {}),
           ...Object.fromEntries(
             Object.entries(input.catalog).map(([key, value]) => [
               `i18n.override.${input.locale}.${key}`,
@@ -76,13 +75,7 @@ export class I18nAdminService {
             ]),
           ),
         };
-        await trx.query(
-          `
-              insert into tenancy.tenant_settings (tenant_id, settings, updated_at)
-              values ($1::uuid, $2::jsonb, clock_timestamp())
-              on conflict (tenant_id)
-              do update set settings = $2::jsonb, updated_at = clock_timestamp()
-            `,
+        await trx.run(writeOverrideSettings,
           [tenantId, JSON.stringify(nextSettings)],
         );
         const overrides = Object.fromEntries(

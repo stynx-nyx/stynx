@@ -1,3 +1,4 @@
+import { insertInboxItem } from '../notifications.repository.js';
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
@@ -19,11 +20,7 @@ export class InAppPostgresChannelAdapter implements ChannelAdapter {
     const database = this.requireDatabase();
     const id = randomUUID();
     await database.tx(async (trx) => {
-      await trx.query(
-        `insert into notifications.inbox_items
-           (id, tenant_id, recipient_subject_id, notification_id, delivery_id, title, body, locale, created_at)
-         values ($1::uuid, $2::uuid, $3, $4::uuid, $5::uuid, $6, $7, $8, clock_timestamp())
-         on conflict (delivery_id) do nothing`,
+      await trx.run(insertInboxItem,
         [
           id,
           input.tenantId,

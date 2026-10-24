@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import {
   collectStorageCatalog,
+  executeTypedQuery,
+  executeConfiguredQuery,
   quoteStorageIdentifier,
   resolveStorageRoleBinding,
 } from '@stynx-nyx/data';
@@ -14,6 +16,7 @@ import type {
 } from '@stynx-nyx/data';
 import { OFFLINE_STORAGE_TEMPLATE } from './storage-template.generated.js';
 import { OFFLINE_STORAGE_CATALOG } from './storage-catalog.generated.js';
+import { storageAdmission, storageVisibility, storageRestrictedRoles, storageSchemaOwner, storageApplicableRoles, storagePrivileges, storageForeignKeyEnforcement } from './storage.repository.js';
 import { inspectOfflineRows } from './storage-invariants.js';
 
 export type OfflineStorageOptions = StorageBindingOptions;
@@ -246,34 +249,16 @@ async function inspectStorage(
     });
   };
   try {
-    const admission = await trx.query<{ owner: string; readonly: string }>(
-      `select current_user::text as owner,current_setting('transaction_read_only') as readonly`,
+    const admission = await executeTypedQuery(trx, storageAdmission, []
     );
-    check('transaction-owner', 'transaction', binding.ownerRole, admission.rows[0]?.owner);
-    check('transaction-read-only', 'transaction', requiredReadOnly, admission.rows[0]?.readonly);
+    check('transaction-owner', 'transaction', binding.ownerRole, admission[0]?.owner);
+    check('transaction-read-only', 'transaction', requiredReadOnly, admission[0]?.readonly);
     if (checks.some((item) => item.status !== 'pass')) return report();
-    const visibility = await trx.query<{ visible: boolean }>(
-      `select coalesce(bool_and(not row_security_active(c.oid)),false) as visible
-       from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
-       where n.nspname='offline' and c.relkind in ('r','p')`,
+    const visibility = await executeTypedQuery(trx, storageVisibility, []
     );
-    check('owner-full-row-visibility', 'offline', true, visibility.rows[0]?.visible);
+    check('owner-full-row-visibility', 'offline', true, visibility[0]?.visible);
     if (checks.some((item) => item.status !== 'pass')) return report();
-    const roles = await trx.query<{
-      name: string;
-      superuser: boolean;
-      bypass: boolean;
-      owns: boolean;
-      ownerMember: boolean;
-      unsafeMembership: boolean;
-    }>(
-      `select r.rolname as name,r.rolsuper as superuser,r.rolbypassrls as bypass,
-        exists(select 1 from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
-          where n.nspname='offline' and c.relowner=r.oid) as owns,
-        pg_has_role(r.oid,$1::name,'MEMBER') as "ownerMember",
-        exists(select 1 from pg_catalog.pg_roles p where (p.rolsuper or p.rolbypassrls)
-          and pg_has_role(r.oid,p.oid,'MEMBER')) as "unsafeMembership"
-       from pg_catalog.pg_roles r where r.rolname=$2 or r.rolname=$3`,
+    const roles = await executeTypedQuery(trx, storageRestrictedRoles,
       [binding.ownerRole, binding.appRole, binding.readerRole],
     );
     for (const name of [binding.appRole, binding.readerRole].filter((name) => name !== null)) {
@@ -288,13 +273,12 @@ async function inspectStorage(
           ownerMember: false,
           unsafeMembership: false,
         },
-        roles.rows.find((row) => row.name === name),
+        roles.find((row) => row.name === name),
       );
     }
-    const schema = await trx.query<{ owner: string }>(
-      `select pg_get_userbyid(nspowner) as owner from pg_catalog.pg_namespace where nspname='offline'`,
+    const schema = await executeTypedQuery(trx, storageSchemaOwner, []
     );
-    check('schema-owner', 'offline', binding.ownerRole, schema.rows[0]?.owner);
+    check('schema-owner', 'offline', binding.ownerRole, schema[0]?.owner);
     const expected = artifact.manifest.catalog;
     const actual = await collectStorageCatalog(trx, 'offline');
     // Additional role bindings are allowed. Their grants/policies cannot count
@@ -305,17 +289,15 @@ async function inspectStorage(
       binding.appRole,
       binding.readerRole,
     ]);
-    const applicable = await trx.query<{ name: string }>(
-      `select rolname as name from pg_catalog.pg_roles where pg_has_role($1::name,oid,'MEMBER')
-        or ($2::text is not null and pg_has_role($2::name,oid,'MEMBER'))`,
+    const applicable = await executeTypedQuery(trx, storageApplicableRoles,
       [binding.appRole, binding.readerRole],
     );
-    const policyRoles = new Set(['PUBLIC', ...applicable.rows.map((row) => row.name)]);
+    const policyRoles = new Set(['PUBLIC', ...applicable.map((row) => row.name)]);
     const relevant = (entry: StorageCatalogEntry): boolean =>
       ['grant', 'default-grant'].includes(entry.kind)
-        ? relevantRoles.has(entry.value.grantee as string)
+        ? typeof entry.value.grantee === 'string' && relevantRoles.has(entry.value.grantee)
         : entry.kind === 'policy'
-          ? (entry.value.roles as string[]).some((role) => policyRoles.has(role))
+          ? Array.isArray(entry.value.roles) && entry.value.roles.some((role: unknown) => typeof role === 'string' && policyRoles.has(role))
           : true;
     const observed = new Map(
       actual.filter(relevant).map((entry) => [`${entry.kind}:${entry.name}`, entry]),
@@ -342,62 +324,15 @@ async function inspectStorage(
       check(`catalog-unexpected:${key}`, `offline.${entry.name}`, null, {
         sha256: createHash('sha256').update(stable(entry.value)).digest('hex'),
       });
-    const privileges = await trx.query<{
-      role: string;
-      object: string;
-      parent: string | null;
-      privilege: string;
-      allowed: boolean;
-      grantable: boolean;
-    }>(
-      `with capabilities as (
-        select role.name as role,member.rolname as member from (values ($1::text),($2::text)) role(name)
-        join pg_catalog.pg_roles member on pg_has_role(role.name::name,member.oid,'MEMBER') where role.name is not null
-      ), permissions as (
-        select role.role,c.relname as object,null::text as parent,privilege.name as privilege,
-          case when c.relkind='S' then has_sequence_privilege(role.member,c.oid,privilege.name)
-            else has_table_privilege(role.member,c.oid,privilege.name) end as allowed,
-          case when c.relkind='S' then has_sequence_privilege(role.member,c.oid,privilege.name||' WITH GRANT OPTION')
-            else has_table_privilege(role.member,c.oid,privilege.name||' WITH GRANT OPTION') end as grantable
-        from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
-        cross join capabilities role
-        cross join lateral unnest(case when c.relkind='S' then array['USAGE','SELECT','UPDATE']
-          else array['SELECT','INSERT','UPDATE','DELETE','TRUNCATE','REFERENCES','TRIGGER'] ||
-            case when current_setting('server_version_num')::integer>=170000 then array['MAINTAIN'] else array[]::text[] end end) privilege(name)
-        where n.nspname='offline' and c.relkind in ('r','p','S')
-        union all
-        select role.role,c.relname||'.'||a.attname,c.relname,privilege.name,
-          has_column_privilege(role.member,c.oid,a.attnum,privilege.name),
-          has_column_privilege(role.member,c.oid,a.attnum,privilege.name||' WITH GRANT OPTION')
-        from pg_catalog.pg_attribute a join pg_catalog.pg_class c on c.oid=a.attrelid
-        join pg_catalog.pg_namespace n on n.oid=c.relnamespace cross join capabilities role
-        cross join unnest(array['SELECT','INSERT','UPDATE','REFERENCES']) privilege(name)
-        where n.nspname='offline' and c.relkind in ('r','p') and a.attnum>0 and not a.attisdropped
-        union all
-        select role.role,'schema',null,privilege.name,has_schema_privilege(role.member,n.oid,privilege.name),
-          has_schema_privilege(role.member,n.oid,privilege.name||' WITH GRANT OPTION')
-        from pg_catalog.pg_namespace n cross join capabilities role
-        cross join unnest(array['USAGE','CREATE']) privilege(name) where n.nspname='offline'
-        union all
-        select role.role,p.proname||'('||pg_get_function_identity_arguments(p.oid)||')',null,'EXECUTE',
-          has_function_privilege(role.member,p.oid,'EXECUTE'),
-          has_function_privilege(role.member,p.oid,'EXECUTE WITH GRANT OPTION') from pg_catalog.pg_proc p
-        join pg_catalog.pg_namespace n on n.oid=p.pronamespace cross join capabilities role where n.nspname='offline'
-        union all
-        select role.role,'type:'||t.typname,null,'USAGE',has_type_privilege(role.member,t.oid,'USAGE'),
-          has_type_privilege(role.member,t.oid,'USAGE WITH GRANT OPTION')
-        from pg_catalog.pg_type t join pg_catalog.pg_namespace n on n.oid=t.typnamespace
-        cross join capabilities role where n.nspname='offline' and t.typtype='e'
-      ) select role,object,parent,privilege,bool_or(allowed) as allowed,bool_or(grantable) as grantable from permissions
-        group by role,object,parent,privilege`,
+    const privileges = await executeTypedQuery(trx, storagePrivileges,
       [binding.appRole, binding.readerRole],
     );
-    for (const row of privileges.rows) {
+    for (const row of privileges) {
       const allowed = expected.some(
         (entry) =>
           entry.kind === 'grant' &&
-          [row.object, row.parent].includes(entry.value.object as string) &&
-          [row.role, 'PUBLIC'].includes(entry.value.grantee as string) &&
+          typeof entry.value.object === 'string' && [row.object, row.parent].includes(entry.value.object) &&
+          typeof entry.value.grantee === 'string' && [row.role, 'PUBLIC'].includes(entry.value.grantee) &&
           entry.value.privilege === row.privilege,
       );
       check(
@@ -416,29 +351,25 @@ async function inspectStorage(
     const foreignKeys = expected.filter(
       (entry) => entry.kind === 'constraint' && entry.value.kind === 'f',
     );
-    const enforcement = await trx.query<{ valid: boolean }>(
-      `select coalesce(bool_and(t.tgenabled in ('O','A')),false) as valid
-       from pg_catalog.pg_constraint k join pg_catalog.pg_class c on c.oid=k.conrelid
-       join pg_catalog.pg_namespace n on n.oid=c.relnamespace
-       left join pg_catalog.pg_trigger t on t.tgconstraint=k.oid
-       where n.nspname='offline' and k.contype='f'`,
+    const enforcement = await executeTypedQuery(trx, storageForeignKeyEnforcement, []
     );
-    check('foreign-key-enforcement', 'offline', true, enforcement.rows[0]?.valid);
+    check('foreign-key-enforcement', 'offline', true, enforcement[0]?.valid);
     for (const entry of foreignKeys) {
       const table = entry.name.slice(0, entry.name.indexOf('.'));
-      const columns = entry.value.columns as string[];
-      const referenced = entry.value.referencedColumns as string[];
-      const identifiers = columns.map((name) => quoteStorageIdentifier(name));
+      const columns = entry.value.columns;
+      const referenced = entry.value.referencedColumns;
+      const targetSchema = entry.value.referencedSchema;
+      const targetTable = entry.value.referencedTable;
+      if (!Array.isArray(columns) || !columns.every((column): column is string => typeof column === 'string') ||
+          !Array.isArray(referenced) || !referenced.every((column): column is string => typeof column === 'string') ||
+          typeof targetSchema !== 'string' || typeof targetTable !== 'string') {
+        throw new TypeError('Invalid foreign-key catalog binding');
+      }
       const source = `offline.${quoteStorageIdentifier(table)}`;
-      const target = `${quoteStorageIdentifier(entry.value.referencedSchema as string)}.${quoteStorageIdentifier(entry.value.referencedTable as string)}`;
-      const predicate = identifiers.map((name) => `child.${name} is not null`).join(' and ');
-      const equality = identifiers
-        .map((name, index) => `child.${name}=parent.${quoteStorageIdentifier(referenced[index]!)}`)
-        .join(' and ');
-      const orphans = await trx.query<{ count: string }>(
-        `select count(*)::text as count from ${source} child
-         where ${predicate} and not exists(select 1 from ${target} parent where ${equality})`,
-      );
+      const orphans = await executeConfiguredQuery(trx, 'catalog.foreign-key-orphans', {
+        sourceSchema: 'offline', sourceTable: table, sourceColumns: columns,
+        targetSchema, targetTable, targetColumns: referenced,
+      }, []);
       check(`stored-foreign-key:${entry.name}`, source, '0', orphans.rows[0]?.count);
     }
     const data = await inspectOfflineRows(trx);

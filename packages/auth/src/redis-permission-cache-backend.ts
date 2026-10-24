@@ -15,6 +15,22 @@ import type { PermissionCacheBackend, PermissionCacheRecord, ResolvedStynxAuthMo
  */
 type Resp2RedisClient = RedisClientType<RedisModules, RedisFunctions, RedisScripts, 2>;
 
+function isPermissionCacheRecord(value: unknown): value is PermissionCacheRecord {
+  if (value === null || typeof value !== 'object' || Array.isArray(value) ||
+      !('sid' in value) || typeof value.sid !== 'string' ||
+      !('userId' in value) || typeof value.userId !== 'string' ||
+      !('tenantId' in value) || typeof value.tenantId !== 'string' ||
+      !('membershipId' in value) || typeof value.membershipId !== 'string' ||
+      !('hash' in value) || typeof value.hash !== 'string' ||
+      !('generation' in value) || (typeof value.generation !== 'string' && typeof value.generation !== 'number') ||
+      !('computedAt' in value) || typeof value.computedAt !== 'number' ||
+      !('permissions' in value) || !Array.isArray(value.permissions)) return false;
+  for (let index = 0; index < value.permissions.length; index += 1) {
+    if (!Object.hasOwn(value.permissions, index) || typeof value.permissions[index] !== 'string') return false;
+  }
+  return true;
+}
+
 @Injectable()
 export class RedisPermissionCacheBackend implements PermissionCacheBackend, OnModuleInit, OnModuleDestroy {
   private client?: Resp2RedisClient;
@@ -65,7 +81,11 @@ export class RedisPermissionCacheBackend implements PermissionCacheBackend, OnMo
       return null;
     }
     const raw = await this.client.get(this.recordKey(sid));
-    return raw ? JSON.parse(raw) as PermissionCacheRecord : null;
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed === null) return null;
+    if (!isPermissionCacheRecord(parsed)) throw new TypeError('Invalid permission cache record');
+    return parsed;
   }
 
   async set(record: PermissionCacheRecord, ttlSeconds: number): Promise<void> {

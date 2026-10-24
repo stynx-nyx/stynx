@@ -1,3 +1,5 @@
+import { executeTypedQuery, executeLegacyArchive } from '../checked-executor.js';
+import { archiveMoveContext, archiveRestoreReason } from '../archive.repository.js';
 import type { QueryResult, QueryResultRow } from 'pg';
 import {
   ArchiveMirrorMissingError,
@@ -78,11 +80,11 @@ export async function restoreByReference(
     throw new RestoreConflictError(conflict);
   }
 
-  await ctx.query(`select set_config('app.archive_move', 'in_progress', true)`);
-  await ctx.query(`select set_config('app.archive_reason', 'restore', true)`);
+  await executeTypedQuery(ctx, archiveMoveContext, []);
+  await executeTypedQuery(ctx, archiveRestoreReason, []);
 
   try {
-    await ctx.query(
+    await executeLegacyArchive(ctx, 'restore-insert',
       `
         insert into ${meta.qualifiedName} (${meta.columnNames.map(quoteIdent).join(', ')})
         select ${meta.columnNames.map(quoteIdent).join(', ')}
@@ -92,10 +94,9 @@ export async function restoreByReference(
       [archived.archive_id],
     );
   } catch (error) {
-    const pgError = error as { code?: string; constraint?: string };
-    if (pgError.code === '23505') {
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === '23505') {
       throw new RestoreConflictError({
-        conflictingConstraint: pgError.constraint ?? 'unique_violation',
+        conflictingConstraint: 'constraint' in error && typeof error.constraint === 'string' ? error.constraint : 'unique_violation',
         conflictValues: { id },
         blockingLiveId: id,
       });
@@ -103,7 +104,7 @@ export async function restoreByReference(
     throw error;
   }
 
-  await ctx.query(`delete from ${meta.mirrorQualifiedName} where archive_id = $1`, [
+  await executeLegacyArchive(ctx, 'restore-delete-archive',`delete from ${meta.mirrorQualifiedName} where archive_id = $1`, [
     archived.archive_id,
   ]);
   ctx.incrementRestore(ctx.metricLabel(meta));
@@ -114,7 +115,7 @@ export async function restoreByReference(
       if (entry.behavior !== 'cascade') {
         continue;
       }
-      const children = await ctx.query<{ id: string }>(
+      const children = await executeLegacyArchive(ctx, 'restore-children',
         `
           select id
           from ${mirrorQualifiedName(entry.childSchema, entry.childTable)}

@@ -1,3 +1,5 @@
+import { bindQueryContext, executeTypedQuery } from '@stynx-nyx/data';
+import { enableRowSecurity, setSessionSetting } from './session-context.repository.js';
 import type { DbContextApplier, DbSessionContext } from '@stynx-nyx/contracts';
 
 export interface PgQueryableClient {
@@ -116,7 +118,7 @@ export class PgSessionDbContextApplier
 
   async apply(client: PgQueryableClient, context: DbSessionContext): Promise<void> {
     if (this.enableRowSecurity) {
-      await client.query('SET row_security = on');
+      await executeTypedQuery(bindQueryContext(client), enableRowSecurity, []);
     }
 
     await this.applySettings(client, this.settings.userId, normalizeScalar(context.userId));
@@ -171,7 +173,7 @@ export class PgSessionDbContextApplier
 
     const normalizedValue = value ?? '';
     for (const settingName of settings) {
-      await client.query('select set_config($1, $2, false)', [
+      await executeTypedQuery(bindQueryContext(client), setSessionSetting, [
         settingName,
         normalizedValue,
       ]);

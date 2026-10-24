@@ -1,3 +1,5 @@
+import { executeTypedQuery } from '@stynx-nyx/data';
+import { activeTenantAdmission, activeMembershipAdmission } from './tenancy.repository.js';
 import {
   BadRequestException,
   CallHandler,
@@ -36,6 +38,17 @@ import {
   resolveSubdomainTenantId,
 } from './utils.js';
 
+function optionalAuthMarkerValue(marker: unknown): unknown {
+  if (marker === null) {
+    throw new TypeError("Cannot read properties of null (reading 'optionalAuth')");
+  }
+  const boxed: unknown = Object(marker);
+  if ((typeof boxed !== 'object' || boxed === null) && typeof boxed !== 'function') {
+    throw new TypeError('Public tenant metadata could not be boxed');
+  }
+  return Reflect.get(boxed, 'optionalAuth', marker);
+}
+
 @Injectable()
 export class TenantContextInterceptor implements NestInterceptor {
   constructor(
@@ -51,7 +64,7 @@ export class TenantContextInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const request = context.switchToHttp().getRequest<RequestLike>();
-    const marker =
+    const marker: unknown =
       this.reflector?.getAllAndOverride<PublicTenantRouteOptions | boolean>(
         STYNX_PUBLIC_TENANT_ROUTE,
         [context.getHandler(), context.getClass()],
@@ -64,7 +77,7 @@ export class TenantContextInterceptor implements NestInterceptor {
         : undefined);
     if (marker !== undefined && marker !== false) {
       request.publicTenantRoute = true;
-      request.publicTenantOptionalAuth = marker === true ? false : Boolean(marker.optionalAuth);
+      request.publicTenantOptionalAuth = marker === true ? false : Boolean(optionalAuthMarkerValue(marker));
     }
     return new Observable<unknown>((subscriber) => {
       let subscription: Subscription | undefined;
@@ -134,9 +147,7 @@ export class TenantContextInterceptor implements NestInterceptor {
             });
           };
           if (this.requestContext.hasActiveContext?.()) {
-            this.requestContextMutator.patch(
-              patch as Parameters<RequestContextMutator['patch']>[0],
-            );
+            this.requestContextMutator.patch(patch);
             run();
           } else {
             let active: ReturnType<RequestContext['snapshot']>;
@@ -229,8 +240,8 @@ export class TenantContextInterceptor implements NestInterceptor {
         delete request.stynxClaims;
         delete request.principal;
         delete request.user;
-        delete (request as RequestLike & { actor?: unknown }).actor;
-        delete (request as RequestLike & { principalContext?: unknown }).principalContext;
+        if ('actor' in request) delete request.actor;
+        if ('principalContext' in request) delete request.principalContext;
         delete request.verifiedSessionId;
         delete request.verifiedTenantClaim;
         delete request.verifiedTenantEntitlement;
@@ -286,11 +297,10 @@ export class TenantContextInterceptor implements NestInterceptor {
 
   private async isActiveTenant(tenantId: string, actorId: string): Promise<boolean> {
     return this.readTenantAdmission(tenantId, actorId, async (trx) => {
-      const result = await trx.query<{ allowed: boolean }>(
-        `select exists (select 1 from tenancy.tenants where id = $1::uuid and is_active = true and coalesce(state, 'active') = 'active') as allowed`,
+      const result = await executeTypedQuery(trx, activeTenantAdmission,
         [tenantId],
       );
-      return result.rows[0]?.allowed === true;
+      return result?.allowed === true;
     });
   }
 
@@ -313,23 +323,10 @@ export class TenantContextInterceptor implements NestInterceptor {
     }
 
     const allowed = await this.readTenantAdmission(tenantId, userId, async (trx) => {
-      const result = await trx.query<{ allowed: boolean }>(
-        `
-          select exists (
-            select 1
-            from auth.memberships membership
-            join tenancy.tenants tenant
-              on tenant.id = membership.tenant_id
-            where membership.user_id = $1::uuid
-              and membership.tenant_id = $2::uuid
-              and membership.is_active = true
-              and tenant.is_active = true
-              and coalesce(tenant.state, 'active') = 'active'
-          ) as allowed
-        `,
+      const result = await executeTypedQuery(trx, activeMembershipAdmission,
         [userId, tenantId],
       );
-      return result.rows[0]?.allowed === true;
+      return result?.allowed === true;
     });
 
     this.membershipCache.set(userId, tenantId, allowed);

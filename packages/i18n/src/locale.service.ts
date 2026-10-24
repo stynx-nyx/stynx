@@ -1,3 +1,4 @@
+import { readTenantLocale } from './i18n.repository.js';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
@@ -35,11 +36,10 @@ export class LocaleService {
       const database = this.moduleRef.get(Database, { strict: false });
       const tenantLocale = await database.txIndependent(
         async (trx) => {
-          const result = await trx.query<{ locale: string | null }>(
-            `select locale from tenancy.tenant_settings where tenant_id = $1::uuid limit 1`,
+          const result = await trx.run(readTenantLocale,
             [tenantId],
           );
-          return result.rows[0]?.locale ?? undefined;
+          return result[0]?.locale ?? undefined;
         },
         { role: 'reader', readonly: true, replica: false },
       );

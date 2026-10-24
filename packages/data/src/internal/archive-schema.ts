@@ -26,7 +26,7 @@ export function archiveOf<TTable extends AnyPgTable>(liveTable: TTable): Archive
   const meta = getTableMeta(liveTable);
   const liveColumns = Object.entries(getTableColumns(liveTable)).map(([propertyKey, column]) => ({
     propertyKey,
-    columnName: (column as { name: string }).name,
+    columnName: column.name,
   }));
   const archiveTable = `${meta.schema}_${meta.table}`;
 

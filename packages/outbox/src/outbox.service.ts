@@ -1,7 +1,12 @@
+import { appendEventRow, findAppendedEventRow, findRetirementReceipt, insertRetirementReceipt, getRetirementReceipt, isAppendedEventRow, isRetirementResult, claimTenantEvents, claimTenantEventsFiltered, claimOwnerEvents, claimOwnerEventsFiltered, listEventRows, aggregateEventRows, eventAttemptRows, eventAttemptRowsWithBytes, queueHealthRows, queueHealthRowsFiltered, eventDeliveryRows } from './outbox-results.repository.js';
+import { lookupAckEvent, lockAckDelivery, lockRetryDelivery, retryDelivery, lockRetirementDelivery, checkRetirementLease, readLegacyEventLink, enqueueEventDelivery, recordClaimedAttempt, markDeliveryFailed, persistFailedAttempt, markEventRetired, recordOwnerClaimedAttempt, extendOwnerLease, persistOwnerSent, markOwnerDeliveryFailed, persistOwnerFailedAttempt, recordLegacyFailedAttempt, markLegacyDeliveryFailed, recordLegacyAssertedAck, applyLegacyAck, readLegacyCutoverRows, advanceCutoverClock, createCutoverEvent, readLegacyAck, importLegacyDelivery, linkLegacyEvent, importLegacyAttempt, importLegacyAck, markLegacyMigrated, finishLegacyOwnership, quarantineUnboundAck, applyTenantAck, recordTenantAck, extendTenantLease, persistTenantSent } from './outbox-commands.repository.js';
+import { cutoverLockQueries, cutoverAuditedRelations, checkApplicationOwnership, readAppendContext, readLockTimeout, readAuditChainKey, advanceAppendClock, auditContractAvailable, lockOwnershipMarker, countLegacyEventMap, setLockTimeout, setAuditChainKey, lockAuditChain, enterItemReadOnly, readOwnershipWaiting, readOwnershipNowait } from './outbox-context.repository.js';
 import { Inject, Injectable, Optional, type OnModuleInit } from '@nestjs/common';
 import {
   AuditChainKeyMismatchError,
   Database,
+  executeTypedQuery,
+  executeConfiguredQuery,
   IndependentTransactionConnectionError,
 } from '@stynx-nyx/data';
 import { createHash } from 'node:crypto';
@@ -39,10 +44,10 @@ import {
   assertQualifiedIdentifier,
   errorMessage,
   isUniqueViolation,
-  outboxColumns,
   toRows,
 } from './row-mapper.js';
 import type {
+  OutboxTimestampResult,
   OutboxAckInput,
   OutboxBackoffPolicy,
   OutboxDispatchOutcome,
@@ -72,6 +77,7 @@ import type {
   OutboxDestinationFilter,
   OutboxDispatchFilter,
   OutboxEventRetirement,
+  OutboxEventRetirementResult,
   OutboxEventRetirementInput,
 } from './types.js';
 
@@ -84,23 +90,25 @@ const DELIVERY_STATUSES: readonly OutboxEventDeliveryStatus[] = [
   'ACKED',
   'RETIRED',
 ];
-const RETIREMENT_COLUMNS = `id,tenant_id as "tenantId",event_id as "eventId",
-  idempotency_key as "idempotencyKey",actor_id as "actorId",reason,
-  previous_status as "previousStatus",retired_at as "retiredAt"`;
-const EVENT_DELIVERY_COLUMNS = `e.id,e.tenant_id as "tenantId",e.entity,e.entity_id as "entityId",
-  e.idempotency_key as "idempotencyKey",e.metadata,e.created_at as "createdAt",d.status,d.attempts,
-  d.last_error as "lastError",d.next_attempt_at as "nextAttemptAt",d.lease_until as "leaseUntil",d.updated_at as "updatedAt",
-  (select row_to_json(receipt) from (select ${RETIREMENT_COLUMNS}
-    from outbox.event_retirements where tenant_id=e.tenant_id and event_id=e.id) receipt) as retirement`;
 type EventDeliverySqlRow = OutboxEventSummary & {
   status: OutboxEventDeliveryStatus | null;
   attempts: number | null;
   lastError: string | null;
-  nextAttemptAt: Date | null;
-  leaseUntil: Date | null;
-  updatedAt: Date | null;
-  retirement?: Omit<OutboxEventRetirement, 'retiredAt'> & { retiredAt: Date | string };
+  nextAttemptAt: OutboxTimestampResult | null;
+  leaseUntil: OutboxTimestampResult | null;
+  updatedAt: OutboxTimestampResult | null;
+  retirement?: Omit<OutboxEventRetirement, 'retiredAt'> & { retiredAt: Date | string | number } | null | undefined;
 };
+
+function resultTimestampIso(value: OutboxTimestampResult, expression: string): string {
+  if (!(value instanceof Date)) throw new TypeError(`${expression}.toISOString is not a function`);
+  return value.toISOString();
+}
+
+function resultTimestampTime(value: OutboxTimestampResult, expression: string): number {
+  if (!(value instanceof Date)) throw new TypeError(`${expression}.getTime is not a function`);
+  return value.getTime();
+}
 
 function eventSummary(row: EventDeliverySqlRow): OutboxEventSummary {
   return {
@@ -280,12 +288,6 @@ function isDestinationFilter(value: unknown): value is OutboxDestinationFilter {
 }
 
 /** Claim predicate for a dispatch filter; `first` is the index of its first SQL parameter. */
-function entityFilterSql(first: number): string {
-  return `and (e.entity=any($${first}::text[]) or exists (
-                select 1 from unnest($${first + 1}::text[]) as prefix(value)
-                 where left(e.entity,length(prefix.value))=prefix.value))`;
-}
-
 function transportEvidenceState(evidence?: OutboxTransportEvidence): string {
   return JSON.stringify({
     requestBytes: evidence?.requestBytes ? 'captured' : 'unavailable',
@@ -337,11 +339,6 @@ export class OutboxService implements OnModuleInit {
   private get platformLegacyTable(): boolean {
     return this.table === DEFAULT_OUTBOX_TABLE && this.ackTable === DEFAULT_OUTBOX_ACK_TABLE;
   }
-  private get ownershipCte(): string {
-    return this.platformLegacyTable
-      ? `with ownership as materialized (select state from outbox.legacy_ownership where id=true for share nowait)`
-      : '';
-  }
   private mapOwnershipError(error: unknown): unknown {
     return retryableSqlCode(error) === '55P03' ? new OutboxOwnershipContentionError() : error;
   }
@@ -367,11 +364,9 @@ export class OutboxService implements OnModuleInit {
 
   private async ownership(trx: OutboxSqlExecutor, nowait = false): Promise<'LEGACY' | 'NEW'> {
     try {
-      const marker = await trx.query<{ state: 'LEGACY' | 'NEW' }>(
-        `select state from outbox.legacy_ownership where id = true for share ${nowait ? 'nowait' : ''}`,
-      );
-      if (!marker.rows[0]) throw new OutboxOwnershipContentionError();
-      return marker.rows[0].state;
+      const marker = await executeTypedQuery(trx, nowait ? readOwnershipNowait : readOwnershipWaiting, []);
+      if (!marker[0]) throw new OutboxOwnershipContentionError();
+      return marker[0].state;
     } catch (error) {
       if ((error as { code?: string }).code === '55P03') throw new OutboxOwnershipContentionError();
       throw error;
@@ -419,24 +414,10 @@ export class OutboxService implements OnModuleInit {
     const rows = await this.database.withSystemContext('outbox application role check', () =>
       this.database.tx(
         async (trx) => {
-          const result = await trx.query<{
-            relation: string;
-            owner: string;
-            owns: boolean | null;
-            member: boolean | null;
-          }>(
-            `select c.relname as relation, o.rolname::text as owner,
-                  (a.oid = c.relowner) as owns,
-                  pg_catalog.pg_has_role(a.oid, c.relowner, 'MEMBER') as member
-             from pg_catalog.pg_class c
-             join pg_catalog.pg_namespace n on n.oid = c.relnamespace
-             join pg_catalog.pg_roles o on o.oid = c.relowner
-             left join pg_catalog.pg_roles a on a.rolname = $1
-            where n.nspname = 'outbox' and c.relname = any($2::text[])
-            order by c.relname`,
+          const result = await executeTypedQuery(trx, checkApplicationOwnership,
             [role, [...OUTBOX_APP_ROLE_CHECKED_RELATIONS]],
           );
-          return result.rows;
+          return result;
         },
         { role: 'owner', readonly: true, retry: false },
       ),
@@ -471,22 +452,8 @@ export class OutboxService implements OnModuleInit {
     events: readonly OutboxAppendEvent[],
   ): Promise<OutboxEventRow[]> {
     if (events.length === 0) return [];
-    const state = await trx.query<{
-      tenant_id: string | null;
-      role: string | null;
-      sql_role: string;
-      isolation: string;
-      read_only: string;
-      recovery: boolean;
-    }>(
-      `select nullif(current_setting('app.tenant_id',true),'')::uuid::text as tenant_id,
-              current_setting('app.role',true) as role,
-              current_user as sql_role,
-              current_setting('transaction_isolation') as isolation,
-              current_setting('transaction_read_only') as read_only,
-              pg_is_in_recovery() as recovery`,
-    );
-    const live = state.rows[0];
+    const state = await executeTypedQuery(trx, readAppendContext, []);
+    const live = state[0];
     if (trx.role !== 'app') throw new OutboxEventTransactionError('transaction_role');
     if (!live?.tenant_id) throw new OutboxEventTransactionError('tenant');
     const reason =
@@ -505,41 +472,32 @@ export class OutboxService implements OnModuleInit {
     if (this.database.currentTenantId()?.toLowerCase() !== live.tenant_id) {
       throw new AuditChainKeyMismatchError();
     }
-    const previousLockTimeout = await trx.query<{ value: string }>(
-      `select current_setting('lock_timeout') as value`,
-    );
-    await trx.query(`select set_config('lock_timeout',$1,true)`, [
+    const previousLockTimeout = await executeTypedQuery(trx, readLockTimeout, []);
+    await executeTypedQuery(trx, setLockTimeout, [
       String(this.options.lockTimeoutMs ?? 5_000),
     ]);
     const tenantId = live.tenant_id;
     let ms!: string;
     let restoreError: unknown;
     try {
-      const priorKey = await trx.query<{ key: string | null }>(
-        `select nullif(current_setting('stynx.audit_chain_key',true),'') as key`,
-      );
-      await this.ownership(trx, Boolean(priorKey.rows[0]?.key));
-      if (priorKey.rows[0]?.key && priorKey.rows[0]?.key !== tenantId) {
+      const priorKey = await executeTypedQuery(trx, readAuditChainKey, []);
+      await this.ownership(trx, Boolean(priorKey[0]?.key));
+      if (priorKey[0]?.key && priorKey[0]?.key !== tenantId) {
         throw new AuditChainKeyMismatchError();
       }
-      await trx.query(`select set_config('stynx.audit_chain_key',$1,true)`, [tenantId]);
-      await trx.query(`select pg_advisory_xact_lock(hashtextextended($1,0))`, [tenantId]);
-      const clock = await trx.query<{ last_ms: string }>(
-        `insert into outbox.tenant_clock (tenant_id,last_ms)
-         values ($1,greatest(0,floor(extract(epoch from clock_timestamp()) * 1000)::bigint))
-         on conflict (tenant_id) do update
-           set last_ms = greatest(outbox.tenant_clock.last_ms,excluded.last_ms)
-         returning last_ms::text`,
+      await executeTypedQuery(trx, setAuditChainKey, [tenantId]);
+      await executeTypedQuery(trx, lockAuditChain, [tenantId]);
+      const clock = await executeTypedQuery(trx, advanceAppendClock,
         [tenantId],
       );
-      ms = clock.rows[0]!.last_ms;
+      ms = clock[0]!.last_ms;
     } finally {
       // A JS validation error leaves the caller's transaction usable. If SQL
       // aborted it, preserve that original error instead of masking it with
       // the expected 25P02 from restoration.
       try {
-        await trx.query(`select set_config('lock_timeout',$1,true)`, [
-          previousLockTimeout.rows[0]!.value,
+        await executeTypedQuery(trx, setLockTimeout, [
+          previousLockTimeout[0]!.value,
         ]);
       } catch (error) {
         restoreError = error;
@@ -550,12 +508,7 @@ export class OutboxService implements OnModuleInit {
     for (const event of events) {
       if (!event.entity || !event.entityId || !event.idempotencyKey)
         throw new OutboxEventTransactionError();
-      const inserted = await trx.query<OutboxEventRow>(
-        `insert into outbox.events
-           (id,tenant_id,entity,entity_id,idempotency_key,payload,metadata,created_at)
-         values (outbox.event_uuid($1::bigint,nextval('outbox.event_order_seq')), $2::uuid,$3,$4,$5,$6::jsonb,$7::jsonb,to_timestamp($1::double precision/1000))
-         on conflict (tenant_id,idempotency_key) do nothing
-         returning id,tenant_id as "tenantId",entity,entity_id as "entityId",idempotency_key as "idempotencyKey",payload,metadata,created_at as "createdAt"`,
+      const inserted = await trx.runGuarded(appendEventRow,
         [
           ms,
           tenantId,
@@ -564,15 +517,10 @@ export class OutboxService implements OnModuleInit {
           event.idempotencyKey,
           JSON.stringify(event.payload),
           event.metadata ? JSON.stringify(event.metadata) : null,
-        ],
-      );
-      let row = inserted.rows[0];
+        ], isAppendedEventRow);
+      let row = inserted[0];
       if (!row) {
-        const previous = await trx.query<OutboxEventRow>(
-          `select id,tenant_id as "tenantId",entity,entity_id as "entityId",idempotency_key as "idempotencyKey",payload,metadata,created_at as "createdAt"
-             from outbox.events where tenant_id=$1::uuid and idempotency_key=$2
-               and entity=$3 and entity_id=$4 and payload=$5::jsonb
-               and metadata is not distinct from $6::jsonb`,
+        const previous = await trx.runGuarded(findAppendedEventRow,
           [
             tenantId,
             event.idempotencyKey,
@@ -580,22 +528,20 @@ export class OutboxService implements OnModuleInit {
             event.entityId,
             JSON.stringify(event.payload),
             event.metadata ? JSON.stringify(event.metadata) : null,
-          ],
-        );
-        row = previous.rows[0];
+          ], isAppendedEventRow);
+        row = previous[0];
         if (!row) {
           throw new OutboxEventConflictError();
         }
       } else if (this.hasDestination(row.entity)) {
         // Only an event with a declared destination enters the delivery queue.
-        await trx.query(
-          `insert into outbox.event_delivery (tenant_id,event_id) values ($1::uuid,$2::uuid)`,
+        await executeTypedQuery(trx, enqueueEventDelivery,
           [tenantId, row.id],
         );
       }
       result.push(row);
     }
-    if (trx.strictItemMode) await trx.query('set local transaction_read_only = on');
+    if (trx.strictItemMode) await executeTypedQuery(trx, enterItemReadOnly, []);
     return result;
   }
 
@@ -610,25 +556,19 @@ export class OutboxService implements OnModuleInit {
     return this.database.withSystemContext('outbox legacy cutover', () =>
       this.database.tx(
         async (trx) => {
-          const auditContract = await trx.query<{ available: boolean }>(
-            `select to_regprocedure('audit.fn_row_change()') is not null as available`,
-          );
-          if (auditContract.rows[0]?.available !== true) {
+          const auditContract = await executeTypedQuery(trx, auditContractAvailable, []);
+          if (auditContract[0]?.available !== true) {
             throw new OutboxConsumerStorageCutoverUnsupportedError('audit-chain-unavailable');
           }
-          await trx.query(`select set_config('lock_timeout',$1,true)`, [
+          await executeTypedQuery(trx, setLockTimeout, [
             String(this.options.lockTimeoutMs ?? 5_000),
           ]);
-          const marker = await trx.query<{ state: string; generation: string }>(
-            `select state,generation::text from outbox.legacy_ownership where id=true for update`,
-          );
-          const current = marker.rows[0]!;
+          const marker = await executeTypedQuery(trx, lockOwnershipMarker, []);
+          const current = marker[0]!;
           if (current.state === 'NEW') {
-            const count = await trx.query<{ count: string }>(
-              `select count(*)::text as count from outbox.legacy_event_map`,
-            );
+            const count = await executeTypedQuery(trx, countLegacyEventMap, []);
             return {
-              migrated: Number(count.rows[0]!.count),
+              migrated: Number(count[0]!.count),
               generation: Number(current.generation),
             };
           }
@@ -642,53 +582,22 @@ export class OutboxService implements OnModuleInit {
             'tenant_clock',
             'legacy_ownership',
           ];
-          for (const target of targets) {
-            await trx.query(`lock table outbox.${target} in share row exclusive mode`);
+          for (const query of cutoverLockQueries) {
+            await executeTypedQuery(trx, query, []);
           }
-          const audited = await trx.query<{ relname: string }>(
-            `with recursive target(oid) as (
-           select c.oid from pg_class c join pg_namespace n on n.oid=c.relnamespace
-            where n.nspname='outbox' and c.relname=any($1::text[])
-           union all
-           select i.inhrelid from pg_inherits i join target t on t.oid=i.inhparent
-         )
-         select distinct c.relname from pg_trigger t
-           join target x on x.oid=t.tgrelid join pg_class c on c.oid=t.tgrelid
-          where t.tgfoid='audit.fn_row_change()'::regprocedure and t.tgenabled<>'D'`,
+          const audited = await executeTypedQuery(trx, cutoverAuditedRelations,
             [targets],
           );
-          if (audited.rows.length) throw new OutboxCutoverAuditedTableError();
-          const legacy = await trx.query<{
-            id: string;
-            tenant_id: string;
-            entity: string;
-            entity_id: string;
-            payload: Record<string, unknown>;
-            metadata: Record<string, unknown> | null;
-            idempotency_key: string;
-            status: string;
-            attempts: number;
-            next_attempt_at: Date | null;
-            last_error: string | null;
-            created_at: Date;
-            updated_at: Date;
-          }>(`select id,tenant_id,entity,entity_id,payload,metadata,idempotency_key,status,attempts,next_attempt_at,last_error,created_at,updated_at
-            from outbox.messages order by tenant_id,created_at,id for update`);
+          if (audited.length) throw new OutboxCutoverAuditedTableError();
+          const legacy = await executeTypedQuery(trx, readLegacyCutoverRows, []);
           const generation = Number(current.generation) + 1;
-          for (const row of legacy.rows) {
-            const clock = await trx.query<{ last_ms: string }>(
-              `insert into outbox.tenant_clock (tenant_id,last_ms)
-             values ($1::uuid,greatest(0,floor(extract(epoch from clock_timestamp())*1000)::bigint))
-           on conflict (tenant_id) do update set last_ms=greatest(outbox.tenant_clock.last_ms,excluded.last_ms)
-           returning last_ms::text`,
+          for (const row of legacy) {
+            const clock = await executeTypedQuery(trx, advanceCutoverClock,
               [row.tenant_id],
             );
-            const event = await trx.query<{ id: string }>(
-              `insert into outbox.events (id,tenant_id,entity,entity_id,idempotency_key,payload,metadata,created_at)
-           values (outbox.event_uuid($1::bigint,nextval('outbox.event_order_seq')),$2::uuid,$3,$4,$5,$6::jsonb,$7::jsonb,to_timestamp($1::double precision/1000))
-           returning id`,
+            const event = await executeTypedQuery(trx, createCutoverEvent,
               [
-                clock.rows[0]!.last_ms,
+                clock[0]!.last_ms,
                 row.tenant_id,
                 row.entity,
                 row.entity_id,
@@ -697,11 +606,8 @@ export class OutboxService implements OnModuleInit {
                 row.metadata ? JSON.stringify(row.metadata) : null,
               ],
             );
-            const eventId = event.rows[0]!.id;
-            await trx.query(
-              `insert into outbox.event_delivery
-             (tenant_id,event_id,legacy_id,status,attempts,next_attempt_at,last_error)
-           values ($1::uuid,$2::uuid,$3::uuid,$4,$5,$6,$7)`,
+            const eventId = event[0]!.id;
+            await executeTypedQuery(trx, importLegacyDelivery,
               [
                 row.tenant_id,
                 eventId,
@@ -712,16 +618,11 @@ export class OutboxService implements OnModuleInit {
                 row.last_error,
               ],
             );
-            await trx.query(
-              `insert into outbox.legacy_event_map (legacy_id,tenant_id,event_id,generation)
-           values ($1::uuid,$2::uuid,$3::uuid,$4)`,
+            await executeTypedQuery(trx, linkLegacyEvent,
               [row.id, row.tenant_id, eventId, generation],
             );
             if (row.attempts > 0) {
-              await trx.query(
-                `insert into outbox.event_attempts
-               (tenant_id,event_id,attempt_ordinal,legacy_message_id,result,error,legacy_state)
-             values ($1::uuid,$2::uuid,0,$3::uuid,'LEGACY_HISTORY_UNAVAILABLE',$4,$5::jsonb)`,
+              await executeTypedQuery(trx, importLegacyAttempt,
                 [
                   row.tenant_id,
                   eventId,
@@ -737,41 +638,29 @@ export class OutboxService implements OnModuleInit {
                 ],
               );
             }
-            const legacyAck = await trx.query<{
-              id: string;
-              ack_status: string;
-              ack_message: string | null;
-              ack_time: Date;
-            }>(
-              `select id,ack_status,ack_message,ack_time from outbox.acknowledgements where message_id=$1::uuid`,
+            const legacyAck = await executeTypedQuery(trx, readLegacyAck,
               [row.id],
             );
-            if (legacyAck.rows[0]) {
-              await trx.query(
-                `insert into outbox.event_acks
-               (tenant_id,event_id,status,identity_verified,hmac_verified,verification_source,legacy_ack_id,
-                legacy_ack_message,legacy_ack_time,received_at)
-             values ($1::uuid,$2::uuid,$3,false,false,'legacy-import',$4::uuid,$5,$6,$6)`,
+            if (legacyAck[0]) {
+              await executeTypedQuery(trx, importLegacyAck,
                 [
                   row.tenant_id,
                   eventId,
-                  legacyAck.rows[0].ack_status,
-                  legacyAck.rows[0].id,
-                  legacyAck.rows[0].ack_message,
-                  legacyAck.rows[0].ack_time,
+                  legacyAck[0].ack_status,
+                  legacyAck[0].id,
+                  legacyAck[0].ack_message,
+                  legacyAck[0].ack_time,
                 ],
               );
             }
-            await trx.query(
-              `update outbox.messages set migrated_event_id=$2::uuid,cutover_generation=$3 where id=$1::uuid`,
+            await executeTypedQuery(trx, markLegacyMigrated,
               [row.id, eventId, generation],
             );
           }
-          await trx.query(
-            `update outbox.legacy_ownership set state='NEW',generation=$1 where id=true`,
+          await executeTypedQuery(trx, finishLegacyOwnership,
             [generation],
           );
-          return { migrated: legacy.rows.length, generation };
+          return { migrated: legacy.length, generation };
         },
         { role: 'owner', isolation: 'read committed', retry: false },
       ),
@@ -784,8 +673,7 @@ export class OutboxService implements OnModuleInit {
       .withSystemContext('outbox unbound ack', () =>
         this.database.txIndependent(
           async (trx) => {
-            await trx.query(
-              `insert into outbox.ack_quarantine (raw_body,raw_sha256,reason) values ($1,$2,$3)`,
+            await executeTypedQuery(trx, quarantineUnboundAck,
               [rawBody, hash, reason],
             );
           },
@@ -833,36 +721,27 @@ export class OutboxService implements OnModuleInit {
     const hash = createHash('sha256').update(input.rawBody).digest('hex');
     await this.database.tx(
       async (trx) => {
-        const found = await trx.query<{ id: string }>(
-          `select id from outbox.events where tenant_id=$1::uuid
-           and ($2::uuid is null or id=$2::uuid)
-           and ($3::text is null or idempotency_key=$3) limit 1`,
+        const found = await executeTypedQuery(trx, lookupAckEvent,
           [tenantId, input.eventId ?? null, input.idempotencyKey ?? null],
         );
-        const eventId = found.rows[0]?.id;
+        const eventId = found[0]?.id;
         if (!eventId)
           throw new OutboxNotFoundError({
             eventId: input.eventId,
             idempotencyKey: input.idempotencyKey,
           });
-        const delivery = await trx.query<{ attempts: number }>(
-          `select attempts from outbox.event_delivery
-          where tenant_id=$1::uuid and event_id=$2::uuid for update`,
+        const delivery = await executeTypedQuery(trx, lockAckDelivery,
           [tenantId, eventId],
         );
-        if (!delivery.rows[0]) throw new OutboxNotFoundError({ eventId });
+        if (!delivery[0]) throw new OutboxNotFoundError({ eventId });
         const nextAttemptAt =
           input.status === 'ERROR'
-            ? this.backoffPolicy.nextAttemptAt(delivery.rows[0].attempts, new Date())
+            ? this.backoffPolicy.nextAttemptAt(delivery[0].attempts, new Date())
             : null;
-        await trx.query(
-          `update outbox.event_delivery set status=$3,next_attempt_at=$4,lease_until=null,updated_at=clock_timestamp()
-          where tenant_id=$1::uuid and event_id=$2::uuid and status not in ('ACKED','RETIRED')`,
+        await executeTypedQuery(trx, applyTenantAck,
           [tenantId, eventId, input.status, nextAttemptAt],
         );
-        await trx.query(
-          `insert into outbox.event_acks (tenant_id,event_id,status,raw_body,raw_sha256,identity_verified,hmac_verified,verification_source)
-         values ($1::uuid,$2::uuid,$3,$4,$5,true,true,'verified-raw-body')`,
+        await executeTypedQuery(trx, recordTenantAck,
           [tenantId, eventId, input.status, input.rawBody, hash],
         );
       },
@@ -886,62 +765,13 @@ export class OutboxService implements OnModuleInit {
     const only = this.dispatchMatcher(filter);
     const claimed = await this.database.tx(
       async (trx) => {
-        const result = await trx.query<{
-          tenant_id: string;
-          event_id: string;
-          attempts: number;
-          entity: string;
-          entity_id: string;
-          idempotency_key: string;
-          payload: Record<string, unknown>;
-          metadata: Record<string, unknown> | null;
-          created_at: Date;
-        }>(
-          `with due as (
-           select d.tenant_id,d.event_id
-             from outbox.event_delivery d join outbox.events e
-               on e.tenant_id=d.tenant_id and e.id=d.event_id
-            where d.tenant_id=$1::uuid and e.tenant_id=$1::uuid
-              and (d.legacy_id is null or
-                   (select state from outbox.legacy_ownership where id=true)='NEW')
-              and ((d.status in ('PENDING','ERROR') and coalesce(d.next_attempt_at,e.created_at)<=clock_timestamp())
-                   or (d.status='SENT' and d.lease_until<clock_timestamp()))
-              and not exists (
-                select 1 from outbox.events p join outbox.event_delivery pd
-                  on pd.tenant_id=p.tenant_id and pd.event_id=p.id
-                 where p.tenant_id=$1::uuid and pd.tenant_id=$1::uuid
-                   and p.entity=e.entity and p.entity_id=e.entity_id
-                   and (p.created_at,p.id)<(e.created_at,e.id) and pd.status not in ('ACKED','RETIRED')
-              )
-              ${only ? entityFilterSql(4) : ''}
-            order by e.created_at,e.id limit $2 for update of d skip locked
-         ), claimed as (
-           update outbox.event_delivery d
-              set status='SENT',attempts=d.attempts+1,
-                  lease_until=clock_timestamp()+($3::integer * interval '1 millisecond'),
-                  next_attempt_at=null,updated_at=clock_timestamp()
-             from due where d.tenant_id=$1::uuid and d.tenant_id=due.tenant_id and d.event_id=due.event_id
-           returning d.tenant_id,d.event_id,d.attempts
-         )
-         select c.*,e.entity,e.entity_id,e.idempotency_key,e.payload,e.metadata,e.created_at
-           from claimed c join outbox.events e on e.tenant_id=$1::uuid and e.tenant_id=c.tenant_id and e.id=c.event_id
-          order by e.created_at,e.id`,
-          [
-            tenantId,
-            limit,
-            this.options.eventLeaseMs ?? 300_000,
-            ...(only ? [only.entities, only.prefixes] : []),
-          ],
-        );
-        for (const row of result.rows) {
-          await trx.query(
-            `insert into outbox.event_attempts (tenant_id,event_id,attempt_ordinal,result,leased_at)
-           values ($1::uuid,$2::uuid,$3,'CLAIMED',clock_timestamp())
-           on conflict (tenant_id,event_id,attempt_ordinal) do nothing`,
+        const result = await (only ? executeTypedQuery(trx, claimTenantEventsFiltered, [tenantId, limit, this.options.eventLeaseMs ?? 300_000, only.entities, only.prefixes]) : executeTypedQuery(trx, claimTenantEvents, [tenantId, limit, this.options.eventLeaseMs ?? 300_000]));
+        for (const row of result) {
+          await executeTypedQuery(trx, recordClaimedAttempt,
             [tenantId, row.event_id, row.attempts],
           );
         }
-        return result.rows;
+        return result;
       },
       { role: 'app', requireActor: true, retry: false },
     );
@@ -960,7 +790,7 @@ export class OutboxService implements OnModuleInit {
         lastError: null,
         ackTime: null,
         nextAttemptAt: null,
-        createdAt: claim.created_at.toISOString(),
+        createdAt: resultTimestampIso(claim.created_at, 'claim.created_at'),
         updatedAt: new Date().toISOString(),
       };
       const port = this.portFor(claim.entity);
@@ -990,17 +820,10 @@ export class OutboxService implements OnModuleInit {
         try {
           await this.database.tx(
             async (trx) => {
-              await trx.query(
-                `update outbox.event_delivery set lease_until=clock_timestamp()+($4::integer * interval '1 millisecond'),updated_at=clock_timestamp()
-                 where tenant_id=$1::uuid and event_id=$2::uuid and attempts=$3 and status='SENT'`,
+              await executeTypedQuery(trx, extendTenantLease,
                 [tenantId, claim.event_id, claim.attempts, this.options.eventLeaseMs ?? 300_000],
               );
-              await trx.query(
-                `update outbox.event_attempts set result='SENT',completed_at=clock_timestamp(),
-                   provider=$4,protocol=$5,request_bytes=$6,request_sha256=$7,
-                   response_bytes=$8,response_sha256=$9,request_headers=$10::jsonb,
-                   response_status=$11,evidence_state=$12::jsonb
-                 where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3`,
+              await executeTypedQuery(trx, persistTenantSent,
                 [
                   tenantId,
                   claim.event_id,
@@ -1042,19 +865,10 @@ export class OutboxService implements OnModuleInit {
         try {
           const projectionChanged = await this.database.tx(
             async (trx) => {
-              const delivery = await trx.query(
-                `update outbox.event_delivery set status='ERROR',lease_until=null,
-                   next_attempt_at=$3,last_error=$4,updated_at=clock_timestamp()
-                 where tenant_id=$1::uuid and event_id=$2::uuid and attempts=$5 and status='SENT'
-                 returning event_id`,
+              const delivery = await executeTypedQuery(trx, markDeliveryFailed,
                 [tenantId, claim.event_id, next, message, claim.attempts],
               );
-              await trx.query(
-                `update outbox.event_attempts set result='ERROR',error=$4,completed_at=clock_timestamp(),
-                   provider=$5,protocol=$6,request_bytes=$7,request_sha256=$8,
-                   response_bytes=$9,response_sha256=$10,request_headers=$11::jsonb,
-                   response_status=$12,evidence_state=$13::jsonb
-                 where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3`,
+              await executeTypedQuery(trx, persistFailedAttempt,
                 [
                   tenantId,
                   claim.event_id,
@@ -1073,7 +887,7 @@ export class OutboxService implements OnModuleInit {
                   transportEvidenceState(failedEvidence),
                 ],
               );
-              return delivery.rows.length > 0;
+              return delivery.length > 0;
             },
             { role: 'app', requireActor: true, retry: false },
           );
@@ -1108,21 +922,9 @@ export class OutboxService implements OnModuleInit {
     return this.database.tx(fn, { role: 'app', readonly: true, requireActor: true, retry: false });
   }
 
-  private async deliveriesWhere(
-    trx: OutboxSqlExecutor,
-    tenantId: string,
-    where: string,
-    params: unknown[],
-    tail: string,
-  ): Promise<OutboxEventDelivery[]> {
-    const result = await trx.query<EventDeliverySqlRow>(
-      `select ${EVENT_DELIVERY_COLUMNS}
-         from outbox.events e join outbox.event_delivery d
-           on d.tenant_id=$1::uuid and d.tenant_id=e.tenant_id and d.event_id=e.id
-        where e.tenant_id=$1::uuid and ${where} ${tail}`,
-      [tenantId, ...params],
-    );
-    return result.rows.map((row) => ({ ...eventSummary(row), delivery: deliveryState(row)! }));
+  private async deliveriesForEvent(trx: Transaction, tenantId: string, eventId: string): Promise<OutboxEventDelivery[]> {
+    const rows = await executeTypedQuery(trx, eventDeliveryRows, [tenantId, eventId]);
+    return rows.map((row) => ({ ...eventSummary(row), delivery: deliveryState(row)! }));
   }
 
   /**
@@ -1164,17 +966,7 @@ export class OutboxService implements OnModuleInit {
     const rows = await this.tenantRead(
       async (trx) =>
         (
-          await trx.query<EventDeliverySqlRow>(
-            `select ${EVENT_DELIVERY_COLUMNS}
-         from outbox.events e left join outbox.event_delivery d
-           on d.tenant_id=$1::uuid and d.tenant_id=e.tenant_id and d.event_id=e.id
-        where e.tenant_id=$1::uuid
-          and ($2::text[] is null or d.status=any($2::text[]))
-          and ($3::text is null or e.entity=$3)
-          and ($4::text is null or left(e.entity,length($4))=$4)
-          and ($5::timestamptz is null or (e.created_at,e.id)<($5::timestamptz,$6::uuid))
-        order by e.created_at desc,e.id desc limit $7`,
-            [
+          await executeTypedQuery(trx, listEventRows, [
               tenantId,
               statuses,
               entity,
@@ -1182,9 +974,8 @@ export class OutboxService implements OnModuleInit {
               cursor?.createdAt ?? null,
               cursor?.id ?? null,
               limit + 1,
-            ],
-          )
-        ).rows,
+            ])
+        ),
     );
     const items = rows
       .slice(0, limit)
@@ -1201,7 +992,7 @@ export class OutboxService implements OnModuleInit {
     const tenantId = this.requestTenant();
     if (!EVENT_UUID.test(eventId)) return null;
     const rows = await this.tenantRead((trx) =>
-      this.deliveriesWhere(trx, tenantId, 'e.id=$2::uuid', [eventId], ''),
+      this.deliveriesForEvent(trx, tenantId, eventId),
     );
     return rows[0] ?? null;
   }
@@ -1221,25 +1012,8 @@ export class OutboxService implements OnModuleInit {
     const rows = await this.tenantRead(
       async (trx) =>
         (
-          await trx.query<
-            EventDeliverySqlRow & {
-              position: number;
-              statusRank: number;
-              statusCount: number;
-            }
-          >(
-            `select * from (
-         select ${EVENT_DELIVERY_COLUMNS},
-                row_number() over (order by e.created_at,e.id)::integer as "position",
-                row_number() over (partition by d.status order by e.created_at,e.id)::integer as "statusRank",
-                count(*) over (partition by d.status)::integer as "statusCount"
-           from outbox.events e join outbox.event_delivery d
-             on d.tenant_id=$1::uuid and d.tenant_id=e.tenant_id and d.event_id=e.id
-          where e.tenant_id=$1::uuid and e.entity=$2 and e.entity_id=$3
-       ) ranked where "position"<=$4 or "statusRank"=1 order by "position"`,
-            [tenantId, entity, entityId, limit],
-          )
-        ).rows,
+          await executeTypedQuery(trx, aggregateEventRows, [tenantId, entity, entityId, limit])
+        ),
     );
     if (rows.length === 0) return null;
     const view = (row: EventDeliverySqlRow): OutboxEventDelivery => ({
@@ -1270,19 +1044,9 @@ export class OutboxService implements OnModuleInit {
     if (!EVENT_UUID.test(eventId)) return [];
     const bytes = options.includeBytes === true;
     const result = await this.tenantRead((trx) =>
-      trx.query<OutboxEventAttempt>(
-        `select id,event_id as "eventId",attempt_ordinal as "attemptOrdinal",provider,protocol,
-              request_sha256 as "requestSha256",response_sha256 as "responseSha256",
-              response_status as "responseStatus",request_headers as "requestHeaders",
-              evidence_state as "evidenceState",result,error,leased_at as "leasedAt",
-              completed_at as "completedAt",legacy_message_id as "legacyMessageId"
-              ${bytes ? ',request_bytes as "requestBytes",response_bytes as "responseBytes"' : ''}
-         from outbox.event_attempts
-        where tenant_id=$1::uuid and event_id=$2::uuid order by attempt_ordinal,id`,
-        [tenantId, eventId],
-      ),
+      executeTypedQuery(trx, bytes ? eventAttemptRowsWithBytes : eventAttemptRows, [tenantId, eventId]),
     );
-    return result.rows;
+    return [...result];
   }
 
   /** Delivery counts by status for the context tenant, optionally per `entity` or per named destination. */
@@ -1295,27 +1059,17 @@ export class OutboxService implements OnModuleInit {
         ? null
         : this.destination(query.destination, 'destination').matcher;
     const result = await this.tenantRead((trx) =>
-      trx.query<{ status: OutboxEventDeliveryStatus; count: number; oldest: Date | null }>(
-        `select d.status,count(*)::integer as count,min(e.created_at) filter (where d.status not in ('ACKED','RETIRED')) as oldest
-         from outbox.event_delivery d join outbox.events e
-           on e.tenant_id=$1::uuid and e.tenant_id=d.tenant_id and e.id=d.event_id
-        where d.tenant_id=$1::uuid
-          and ($2::text is null or e.entity=$2)
-          and ($3::text is null or left(e.entity,length($3))=$3)
-          ${only ? entityFilterSql(4) : ''}
-        group by d.status`,
-        [tenantId, entity, entityPrefix, ...(only ? [only.entities, only.prefixes] : [])],
-      ),
+      (only ? executeTypedQuery(trx, queueHealthRowsFiltered, [tenantId, entity, entityPrefix, only.entities, only.prefixes]) : executeTypedQuery(trx, queueHealthRows, [tenantId, entity, entityPrefix])),
     );
     const oldest =
-      result.rows
+      result
         .map((row) => row.oldest)
-        .filter((value): value is Date => value !== null)
-        .sort((left, right) => left.getTime() - right.getTime())[0] ?? null;
+        .filter((value): value is OutboxTimestampResult => value !== null)
+        .sort((left, right) => resultTimestampTime(left, 'left') - resultTimestampTime(right, 'right'))[0] ?? null;
     return {
       tenantId,
-      total: result.rows.reduce((sum, row) => sum + row.count, 0),
-      byStatus: statusCounts(result.rows),
+      total: result.reduce((sum, row) => sum + row.count, 0),
+      byStatus: statusCounts(result),
       oldestUnackedCreatedAt: oldest,
     };
   }
@@ -1335,34 +1089,21 @@ export class OutboxService implements OnModuleInit {
     return this.database.tx(
       async (trx) => {
         // The row lock serializes with a claim; a claimed row is SENT and refused.
-        const current = await trx.query<{ status: OutboxEventDeliveryStatus; attempts: number }>(
-          `select status,attempts from outbox.event_delivery
-          where tenant_id=$1::uuid and event_id=$2::uuid for update`,
+        const current = await executeTypedQuery(trx, lockRetryDelivery,
           [tenantId, eventId],
         );
-        const row = current.rows[0];
+        const row = current[0];
         if (!row) throw new OutboxNotFoundError({ eventId });
         if (row.status !== 'ERROR')
           throw new OutboxEventNotFailedError({ eventId, status: row.status });
         const nextAttemptAt = options.immediate
           ? null
           : this.backoffPolicy.nextAttemptAt(row.attempts, new Date());
-        const updated = await trx.query<{ event_id: string }>(
-          `update outbox.event_delivery
-            set status='PENDING',next_attempt_at=case when $3::timestamptz is null then clock_timestamp()
-                  else least(coalesce(next_attempt_at,clock_timestamp()),$3::timestamptz) end,
-                lease_until=null,updated_at=clock_timestamp()
-          where tenant_id=$1::uuid and event_id=$2::uuid and status='ERROR' returning event_id`,
+        const updated = await executeTypedQuery(trx, retryDelivery,
           [tenantId, eventId, nextAttemptAt],
         );
-        if (!updated.rows[0]) throw new OutboxEventNotFailedError({ eventId });
-        const [delivery] = await this.deliveriesWhere(
-          trx,
-          tenantId,
-          'e.id=$2::uuid',
-          [eventId],
-          '',
-        );
+        if (!updated[0]) throw new OutboxEventNotFailedError({ eventId });
+        const [delivery] = await this.deliveriesForEvent(trx, tenantId, eventId);
         return delivery!;
       },
       { role: 'app', requireActor: true, retry: false },
@@ -1373,7 +1114,7 @@ export class OutboxService implements OnModuleInit {
   async retireEvent(
     eventId: string,
     input: OutboxEventRetirementInput,
-  ): Promise<OutboxEventRetirement> {
+  ): Promise<OutboxEventRetirementResult> {
     const tenantId = this.requestTenant();
     if (
       typeof eventId !== 'string' ||
@@ -1399,28 +1140,17 @@ export class OutboxService implements OnModuleInit {
       return await this.database.tx(
         async (trx) => {
           // Lock first: ACKs, claims and all retirements serialize on this row.
-          const locked = await trx.query<{
-            status: OutboxEventDeliveryStatus;
-            leaseUntil: Date | null;
-            actorId: string;
-          }>(
-            `select status,lease_until as "leaseUntil",
-            nullif(current_setting('app.actor_id',true),'')::uuid as "actorId"
-          from outbox.event_delivery
-          where tenant_id=$1::uuid and event_id=$2::uuid for update`,
+          const locked = await executeTypedQuery(trx, lockRetirementDelivery,
             [tenantId, canonicalEventId],
           );
-          const current = locked.rows[0];
+          const current = locked[0];
           if (!current) throw new OutboxNotFoundError({ eventId });
-          const existing = await trx.query<OutboxEventRetirement>(
-            `select ${RETIREMENT_COLUMNS} from outbox.event_retirements
-           where tenant_id=$1::uuid and (event_id=$2::uuid or idempotency_key=$3)`,
-            [tenantId, canonicalEventId, input.idempotencyKey],
-          );
-          if (existing.rows.length > 0) {
-            const receipt = existing.rows[0]!;
+          const existing = await trx.runGuarded(findRetirementReceipt,
+            [tenantId, canonicalEventId, input.idempotencyKey], isRetirementResult);
+          if (existing.length > 0) {
+            const receipt = existing[0]!;
             if (
-              existing.rows.length === 1 &&
+              existing.length === 1 &&
               receipt.eventId === canonicalEventId &&
               receipt.idempotencyKey === input.idempotencyKey &&
               receipt.actorId === current.actorId &&
@@ -1428,7 +1158,7 @@ export class OutboxService implements OnModuleInit {
             )
               return receipt;
             throw new OutboxRetirementConflictError(
-              existing.rows.some((row) => row.idempotencyKey === input.idempotencyKey)
+              existing.some((row) => row.idempotencyKey === input.idempotencyKey)
                 ? 'operation-conflict'
                 : 'already-retired',
             );
@@ -1439,26 +1169,17 @@ export class OutboxService implements OnModuleInit {
           // Sample the database clock after acquiring the lock, including when
           // another transaction held the row long enough for a lease to expire.
           if (current.leaseUntil) {
-            const lease = await trx.query<{ active: boolean }>(
-              `select $1::timestamptz>clock_timestamp() as active`,
+            const lease = await executeTypedQuery(trx, checkRetirementLease,
               [current.leaseUntil],
             );
-            if (lease.rows[0]?.active) throw new OutboxRetirementConflictError('active-lease');
+            if (lease[0]?.active) throw new OutboxRetirementConflictError('active-lease');
           }
-          const inserted = await trx.query<OutboxEventRetirement>(
-            `insert into outbox.event_retirements
-             (tenant_id,event_id,idempotency_key,actor_id,reason,previous_status)
-           values ($1::uuid,$2::uuid,$3,nullif(current_setting('app.actor_id',true),'')::uuid,$4,$5)
-           returning ${RETIREMENT_COLUMNS}`,
-            [tenantId, canonicalEventId, input.idempotencyKey, input.reason, current.status],
-          );
-          await trx.query(
-            `update outbox.event_delivery
-           set status='RETIRED',lease_until=null,next_attempt_at=null,updated_at=clock_timestamp()
-           where tenant_id=$1::uuid and event_id=$2::uuid`,
+          const inserted = await trx.runGuarded(insertRetirementReceipt,
+            [tenantId, canonicalEventId, input.idempotencyKey, input.reason, current.status], isRetirementResult);
+          await executeTypedQuery(trx, markEventRetired,
             [tenantId, canonicalEventId],
           );
-          return inserted.rows[0]!;
+          return inserted[0]!;
         },
         { role: 'app', requireActor: true, retry: false },
       );
@@ -1471,17 +1192,14 @@ export class OutboxService implements OnModuleInit {
   }
 
   /** A foreign, missing, malformed or never-retired event has no visible receipt. */
-  async getEventRetirement(eventId: string): Promise<OutboxEventRetirement | null> {
+  async getEventRetirement(eventId: string): Promise<OutboxEventRetirementResult | null> {
     const tenantId = this.requestTenant();
     if (typeof eventId !== 'string' || !EVENT_UUID.test(eventId)) return null;
     const result = await this.tenantRead((trx) =>
-      trx.query<OutboxEventRetirement>(
-        `select ${RETIREMENT_COLUMNS} from outbox.event_retirements
-       where tenant_id=$1::uuid and event_id=$2::uuid`,
-        [tenantId, eventId],
-      ),
+      trx.runGuarded(getRetirementReceipt,
+        [tenantId, eventId], isRetirementResult),
     );
-    return result.rows[0] ?? null;
+    return result[0] ?? null;
   }
 
   async ackEvent(input: OutboxEventAckInput): Promise<void> {
@@ -1499,13 +1217,10 @@ export class OutboxService implements OnModuleInit {
     const found = await this.database.withSystemContext('outbox event ack lookup', () =>
       this.database.tx(
         async (trx) => {
-          const rows = await trx.query<{ id: string }>(
-            `select id from outbox.events where tenant_id=$1::uuid
-           and ($2::uuid is null or id=$2::uuid)
-           and ($3::text is null or idempotency_key=$3) limit 1`,
+          const rows = await executeTypedQuery(trx, lookupAckEvent,
             [input.tenantId, input.eventId ?? null, input.idempotencyKey ?? null],
           );
-          return rows.rows[0]?.id;
+          return rows[0]?.id;
         },
         { role: 'owner', readonly: true, retry: false },
       ),
@@ -1519,24 +1234,18 @@ export class OutboxService implements OnModuleInit {
     }
     const hash = createHash('sha256').update(input.rawBody).digest('hex');
     await this.ownerRetry('outbox event ack', async (trx) => {
-      const delivery = await trx.query<{ attempts: number }>(
-        `select attempts from outbox.event_delivery
-          where tenant_id=$1::uuid and event_id=$2::uuid for update`,
+      const delivery = await executeTypedQuery(trx, lockAckDelivery,
         [input.tenantId, found],
       );
-      if (!delivery.rows[0]) throw new OutboxNotFoundError({ eventId: found });
+      if (!delivery[0]) throw new OutboxNotFoundError({ eventId: found });
       const nextAttemptAt =
         input.status === 'ERROR'
-          ? this.backoffPolicy.nextAttemptAt(delivery.rows[0].attempts, new Date())
+          ? this.backoffPolicy.nextAttemptAt(delivery[0].attempts, new Date())
           : null;
-      await trx.query(
-        `update outbox.event_delivery set status=$3,next_attempt_at=$4,lease_until=null,updated_at=clock_timestamp()
-          where tenant_id=$1::uuid and event_id=$2::uuid and status not in ('ACKED','RETIRED')`,
+      await executeTypedQuery(trx, applyTenantAck,
         [input.tenantId, found, input.status, nextAttemptAt],
       );
-      await trx.query(
-        `insert into outbox.event_acks (tenant_id,event_id,status,raw_body,raw_sha256,identity_verified,hmac_verified,verification_source)
-         values ($1::uuid,$2::uuid,$3,$4,$5,true,true,'verified-raw-body')`,
+      await executeTypedQuery(trx, recordTenantAck,
         [input.tenantId, found, input.status, input.rawBody, hash],
       );
     });
@@ -1553,61 +1262,13 @@ export class OutboxService implements OnModuleInit {
   ): Promise<OutboxDispatchOutcome[]> {
     const only = this.dispatchMatcher(filter);
     const claimed = await this.ownerRetry('outbox event claim', async (trx) => {
-      const result = await trx.query<{
-        tenant_id: string;
-        event_id: string;
-        attempts: number;
-        status: string;
-        entity: string;
-        entity_id: string;
-        idempotency_key: string;
-        payload: Record<string, unknown>;
-        metadata: Record<string, unknown> | null;
-        created_at: Date;
-      }>(
-        `with due as (
-           select d.tenant_id,d.event_id
-             from outbox.event_delivery d join outbox.events e
-               on e.tenant_id=d.tenant_id and e.id=d.event_id
-            where (d.legacy_id is null or
-                   (select state from outbox.legacy_ownership where id=true)='NEW')
-              and ((d.status in ('PENDING','ERROR') and coalesce(d.next_attempt_at,e.created_at)<=clock_timestamp())
-                   or (d.status='SENT' and d.lease_until<clock_timestamp()))
-              and not exists (
-                select 1 from outbox.events p join outbox.event_delivery pd
-                  on pd.tenant_id=p.tenant_id and pd.event_id=p.id
-                 where p.tenant_id=e.tenant_id and p.entity=e.entity and p.entity_id=e.entity_id
-                   and (p.created_at,p.id)<(e.created_at,e.id) and pd.status not in ('ACKED','RETIRED')
-              )
-              ${only ? entityFilterSql(3) : ''}
-            order by e.created_at,e.id limit $1 for update of d skip locked
-         ), claimed as (
-           update outbox.event_delivery d
-              set status='SENT',attempts=d.attempts+1,
-                  lease_until=clock_timestamp()+($2::integer * interval '1 millisecond'),
-                  next_attempt_at=null,updated_at=clock_timestamp()
-             from due where d.tenant_id=due.tenant_id and d.event_id=due.event_id
-           returning d.tenant_id,d.event_id,d.attempts,d.status
-         )
-         select c.*,e.entity,e.entity_id,e.idempotency_key,e.payload,e.metadata,e.created_at
-           from claimed c join outbox.events e on e.tenant_id=c.tenant_id and e.id=c.event_id
-          order by e.created_at,e.id`,
-        [
-          limit,
-          this.options.eventLeaseMs ?? 300_000,
-          ...(only ? [only.entities, only.prefixes] : []),
-        ],
-      );
-      for (const row of result.rows) {
-        await trx.query(
-          `insert into outbox.event_attempts
-             (tenant_id,event_id,attempt_ordinal,result,leased_at)
-           values ($1::uuid,$2::uuid,$3,'CLAIMED',clock_timestamp())
-           on conflict (tenant_id,event_id,attempt_ordinal) do nothing`,
+      const result = await (only ? executeTypedQuery(trx, claimOwnerEventsFiltered, [limit, this.options.eventLeaseMs ?? 300_000, only.entities, only.prefixes]) : executeTypedQuery(trx, claimOwnerEvents, [limit, this.options.eventLeaseMs ?? 300_000]));
+      for (const row of result) {
+        await executeTypedQuery(trx, recordOwnerClaimedAttempt,
           [row.tenant_id, row.event_id, row.attempts],
         );
       }
-      return result.rows;
+      return result;
     });
     const outcomes: OutboxDispatchOutcome[] = [];
     for (const claim of claimed) {
@@ -1624,7 +1285,7 @@ export class OutboxService implements OnModuleInit {
         lastError: null,
         ackTime: null,
         nextAttemptAt: null,
-        createdAt: claim.created_at.toISOString(),
+        createdAt: resultTimestampIso(claim.created_at, 'claim.created_at'),
         updatedAt: new Date().toISOString(),
       };
       const port = this.portFor(claim.entity);
@@ -1655,11 +1316,7 @@ export class OutboxService implements OnModuleInit {
           : null;
         try {
           await this.ownerRetry('outbox event sent', async (trx) => {
-            await trx.query(
-              `update outbox.event_delivery
-                  set lease_until=clock_timestamp()+($4::integer * interval '1 millisecond'),
-                      updated_at=clock_timestamp()
-                where tenant_id=$1::uuid and event_id=$2::uuid and attempts=$3 and status='SENT'`,
+            await executeTypedQuery(trx, extendOwnerLease,
               [
                 claim.tenant_id,
                 claim.event_id,
@@ -1667,12 +1324,7 @@ export class OutboxService implements OnModuleInit {
                 this.options.eventLeaseMs ?? 300_000,
               ],
             );
-            await trx.query(
-              `update outbox.event_attempts set result='SENT',completed_at=clock_timestamp(),
-                   provider=$4,protocol=$5,request_bytes=$6,request_sha256=$7,
-                   response_bytes=$8,response_sha256=$9,
-                   request_headers=$10::jsonb,response_status=$11,evidence_state=$12::jsonb
-                where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3`,
+            await executeTypedQuery(trx, persistOwnerSent,
               [
                 claim.tenant_id,
                 claim.event_id,
@@ -1713,20 +1365,10 @@ export class OutboxService implements OnModuleInit {
         let projectionChanged: boolean;
         try {
           projectionChanged = await this.ownerRetry('outbox event failure', async (trx) => {
-            const delivery = await trx.query(
-              `update outbox.event_delivery set status='ERROR',lease_until=null,
-                   next_attempt_at=$3,last_error=$4,updated_at=clock_timestamp()
-                 where tenant_id=$1::uuid and event_id=$2::uuid
-                   and attempts=$5 and status='SENT'
-                 returning event_id`,
+            const delivery = await executeTypedQuery(trx, markOwnerDeliveryFailed,
               [claim.tenant_id, claim.event_id, next, message, claim.attempts],
             );
-            await trx.query(
-              `update outbox.event_attempts set result='ERROR',error=$4,completed_at=clock_timestamp(),
-                  provider=$5,protocol=$6,request_bytes=$7,request_sha256=$8,
-                  response_bytes=$9,response_sha256=$10,
-                  request_headers=$11::jsonb,response_status=$12,evidence_state=$13::jsonb
-                where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3`,
+            await executeTypedQuery(trx, persistOwnerFailedAttempt,
               [
                 claim.tenant_id,
                 claim.event_id,
@@ -1743,7 +1385,7 @@ export class OutboxService implements OnModuleInit {
                 transportEvidenceState(evidence),
               ],
             );
-            return delivery.rows.length > 0;
+            return delivery.length > 0;
           });
         } catch (persistenceError) {
           outcomes.push({
@@ -1813,25 +1455,13 @@ export class OutboxService implements OnModuleInit {
   async enqueue(trx: OutboxSqlExecutor, envelope: OutboxEnvelope): Promise<OutboxRow> {
     const idempotencyKey = envelope.idempotencyKey ?? `${envelope.entity}:${envelope.entityId}`;
     try {
-      const result = await trx.query<OutboxRow>(
-        `${this.ownershipCte}
-         insert into ${this.table} (id, tenant_id, entity, entity_id, payload, metadata, status, idempotency_key, next_attempt_at)
-         select
-           gen_random_uuid(),
-           nullif(current_setting('app.tenant_id', true), '')::uuid,
-           $1, $2, $3::jsonb, $4::jsonb, 'PENDING', $5, null
-         ${this.platformLegacyTable ? "from ownership where state='LEGACY'" : ''}
-         on conflict (tenant_id, entity, entity_id)
-         do update set updated_at = now(), idempotency_key = excluded.idempotency_key
-         returning ${outboxColumns()}`,
-        [
+      const result = await executeConfiguredQuery(trx, 'outbox.legacy-enqueue', { table: this.table, ackTable: this.ackTable }, [
           envelope.entity,
           envelope.entityId,
           JSON.stringify(envelope.payload ?? {}),
           envelope.metadata ? JSON.stringify(envelope.metadata) : null,
           idempotencyKey,
-        ],
-      );
+        ]);
       const row = toRows(result)[0];
       if (!row) {
         if (this.platformLegacyTable) throw new OutboxLegacyCutoverError();
@@ -1859,10 +1489,7 @@ export class OutboxService implements OnModuleInit {
   async getOne(entity: string, entityId: string): Promise<OutboxRow> {
     return this.database.tx(
       async (trx) => {
-        const result = await trx.query<OutboxRow>(
-          `select ${outboxColumns()} from ${this.table} where entity = $1 and entity_id = $2`,
-          [entity, entityId],
-        );
+        const result = await executeConfiguredQuery(trx, 'outbox.legacy-get-one', { table: this.table, ackTable: this.ackTable }, [entity, entityId]);
         const row = toRows(result)[0];
         if (!row) {
           throw new OutboxNotFoundError({ entity, entityId });
@@ -1939,29 +1566,7 @@ export class OutboxService implements OnModuleInit {
     return this.database.withSystemContext('outbox claim', () =>
       this.database.tx(
         async (trx) => {
-          const result = await trx.query<OutboxRow>(
-            `${this.platformLegacyTable ? this.ownershipCte + ',' : 'with'} due as (
-               select id
-                 from ${this.table} ${this.platformLegacyTable ? 'cross join ownership' : ''}
-                where status in ('PENDING', 'ERROR')
-                  ${this.platformLegacyTable ? "and ownership.state='LEGACY'" : ''}
-                  ${this.platformLegacyTable ? 'and migrated_event_id is null' : ''}
-                  and coalesce(next_attempt_at, created_at) <= now()
-                order by created_at asc
-                limit $1
-                for update skip locked
-             )
-             update ${this.table} o
-                set status = 'SENT',
-                    attempts = attempts + 1,
-                    last_error = null,
-                    next_attempt_at = null,
-                    updated_at = now()
-               from due
-              where o.id = due.id
-              returning ${outboxColumns('o')}`,
-            [limit],
-          );
+          const result = await executeConfiguredQuery(trx, 'outbox.legacy-claim-due', { table: this.table, ackTable: this.ackTable }, [limit]);
           return toRows(result);
         },
         { role: 'owner', readonly: false },
@@ -1976,48 +1581,25 @@ export class OutboxService implements OnModuleInit {
       this.database.withSystemContext('outbox dispatch failure', () =>
         this.database.tx(
           async (trx) => {
-            const result = await trx.query<OutboxRow>(
-              `${this.ownershipCte} update ${this.table}
-                set status = 'ERROR',
-                    last_error = $2,
-                    next_attempt_at = $3,
-                    updated_at = now()
-              ${this.platformLegacyTable ? 'from ownership' : ''}
-              where id = $1 and status <> 'ACKED'
-              returning ${outboxColumns()}`,
-              [row.id, message.slice(0, 4000), nextAttemptAt],
-            );
+            const result = await executeConfiguredQuery(trx, 'outbox.legacy-fail', { table: this.table, ackTable: this.ackTable }, [row.id, message.slice(0, 4000), nextAttemptAt]);
             let updated = toRows(result)[0];
             if (!updated) {
-              const terminal = await trx.query<OutboxRow>(
-                `select ${outboxColumns()}
-                 from ${this.table} where id=$1::uuid and status='ACKED'`,
-                [row.id],
-              );
+              const terminal = await executeConfiguredQuery(trx, 'outbox.legacy-acked-row', { table: this.table, ackTable: this.ackTable }, [row.id]);
               updated = terminal?.rows?.[0];
             }
             if (!updated) {
               throw new OutboxNotFoundError({ id: row.id });
             }
             if (this.platformLegacyTable) {
-              const link = await trx.query<{ tenant_id: string; migrated_event_id: string | null }>(
-                `select tenant_id,migrated_event_id from outbox.messages where id=$1::uuid`,
+              const link = await executeTypedQuery(trx, readLegacyEventLink,
                 [row.id],
               );
-              const migration = link?.rows?.[0];
+              const migration = link?.[0];
               if (migration?.migrated_event_id) {
-                await trx.query(
-                  `insert into outbox.event_attempts
-                   (tenant_id,event_id,attempt_ordinal,legacy_message_id,result,error,completed_at)
-                 values ($1::uuid,$2::uuid,$3,$4::uuid,'ERROR',$5,clock_timestamp())
-                 on conflict (tenant_id,event_id,attempt_ordinal) do nothing`,
+                await executeTypedQuery(trx, recordLegacyFailedAttempt,
                   [migration.tenant_id, migration.migrated_event_id, row.attempts, row.id, message],
                 );
-                await trx.query(
-                  `update outbox.event_delivery set status='ERROR',next_attempt_at=$3,
-                   last_error=$4,updated_at=clock_timestamp()
-                 where tenant_id=$1::uuid and event_id=$2::uuid
-                   and status='SENT_UNRESOLVED'`,
+                await executeTypedQuery(trx, markLegacyDeliveryFailed,
                   [migration.tenant_id, migration.migrated_event_id, nextAttemptAt, message],
                 );
               }
@@ -2062,11 +1644,10 @@ export class OutboxService implements OnModuleInit {
       .withSystemContext('outbox retry', () =>
         this.database.tx(
           async (trx) => {
-            const current = await trx.query<{
-              attempts: number;
-              migrated_event_id?: string | null;
-            }>(
-              `${this.ownershipCte} select attempts${this.platformLegacyTable ? ',migrated_event_id' : ''} from ${this.table} ${this.platformLegacyTable ? 'cross join ownership' : ''} where id = $1`,
+            const current = await executeConfiguredQuery(
+              trx,
+              'outbox.legacy-retry-state',
+              { table: this.table, ackTable: this.ackTable },
               [id],
             );
             const currentRow = toRows(current)[0];
@@ -2078,17 +1659,7 @@ export class OutboxService implements OnModuleInit {
             const nextAttemptAt = options.immediate
               ? new Date()
               : this.backoffPolicy.nextAttemptAt(attempts, new Date());
-            const result = await trx.query<OutboxRow>(
-              `update ${this.table}
-                set attempts = $2,
-                    status = 'PENDING',
-                    last_error = null,
-                    next_attempt_at = $3,
-                    updated_at = now()
-              where id = $1
-              returning ${outboxColumns()}`,
-              [id, attempts, nextAttemptAt],
-            );
+            const result = await executeConfiguredQuery(trx, 'outbox.legacy-retry', { table: this.table, ackTable: this.ackTable }, [id, attempts, nextAttemptAt]);
             const updated = toRows(result)[0];
             if (!updated) {
               throw new OutboxNotFoundError({ id });
@@ -2126,26 +1697,13 @@ export class OutboxService implements OnModuleInit {
               input.status === 'ERROR'
                 ? this.backoffPolicy.nextAttemptAt(target.attempts, new Date())
                 : null;
-            const result = await trx.query<OutboxRow>(
-              `update ${this.table}
-                set status = $2::outbox.message_status,
-                    ack_time = now(),
-                    last_error = case when $2::text = 'ERROR' then $3 else null end,
-                    next_attempt_at = $4,
-                    updated_at = now()
-              where id = $1
-              returning ${outboxColumns()}`,
-              [target.id, input.status, input.detail ?? null, nextAttemptAt],
-            );
+            const result = await executeConfiguredQuery(trx, 'outbox.legacy-ack', { table: this.table, ackTable: this.ackTable }, [target.id, input.status, input.detail ?? null, nextAttemptAt]);
             const row = toRows(result)[0];
             if (!row) {
               throw new OutboxNotFoundError({ entity: input.entity, entityId: input.entityId });
             }
             try {
-              await trx.query(
-                `insert into ${this.ackTable} (id, tenant_id, message_id, ack_status, ack_message, ack_time)
-               values (gen_random_uuid(), $1, $2, $3, $4, now())
-               on conflict (message_id) do nothing`,
+              await executeConfiguredQuery(trx, 'outbox.legacy-record-ack', { table: this.ackTable },
                 [row.tenantId, row.id, input.status, input.detail ?? null],
               );
             } catch (error) {
@@ -2154,16 +1712,10 @@ export class OutboxService implements OnModuleInit {
               }
             }
             if (target.migratedEventId) {
-              await trx.query(
-                `insert into outbox.event_acks
-                 (tenant_id,event_id,status,identity_verified,hmac_verified,verification_source)
-               values ($1::uuid,$2::uuid,$3,false,false,'caller-asserted-legacy-api')`,
+              await executeTypedQuery(trx, recordLegacyAssertedAck,
                 [row.tenantId, target.migratedEventId, input.status],
               );
-              await trx.query(
-                `update outbox.event_delivery set status=$3,next_attempt_at=$4,lease_until=null,
-                 updated_at=clock_timestamp()
-               where tenant_id=$1::uuid and event_id=$2::uuid and status not in ('ACKED','RETIRED')`,
+              await executeTypedQuery(trx, applyLegacyAck,
                 [row.tenantId, target.migratedEventId, input.status, nextAttemptAt],
               );
             }
@@ -2182,21 +1734,13 @@ export class OutboxService implements OnModuleInit {
     trx: OutboxSqlExecutor,
     input: OutboxAckInput,
   ): Promise<{ id: string; tenantId: string; migratedEventId: string | null; attempts: number }> {
-    const params: unknown[] = [input.entity, input.entityId];
-    let whereTenant = '';
-    if (input.tenantId) {
-      params.push(input.tenantId);
-      whereTenant = 'and tenant_id = $3::uuid';
-    }
-    const result = await trx.query<{
-      id: string;
-      tenantId: string;
-      migratedEventId: string | null;
-      attempts: number;
-    }>(
-      `${this.ownershipCte} select id, tenant_id as "tenantId", attempts, ${this.platformLegacyTable ? 'migrated_event_id' : 'null::uuid'} as "migratedEventId"
-         from ${this.table} ${this.platformLegacyTable ? 'cross join ownership' : ''}
-         where entity = $1 and entity_id = $2 ${whereTenant} for update of ${this.table.split('.')[1]}`,
+    const params: [string, string] | [string, string, string] = input.tenantId
+      ? [input.entity, input.entityId, input.tenantId]
+      : [input.entity, input.entityId];
+    const result = await executeConfiguredQuery(
+      trx,
+      'outbox.legacy-ack-target',
+      { table: this.table, ackTable: this.ackTable, tenant: Boolean(input.tenantId) },
       params,
     );
     const rows = toRows(result);

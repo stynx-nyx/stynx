@@ -1,3 +1,4 @@
+import { executeConfiguredQuery } from '@stynx-nyx/data';
 import type { TenantEntitlementContext } from '@stynx-nyx/contracts';
 import type { TenantEntitlementFallback } from './claim-first-tenant-entitlement.policy.js';
 
@@ -29,10 +30,6 @@ function assertIdentifierPath(value: string, name: string): string {
     throw new Error(`Invalid SQL identifier for ${name}: ${value}`);
   }
   return parts.join('.');
-}
-
-function toRows<T>(result: RowResult<T>): T[] {
-  return Array.isArray(result) ? result : result.rows;
 }
 
 function normalizeText(value: unknown): string | null {
@@ -83,27 +80,11 @@ export class SqlTenantEntitlementFallback implements TenantEntitlementFallback {
       return false;
     }
 
-    const activePredicate = this.activeColumn
-      ? ` and ${this.activeColumn} = true`
-      : '';
-
-    const sql = `select 1 as one
-      from ${this.table}
-      where ${this.tenantColumn} = $1
-      ${activePredicate}
-      and (
-        (${this.subjectColumn} is not distinct from $2)
-        or (${this.emailColumn} is not distinct from $3)
-      )
-      limit 1`;
-
-    const rows = toRows(
-      await this.options.executor.query<{ one: number }>(sql, [
-        context.tenantId,
-        subject,
-        email,
-      ]),
-    );
+    const result = await executeConfiguredQuery(this.options.executor, 'auth.tenant-entitlement', {
+      table: this.table, tenantColumn: this.tenantColumn, subjectColumn: this.subjectColumn,
+      emailColumn: this.emailColumn, activeColumn: this.activeColumn,
+    }, [context.tenantId, subject, email]);
+    const rows = result.rows;
 
     return rows.length > 0;
   }

@@ -1,3 +1,5 @@
+import { executeTypedQuery } from '@stynx-nyx/data';
+import { archivedDocument } from './documents.repository.js';
 import { randomUUID } from 'node:crypto';
 import { basename } from 'node:path';
 import { Inject, Injectable } from '@nestjs/common';
@@ -22,18 +24,7 @@ import type {
   StynxStorageModuleOptions,
 } from './types.js';
 
-interface DocumentRow {
-  id: string;
-  tenantId: string;
-  collection: string;
-  s3Key: string;
-  filename: string;
-  mimeType: string;
-  byteSize: number;
-  checksumSha256: string;
-  scanStatus: string;
-  scanDetail: Record<string, unknown>;
-}
+type DocumentRow = typeof documents.$inferSelect;
 
 function sanitizeFilename(value: string): string {
   return basename(value).replace(/[^A-Za-z0-9._-]/g, '_');
@@ -146,7 +137,7 @@ export class DocumentsService {
           })
           .where(eq(documents.id, id));
 
-        await trx.softDelete(documents as never, id);
+        await trx.softDelete(documents, id);
       });
       return { id, scanStatus: 'quarantined' };
     }
@@ -185,7 +176,7 @@ export class DocumentsService {
     await this.requireOwnedDocument(id);
     const database = this.requireDatabase();
     await database.tx(async (trx) => {
-      await trx.softDelete(documents as never, id);
+      await trx.softDelete(documents, id);
     });
   }
 
@@ -193,7 +184,7 @@ export class DocumentsService {
     this.requireTenantId();
     const database = this.requireDatabase();
     await database.tx(async (trx) => {
-      await trx.restoreFromArchive(documents as never, id);
+      await trx.restoreFromArchive(documents, id);
     });
   }
 
@@ -201,20 +192,10 @@ export class DocumentsService {
     this.requireTenantId();
     const database = this.requireDatabase();
     await database.tx(async (trx) => {
-      const archived = await trx.query<{
-        archive_id: string;
-        tenant_id: string;
-        s3_key: string;
-      }>(
-        `
-          select archive_id, tenant_id::text, s3_key
-          from archive.storage_documents
-          where id = $1::uuid
-          limit 1
-        `,
+      const archived = await executeTypedQuery(trx, archivedDocument,
         [id],
       );
-      const current = archived.rows[0];
+      const current = archived;
       if (!current) {
         throw new StorageDocumentNotFoundError(id);
       }
@@ -252,7 +233,7 @@ export class DocumentsService {
       if (!row) {
         return null;
       }
-      return row as DocumentRow;
+      return row;
     }, { readonly: true, role: 'reader', replica: false });
   }
 

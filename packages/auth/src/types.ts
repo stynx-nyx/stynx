@@ -74,7 +74,7 @@ export interface PermissionCacheRecord {
   membershipId: string;
   permissions: string[];
   hash: string;
-  generation: number;
+  generation: string | number;
   computedAt: number;
 }
 
@@ -90,7 +90,7 @@ export interface PermissionCacheBackend {
 
 export interface HashProbeState {
   hash: string | null;
-  generation: number;
+  generation: string | number;
 }
 
 export interface RequestLike {

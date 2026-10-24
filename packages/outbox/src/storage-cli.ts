@@ -2,7 +2,8 @@
 import { existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { createStynxPgClient } from '@stynx-nyx/data';
+import { createStynxPgClient, executeTypedQuery } from '@stynx-nyx/data';
+import { beginOutboxStorageVerification, rollbackOutboxStorageVerification } from './storage.repository.js';
 import { renderOutboxStorage, verifyOutboxStorage, type OutboxStorageOptions } from './storage.js';
 
 export interface OutboxStorageCommandIO {
@@ -92,12 +93,12 @@ async function execute(
   const client = createStynxPgClient({ connectionString: environment[key] });
   try {
     await client.connect();
-    await client.query('begin read only');
+    await executeTypedQuery(client, beginOutboxStorageVerification, []);
     const report = await verifyOutboxStorage(client, options);
     io.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     return report.supported ? 0 : 1;
   } finally {
-    await client.query('rollback').catch(() => undefined);
+    await executeTypedQuery(client, rollbackOutboxStorageVerification, []).catch(() => undefined);
     await client.end();
   }
 }

@@ -1,4 +1,6 @@
 import type { Pool } from 'pg';
+import { executeTypedQuery } from './checked-executor.js';
+import { appRoleProperties } from './data-context.repository.js';
 import { AppRoleConfigurationError, type AppRoleProperty } from './errors.js';
 import type { StynxDataModuleOptions } from './tokens.js';
 
@@ -36,15 +38,6 @@ interface LiveAppRole {
   session_bypassrls: boolean;
 }
 
-/** Catalog probe of the application connection; names no role, reads nothing secret. */
-const APP_ROLE_PROPERTY_SQL = `select current_user::text as current_user,
-       session_user::text as session_user,
-       c.rolsuper as current_super,
-       c.rolbypassrls as current_bypassrls,
-       s.rolsuper as session_super,
-       s.rolbypassrls as session_bypassrls
-  from pg_catalog.pg_roles c, pg_catalog.pg_roles s
- where c.rolname = current_user and s.rolname = session_user`;
 
 function refuse(property: AppRoleProperty, roleName: string, actual?: string): never {
   throw new AppRoleConfigurationError(property, {
@@ -105,8 +98,8 @@ export class AppRoleVerifier {
   private async run(): Promise<void> {
     const client = await this.pool().connect();
     try {
-      const result = await client.query<LiveAppRole>(APP_ROLE_PROPERTY_SQL);
-      assertAppRoleProperties(result.rows[0], this.roleName);
+      const result = await executeTypedQuery(client, appRoleProperties, []);
+      assertAppRoleProperties(result ?? undefined, this.roleName);
       this.verified = true;
     } finally {
       client.release();

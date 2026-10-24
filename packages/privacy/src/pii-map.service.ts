@@ -1,3 +1,4 @@
+import { readPiiRules } from './privacy.repository.js';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Inject, Injectable } from '@nestjs/common';
@@ -142,21 +143,11 @@ export class PiiMapService {
     });
   }
 
-  private async queryDatabaseRules(trx: Pick<Transaction, 'query'>): Promise<PrivacyRule[]> {
-    const result = await trx.query<PiiMapRow>(
-      `
-              select
-                table_schema,
-                table_name,
-                column_name,
-                strategy,
-                category,
-                notes
-              from core.pii_map
-            `,
+  private async queryDatabaseRules(trx: Pick<Transaction, 'run'>): Promise<PrivacyRule[]> {
+    const result = await trx.run(readPiiRules,
       [],
     );
-    return result.rows.map(normalizeDbRule);
+    return result.map(normalizeDbRule);
   }
 
   private loadOverrideRules(): PrivacyRule[] {

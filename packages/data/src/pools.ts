@@ -18,11 +18,12 @@ export interface StynxPgPoolOptions {
 
 function parseSecretConnection(secret: string): string {
   try {
-    const parsed = JSON.parse(secret) as { connectionString?: string; url?: string };
-    if (typeof parsed.connectionString === 'string' && parsed.connectionString.length > 0) {
+    const parsed: unknown = JSON.parse(secret);
+    if (typeof parsed !== 'object' || parsed === null) return secret;
+    if ('connectionString' in parsed && typeof parsed.connectionString === 'string' && parsed.connectionString.length > 0) {
       return parsed.connectionString;
     }
-    if (typeof parsed.url === 'string' && parsed.url.length > 0) {
+    if ('url' in parsed && typeof parsed.url === 'string' && parsed.url.length > 0) {
       return parsed.url;
     }
   } catch {
@@ -87,7 +88,7 @@ export function createStynxPgPool(options: StynxPgPoolOptions): Pool {
 
 @Injectable()
 export class StynxPoolRegistry implements OnModuleInit, OnModuleDestroy {
-  readonly pools: Record<StynxDataRole, Pool>;
+  readonly pools: Partial<Record<StynxDataRole, Pool>>;
   /** Resolved application SQL role name (ADR-OUTBOX-0003 D1). */
   readonly appRoleName: string;
   private initialized = false;
@@ -98,7 +99,7 @@ export class StynxPoolRegistry implements OnModuleInit, OnModuleDestroy {
     private readonly options: StynxDataModuleOptions,
     private readonly secretLoader: SecretLoader,
   ) {
-    this.pools = {} as Record<StynxDataRole, Pool>;
+    this.pools = {};
     this.appRoleName = resolveAppRoleName(options);
   }
 
@@ -131,11 +132,15 @@ export class StynxPoolRegistry implements OnModuleInit, OnModuleDestroy {
   }
 
   private appRoleVerifier(): AppRoleVerifier {
-    this.appRole ??= new AppRoleVerifier(() => this.pools.app, this.appRoleName);
+    this.appRole ??= new AppRoleVerifier(() => {
+      const pool = this.pools.app;
+      if (pool === undefined) throw new TypeError('Application pool is not initialized');
+      return pool;
+    }, this.appRoleName);
     return this.appRole;
   }
 
-  get(role: StynxDataRole, replica = false): Pool {
+  get(role: StynxDataRole, replica = false): Pool | undefined {
     if (replica || role === 'reader') {
       return this.pools.reader;
     }

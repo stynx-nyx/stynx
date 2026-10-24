@@ -162,9 +162,14 @@ function timezoneFormatter(timezone: string, expression: string): Intl.DateTimeF
  * malformed or (pathologically) matches nothing within the search ceiling.
  */
 export function nextCronRunAt(expression: string, after: Date, timezone = 'UTC'): Date {
+  return nextCronRunAtUsingTime(expression, () => after.getTime(), timezone);
+}
+
+/** @internal Preserves cron/timezone validation before reading a persisted timestamp. */
+export function nextCronRunAtUsingTime(expression: string, getTime: () => number, timezone = 'UTC'): Date {
   const parsed = parseCronExpression(expression);
   const formatter = timezone === 'UTC' ? undefined : timezoneFormatter(timezone, expression);
-  const first = Math.floor(after.getTime() / MINUTE_MS) * MINUTE_MS + MINUTE_MS;
+  const first = Math.floor(getTime() / MINUTE_MS) * MINUTE_MS + MINUTE_MS;
   const last = first + (MAX_SEARCH_MINUTES - 1) * MINUTE_MS;
   const startWall = formatter ? wallMinute(new Date(first), formatter) : utcWall(new Date(first));
   const endWall = formatter ? wallMinute(new Date(last), formatter) : utcWall(new Date(last));

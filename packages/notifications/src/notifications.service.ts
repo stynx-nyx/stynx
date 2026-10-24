@@ -1,3 +1,4 @@
+import { insertNotification, insertDelivery, notificationByCorrelation, notificationDeliveries } from './notifications.repository.js';
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
@@ -17,12 +18,6 @@ import type {
   NotifyRequest,
   NotifyResult,
 } from './types.js';
-
-interface DeliveryRow {
-  id: string;
-  channel: NotificationChannel;
-  status: DeliveryStatus;
-}
 
 /** Channels gated by @stynx-nyx/preferences.NotificationDeliveryPreferences. SMS is not (see the port doc). */
 const PREFERENCE_GATED_CHANNELS: Partial<
@@ -64,7 +59,7 @@ export class NotificationsService {
     const template = this.templates.resolve(request.templateId, request.templateVersion);
     const requestedChannels = request.channels ?? [...template.supportedChannels];
     const unsupported = requestedChannels.filter(
-      (ch) => !template.supportedChannels.includes(ch as NotificationChannel),
+      (ch) => !template.supportedChannels.includes(ch),
     );
     if (unsupported.length > 0) {
       throw new NotificationValidationError('Template does not support the requested channel', {
@@ -88,12 +83,7 @@ export class NotificationsService {
     const variables = request.variables ?? {};
 
     return database.tx(async (trx) => {
-      await trx.query(
-        `insert into notifications.notifications
-           (id, tenant_id, recipient_subject_id, recipient_email, recipient_phone,
-            recipient_push_token, category, template_id, template_version, locale,
-            variables, requested_channels, correlation_id, created_by_actor_id)
-         values ($1::uuid, $2::uuid, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::text[], $13, $14)`,
+      await trx.run(insertNotification,
         [
           notificationId,
           tenantId,
@@ -113,15 +103,12 @@ export class NotificationsService {
       );
 
       const deliveries: NotifyResult['deliveries'] = [];
-      for (const ch of requestedChannels as NotificationChannel[]) {
+      for (const ch of requestedChannels) {
         const gate = PREFERENCE_GATED_CHANNELS[ch];
         const suppressed = gate ? preferences[gate] === false : false;
         const deliveryId = randomUUID();
         const status: DeliveryStatus = suppressed ? 'SUPPRESSED' : 'QUEUED';
-        await trx.query(
-          `insert into notifications.deliveries
-             (id, tenant_id, notification_id, channel, status, suppressed_reason, next_attempt_at)
-           values ($1::uuid, $2::uuid, $3::uuid, $4, $5, $6, clock_timestamp())`,
+        await trx.run(insertDelivery,
           [
             deliveryId,
             tenantId,
@@ -144,25 +131,19 @@ export class NotificationsService {
     correlationId: string,
   ): Promise<NotifyResult | undefined> {
     return database.tx(async (trx) => {
-      const notification = await trx.query<{ id: string }>(
-        `select id from notifications.notifications
-          where tenant_id = $1::uuid and correlation_id = $2
-          limit 1`,
+      const notification = await trx.run(notificationByCorrelation,
         [tenantId, correlationId],
       );
-      const row = notification.rows[0];
+      const row = notification[0];
       if (!row) {
         return undefined;
       }
-      const deliveries = await trx.query<DeliveryRow>(
-        `select id, channel, status from notifications.deliveries
-          where tenant_id = $1::uuid and notification_id = $2::uuid
-          order by channel`,
+      const deliveries = await trx.run(notificationDeliveries,
         [tenantId, row.id],
       );
       return {
         notificationId: row.id,
-        deliveries: deliveries.rows.map((delivery) => ({
+        deliveries: deliveries.map((delivery) => ({
           channel: delivery.channel,
           deliveryId: delivery.id,
           status: delivery.status,

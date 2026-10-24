@@ -1,3 +1,4 @@
+import { lockRangeCreation, rangeByCreationKey, insertRange, rangeById, listRanges, lockRangeById, cancelRange, type RangeRow } from './ranges.repository.js';
 import { randomUUID } from 'node:crypto';
 import { Database, type Transaction } from '@stynx-nyx/data';
 import { OfflineSyncConfigurationError, OfflineSyncUpgradeRequiredError } from './errors.js';
@@ -21,32 +22,9 @@ import type {
   TrustedOfflineSyncScope,
 } from './types.js';
 
-interface RangeRow {
-  id: string;
-  tenant_id: string;
-  org_unit_id: string;
-  entity_type: string;
-  series: string;
-  start_number: string | number;
-  end_number: string | number;
-  next_number: string | number;
-  status: NumberingRange['status'];
-  consumer_attributes: Record<string, unknown> | null;
-  created_by: string | null;
-  created_at: Date | string;
-  updated_at: Date | string | null;
-  cancelled_by: string | null;
-  cancelled_at: Date | string | null;
-  cancellation_reason: string | null;
-  creation_fingerprint: string | null;
-  creation_receipt: NumberingRange | null;
-  created_us?: string;
-}
-const columns = `id,tenant_id,org_unit_id,entity_type,series,start_number,end_number,next_number,status,
-  consumer_attributes,created_by,created_at,updated_at,cancelled_by,cancelled_at,cancellation_reason,
-  creation_fingerprint,creation_receipt`;
 
-function instant(value: string | Date): string {
+
+function instant(value: string | Date | number): string {
   const at = new Date(value);
   if (!Number.isFinite(at.getTime())) throw new OfflineSyncConfigurationError('rangeTimestamp');
   return at.toISOString();
@@ -86,7 +64,8 @@ async function transaction<T>(
       retry: false,
     });
   } catch (error) {
-    const { code, constraint } = error as { code?: string; constraint?: string };
+    const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined;
+    const constraint = typeof error === 'object' && error !== null && 'constraint' in error ? error.constraint : undefined;
     if (code === '42703' || code === '42P01') throw new OfflineSyncUpgradeRequiredError('0007');
     if (code === '23505' && constraint === 'numbering_ranges_tenant_creation_key_uq')
       throw rangeConflict('key');
@@ -108,26 +87,24 @@ export async function pgCreateNumberingRange(
   const { input, fingerprint } = rangeCreation(scope, original);
   return transaction(database, async (trx) => {
     if (input.idempotencyKey !== undefined) {
-      await trx.query('select pg_advisory_xact_lock(hashtextextended($1,0))', [
+      await trx.run(lockRangeCreation, [
         `${scope.tenantId}:numbering-range-create:${input.idempotencyKey}`,
       ]);
       const prior = (
-        await trx.query<RangeRow>(
-          `select ${columns},(extract(epoch from created_at)*1000000)::numeric(30,0)::text as created_us from offline.numbering_ranges
-        where tenant_id=$1::uuid and creation_key=$2`,
+        await trx.run(rangeByCreationKey,
           [scope.tenantId, input.idempotencyKey],
         )
-      ).rows[0];
+      );
       if (prior) {
         if (prior.creation_fingerprint !== fingerprint) throw rangeConflict('key');
+        const receipt = prior.creation_receipt;
+        if (typeof receipt !== 'object' || receipt === null || Array.isArray(receipt) ||
+            typeof receipt.createdAt !== 'string' || prior.created_by === null) {
+          throw new OfflineSyncConfigurationError('rangeCreationReceipt');
+        }
         let receiptInstantMatches = false;
         try {
-          receiptInstantMatches =
-            prior.creation_receipt !== null &&
-            typeof prior.creation_receipt.createdAt === 'string' &&
-            prior.created_us !== undefined &&
-            importInstantMicroseconds(prior.creation_receipt.createdAt) ===
-              BigInt(prior.created_us);
+          receiptInstantMatches = importInstantMicroseconds(receipt.createdAt) === BigInt(prior.created_us);
         } catch {
           /* Malformed persisted creation evidence fails closed. */
         }
@@ -142,19 +119,19 @@ export async function pgCreateNumberingRange(
           endNumber: input.endNumber,
           nextNumber: input.startNumber,
           status: 'active',
-          createdAt: prior.creation_receipt!.createdAt!,
-          createdBy: prior.created_by!,
+          createdAt: receipt.createdAt,
+          createdBy: prior.created_by,
           ...(input.consumerAttributes === undefined
             ? {}
             : { consumerAttributes: input.consumerAttributes }),
         };
         if (
           !prior.creation_receipt ||
-          canonicalOfflineSyncPayload({ ...prior.creation_receipt }) !==
+          canonicalOfflineSyncPayload({ ...receipt }) !==
             canonicalOfflineSyncPayload({ ...expected })
         )
           throw new OfflineSyncConfigurationError('rangeCreationReceipt');
-        return cloneRange(prior.creation_receipt);
+        return cloneRange(expected);
       }
     }
     const createdAt = instant(now);
@@ -175,12 +152,7 @@ export async function pgCreateNumberingRange(
         : { consumerAttributes: input.consumerAttributes }),
     };
     const inserted = (
-      await trx.query<RangeRow>(
-        `insert into offline.numbering_ranges
-      (id,tenant_id,org_unit_id,entity_type,series,start_number,end_number,next_number,status,
-        consumer_attributes,created_by,created_at,creation_key,creation_fingerprint,creation_receipt)
-      values ($1::uuid,$2::uuid,$3,$4,$5,$6,$7,$6,'active',$8::json,$9,$10::timestamptz,$11,$12,$13::jsonb)
-      returning ${columns}`,
+      await trx.run(insertRange,
         [
           range.id,
           scope.tenantId,
@@ -197,7 +169,7 @@ export async function pgCreateNumberingRange(
           input.idempotencyKey === undefined ? null : JSON.stringify(range),
         ],
       )
-    ).rows[0]!;
+    );
     return mapRange(inserted);
   });
 }
@@ -212,12 +184,10 @@ export async function pgGetNumberingRange(
     database,
     async (trx) => {
       const row = (
-        await trx.query<RangeRow>(
-          `select ${columns} from offline.numbering_ranges
-      where tenant_id=$1::uuid and id=$2::uuid`,
+        await trx.run(rangeById,
           [scope.tenantId, id],
         )
-      ).rows[0];
+      );
       return row ? mapRange(row) : null;
     },
     true,
@@ -234,12 +204,7 @@ export async function pgListNumberingRanges(
     database,
     async (trx) => {
       const rows = (
-        await trx.query<RangeRow>(
-          `select ${columns} from offline.numbering_ranges
-      where tenant_id=$1::uuid and ($2::text is null or org_unit_id=$2)
-        and ($3::text is null or entity_type=$3) and ($4::text is null or series=$4)
-        and ($5::text is null or status=$5) and ($6::uuid is null or id>$6::uuid)
-      order by id limit $7`,
+        await trx.run(listRanges,
           [
             scope.tenantId,
             input.orgUnitId ?? null,
@@ -250,7 +215,7 @@ export async function pgListNumberingRanges(
             input.limit + 1,
           ],
         )
-      ).rows;
+      );
       const items = rows.slice(0, input.limit).map(mapRange);
       return { items, nextCursor: rows.length > input.limit ? items[items.length - 1]!.id : null };
     },
@@ -269,24 +234,19 @@ export async function pgCancelNumberingRange(
   const input = rangeCancellation(originalInput);
   return transaction(database, async (trx) => {
     const row = (
-      await trx.query<RangeRow>(
-        `select ${columns} from offline.numbering_ranges
-      where tenant_id=$1::uuid and id=$2::uuid for update`,
+      await trx.run(lockRangeById,
         [scope.tenantId, id],
       )
-    ).rows[0];
+    );
     if (!row) throw rangeNotFound();
     if (row.status === 'cancelled') return mapRange(row);
     if (row.status !== 'active') throw rangeConflict('state');
     const at = instant(now);
     const changed = (
-      await trx.query<RangeRow>(
-        `update offline.numbering_ranges set status='cancelled',
-      cancelled_by=$3,cancelled_at=$4::timestamptz,cancellation_reason=$5,updated_at=$4::timestamptz
-      where tenant_id=$1::uuid and id=$2::uuid returning ${columns}`,
+      await trx.run(cancelRange,
         [scope.tenantId, id, scope.actorId, at, input.reason ?? null],
       )
-    ).rows[0]!;
+    );
     return mapRange(changed);
   });
 }

@@ -23,6 +23,18 @@ export interface RequestLike {
   dbClient?: unknown;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isStringArray(value: unknown): value is string[] {
+  if (!Array.isArray(value)) return false;
+  for (let index = 0; index < value.length; index += 1) {
+    if (!Object.hasOwn(value, index) || typeof value[index] !== 'string') return false;
+  }
+  return true;
+}
+
 export function getPrincipalFromRequest(request: RequestLike): Principal | undefined {
   const direct = request.principal;
   if (direct) return direct;
@@ -30,29 +42,29 @@ export function getPrincipalFromRequest(request: RequestLike): Principal | undef
   const fromContext = request.principalContext?.principal;
   if (fromContext) return fromContext;
 
-  const user = request.user as Partial<Principal> | undefined;
-  if (user?.id) {
-    return {
-      id: user.id,
-      roles: Array.isArray(user.roles) ? user.roles : [],
-      permissions: Array.isArray(user.permissions) ? user.permissions : [],
-      tenants: Array.isArray(user.tenants) ? user.tenants : [],
-      claims: (user.claims as Record<string, unknown>) ?? {},
-      ...(typeof user.email === 'string' ? { email: user.email } : {}),
-      ...(typeof user.username === 'string' ? { username: user.username } : {}),
-    };
-  }
+  const candidateKeys: readonly ['user', 'actor'] = ['user', 'actor'];
+  for (const key of candidateKeys) {
+    const candidate = request[key];
+    if (candidate === null || typeof candidate !== 'object' || !('id' in candidate)) continue;
+    const id = candidate.id;
+    if (!id) continue;
+    if (!isRecord(candidate) || typeof id !== 'string') return undefined;
+    const selected: Record<string, unknown> = candidate;
 
-  const actor = request.actor as Partial<Principal> | undefined;
-  if (actor?.id) {
+    const roles: unknown = Array.isArray(selected.roles) ? selected.roles : [];
+    const permissions: unknown = Array.isArray(selected.permissions) ? selected.permissions : [];
+    const tenants: unknown = Array.isArray(selected.tenants) ? selected.tenants : [];
+    const claims = selected.claims ?? {};
+    if (!isStringArray(roles) || !isStringArray(permissions) || !isStringArray(tenants) ||
+        !isRecord(claims)) return undefined;
     return {
-      id: actor.id,
-      roles: Array.isArray(actor.roles) ? actor.roles : [],
-      permissions: Array.isArray(actor.permissions) ? actor.permissions : [],
-      tenants: Array.isArray(actor.tenants) ? actor.tenants : [],
-      claims: (actor.claims as Record<string, unknown>) ?? {},
-      ...(typeof actor.email === 'string' ? { email: actor.email } : {}),
-      ...(typeof actor.username === 'string' ? { username: actor.username } : {}),
+      id,
+      roles,
+      permissions,
+      tenants,
+      claims,
+      ...(typeof selected.email === 'string' ? { email: selected.email } : {}),
+      ...(typeof selected.username === 'string' ? { username: selected.username } : {}),
     };
   }
 

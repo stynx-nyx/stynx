@@ -1,3 +1,5 @@
+import { bindQueryContext, executeConfiguredQuery, executeTypedQuery } from '@stynx-nyx/data';
+import { writeCommandAudit, writeLegacyAudit } from './audit.repository.js';
 import type { AuditEventEnvelope, AuditSink, AuditTransactionExecutor, TransactionalAuditSink } from '@stynx-nyx/contracts';
 
 export interface SqlExecutor {
@@ -23,7 +25,7 @@ export interface AuditSqlListQuery {
 }
 
 export interface AuditSqlListItem {
-  occurredAt: string;
+  occurredAt: string | number;
   tenantId?: string | null;
   actorId?: string | null;
   actorRole?: string | null;
@@ -71,12 +73,7 @@ export class AuditSqlSink implements AuditSink, TransactionalAuditSink {
       throw new Error('Transactional commands require audit_write_function mode');
     }
     const pk = event.pk ?? (event.entityId ? { id: event.entityId } : undefined);
-    await executor.query(
-      `SELECT audit.write_command_event(
-        $1::text, $2::text, $3::text, $4::jsonb,
-        $5::text, $6::text, $7::text,
-        $8::jsonb, $9::jsonb, $10::jsonb
-      )`,
+    await executeTypedQuery(bindQueryContext(executor), writeCommandAudit,
       [
         event.action,
         event.entity,
@@ -94,22 +91,7 @@ export class AuditSqlSink implements AuditSink, TransactionalAuditSink {
 
   private async writeUsingFunction(event: AuditEventEnvelope): Promise<void> {
     const pk = event.pk ?? (event.entityId ? { id: event.entityId } : undefined);
-    await this.executor.query(
-      `SELECT audit.write(
-         $1::uuid,
-         $2::uuid,
-         $3::text,
-         $4::text,
-         $5::text,
-         $6::text,
-         $7::jsonb,
-         $8::text,
-         $9::text,
-         $10::text,
-         $11::jsonb,
-         $12::jsonb,
-         $13::jsonb
-       )`,
+    await executeTypedQuery(bindQueryContext(this.executor), writeLegacyAudit,
       [
         event.tenantId ?? null,
         event.actorId ?? null,
@@ -131,26 +113,7 @@ export class AuditSqlSink implements AuditSink, TransactionalAuditSink {
   private async writeUsingTable(event: AuditEventEnvelope): Promise<void> {
     const schema = this.options.schema ?? 'public';
     const table = this.options.table ?? 'audit_event';
-    await this.executor.query(
-      `INSERT INTO ${schema}.${table} (
-         occurred_at,
-         actor_sub,
-         action,
-         resource_type,
-         resource_id,
-         request_id,
-         ip_address,
-         metadata
-       ) VALUES (
-         $1::timestamptz,
-         $2::text,
-         $3::text,
-         $4::text,
-         $5::text,
-         $6::text,
-         NULLIF($7::text, ''),
-         $8::jsonb
-       )`,
+    await executeConfiguredQuery(this.executor, 'audit.write-table', { schema, table },
       [
         event.occurredAt,
         event.actorId ?? null,
@@ -174,7 +137,7 @@ export class AuditSqlSink implements AuditSink, TransactionalAuditSink {
 }
 
 type SelectRow = {
-  occurred_at: string | Date;
+  occurred_at: string | Date | number;
   table_schema?: string;
   tenant_id?: string | null;
   tenancy_id?: string | null;
@@ -205,7 +168,7 @@ function toRows<T>(result: unknown): T[] {
   return Array.isArray(rows) ? rows : [];
 }
 
-function toIso(value: string | Date): string {
+function toIso(value: string | Date | number): string | number {
   return value instanceof Date ? value.toISOString() : value;
 }
 

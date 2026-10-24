@@ -1,13 +1,5 @@
 import type { AnyPgTable } from 'drizzle-orm/pg-core';
-import type { LiveOnlyTable, SoftDeletableTable } from './types.js';
-
-const SOFT_DELETABLE = Symbol.for('stynx.data.soft-deletable');
-const LIVE_ONLY = Symbol.for('stynx.data.live-only');
-
-type BrandedTable = AnyPgTable & {
-  [SOFT_DELETABLE]?: true;
-  [LIVE_ONLY]?: true;
-};
+import { LIVE_ONLY, SOFT_DELETABLE, type LiveOnlyTable, type SoftDeletableTable } from './types.js';
 
 export function softDeletable<T extends AnyPgTable>(table: T): SoftDeletableTable<T> {
   Object.defineProperty(table, SOFT_DELETABLE, {
@@ -16,7 +8,8 @@ export function softDeletable<T extends AnyPgTable>(table: T): SoftDeletableTabl
     enumerable: false,
     writable: false,
   });
-  return table as SoftDeletableTable<T>;
+  if (isSoftDeletable(table)) return table;
+  throw new TypeError('The soft-deletable marker was not installed');
 }
 
 export function makeLiveOnly<T extends AnyPgTable>(table: T): LiveOnlyTable<T> {
@@ -26,9 +19,16 @@ export function makeLiveOnly<T extends AnyPgTable>(table: T): LiveOnlyTable<T> {
     enumerable: false,
     writable: false,
   });
-  return table as LiveOnlyTable<T>;
+  if (isLiveOnly(table)) return table;
+  throw new TypeError('The live-only marker was not installed');
 }
 
-export function isSoftDeletable(table: unknown): table is SoftDeletableTable<AnyPgTable> {
-  return Boolean((table as BrandedTable | undefined)?.[SOFT_DELETABLE]);
+export function isSoftDeletable(table: unknown): table is { readonly [SOFT_DELETABLE]: true } {
+  return ((typeof table === 'object' && table !== null) || typeof table === 'function') &&
+    SOFT_DELETABLE in table && table[SOFT_DELETABLE] === true;
+}
+
+function isLiveOnly(table: unknown): table is { readonly [LIVE_ONLY]: true } {
+  return ((typeof table === 'object' && table !== null) || typeof table === 'function') &&
+    LIVE_ONLY in table && table[LIVE_ONLY] === true;
 }

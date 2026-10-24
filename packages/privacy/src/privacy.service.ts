@@ -1,7 +1,8 @@
+import { expiredSessionPartitions, privacyTenantMembership, setErasureStrategy } from './privacy.repository.js';
 import { createHmac, randomUUID } from 'node:crypto';
 import { ForbiddenException, Inject, Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database, type Transaction } from '@stynx-nyx/data';
+import { Database, executeConfiguredQuery, executeTypedQuery, type Transaction } from '@stynx-nyx/data';
 import JSZip from 'jszip';
 import { z } from 'zod';
 import { requirePrivacySystemContext, requirePrivacyTenantContext } from './privacy-context.js';
@@ -33,11 +34,11 @@ interface TableSnapshot {
   rows: Record<string, unknown>[];
 }
 
-function quoteIdent(value: string): string {
+function privacyIdentifier(value: string): string {
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/u.test(value)) {
     throw new PrivacyConfigurationError('Unsafe SQL identifier', { value });
   }
-  return `"${value.replace(/"/g, '""')}"`;
+  return value;
 }
 
 function csvEscape(value: unknown): string {
@@ -332,14 +333,15 @@ export class PrivacyService {
               target === 'archive'
                 ? { schema: 'archive', table: `${rule.tableSchema}_${rule.tableName}` }
                 : { schema: rule.tableSchema, table: rule.tableName };
-            const where = `${quoteIdent(retention.timestampColumn)} < (clock_timestamp() - ($1::text || ' days')::interval)${tenantId ? ` and ${quoteIdent(rule.tenantColumn!)} = $2::uuid` : ''}`;
-            const values = tenantId
+            const bindings = {
+              schema: privacyIdentifier(meta.schema), table: privacyIdentifier(meta.table),
+              timestampColumn: privacyIdentifier(retention.timestampColumn),
+              tenantColumn: tenantId ? privacyIdentifier(rule.tenantColumn!) : null,
+            };
+            const values: [string] | [string, string] = tenantId
               ? [String(retention.olderThanDays), tenantId]
               : [String(retention.olderThanDays)];
-            const countResult = await trx.query<{ total: number }>(
-              `select count(*)::int as total from ${quoteIdent(meta.schema)}.${quoteIdent(meta.table)} where ${where}`,
-              values,
-            );
+            const countResult = await executeConfiguredQuery(trx, 'privacy.retention-count', bindings, values);
             const total = countResult.rows[0]?.total ?? 0;
             if (total === 0) {
               continue;
@@ -357,24 +359,16 @@ export class PrivacyService {
               continue;
             }
 
-            await trx.query(
-              `delete from ${quoteIdent(meta.schema)}.${quoteIdent(meta.table)} where ${where}`,
-              values,
-            );
+            await executeConfiguredQuery(trx, 'privacy.retention-delete', bindings, values);
           }
         }
 
         // ADR-SESSIONS-0003: session month partitions expire 90 days after the month ends.
         if (tenantId) return;
-        const expired = await trx.query<{
-          partition_name: string;
-          month_end: string;
-          dropped: boolean;
-        }>(
-          'select partition_name, month_end::text as month_end, dropped from auth.drop_expired_sessions_partitions($1::boolean)',
+        const expired = await trx.run(expiredSessionPartitions,
           [dryRun],
         );
-        for (const row of expired.rows) {
+        for (const row of expired) {
           partitions.push({
             table: 'auth.sessions',
             partition: row.partition_name,
@@ -444,15 +438,14 @@ export class PrivacyService {
   }
 
   private async requireMember(
-    trx: Pick<Transaction, 'query'>,
+    trx: Pick<Transaction, 'run'>,
     tenantId: string,
     subjectUserId: string,
   ): Promise<void> {
-    const result = await trx.query<{ allowed: boolean }>(
-      'select exists (select 1 from auth.memberships where tenant_id = $1::uuid and user_id = $2::uuid and is_active = true) as allowed',
+    const result = await trx.run(privacyTenantMembership,
       [tenantId, subjectUserId],
     );
-    if (result.rows[0]?.allowed !== true)
+    if (result[0]?.allowed !== true)
       throw new ForbiddenException('Subject is not an active member of the admitted tenant');
   }
 
@@ -470,30 +463,15 @@ export class PrivacyService {
 
     const schema = fromArchive ? 'archive' : rule.tableSchema;
     const table = fromArchive ? `${rule.tableSchema}_${rule.tableName}` : rule.tableName;
-    const filters: string[] = [];
-    const values: unknown[] = [];
-
-    if (subjectUserId) {
-      values.push(subjectUserId);
-      filters.push(`${quoteIdent(rule.subjectColumn)} = $${values.length}::uuid`);
-    }
-    if (tenantId && rule.tenantColumn) {
-      values.push(tenantId);
-      filters.push(`${quoteIdent(rule.tenantColumn)} = $${values.length}::uuid`);
-    }
-
-    const where = filters.length > 0 ? `where ${filters.join(' and ')}` : '';
-    const result = await trx.query<{ row_json: Record<string, unknown> }>(
-      `
-        select row_to_json(payload) as row_json
-        from (
-          select *
-          from ${quoteIdent(schema)}.${quoteIdent(table)}
-          ${where}
-        ) payload
-      `,
-      values,
-    );
+    const subject = subjectUserId ? privacyIdentifier(rule.subjectColumn) : null;
+    const tenant = tenantId && rule.tenantColumn ? privacyIdentifier(rule.tenantColumn) : null;
+    const values: [] | [string] | [string, string] = subjectUserId
+      ? tenantId && tenant ? [subjectUserId, tenantId] : [subjectUserId]
+      : tenantId && tenant ? [tenantId] : [];
+    const result = await executeConfiguredQuery(trx, 'privacy.export', {
+      schema: privacyIdentifier(schema), table: privacyIdentifier(table),
+      subjectColumn: subject, tenantColumn: tenant,
+    }, values);
     return result.rows.map((row) => row.row_json);
   }
 
@@ -513,37 +491,28 @@ export class PrivacyService {
 
     const schema = onArchive ? 'archive' : rule.tableSchema;
     const table = onArchive ? `${rule.tableSchema}_${rule.tableName}` : rule.tableName;
-    const target = `${quoteIdent(schema)}.${quoteIdent(table)}`;
-    const values: unknown[] = [subjectUserId];
-    if (tenantId) values.push(tenantId);
-    const where = `${quoteIdent(rule.subjectColumn)} = $1::uuid${tenantId ? ` and ${quoteIdent(rule.tenantColumn!)} = $2::uuid` : ''}`;
+    const bindings = {
+      schema: privacyIdentifier(schema), table: privacyIdentifier(table),
+      subjectColumn: privacyIdentifier(rule.subjectColumn),
+      tenantColumn: tenantId ? privacyIdentifier(rule.tenantColumn!) : null,
+    };
+    const values: [string] | [string, string] = tenantId ? [subjectUserId, tenantId] : [subjectUserId];
 
-    await trx.query(`select set_config('app.erasure_strategy', $1, true)`, [rule.strategy]);
+    await executeTypedQuery(trx, setErasureStrategy, [rule.strategy]);
 
     if (rule.strategy === 'delete_row') {
-      const deleted = await trx.query(`delete from ${target} where ${where}`, values);
+      const deleted = await executeConfiguredQuery(trx, 'privacy.erasure-delete', bindings, values);
       return deleted.rowCount ?? 0;
     }
 
-    let assignment = `${quoteIdent(rule.columnName)} = null`;
-    if (rule.strategy === 'tombstone') {
-      values.push(`[erased:${subjectUserId}]`);
-      assignment = `${quoteIdent(rule.columnName)} = $${values.length}`;
-    }
-    if (rule.strategy === 'hash_with_salt') {
-      values.push(this.hashReplacement(rule, subjectUserId, tenantId));
-      assignment = `${quoteIdent(rule.columnName)} = $${values.length}`;
-    }
-
-    const setClauses = [assignment];
-    if (onArchive) {
-      setClauses.push(`${quoteIdent('last_erasure_at')} = clock_timestamp()`);
-    }
-
-    const updated = await trx.query(
-      `update ${target} set ${setClauses.join(', ')} where ${where}`,
-      values,
-    );
+    const updateBindings = { ...bindings, column: privacyIdentifier(rule.columnName), onArchive };
+    let replacement: string | undefined;
+    if (rule.strategy === 'tombstone') replacement = `[erased:${subjectUserId}]`;
+    if (rule.strategy === 'hash_with_salt') replacement = this.hashReplacement(rule, subjectUserId, tenantId);
+    const updated = replacement === undefined
+      ? await executeConfiguredQuery(trx, 'privacy.erasure-null', updateBindings, values)
+      : await executeConfiguredQuery(trx, 'privacy.erasure-replace', updateBindings,
+        tenantId ? [subjectUserId, tenantId, replacement] : [subjectUserId, replacement]);
     return updated.rowCount ?? 0;
   }
 

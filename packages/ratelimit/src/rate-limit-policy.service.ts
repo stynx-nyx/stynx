@@ -1,3 +1,4 @@
+import { rateLimitOverride, rateLimitPlatformConfig, type OverrideRow, type ConfigValue } from './rate-limit-policy.repository.js';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { Database } from '@stynx-nyx/data';
 import { STYNX_RATE_LIMIT_OPTIONS } from './constants.js';
@@ -8,18 +9,6 @@ import type {
   ResolvedRateLimitPolicy,
 } from './types.js';
 import type { RequestLike } from './request-context.js';
-
-interface ConfigRow {
-  value: {
-    limit?: number;
-    windowSeconds?: number;
-  };
-}
-
-interface OverrideRow {
-  limit_value: number;
-  window_seconds: number;
-}
 
 @Injectable()
 export class DatabaseRateLimitPolicyResolver implements RateLimitPolicyResolver {
@@ -70,25 +59,17 @@ export class DatabaseRateLimitPolicyResolver implements RateLimitPolicyResolver 
     return database.withSystemContext('rate limit policy override lookup', async () =>
       database.tx(
         async (trx) => {
-          const result = await trx.query<OverrideRow>(
-            `
-              select limit_value, window_seconds
-              from core.rate_limit_overrides
-              where tenant_id = $1::uuid
-                and scope = $2
-              order by updated_at desc
-              limit 1
-            `,
+          const result = await trx.run(rateLimitOverride,
             [tenantId, scope],
           );
-          return result.rows[0] ?? null;
+          return result[0] ?? null;
         },
         { role: 'owner', readonly: true, replica: false },
       ),
     );
   }
 
-  private async lookupPlatformConfig(scope: string): Promise<ConfigRow['value'] | null> {
+  private async lookupPlatformConfig(scope: string): Promise<ConfigValue | null> {
     if (!this.database) {
       return null;
     }
@@ -98,18 +79,11 @@ export class DatabaseRateLimitPolicyResolver implements RateLimitPolicyResolver 
       database.tx(
         async (trx) => {
           for (const key of keys) {
-            const result = await trx.query<ConfigRow>(
-              `
-                select value
-                from core.config
-                where key = $1
-                  and tenant_id is null
-                limit 1
-              `,
+            const result = await trx.run(rateLimitPlatformConfig,
               [key],
             );
-            if (result.rows[0]?.value) {
-              return result.rows[0].value;
+            if (result[0]?.value) {
+              return result[0].value;
             }
           }
           return null;

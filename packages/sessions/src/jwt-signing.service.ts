@@ -35,44 +35,32 @@ function validateKeySet(value: unknown): StynxSessionSigningKeySet {
     throw new SessionSigningKeyError('Session key material is missing');
   }
 
-  const parsed = value as {
-    currentKid?: unknown;
-    keys?: unknown;
-  };
-
-  if (typeof parsed.currentKid !== 'string' || parsed.currentKid.length === 0) {
+  if (!('currentKid' in value) || typeof value.currentKid !== 'string' || value.currentKid.length === 0) {
     throw new SessionSigningKeyError('Session key material is missing currentKid');
   }
-  if (!Array.isArray(parsed.keys) || parsed.keys.length === 0) {
+  if (!('keys' in value) || !Array.isArray(value.keys) || value.keys.length === 0) {
     throw new SessionSigningKeyError('Session key material has no keys');
   }
 
   return {
-    currentKid: parsed.currentKid,
-    keys: parsed.keys.map((entry) => {
+    currentKid: value.currentKid,
+    keys: value.keys.map((entry: unknown) => {
       if (!entry || typeof entry !== 'object') {
         throw new SessionSigningKeyError('Session signing key entry is invalid');
       }
-      const key = entry as {
-        kid?: unknown;
-        publicKeyPem?: unknown;
-        privateKeyPem?: unknown;
-        activatesAt?: unknown;
-        expiresAt?: unknown;
-      };
       if (
-        typeof key.kid !== 'string'
-        || typeof key.publicKeyPem !== 'string'
-        || typeof key.privateKeyPem !== 'string'
+        !('kid' in entry) || typeof entry.kid !== 'string'
+        || !('publicKeyPem' in entry) || typeof entry.publicKeyPem !== 'string'
+        || !('privateKeyPem' in entry) || typeof entry.privateKeyPem !== 'string'
       ) {
         throw new SessionSigningKeyError('Session signing key entry is incomplete');
       }
       return {
-        kid: key.kid,
-        publicKeyPem: key.publicKeyPem,
-        privateKeyPem: key.privateKeyPem,
-        ...(typeof key.activatesAt === 'string' ? { activatesAt: key.activatesAt } : {}),
-        ...(typeof key.expiresAt === 'string' ? { expiresAt: key.expiresAt } : {}),
+        kid: entry.kid,
+        publicKeyPem: entry.publicKeyPem,
+        privateKeyPem: entry.privateKeyPem,
+        ...('activatesAt' in entry && typeof entry.activatesAt === 'string' ? { activatesAt: entry.activatesAt } : {}),
+        ...('expiresAt' in entry && typeof entry.expiresAt === 'string' ? { expiresAt: entry.expiresAt } : {}),
       };
     }),
   };
@@ -158,7 +146,14 @@ export class SessionJwtSigningService {
     const resolvedKeys = keySet.keys.map((entry) => {
       const privateKey = createPrivateKey(entry.privateKeyPem);
       const publicKey = createPublicKey(entry.publicKeyPem);
-      const jwk = publicKey.export({ format: 'jwk' }) as Record<string, string | undefined>;
+      const exported = publicKey.export({ format: 'jwk' });
+      const jwk: Record<string, string | undefined> = {};
+      for (const [name, value] of Object.entries(exported)) {
+        if (value !== undefined && typeof value !== 'string') {
+          throw new SessionSigningKeyError('Session public key contains unsupported JWK metadata');
+        }
+        jwk[name] = value;
+      }
       return {
         kid: entry.kid,
         privateKey,
@@ -191,6 +186,7 @@ export class SessionJwtSigningService {
     }
 
     const raw = await this.secretLoader.getSecretString(this.options.jwt.secretId);
-    return validateKeySet(JSON.parse(raw) as unknown);
+    const parsed: unknown = JSON.parse(raw);
+    return validateKeySet(parsed);
   }
 }

@@ -1,3 +1,5 @@
+import { identityUsername, upsertIdentityRole, upsertIdentityUser, insertIdentityMembership } from './identity-sync.repository.js';
+import { bindQueryContext, executeTypedQuery, executeConfiguredQuery } from '@stynx-nyx/data';
 import type {
   IdentityAdminAdapter,
   IdentityGroupMeta,
@@ -75,10 +77,6 @@ function buildSyncRecord(params: {
   };
 }
 
-function toRows<T>(result: QueryResult<T>): T[] {
-  return Array.isArray(result) ? result : result.rows;
-}
-
 function isUuid(value: string | undefined | null): value is string {
   if (!value) return false;
   return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
@@ -129,12 +127,7 @@ async function defaultResolveUsernameByUserId(
   userId: string,
   db: IdentityLocalSyncSqlExecutor,
 ): Promise<string | undefined> {
-  const rows = toRows(
-    await db.query<{ external_id?: string | null }>(
-      'SELECT external_id FROM auth.users WHERE user_id = $1',
-      [userId],
-    ),
-  );
+  const rows = await executeTypedQuery(bindQueryContext(db), identityUsername, [userId]);
   const externalId = rows[0]?.external_id;
   if (typeof externalId !== 'string' || externalId.trim().length === 0) {
     return undefined;
@@ -331,17 +324,7 @@ export class PgIdentityLocalSyncAdapter implements IdentityLocalSyncAdapter {
 
         const roleCode = this.roleCodeFromGroupName(groupName);
         const roleDescription = this.roleDescriptionFromGroup(group);
-        const roleRows = toRows(
-          await this.options.db.query<{ role_id: string }>(
-            `INSERT INTO auth.roles (code, description)
-             VALUES ($1, $2)
-             ON CONFLICT (code) DO UPDATE
-               SET description = COALESCE(EXCLUDED.description, description)
-             RETURNING role_id`,
-            [roleCode, roleDescription],
-            client,
-          ),
-        );
+        const roleRows = await executeTypedQuery(bindQueryContext(this.options.db, client), upsertIdentityRole, [roleCode, roleDescription]);
         const roleId = roleRows[0]?.role_id;
         if (!roleId) continue;
         roleIdsByGroupName.set(groupName, roleId);
@@ -360,22 +343,7 @@ export class PgIdentityLocalSyncAdapter implements IdentityLocalSyncAdapter {
           ...(record.email !== undefined ? { email: record.email } : {}),
         });
 
-        await this.options.db.query(
-          `INSERT INTO auth.users (
-             user_id,
-             external_id,
-             email,
-             display_name,
-             status,
-             meta
-           )
-           VALUES ($1, $2, $3, $4, $5, $6::jsonb)
-           ON CONFLICT (user_id) DO UPDATE
-             SET external_id = EXCLUDED.external_id,
-                 email = EXCLUDED.email,
-                 display_name = EXCLUDED.display_name,
-                 status = COALESCE(EXCLUDED.status, status),
-                 meta = EXCLUDED.meta`,
+        await executeTypedQuery(bindQueryContext(this.options.db, client), upsertIdentityUser,
           [
             record.userId,
             record.username,
@@ -390,7 +358,6 @@ export class PgIdentityLocalSyncAdapter implements IdentityLocalSyncAdapter {
               groups: record.groups,
             }),
           ],
-          client,
         );
         usersUpserted += 1;
 
@@ -398,12 +365,8 @@ export class PgIdentityLocalSyncAdapter implements IdentityLocalSyncAdapter {
         for (const groupName of record.groups) {
           const roleId = roleIdsByGroupName.get(groupName);
           if (!roleId || seenRoleIds.has(roleId)) continue;
-          await this.options.db.query(
-            `INSERT INTO auth.user_roles (user_id, role_id)
-             VALUES ($1, $2)
-             ON CONFLICT DO NOTHING`,
+          await executeTypedQuery(bindQueryContext(this.options.db, client), insertIdentityMembership,
             [record.userId, roleId],
-            client,
           );
           seenRoleIds.add(roleId);
           memberships += 1;
@@ -445,22 +408,7 @@ export async function loadPormRoleMetaRows(
 ): Promise<IdentityGroupMetaRow[]> {
   const viewName = options.viewName ?? 'porm.v_enum';
   const roleDomain = options.roleDomain ?? 'org_role';
-  const rows = toRows(
-    await db.query<{
-      code: string;
-      label?: string | null;
-      icon?: string | null;
-      meta?: Record<string, unknown> | null;
-      sort_order?: number | null;
-      order?: number | null;
-    }>(
-      `SELECT code, label, icon, meta, sort_order, "order"
-         FROM ${viewName}
-        WHERE domain = $1
-        ORDER BY "order", code`,
-      [roleDomain],
-    ),
-  );
+  const { rows } = await executeConfiguredQuery(db, 'identity.role-metadata', { viewName }, [roleDomain]);
 
   return rows.map((row) => ({
     code: row.code,

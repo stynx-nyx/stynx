@@ -1,3 +1,4 @@
+import { executeConfiguredQuery } from '@stynx-nyx/data';
 import type {
   IdempotencyDecisionContext,
   IdempotencySqlExecutor,
@@ -69,21 +70,7 @@ export class PgIdempotencyStore implements IdempotencyStore {
   async lookup(context: IdempotencyDecisionContext): Promise<IdempotencyStoredEntry | null> {
     if (!context.tenantId) return null;
 
-    const result = await this.options.executor.query<{
-      requestFingerprint: string;
-      statusCode: number | null;
-      responseBody: unknown;
-      expiresAt: string;
-    }>(
-      `SELECT ${this.fingerprintColumn} AS "requestFingerprint",
-              ${this.statusCodeColumn} AS "statusCode",
-              ${this.bodyColumn} AS "responseBody",
-              ${this.expiresAtColumn} AS "expiresAt"
-         FROM ${this.table}
-        WHERE ${this.tenantColumn}::text = $1
-          AND ${this.keyColumn} = $2
-          AND ${this.expiresAtColumn} > now()
-        LIMIT 1`,
+    const result = await executeConfiguredQuery(this.options.executor, 'idempotency.lookup', this.identifierBindings(),
       [context.tenantId, context.idempotencyKey],
     );
     const rows = toRows(result);
@@ -96,34 +83,14 @@ export class PgIdempotencyStore implements IdempotencyStore {
       requestFingerprint: row.requestFingerprint,
       statusCode: row.statusCode ?? 200,
       body,
-      expiresAt: Date.parse(row.expiresAt),
+      expiresAt: Date.parse(String(row.expiresAt)),
     };
   }
 
   async reserve(context: IdempotencyDecisionContext): Promise<boolean> {
     if (!context.tenantId) return false;
     const ttlSeconds = Math.max(1, Math.floor(context.ttlMs / 1000));
-    const result = await this.options.executor.query<{ reserved: number }>(
-      `INSERT INTO ${this.table} (
-         id,
-         ${this.tenantColumn},
-         ${this.keyColumn},
-         ${this.fingerprintColumn},
-         ${this.statusCodeColumn},
-         ${this.bodyColumn},
-         ${this.expiresAtColumn}
-       )
-       VALUES (
-         gen_random_uuid(),
-         $1::uuid,
-         $2,
-         $3,
-         NULL,
-         NULL,
-         now() + make_interval(secs => $4::int)
-       )
-       ON CONFLICT (${this.tenantColumn}, ${this.keyColumn}) DO NOTHING
-       RETURNING 1 AS reserved`,
+    const result = await executeConfiguredQuery(this.options.executor, 'idempotency.reserve', this.identifierBindings(),
       [
         context.tenantId,
         context.idempotencyKey,
@@ -143,14 +110,7 @@ export class PgIdempotencyStore implements IdempotencyStore {
     if (!context.tenantId) return false;
     const ttlSeconds = Math.max(1, Math.floor(context.ttlMs / 1000));
     const responseBody = body === undefined ? null : body;
-    const result = await this.options.executor.query(
-      `UPDATE ${this.table}
-          SET ${this.statusCodeColumn} = $4,
-              ${this.bodyColumn} = $5::jsonb,
-              ${this.expiresAtColumn} = now() + make_interval(secs => $6::int)
-        WHERE ${this.tenantColumn}::text = $1
-          AND ${this.keyColumn} = $2
-          AND ${this.fingerprintColumn} = $3`,
+    const result = await executeConfiguredQuery(this.options.executor, 'idempotency.complete', this.identifierBindings(),
       [
         context.tenantId,
         context.idempotencyKey,
@@ -160,19 +120,22 @@ export class PgIdempotencyStore implements IdempotencyStore {
         ttlSeconds,
       ],
     );
-    const rowCount = Array.isArray(result) ? result.length : (result.rowCount ?? 0);
+    const rowCount = result.rowCount ?? 0;
     return rowCount > 0;
   }
 
   async clearReservation(context: IdempotencyDecisionContext): Promise<void> {
     if (!context.tenantId) return;
-    await this.options.executor.query(
-      `DELETE FROM ${this.table}
-        WHERE ${this.tenantColumn}::text = $1
-          AND ${this.keyColumn} = $2
-          AND ${this.fingerprintColumn} = $3
-          AND ${this.bodyColumn} IS NULL`,
+    await executeConfiguredQuery(this.options.executor, 'idempotency.clear', this.identifierBindings(),
       [context.tenantId, context.idempotencyKey, context.requestFingerprint],
     );
   }
+  private identifierBindings() {
+    return {
+      table: this.table, tenantColumn: this.tenantColumn, keyColumn: this.keyColumn,
+      fingerprintColumn: this.fingerprintColumn, statusCodeColumn: this.statusCodeColumn,
+      bodyColumn: this.bodyColumn, expiresAtColumn: this.expiresAtColumn,
+    };
+  }
+
 }

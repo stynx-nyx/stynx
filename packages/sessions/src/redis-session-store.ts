@@ -18,6 +18,11 @@ import type {
   SessionRevocationEntry,
 } from './types.js';
 import { SessionConflictError, SessionExchangeError } from './errors.js';
+import {
+  parseRedisPolicyReply,
+  parseRedisRefreshLookup,
+  parseRedisSessionRecord,
+} from './redis-session-validation.js';
 
 const CREATE_WITH_POLICY = `
 local prefix, recordJson, mode, priorSid = ARGV[1], ARGV[2], ARGV[3], ARGV[4]
@@ -89,13 +94,6 @@ function revocationScore(isoTimestamp: string): number {
   return Number.isFinite(millis) ? millis : Date.now();
 }
 
-function parseJson<T>(value: string | null): T | null {
-  if (!value) {
-    return null;
-  }
-  return JSON.parse(value) as T;
-}
-
 /**
  * Client type for the RESP2-pinned connection created below. node-redis 6
  * defaults the RESP generic to 3, so the field annotation must say 2 as well.
@@ -159,10 +157,9 @@ export class RedisSessionStore implements SessionStore, OnModuleInit, OnModuleDe
       ],
     });
     if (typeof reply !== 'string') throw new Error('Invalid Redis policy reply');
-    const result = JSON.parse(reply) as { error?: string; revoked?: SessionRecord[] };
+    const result = parseRedisPolicyReply(reply);
     if (result.error === 'conflict') throw new SessionConflictError();
     if (result.error === 'prior') throw new SessionExchangeError('SESSION_NOT_ACTIVE', 'Prior session is not active');
-    if (result.revoked && !Array.isArray(result.revoked)) throw new Error('Invalid Redis policy result');
     return { created: record, revoked: result.revoked ?? [] };
   }
 
@@ -173,11 +170,11 @@ export class RedisSessionStore implements SessionStore, OnModuleInit, OnModuleDe
   }
 
   async getSession(sid: string): Promise<SessionRecord | null> {
-    return parseJson<SessionRecord>(await this.getClient().get(this.sessionKey(sid)));
+    return parseRedisSessionRecord(await this.getClient().get(this.sessionKey(sid)));
   }
 
   async lookupRefreshToken(hash: string): Promise<RefreshTokenLookup | null> {
-    return parseJson<RefreshTokenLookup>(await this.getClient().get(this.refreshLookupKey(hash)));
+    return parseRedisRefreshLookup(await this.getClient().get(this.refreshLookupKey(hash)));
   }
 
   async rotateRefreshToken(

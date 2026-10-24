@@ -161,7 +161,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
       return `[${value.map((item) => this.stableStringify(item)).join(',')}]`;
     }
     if (typeof value === 'object') {
-      const entries = Object.entries(value as Record<string, unknown>)
+      const entries = Object.entries(value)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(
           ([key, entry]) =>
@@ -273,7 +273,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     idempotencyKey: string,
     requestFingerprint: string,
   ): Promise<CachedResponse> {
-    const body = await firstValueFrom(next.handle());
+    const body: unknown = await firstValueFrom(next.handle());
     const statusCode = response.statusCode ?? 200;
     response.setHeader(this.options.replayKeyHeaderName, idempotencyKey);
     const entry: CachedResponse = {
@@ -365,7 +365,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
       }
 
       try {
-        const body = await firstValueFrom(next.handle());
+        const body: unknown = await firstValueFrom(next.handle());
         const statusCode = response.statusCode ?? 200;
         response.setHeader(this.options.replayKeyHeaderName, idempotencyKey);
         const persisted = await this.durableStore!.persistResponse(
@@ -442,7 +442,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
       );
     }
 
-    const body = await firstValueFrom(next.handle());
+    const body: unknown = await firstValueFrom(next.handle());
     const statusCode = response.statusCode ?? 200;
     response.setHeader(this.options.replayKeyHeaderName, context.idempotencyKey);
     this.cache.set(cacheKey, {

@@ -1,8 +1,9 @@
+import { lockReconciliationReservation, replayReconciliation, claimReconciliationNumber, touchReconciliationReservation, reconciliationConsumption, appendReconciliation, listReconciliations } from './reconciliation.repository.js';
 import { randomUUID } from 'node:crypto';
 import type { Database, Transaction } from '@stynx-nyx/data';
 import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection.js';
 import { OfflineSyncError, OfflineSyncUpgradeRequiredError } from './errors.js';
-import { decodeCursor, finishPage, pgSortInstant } from './listing.js';
+import { decodeCursor, finishPage } from './listing.js';
 import {
   reconciliationConflict,
   reconciliationList,
@@ -10,7 +11,6 @@ import {
   reconciliationResult,
 } from './reconciliation.js';
 import type {
-  CTG9NumberingReservation,
   ListNumberingReconciliationsInput,
   NumberingConsumptionEntry,
   NumberingReconciliationRecord,
@@ -20,18 +20,7 @@ import type {
   TrustedOfflineSyncScope,
 } from './types.js';
 
-type HistoryRow = {
-  id: string;
-  tenant_id: string;
-  reservation_id: string;
-  actor_id: string;
-  created_at: string;
-  claimed_numbers: string[];
-  user_ref: string | null;
-  idempotency_key: string | null;
-  request_fingerprint: string | null;
-  result_json: ReconcileNumberingResult;
-};
+
 
 async function transaction<T>(
   database: Database,
@@ -40,7 +29,7 @@ async function transaction<T>(
   try {
     return await database.tx(action);
   } catch (error) {
-    if (['42P01', '42703'].includes((error as { code?: string }).code ?? ''))
+    if (typeof error === 'object' && error !== null && 'code' in error && (error.code === '42P01' || error.code === '42703'))
       throw new OfflineSyncUpgradeRequiredError('0009');
     throw error;
   }
@@ -58,17 +47,10 @@ export async function pgReconcile(
   const request = reconciliationRequest(scope, input);
   return transaction(database, async (trx) => {
     const reservation = (
-      await trx.query<{
-        start_number: string;
-        end_number: string;
-        status: CTG9NumberingReservation['status'];
-        valid_until: string;
-      }>(
-        `select start_number,end_number,status,${pgSortInstant('valid_until')} as valid_until
-      from offline.numbering_reservations where tenant_id=$1::uuid and id=$2::uuid for update`,
+      await trx.run(lockReconciliationReservation,
         [scope.tenantId, id],
       )
-    ).rows[0];
+    );
     if (!reservation)
       throw new OfflineSyncError(
         'OFFLINE_SYNC_RESERVATION_NOT_FOUND',
@@ -77,12 +59,10 @@ export async function pgReconcile(
       );
     if (input.idempotencyKey !== undefined) {
       const replay = (
-        await trx.query<Pick<HistoryRow, 'request_fingerprint' | 'result_json'>>(
-          `select request_fingerprint,result_json from offline.numbering_reconciliations
-         where tenant_id=$1::uuid and reservation_id=$2::uuid and idempotency_key=$3`,
+        await trx.run(replayReconciliation,
           [scope.tenantId, id, input.idempotencyKey],
         )
-      ).rows[0];
+      );
       if (replay) {
         if (replay.request_fingerprint !== request.fingerprint) reconciliationConflict();
         return replay.result_json;
@@ -101,29 +81,17 @@ export async function pgReconcile(
       );
     if (reservation.status === 'reserved') {
       for (const number of request.claimedNumbers)
-        await trx.query(
-          `insert into offline.numbering_consumption (tenant_id,reservation_id,number,status)
-          values ($1::uuid,$2::uuid,$3,'claimed-locally') on conflict (tenant_id,reservation_id,number) do update
-          set status=case when offline.numbering_consumption.status='available' then 'claimed-locally' else offline.numbering_consumption.status end`,
+        await trx.run(claimReconciliationNumber,
           [scope.tenantId, id, number],
         );
-      await trx.query(
-        `update offline.numbering_reservations set audit_actor_id=$3,updated_at=$4::timestamptz
-        where tenant_id=$1::uuid and id=$2::uuid`,
+      await trx.run(touchReconciliationReservation,
         [scope.tenantId, id, scope.actorId, now],
       );
     }
-    const rows = await trx.query<{
-      number: string;
-      status: NumberingConsumptionEntry['status'];
-      server_entity_id: string | null;
-      finalized_at: string | null;
-    }>(
-      `select number,status,server_entity_id,${pgSortInstant('finalized_at')} as finalized_at from offline.numbering_consumption
-       where tenant_id=$1::uuid and reservation_id=$2::uuid`,
+    const rows = await trx.run(reconciliationConsumption,
       [scope.tenantId, id],
     );
-    const overrides = new Map(rows.rows.map((entry) => [Number(entry.number), entry]));
+    const overrides = new Map(rows.map((entry) => [Number(entry.number), entry]));
     const entries: NumberingConsumptionEntry[] = [];
     for (
       let number = Number(reservation.start_number);
@@ -152,10 +120,7 @@ export async function pgReconcile(
       request.claimedNumbers,
       reconciliationId,
     );
-    await trx.query(
-      `insert into offline.numbering_reconciliations
-      (id,tenant_id,reservation_id,actor_id,created_at,claimed_numbers,user_ref,idempotency_key,request_fingerprint,result_json)
-      values ($1::uuid,$2::uuid,$3::uuid,$4,$5::timestamptz,$6::bigint[],$7,$8,$9,$10::jsonb)`,
+    await trx.run(appendReconciliation,
       [
         reconciliationId,
         scope.tenantId,
@@ -182,15 +147,10 @@ export async function pgListReconciliations(
   const after = decodeCursor(input.cursor, 2);
   return transaction(database, async (trx) => {
     const rows = (
-      await trx.query<HistoryRow>(
-        `select id,tenant_id,reservation_id,actor_id,${pgSortInstant('created_at')} as created_at,
-      claimed_numbers,user_ref,idempotency_key,request_fingerprint,result_json from offline.numbering_reconciliations
-      where tenant_id=$1::uuid and reservation_id=$2::uuid
-        and ($3::timestamptz is null or (created_at,id) < ($3::timestamptz,$4::uuid))
-      order by created_at desc,id desc limit $5`,
+      await trx.run(listReconciliations,
         [scope.tenantId, input.reservationId, after?.[0] ?? null, after?.[1] ?? null, limit + 1],
       )
-    ).rows;
+    );
     return finishPage(
       rows.map((row) => ({
         key: [row.created_at, row.id],

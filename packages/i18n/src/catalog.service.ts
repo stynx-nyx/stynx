@@ -1,3 +1,4 @@
+import { readOverrideSettings } from './i18n.repository.js';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { Inject, Injectable } from '@nestjs/common';
@@ -90,11 +91,10 @@ export class CatalogService {
     const database = this.moduleRef.get(Database, { strict: false });
     return database.txIndependent(
       async (trx) => {
-        const result = await trx.query<{ settings: Record<string, unknown> | null }>(
-          `select settings from tenancy.tenant_settings where tenant_id = $1::uuid limit 1`,
+        const result = await trx.run(readOverrideSettings,
           [tenantId],
         );
-        const settings = result.rows[0]?.settings ?? {};
+        const settings = result[0]?.settings ?? {};
         return Object.fromEntries(
           Object.entries(settings).filter(([entryKey]) => entryKey.startsWith('i18n.override.')),
         ) as Record<string, string>;

@@ -1,3 +1,6 @@
+/** Raw PostgreSQL timestamp result; numeric values are only positive/negative Infinity. Date includes Invalid Date. */
+export type InboxTimestampResult = Date | string | number;
+
 export type NotificationChannel = 'email' | 'sms' | 'push' | 'inapp';
 
 export const NOTIFICATION_CHANNELS: readonly NotificationChannel[] = [
@@ -113,9 +116,9 @@ export interface InboxItem {
   title: string;
   body: string;
   locale: string;
-  readAt?: string;
-  dismissedAt?: string;
-  createdAt: string;
+  readAt?: InboxTimestampResult | null;
+  dismissedAt?: InboxTimestampResult | null;
+  createdAt: InboxTimestampResult;
 }
 
 export interface InboxQuery {

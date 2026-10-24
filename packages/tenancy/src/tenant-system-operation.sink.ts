@@ -1,3 +1,5 @@
+import { executeTypedQuery } from '@stynx-nyx/data';
+import { recordSystemOperation } from './tenancy.repository.js';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
@@ -14,11 +16,7 @@ export class TenantSystemOperationSink implements SystemOperationSink {
 
     const database = this.requireDatabase();
     await database.tx(async (trx) => {
-      await trx.query(
-        `
-          insert into audit.system_op (occurred_at, reason, actor_id, request_id, payload)
-          values ($1::timestamptz, $2, $3::uuid, $4, $5::jsonb)
-        `,
+      await executeTypedQuery(trx, recordSystemOperation,
         [
           record.occurredAt,
           record.reason,

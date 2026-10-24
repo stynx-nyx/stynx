@@ -48,10 +48,10 @@ export class PgTenantDbClientLifecycle implements RequestDbClientLifecycle {
   }
 
   async release(context: RequestDbClientReleaseContext): Promise<void> {
-    const candidate = context.client as Record<string, unknown>;
-    const release = candidate[this.releaseMethodName];
+    const release = readProperty(context.client, this.releaseMethodName);
     if (typeof release === 'function') {
-      await (release as () => Promise<void> | void).call(context.client);
+      const result: unknown = Reflect.apply(release, context.client, []);
+      await result;
     }
   }
 }
@@ -85,7 +85,10 @@ export class ResponseEventRequestDbClientLifecycle implements RequestDbClientLif
   }
 
   async release(context: RequestDbClientReleaseContext): Promise<void> {
-    const requestState = context.request as unknown as Record<PropertyKey, unknown>;
+    const requestState = context.request;
+    if (!isPropertyRecord(requestState)) {
+      throw new TypeError('Request lifecycle state requires an object');
+    }
     if (requestState[RELEASED_BY_RESPONSE_EVENT]) {
       return;
     }
@@ -122,13 +125,47 @@ export class ResponseEventRequestDbClientLifecycle implements RequestDbClientLif
 }
 
 function defaultResponseResolver(request: RequestLike): ResponseLike | undefined {
-  const direct = request.response as ResponseLike | undefined;
-  if (direct && typeof direct.once === 'function') {
-    return direct;
+  const direct = request.response;
+  if (direct && typeof readProperty(direct, 'once') === 'function') {
+    return responseAdapter(direct);
   }
-  const nested = request.res as ResponseLike | undefined;
-  if (nested && typeof nested.once === 'function') {
-    return nested;
+  const nested = request.res;
+  if (nested && typeof readProperty(nested, 'once') === 'function') {
+    return responseAdapter(nested);
   }
   return undefined;
+}
+
+function isPropertyRecord(value: unknown): value is Record<PropertyKey, unknown> {
+  return (typeof value === 'object' && value !== null) || typeof value === 'function';
+}
+
+function readProperty(value: unknown, key: PropertyKey): unknown {
+  if (value === null || value === undefined) {
+    throw new TypeError(`Cannot read properties of ${String(value)} (reading '${String(key)}')`);
+  }
+  const boxed: unknown = Object(value);
+  if (!isPropertyRecord(boxed)) {
+    throw new TypeError('Lifecycle property receiver could not be boxed');
+  }
+  return Reflect.get(boxed, key, value);
+}
+
+function responseAdapter(response: unknown): ResponseLike {
+  return {
+    get finished() {
+      return Boolean(readProperty(response, 'finished'));
+    },
+    get writableEnded() {
+      return Boolean(readProperty(response, 'writableEnded'));
+    },
+    once(event, listener): unknown {
+      const once = readProperty(response, 'once');
+      if (typeof once !== 'function') {
+        throw new TypeError('Response once is not a function');
+      }
+      const result: unknown = Reflect.apply(once, response, [event, listener]);
+      return result;
+    },
+  };
 }

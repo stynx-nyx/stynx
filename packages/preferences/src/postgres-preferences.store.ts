@@ -3,21 +3,11 @@ import { ModuleRef } from '@nestjs/core';
 import { Database, STYNX_DATABASE } from '@stynx-nyx/data';
 import type {
   PreferenceMutation,
-  PreferenceOverrides,
   PreferencesStore,
   StoredSubjectPreferences,
   TrustedPreferenceScope,
 } from './types.js';
-interface Row {
-  tenant_id: string;
-  subject_id: string;
-  display_name: string | null;
-  avatar_document_id: string | null;
-  preference_overrides: PreferenceOverrides;
-  revision: string | number;
-  created_at: string | Date;
-  updated_at: string | Date;
-}
+import { insertPreferences, readPreferences, updatePreferences, type PreferencesRow } from './preferences.repository.js';
 @Injectable()
 export class PostgresPreferencesStore implements PreferencesStore {
   constructor(private readonly moduleRef: ModuleRef) {}
@@ -26,11 +16,11 @@ export class PostgresPreferencesStore implements PreferencesStore {
       { tenantId: scope.tenantId, actorId: scope.subjectId },
       () => this.database.tx(
       async (trx) => {
-        const result = await trx.query<Row>(
-          'select tenant_id, subject_id, display_name, avatar_document_id, preference_overrides, revision, created_at, updated_at from profile.subject_preferences where tenant_id = $1::uuid and subject_id = $2',
+        const result = await trx.run(
+          readPreferences,
           [scope.tenantId, scope.subjectId],
         );
-        return result.rows[0] ? this.map(result.rows[0]) : null;
+        return result[0] ? this.map(result[0]) : null;
       },
         { readonly: true },
       ),
@@ -42,8 +32,8 @@ export class PostgresPreferencesStore implements PreferencesStore {
       () => this.database.tx(async (trx) => {
       const result =
         input.expectedRevision === 0
-          ? await trx.query<Row>(
-              `insert into profile.subject_preferences (tenant_id, subject_id, display_name, avatar_document_id, preference_overrides, revision) values ($1::uuid,$2,$3,$4,$5::jsonb,1) on conflict (tenant_id,subject_id) do nothing returning *`,
+          ? await trx.run(
+              insertPreferences,
               [
                 input.scope.tenantId,
                 input.scope.subjectId,
@@ -52,8 +42,8 @@ export class PostgresPreferencesStore implements PreferencesStore {
                 JSON.stringify(input.overrides),
               ],
             )
-          : await trx.query<Row>(
-              `update profile.subject_preferences set display_name=$3, avatar_document_id=$4, preference_overrides=$5::jsonb, revision=revision+1, updated_at=clock_timestamp() where tenant_id=$1::uuid and subject_id=$2 and revision=$6 returning *`,
+          : await trx.run(
+              updatePreferences,
               [
                 input.scope.tenantId,
                 input.scope.subjectId,
@@ -63,11 +53,11 @@ export class PostgresPreferencesStore implements PreferencesStore {
                 input.expectedRevision,
               ],
             );
-      return result.rows[0] ? this.map(result.rows[0]) : 'conflict';
+      return result[0] ? this.map(result[0]) : 'conflict';
       }),
     );
   }
-  private map(row: Row): StoredSubjectPreferences {
+  private map(row: PreferencesRow): StoredSubjectPreferences {
     return {
       scope: { tenantId: row.tenant_id, subjectId: row.subject_id },
       displayName: row.display_name,

@@ -1,12 +1,5 @@
-import type { PoolClient } from 'pg';
 import { z } from 'zod';
-import {
-  NotFoundError,
-  QueryArgumentError,
-  QueryCardinalityError,
-  QueryRowValidationError,
-  type QueryIssue,
-} from './errors.js';
+export { executeTypedQuery } from './checked-executor.js';
 
 /** Row count a typed query promises (02 §3, D-030). */
 export type Expects = 'one' | 'zero-or-one' | 'many' | 'none';
@@ -69,6 +62,7 @@ export function defineQuery<P extends z.ZodTuple, R extends z.ZodObject, E exten
   if (!EXPECTS.includes(query.expects)) {
     throw new TypeError(`defineQuery(${query.name}): expects must be one of ${EXPECTS.join(', ')}`);
   }
+  assertQueryPlaceholders(query.text, query.params, query.name);
   return Object.freeze({
     name: query.name,
     text: query.text,
@@ -94,67 +88,56 @@ export function sql(strings: TemplateStringsArray, ...holes: never[]): string {
   return text;
 }
 
-function toIssues(error: z.ZodError): QueryIssue[] {
-  // Path and code only: zod messages and inputs may carry argument or row contents.
-  return error.issues.map((issue) => ({
-    path: issue.path.map((segment) => (typeof segment === 'number' ? segment : String(segment))),
-    code: issue.code,
-  }));
-}
 
-/**
- * The single checked executor behind `Transaction.run`: parses the arguments before any SQL
- * is sent, binds them as `$n`, checks the row count, and validates every row.
- *
- * @internal
- */
-export async function executeTypedQuery<Q extends TypedQuery>(
-  client: Pick<PoolClient, 'query'>,
-  query: Q,
-  params: z.input<Q['params']>,
-): Promise<ResultOf<Q>> {
-  const parsedParams = query.params.safeParse(params);
-  if (!parsedParams.success) {
-    throw new QueryArgumentError(query.name, toIssues(parsedParams.error));
-  }
-
-  const result = await client.query<Record<string, unknown>>(query.text, [...parsedParams.data]);
-  const rows = result.rows;
-
-  const count = rows.length;
-  const expects: Expects = query.expects;
-  if (expects === 'one' && count === 0) {
-    throw new NotFoundError({ query: query.name });
-  }
-  if (
-    (expects === 'none' && count > 0) ||
-    ((expects === 'one' || expects === 'zero-or-one') && count > 1)
-  ) {
-    throw new QueryCardinalityError(query.name, expects, count);
-  }
-
-  const parsedRows = rows.map((row, rowIndex) => {
-    const parsed = query.row.safeParse(row);
-    if (!parsed.success) {
-      throw new QueryRowValidationError(query.name, rowIndex, toIssues(parsed.error));
+/** PostgreSQL lexical scan: quoted text and nested comments do not bind arguments. */
+function assertQueryPlaceholders(text: string, params: z.ZodTuple, name: string): void {
+  const positions = new Set<number>();
+  for (let offset = 0; offset < text.length;) {
+    const remaining = text.slice(offset);
+    if (remaining.startsWith('--')) {
+      const end = text.indexOf('\n', offset + 2);
+      offset = end < 0 ? text.length : end + 1;
+    } else if (remaining.startsWith('/*')) {
+      let depth = 1;
+      offset += 2;
+      while (offset < text.length && depth > 0) {
+        if (text.startsWith('/*', offset)) { depth += 1; offset += 2; }
+        else if (text.startsWith('*/', offset)) { depth -= 1; offset += 2; }
+        else offset += 1;
+      }
+    } else if (text[offset] === "'" || text[offset] === '"') {
+      const quote = text[offset++];
+      const escaped = quote === "'" && /[eE]/u.test(text[offset - 2] ?? '') &&
+        !/[\w$]/u.test(text[offset - 3] ?? '');
+      while (offset < text.length) {
+        if (escaped && text[offset] === '\\') { offset += 2; continue; }
+        if (text[offset++] !== quote) continue;
+        if (text[offset] === quote) { offset += 1; continue; }
+        break;
+      }
+    } else if (/[a-zA-Z_\u0080-\uffff]/u.test(text[offset] ?? '')) {
+      // PostgreSQL permits dollar signs inside unquoted identifiers. They are
+      // neither positional parameters nor dollar-quote delimiters there.
+      offset += 1;
+      while (/[a-zA-Z0-9_$\u0080-\uffff]/u.test(text[offset] ?? '')) offset += 1;
+    } else {
+      // Dollar tags use unquoted identifier characters, except for dollar signs.
+      const delimiter = /^\$(?:[a-zA-Z_\u0080-\u{10ffff}][a-zA-Z0-9_\u0080-\u{10ffff}]*)?\$/u.exec(remaining)?.[0];
+      if (delimiter) {
+        const end = text.indexOf(delimiter, offset + delimiter.length);
+        offset = end < 0 ? text.length : end + delimiter.length;
+        continue;
+      }
+      const placeholder = /^\$(\d+)/u.exec(remaining);
+      if (placeholder) {
+        positions.add(Number(placeholder[1]));
+        offset += placeholder[0].length;
+      } else offset += 1;
     }
-    return parsed.data;
-  });
-
-  let value: unknown;
-  switch (expects) {
-    case 'one':
-      value = parsedRows[0];
-      break;
-    case 'zero-or-one':
-      value = parsedRows[0] ?? null;
-      break;
-    case 'many':
-      value = Object.freeze(parsedRows);
-      break;
-    case 'none':
-      value = undefined;
-      break;
   }
-  return value as ResultOf<Q>;
+  const count = params.def.items.length;
+  if (params.def.rest || positions.size !== count ||
+      [...positions].some((position) => !Number.isSafeInteger(position) || position < 1 || position > count)) {
+    throw new TypeError(`defineQuery(${name}): placeholders must match a finite argument tuple`);
+  }
 }

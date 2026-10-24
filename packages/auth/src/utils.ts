@@ -17,6 +17,10 @@ export function base64UrlDecode(value: string): string {
   return Buffer.from(padded, 'base64').toString('utf8');
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 export function decodeJwtClaims(token: string): {
   header: Record<string, unknown>;
   payload: Record<string, unknown>;
@@ -36,12 +40,13 @@ export function decodeJwtClaims(token: string): {
   let header: Record<string, unknown>;
   let payload: Record<string, unknown>;
   try {
-    header = JSON.parse(base64UrlDecode(encodedHeader)) as Record<string, unknown>;
-    payload = JSON.parse(base64UrlDecode(encodedPayload)) as Record<string, unknown>;
-    if (!header || typeof header !== 'object' || Array.isArray(header) ||
-      !payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    const parsedHeader: unknown = JSON.parse(base64UrlDecode(encodedHeader));
+    const parsedPayload: unknown = JSON.parse(base64UrlDecode(encodedPayload));
+    if (!isRecord(parsedHeader) || !isRecord(parsedPayload)) {
       throw new Error('JWT is malformed');
     }
+    header = parsedHeader;
+    payload = parsedPayload;
   } catch {
     throw new InvalidCredentialError('JWT is malformed');
   }

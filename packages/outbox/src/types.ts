@@ -1,3 +1,6 @@
+/** Raw PostgreSQL timestamp result; numeric values are only positive/negative Infinity. Date includes Invalid Date. */
+export type OutboxTimestampResult = Date | string | number;
+
 /**
  * Public types for the transactional outbox: envelope, row shape, dispatcher
  * port, backoff policy, and the minimal SQL executor duck-type that lets
@@ -45,10 +48,11 @@ export interface OutboxAppendEvent {
   metadata?: Record<string, unknown>;
 }
 
-export interface OutboxEventRow extends OutboxAppendEvent {
+export interface OutboxEventRow extends Omit<OutboxAppendEvent, 'metadata'> {
+  metadata?: Record<string, unknown> | null;
   id: string;
   tenantId: string;
-  createdAt: Date;
+  createdAt: OutboxTimestampResult;
 }
 
 export interface OutboxEventAckInput {
@@ -71,11 +75,11 @@ export interface OutboxRow {
   status: OutboxStatus;
   attempts: number;
   lastError: string | null;
-  ackTime: string | null;
-  nextAttemptAt: string | null;
+  ackTime: OutboxTimestampResult | null;
+  nextAttemptAt: OutboxTimestampResult | null;
   idempotencyKey: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: OutboxTimestampResult;
+  updatedAt: OutboxTimestampResult;
 }
 
 /** Input to `OutboxService.ack()` — normally sourced from an inbound webhook body. */
@@ -251,14 +255,19 @@ export interface OutboxEventRetirement {
   retiredAt: Date;
 }
 
+/** Direct PostgreSQL retirement receipt; nested delivery projections retain their Date mapping. */
+export type OutboxEventRetirementResult = Omit<OutboxEventRetirement, 'retiredAt'> & {
+  retiredAt: OutboxTimestampResult;
+};
+
 /** Delivery projection of one event; `nextAttemptAt` is the next eligibility. */
 export interface OutboxEventDeliveryState {
   status: OutboxEventDeliveryStatus;
   attempts: number;
   lastError: string | null;
-  nextAttemptAt: Date | null;
-  leaseUntil: Date | null;
-  updatedAt: Date;
+  nextAttemptAt: OutboxTimestampResult | null;
+  leaseUntil: OutboxTimestampResult | null;
+  updatedAt: OutboxTimestampResult;
   retirement?: OutboxEventRetirement;
 }
 
@@ -270,7 +279,7 @@ export interface OutboxEventSummary {
   entityId: string;
   idempotencyKey: string;
   metadata: Record<string, unknown> | null;
-  createdAt: Date;
+  createdAt: OutboxTimestampResult;
 }
 
 /** One `listEvents()` row; `delivery` is `null` for an event without a delivery row. */
@@ -302,10 +311,16 @@ export interface OutboxEventListQuery {
   cursor?: OutboxEventListCursor | null;
 }
 
+/** Raw page position. A non-Date or invalid Date result is not accepted as a continuation request. */
+export interface OutboxEventListResultCursor {
+  createdAt: OutboxTimestampResult;
+  id: string;
+}
+
 export interface OutboxEventListPage {
   items: OutboxEventListItem[];
   /** `null` when no later page exists. */
-  nextCursor: OutboxEventListCursor | null;
+  nextCursor: OutboxEventListResultCursor | null;
 }
 
 export type OutboxDeliveryStatusCounts = Record<OutboxEventDeliveryStatus, number>;
@@ -339,8 +354,8 @@ export interface OutboxEventAttempt {
   evidenceState: Record<string, unknown>;
   result: OutboxEventAttemptResult;
   error: string | null;
-  leasedAt: Date | null;
-  completedAt: Date | null;
+  leasedAt: OutboxTimestampResult | null;
+  completedAt: OutboxTimestampResult | null;
   legacyMessageId: string | null;
   requestBytes?: Buffer | null;
   responseBytes?: Buffer | null;
@@ -352,7 +367,7 @@ export interface OutboxQueueHealth {
   total: number;
   byStatus: OutboxDeliveryStatusCounts;
   /** `createdAt` of the oldest outstanding delivery, excluding ACKED and RETIRED. */
-  oldestUnackedCreatedAt: Date | null;
+  oldestUnackedCreatedAt: OutboxTimestampResult | null;
 }
 
 export interface OutboxQueueHealthQuery {

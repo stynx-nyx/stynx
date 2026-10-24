@@ -1,3 +1,5 @@
+import { executeTypedQuery, executeLegacyArchive } from '../checked-executor.js';
+import { registryByParent, registryByChild, uniqueConstraints, columnNames, mirrorExists } from '../archive.repository.js';
 import type { QueryResult, QueryResultRow } from 'pg';
 import { ArchiveMirrorMissingError } from '../errors.js';
 import { mirrorQualifiedName, qualifiedName, quoteIdent, type TableMeta } from './table-meta.js';
@@ -24,10 +26,6 @@ export interface ArchiveLookupRow extends QueryResultRow {
   row_data: Record<string, unknown>;
 }
 
-interface UniqueConstraintRow extends QueryResultRow {
-  constraint_name: string;
-  columns: string[] | string;
-}
 
 export interface ArchiveRelationContext {
   query<TRow extends QueryResultRow = QueryResultRow>(
@@ -43,34 +41,8 @@ export async function loadRegistryByParent(
   parentSchema: string,
   parentTable: string,
 ): Promise<RegistryEntry[]> {
-  const result = await ctx.query<RegistryEntry>(
-    `
-      select
-        registry.parent_schema as "parentSchema",
-        registry.parent_table as "parentTable",
-        registry.child_schema as "childSchema",
-        registry.child_table as "childTable",
-        registry.fk_constraint as "fkConstraint",
-        registry.behavior as behavior,
-        child_attribute.attname as "childColumn"
-      from core.softdelete_fk_registry registry
-      join pg_namespace child_namespace
-        on child_namespace.nspname = registry.child_schema
-      join pg_class child_class
-        on child_class.relname = registry.child_table
-       and child_class.relnamespace = child_namespace.oid
-      join pg_constraint constraint_item
-        on constraint_item.conname = registry.fk_constraint
-       and constraint_item.conrelid = child_class.oid
-      join pg_attribute child_attribute
-        on child_attribute.attrelid = child_class.oid
-       and child_attribute.attnum = constraint_item.conkey[1]
-      where registry.parent_schema = $1
-        and registry.parent_table = $2
-    `,
-    [parentSchema, parentTable],
-  );
-  return result.rows;
+  const result = { rows: await executeTypedQuery(ctx, registryByParent, [parentSchema, parentTable]) };
+  return [...result.rows];
 }
 
 export async function loadRegistryByChild(
@@ -78,34 +50,8 @@ export async function loadRegistryByChild(
   childSchema: string,
   childTable: string,
 ): Promise<RegistryEntry[]> {
-  const result = await ctx.query<RegistryEntry>(
-    `
-      select
-        registry.parent_schema as "parentSchema",
-        registry.parent_table as "parentTable",
-        registry.child_schema as "childSchema",
-        registry.child_table as "childTable",
-        registry.fk_constraint as "fkConstraint",
-        registry.behavior as behavior,
-        child_attribute.attname as "childColumn"
-      from core.softdelete_fk_registry registry
-      join pg_namespace child_namespace
-        on child_namespace.nspname = registry.child_schema
-      join pg_class child_class
-        on child_class.relname = registry.child_table
-       and child_class.relnamespace = child_namespace.oid
-      join pg_constraint constraint_item
-        on constraint_item.conname = registry.fk_constraint
-       and constraint_item.conrelid = child_class.oid
-      join pg_attribute child_attribute
-        on child_attribute.attrelid = child_class.oid
-       and child_attribute.attnum = constraint_item.conkey[1]
-      where registry.child_schema = $1
-        and registry.child_table = $2
-    `,
-    [childSchema, childTable],
-  );
-  return result.rows;
+  const result = { rows: await executeTypedQuery(ctx, registryByChild, [childSchema, childTable]) };
+  return [...result.rows];
 }
 
 export async function listChildIds(
@@ -113,7 +59,7 @@ export async function listChildIds(
   entry: RegistryEntry,
   parentId: string,
 ): Promise<string[]> {
-  const result = await ctx.query<{ id: string }>(
+  const result = await executeLegacyArchive(ctx, 'list-child-ids',
     `
       select id
       from ${qualifiedName(entry.childSchema, entry.childTable)}
@@ -133,7 +79,7 @@ export async function describeBlockingChildren(
   const blocking: Array<Record<string, unknown>> = [];
 
   for (const entry of registry.filter((item) => item.behavior === 'block')) {
-    const countResult = await ctx.query<{ count: string }>(
+    const countResult = await executeLegacyArchive(ctx, 'count-blocking-children',
       `
         select count(*)::text as count
         from ${qualifiedName(entry.childSchema, entry.childTable)}
@@ -146,7 +92,7 @@ export async function describeBlockingChildren(
       continue;
     }
 
-    const sampleResult = await ctx.query<{ id: string }>(
+    const sampleResult = await executeLegacyArchive(ctx, 'sample-blocking-children',
       `
         select id
         from ${qualifiedName(entry.childSchema, entry.childTable)}
@@ -173,7 +119,7 @@ export async function loadArchivedRow(
   id: string,
   archiveId?: bigint,
 ): Promise<ArchiveLookupRow | undefined> {
-  const result = await ctx.query<ArchiveLookupRow>(
+  const result = await executeLegacyArchive(ctx, 'load-archived-row',
     `
       select
         archive_id,
@@ -206,7 +152,7 @@ export async function findArchivedParents(
       continue;
     }
 
-    const liveParent = await ctx.query<{ exists: boolean }>(
+    const liveParent = await executeLegacyArchive(ctx, 'live-parent-exists',
       `
         select exists(
           select 1
@@ -221,7 +167,7 @@ export async function findArchivedParents(
       continue;
     }
 
-    const archiveParent = await ctx.query<{ exists: boolean }>(
+    const archiveParent = await executeLegacyArchive(ctx, 'archived-parent-exists',
       `
         select exists(
           select 1
@@ -250,25 +196,7 @@ export async function findRestoreConflict(
   rowData: Record<string, unknown>,
   id: string,
 ): Promise<Record<string, unknown> | undefined> {
-  const constraints = await ctx.query<UniqueConstraintRow>(
-    `
-      select
-        constraint_item.conname as constraint_name,
-        array_agg(attribute.attname order by attribute.attnum) as columns
-      from pg_constraint constraint_item
-      join pg_class table_class on table_class.oid = constraint_item.conrelid
-      join pg_namespace namespace_item on namespace_item.oid = table_class.relnamespace
-      join unnest(constraint_item.conkey) as key_items(attnum) on true
-      join pg_attribute attribute
-        on attribute.attrelid = table_class.oid
-       and attribute.attnum = key_items.attnum
-      where namespace_item.nspname = $1
-        and table_class.relname = $2
-        and constraint_item.contype in ('u', 'p')
-      group by constraint_item.conname
-    `,
-    [meta.schema, meta.table],
-  );
+  const constraints = { rows: await executeTypedQuery(ctx, uniqueConstraints, [meta.schema, meta.table]) };
 
   for (const constraint of constraints.rows) {
     const columns = Array.isArray(constraint.columns)
@@ -286,7 +214,7 @@ export async function findRestoreConflict(
     const whereClause = columns
       .map((column, index) => `${quoteIdent(column)} is not distinct from $${index + 1}`)
       .join(' and ');
-    const conflict = await ctx.query<{ blocking_id: string }>(
+    const conflict = await executeLegacyArchive(ctx, 'restore-conflict',
       `
         select id::text as blocking_id
         from ${meta.qualifiedName}
@@ -314,17 +242,7 @@ export async function loadColumnNames(
   schemaName: string,
   tableName: string,
 ): Promise<string[]> {
-  const result = await ctx.query<{ column_name: string }>(
-    `
-      select column_name
-      from information_schema.columns
-      where table_schema = $1
-        and table_name = $2
-        and coalesce(is_generated, 'NEVER') <> 'ALWAYS'
-      order by ordinal_position
-    `,
-    [schemaName, tableName],
-  );
+  const result = { rows: await executeTypedQuery(ctx, columnNames, [schemaName, tableName]) };
   return result.rows.map((row) => row.column_name);
 }
 
@@ -332,11 +250,8 @@ export async function ensureMirrorExists(
   ctx: Pick<ArchiveRelationContext, 'query'>,
   meta: TableMeta,
 ): Promise<void> {
-  const result = await ctx.query<{ exists: boolean }>(
-    `select to_regclass($1) is not null as exists`,
-    [`archive.${meta.schema}_${meta.table}`],
-  );
-  if (!result.rows[0]?.exists) {
+  const result = await executeTypedQuery(ctx, mirrorExists, [`archive.${meta.schema}_${meta.table}`]);
+  if (!result?.exists) {
     throw new ArchiveMirrorMissingError({
       table: meta.qualifiedName,
       archiveTable: meta.mirrorQualifiedName,

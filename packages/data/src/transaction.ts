@@ -1,5 +1,5 @@
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { type SQL, type SQLWrapper } from 'drizzle-orm';
+import { type SQLWrapper } from 'drizzle-orm';
 import type { AnyPgTable } from 'drizzle-orm/pg-core';
 import type { PoolClient, QueryResult, QueryResultRow } from 'pg';
 import type { z } from 'zod';
@@ -32,6 +32,8 @@ import { createTransactionSelectRoot, type TransactionSelectRoot } from './query
 import * as schema from './schema/index.js';
 import { isSoftDeletable } from './table-markers.js';
 import { executeTypedQuery, type ResultOf, type TypedQuery } from './typed-query.js';
+import { executeCompatibilityQuery, executeCompatibilityStatement, executeLegacyArchive, executeGuardedQueryRows } from './checked-executor.js';
+import { archiveSize } from './archive.repository.js';
 import type { StynxDataMetricsSink, StynxDataRole } from './tokens.js';
 import type {
   CascadePlan,
@@ -104,7 +106,7 @@ export class Transaction {
 
   async execute(query: SQLWrapper): Promise<QueryResult<QueryResultRow>> {
     this.ensureActive();
-    return this.db.execute(query as SQL<unknown>);
+    return executeCompatibilityStatement(this.db, query);
   }
 
   /**
@@ -116,7 +118,7 @@ export class Transaction {
     values?: unknown[],
   ): Promise<QueryResult<TRow>> {
     this.ensureActive();
-    return this.client.query<TRow>(text, values);
+    return executeCompatibilityQuery<TRow>(this.client, text, values);
   }
 
   /**
@@ -128,6 +130,17 @@ export class Transaction {
   async run<Q extends TypedQuery>(query: Q, params: z.input<Q['params']>): Promise<ResultOf<Q>> {
     this.ensureActive();
     return executeTypedQuery(this.client, query, params);
+  }
+
+
+  /** Validate many rows while preserving their identity and transaction error order. */
+  async runGuarded<P extends z.ZodTuple, S extends z.ZodObject, Row>(
+    query: TypedQuery<P, S, 'many'>,
+    params: z.input<P>,
+    isRow: (value: unknown) => value is Row,
+  ): Promise<readonly Row[]> {
+    this.ensureActive();
+    return executeGuardedQueryRows(this.client, query, params, isRow);
   }
 
   async softDelete<T extends AnyPgTable>(
@@ -222,8 +235,8 @@ export class Transaction {
     ensureWritableRole(this.role);
     this.assertHardDeleteConfirmation(options);
 
-    const meta = getTableMeta(table as AnyPgTable);
-    await this.query(`delete from ${meta.qualifiedName} where id = $1`, [id]);
+    const meta = getTableMeta(table);
+    await executeLegacyArchive(this, 'hard-delete-live', `delete from ${meta.qualifiedName} where id = $1`, [id]);
     this.metrics?.incrementHardDelete(this.metricLabel(meta));
   }
 
@@ -235,7 +248,7 @@ export class Transaction {
     ensureWritableRole(this.role);
     this.assertHardDeleteConfirmation(options);
 
-    await this.query(
+    await executeLegacyArchive(this, 'hard-delete-archive',
       `delete from ${parseArchiveTableName(options.archiveTable)} where archive_id = $1`,
       [archiveId.toString()],
     );
@@ -293,9 +306,18 @@ export class Transaction {
     return restoreByReferenceInternal(this.restoreContext(), meta, id, options, restoredChildren);
   }
 
+  private queryContext() {
+    return {
+      query: <TRow extends QueryResultRow>(text: string, values?: unknown[]) => {
+        this.ensureActive();
+        return executeCompatibilityQuery<TRow>(this.client, text, values);
+      },
+    };
+  }
+
   private softDeleteContext() {
     return {
-      query: this.query.bind(this),
+      query: this.queryContext().query,
       ensureMirrorExists: this.ensureMirrorExists.bind(this),
       loadRegistryByParent: this.loadRegistryByParent.bind(this),
       listChildIds: this.listChildIds.bind(this),
@@ -311,7 +333,7 @@ export class Transaction {
 
   private restoreContext() {
     return {
-      query: this.query.bind(this),
+      query: this.queryContext().query,
       loadArchivedRow: this.loadArchivedRow.bind(this),
       findArchivedParents: this.findArchivedParents.bind(this),
       findRestoreConflict: this.findRestoreConflict.bind(this),
@@ -348,7 +370,7 @@ export class Transaction {
   ): Promise<Array<Record<string, unknown>>> {
     return describeBlockingChildrenInternal(
       {
-        query: this.query.bind(this),
+        query: this.queryContext().query,
         loadRegistryByParent: this.loadRegistryByParent.bind(this),
       },
       meta,
@@ -370,7 +392,7 @@ export class Transaction {
   ): Promise<ArchivedParent[]> {
     return findArchivedParentsInternal(
       {
-        query: this.query.bind(this),
+        query: this.queryContext().query,
         loadRegistryByChild: this.loadRegistryByChild.bind(this),
       },
       meta,
@@ -410,11 +432,8 @@ export class Transaction {
       return;
     }
 
-    const size = await this.query<{ bytes: string }>(
-      `select pg_total_relation_size($1::regclass)::text as bytes`,
-      [qualifiedRelationName.replaceAll('"', '')],
-    );
-    const bytes = Number.parseInt(size.rows[0]?.bytes ?? '0', 10);
+    const size = await this.run(archiveSize, [qualifiedRelationName.replaceAll('"', '')]);
+    const bytes = Number.parseInt(size?.bytes ?? '0', 10);
     if (Number.isFinite(bytes)) {
       this.metrics.setArchiveSizeBytes(label, bytes);
     }

@@ -1,3 +1,4 @@
+import { claimDueDeliveries, markClaimedDelivery, persistDeliveryOutcome } from './notifications.repository.js';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
@@ -60,28 +61,15 @@ export class NotificationDispatchService implements NotificationDispatchPort {
   async dispatchDue(options: DispatchDueOptions = {}): Promise<DispatchDueResult> {
     const database = this.requireDatabase();
     const claimed = await database.tx(async (trx) => {
-        const rows = await trx.query<ClaimedDelivery>(
-          `select d.id, d.tenant_id, d.notification_id, d.channel, d.attempt_count, d.max_attempts,
-                  n.recipient_subject_id, n.recipient_email, n.recipient_phone, n.recipient_push_token,
-                  n.template_id, n.template_version, n.locale, n.variables
-             from notifications.deliveries d
-             join notifications.notifications n on n.id = d.notification_id and n.tenant_id = d.tenant_id
-            where d.status = 'QUEUED' and d.next_attempt_at <= $1::timestamptz
-            order by d.next_attempt_at, d.created_at
-            for update of d skip locked
-            limit $2`,
+        const rows = await trx.run(claimDueDeliveries,
           [(options.now ?? new Date()).toISOString(), Math.min(Math.max(options.batchSize ?? 50, 1), 500)],
         );
-        for (const row of rows.rows) {
-          await trx.query(
-            `update notifications.deliveries
-                set status = 'SENT', attempt_count = attempt_count + 1, last_attempt_at = clock_timestamp(),
-                    sent_at = clock_timestamp(), updated_at = clock_timestamp()
-              where id = $1::uuid and tenant_id = $2::uuid`,
+        for (const row of rows) {
+          await trx.run(markClaimedDelivery,
             [row.id, row.tenant_id],
           );
         }
-        return rows.rows;
+        return rows;
       });
 
     const outcomes: DispatchOutcome[] = [];
@@ -133,15 +121,7 @@ export class NotificationDispatchService implements NotificationDispatchPort {
     const delay = this.retryDelay(policy, delivery.attempt_count + 1);
     const database = this.requireDatabase();
     await database.tx(async (trx) => {
-        await trx.query(
-          `update notifications.deliveries
-              set status = $3, provider_message_id = $4, error_code = $5, error_detail = $6,
-                  suppressed_reason = $7,
-                  next_attempt_at = case when $3 = 'QUEUED' then clock_timestamp() + ($8 * interval '1 millisecond') else next_attempt_at end,
-                  delivered_at = case when $3 = 'DELIVERED' then clock_timestamp() else delivered_at end,
-                  failed_at = case when $3 = 'FAILED' then clock_timestamp() else failed_at end,
-                  updated_at = clock_timestamp()
-            where id = $1::uuid and tenant_id = $2::uuid`,
+        await trx.run(persistDeliveryOutcome,
           [delivery.id, delivery.tenant_id, finalStatus, result.providerMessageId ?? null,
             result.errorCode ?? null, result.errorDetail ?? null, result.suppressedReason ?? null, delay],
         );

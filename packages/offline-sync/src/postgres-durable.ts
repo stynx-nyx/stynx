@@ -1,11 +1,12 @@
+import { batchLockTimeout, lockBatchIdentity, hydrateExistingLegacyReceipts, takeExistingBatchLease, existingLegacyBatchKeys, insertUnverifiedLegacyBatch, hydrateImportedLegacyReceipts, lockLastBatchSequence, insertDurableBatch, legacyBatchIdentity, retryBatchLockTimeout, takeOpenBatchLease, lockItemIdentity, originalItemIdentity, insertDurableQueueItem, storedItemIdentity, appendQueueReuseAttempt, ensureLegacyBatch, ensureLegacyReceipt, appendLegacyUnappliedAttempt, insertInitialReceipt, lockInitialReceipt, appendDuplicateAttempt, lockApplyingReceipt, queueIdentityExists, recordConcurrencyContext, lockNumberCoverage, lockNumberConsumption, claimNumberConsumption, applyNumberConsumption, applyQueueItem, applyItemReceipt, recordAppliedContext, appendDomainConflict, appendDomainEvidence, recordFailedReceipt, recordOutcomeQueue, appendReapplyAttempt, appendFinalAttempt, finalizeDurableBatch, releaseDurableLease } from './durable.repository.js';
+import { readDurableBatch, renewDurableLease, insertTransportKey, boundTransportKey, durableItemReceipts, appendIntegrityAttempt, integrityAttemptContext, existingIntegrityConflict, appendIntegrityConflict, appendIntegrityEvidence, integrityRejectionByIdentity, durableItemByKey, lockDurableReservation, transitionDurableReservation, blockReservationConsumption, expireDurableConsumption, consumptionReservation, consumptionOverrides, appendConcurrencyConflict, appendConcurrencyEvidence, markConcurrencyQueue, markConcurrencyReceipt } from './durable.repository.js';
 export { pgReconcile } from './postgres-reconciliation.js';
 import { domainErrorContext } from './domain-error-context.js';
 import { classifyDomainOutcome, domainFailureCode } from './domain-outcome.js';
-import { pgSortInstant } from './listing.js';
 import { consumptionReadInstant, projectNumberingConsumption } from './consumption-projection.js';
 import { createHash, randomUUID } from 'node:crypto';
 import { HttpException, UnprocessableEntityException } from '@nestjs/common';
-import { Database, IndependentTransactionConnectionError, type Transaction } from '@stynx-nyx/data';
+import { Database, executeTypedQueryResult, executeTypedCommand, IndependentTransactionConnectionError, type Transaction } from '@stynx-nyx/data';
 import type {
   CTG9SubmitSyncBatchInput,
   CTG9SubmitSyncBatchResult,
@@ -43,7 +44,6 @@ import { prepareOfflineSyncItem } from './pre-apply.js';
 import { activeReservationError } from './reservation-admission.js';
 import {
   boundedConsumerAttributes,
-  mergeStynxSql,
   recordedAttempts,
   splitStynxContext,
   stynxContextOf,
@@ -51,31 +51,23 @@ import {
 } from './stynx-context.js';
 
 interface BatchRow {
-  response_body_is_archived?: boolean;
-  initial_queue_status?: 'received' | 'pending';
+  response_body_is_archived?: boolean | undefined;
+  initial_queue_status?: 'received' | 'pending' | undefined;
   device_id: string;
   device_batch_id: string;
-  batch_sequence: string | null;
+  batch_sequence: string | number | null;
   status: SyncBatchReceipt['status'];
   context_hash: string;
   declared_keys: (string | null)[];
   lease_token: string | null;
-  lease_generation: string;
-  lease_expires_at: Date | string | null;
+  lease_generation: string | number;
+  lease_expires_at: Date | string | number | null;
   response_status: number | null;
   response_body_bytes: Buffer | null;
-  response_headers: Record<string, string>;
+  response_headers: Record<string, string> | null;
   transport_key: string | null;
   transport_fingerprint: string | null;
-  lease_valid?: boolean;
-}
-interface ReceiptRow {
-  idempotency_key: string;
-  queue_item_id: string;
-  payload_hash: string;
-  status: SyncItemReceipt['status'];
-  error_code: string | null;
-  context_json: Record<string, unknown> | null;
+  lease_valid?: boolean | null | undefined;
 }
 interface ReservationRow {
   id: string;
@@ -87,12 +79,12 @@ interface ReservationRow {
   agent_id: string;
   device_id: string;
   shift_id: string | null;
-  start_number: string;
-  end_number: string;
-  next_number: string;
-  valid_until: Date | string;
+  start_number: string | number;
+  end_number: string | number;
+  next_number: string | number;
+  valid_until: Date | string | number;
   status: CTG9NumberingReservation['status'];
-  expired?: boolean;
+  expired?: boolean | undefined;
 }
 const sha = (value: string): string => createHash('sha256').update(value).digest('hex');
 const failure = (
@@ -119,12 +111,12 @@ const mapReservation = (r: ReservationRow): CTG9NumberingReservation => ({
   validUntil: new Date(r.valid_until).toISOString(),
   status: r.status,
 });
-const reservationSelect = `select id,tenant_id,range_id,org_unit_id,entity_type,series,agent_id,device_id,shift_id,start_number,end_number,next_number,valid_until,status,(valid_until <= clock_timestamp()) as expired from offline.numbering_reservations where tenant_id=$1::uuid and id=$2::uuid`;
 function assertIndependent(database: Database): void {
   if (database.hasHeldConnection()) throw new IndependentTransactionConnectionError();
 }
 function upgrade(error: unknown): never {
-  const { code, message } = error as { code?: string; message?: string };
+  const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined;
+  const message = typeof error === 'object' && error !== null && 'message' in error ? error.message : undefined;
   if (code === 'STY44') throw activeReservationError();
   if (code === '42703' && typeof message === 'string' && /\binitial_queue_status\b/u.test(message))
     throw new OfflineSyncUpgradeRequiredError('0005');
@@ -141,13 +133,12 @@ async function txDurable<T>(database: Database, fn: (trx: Transaction) => Promis
 async function readBatch(
   trx: Transaction,
   scope: TrustedOfflineSyncScope,
-  input: CTG9SubmitSyncBatchInput,
+  input: Pick<CTG9SubmitSyncBatchInput, 'deviceId' | 'deviceBatchId'>,
 ): Promise<BatchRow | null> {
-  const rows = await trx.query<BatchRow>(
-    `select *,lease_expires_at > clock_timestamp() as lease_valid from offline.sync_batches where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3`,
+  const rows = await trx.run(readDurableBatch,
     [scope.tenantId, input.deviceId, input.deviceBatchId],
   );
-  return rows.rows[0] ?? null;
+  return rows[0] ?? null;
 }
 async function renewLease(
   trx: Transaction,
@@ -156,10 +147,7 @@ async function renewLease(
   token: string,
   generation: number,
 ): Promise<void> {
-  const held = await trx.query(
-    `update offline.sync_batches set lease_expires_at=clock_timestamp()+interval '30 seconds'
-    where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3 and status='open'
-      and lease_token=$4::uuid and lease_generation=$5 returning lease_generation`,
+  const held = await executeTypedQueryResult(trx, renewDurableLease,
     [scope.tenantId, input.deviceId, input.deviceBatchId, token, generation],
   );
   if (!held.rowCount) failure('OFFLINE_SYNC_BATCH_CONFLICT', 409, 'Batch lease was fenced.');
@@ -206,23 +194,14 @@ async function bindTransportKey(
   compositeKey: string,
   fingerprint: string,
 ): Promise<void> {
-  await trx.query(
-    `insert into offline.sync_batch_transport_keys
-    (tenant_id,transport_key,device_id,device_batch_id,transport_fingerprint)
-    values ($1::uuid,$2,$3,$4,$5) on conflict (tenant_id,transport_key) do nothing`,
+  await trx.run(insertTransportKey,
     [scope.tenantId, compositeKey, input.deviceId, input.deviceBatchId, fingerprint],
   );
   const bound = (
-    await trx.query<{
-      device_id: string;
-      device_batch_id: string;
-      transport_fingerprint: string;
-    }>(
-      `select device_id,device_batch_id,transport_fingerprint from offline.sync_batch_transport_keys
-      where tenant_id=$1::uuid and transport_key=$2`,
+    await trx.run(boundTransportKey,
       [scope.tenantId, compositeKey],
     )
-  ).rows[0];
+  )[0];
   if (bound?.transport_fingerprint !== fingerprint)
     throw new UnprocessableEntityException('IDEMPOTENT_KEY_REUSE_DIFFERENT_BODY');
   if (bound.device_id !== input.deviceId || bound.device_batch_id !== input.deviceBatchId)
@@ -231,23 +210,12 @@ async function bindTransportKey(
 async function itemReceipts(
   trx: Transaction,
   scope: TrustedOfflineSyncScope,
-  input: CTG9SubmitSyncBatchInput,
+  input: Pick<CTG9SubmitSyncBatchInput, 'deviceId' | 'deviceBatchId'>,
 ): Promise<SyncItemReceipt[]> {
-  const rows = await trx.query<{
-    queue_item_id: string;
-    status: SyncItemReceipt['status'];
-    error_code: string | null;
-    context_json: Record<string, unknown> | null;
-  }>(
-    `select queue_item_id,status,error_code,context_json,received_at as event_at
-      from offline.sync_item_receipts where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3
-     union all
-     select queue_item_id,status,error_code,context_json,created_at as event_at
-      from offline.sync_item_attempts where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3
-     order by event_at,queue_item_id`,
+  const rows = await trx.run(durableItemReceipts,
     [scope.tenantId, input.deviceId, input.deviceBatchId],
   );
-  return rows.rows.map((r) => ({
+  return rows.map((r) => ({
     queueItemId: r.queue_item_id,
     status: r.status,
     ...(r.error_code ? { errorCode: r.error_code } : {}),
@@ -283,11 +251,7 @@ async function integrityRejection(
     relatedQueueItemId: original?.id,
     retryable: false,
   });
-  await trx.query(
-    `insert into offline.sync_item_attempts
-    (tenant_id,device_id,device_batch_id,queue_item_id,idempotency_key,payload_hash,status,error_code,context_json,created_at)
-    values ($1::uuid,$2,$3,$4,$5,$6,'rejected','OFFLINE_SYNC_ITEM_INTEGRITY',$7::jsonb,$8::timestamptz)
-    on conflict (tenant_id,device_id,device_batch_id,queue_item_id) do nothing`,
+  await trx.run(appendIntegrityAttempt,
     [
       scope.tenantId,
       input.deviceId,
@@ -300,27 +264,18 @@ async function integrityRejection(
     ],
   );
   const recorded = (
-    await trx.query<{ context_json: Record<string, unknown> | null }>(
-      `select context_json from offline.sync_item_attempts where tenant_id=$1::uuid
-      and device_id=$2 and device_batch_id=$3 and queue_item_id=$4`,
+    await trx.run(integrityAttemptContext,
       [scope.tenantId, input.deviceId, input.deviceBatchId, item.queueItemId],
     )
-  ).rows[0];
+  )[0];
   const proof = splitStynxContext(recorded?.context_json).stynx;
   if (!original) return proof;
-  const existing = await trx.query<{ id: string }>(
-    `select c.id from offline.sync_conflicts c
-    join offline.sync_conflict_evidence e on e.tenant_id=c.tenant_id and e.conflict_id=c.id
-    where c.tenant_id=$1::uuid and c.sync_queue_item_id=$2 and c.conflict_type='integrity'
-      and e.evidence->'stynx'->>'receivedPayloadHash'=$3 limit 1`,
+  const existing = await trx.run(existingIntegrityConflict,
     [scope.tenantId, original.id, item.payloadHash],
   );
-  if (existing.rows[0]) return proof;
+  if (existing[0]) return proof;
   const conflictId = randomUUID();
-  await trx.query(
-    `insert into offline.sync_conflicts
-    (id,tenant_id,sync_queue_item_id,local_entity_id,payload_hash,conflict_type,description,status,created_at)
-    values ($1::uuid,$2::uuid,$3,$4,$5,'integrity','Payload hash differs from the stored item.','open',$6::timestamptz)`,
+  await trx.run(appendIntegrityConflict,
     [conflictId, scope.tenantId, original.id, original.local_entity_id, original.payload_hash, now],
   );
   const context = {
@@ -337,10 +292,7 @@ async function integrityRejection(
     conflictId,
     context,
   )) ?? ['reject'];
-  await trx.query(
-    `insert into offline.sync_conflict_evidence
-    (tenant_id,conflict_id,queue_item_id,related_queue_item_id,allowed_actions,evidence)
-    values ($1::uuid,$2::uuid,$3,$4,$5::jsonb,$6::jsonb)`,
+  await trx.run(appendIntegrityEvidence,
     [
       scope.tenantId,
       conflictId,
@@ -371,7 +323,7 @@ export async function pgGetBatch(
   deviceBatchId: string,
 ): Promise<SyncBatchReceipt | null> {
   return txDurable(database, async (trx) => {
-    const input = { deviceId, deviceBatchId } as CTG9SubmitSyncBatchInput;
+    const input = { deviceId, deviceBatchId };
     const row = await readBatch(trx, scope, input);
     return row ? rowReceipt(row, await itemReceipts(trx, scope, input)) : null;
   });
@@ -383,18 +335,10 @@ export async function pgGetIntegrityRejection(
 ): Promise<SyncIntegrityRejection | null> {
   return txDurable(database, async (trx) => {
     const record = (
-      await trx.query<{
-        idempotency_key: string;
-        payload_hash: string;
-        context_json: Record<string, unknown> | null;
-        created_at: Date | string;
-      }>(
-        `select idempotency_key,payload_hash,context_json,created_at from offline.sync_item_attempts
-      where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3 and queue_item_id=$4
-        and error_code='OFFLINE_SYNC_ITEM_INTEGRITY'`,
+      await trx.run(integrityRejectionByIdentity,
         [scope.tenantId, identity.deviceId, identity.deviceBatchId, identity.queueItemId],
       )
-    ).rows[0];
+    )[0];
     if (!record) return null;
     const proof = splitStynxContext(record.context_json).stynx;
     return {
@@ -421,11 +365,10 @@ export async function pgGetItem(
 ): Promise<SyncItemReceipt | null> {
   return txDurable(database, async (trx) => {
     const r = (
-      await trx.query<ReceiptRow>(
-        `select idempotency_key,queue_item_id,payload_hash,status,error_code,context_json from offline.sync_item_receipts where tenant_id=$1::uuid and idempotency_key=$2`,
+      await trx.run(durableItemByKey,
         [scope.tenantId, key],
       )
-    ).rows[0];
+    )[0];
     return r
       ? {
           queueItemId: r.queue_item_id,
@@ -447,8 +390,8 @@ export async function pgTransition(
 ): Promise<CTG9NumberingReservation> {
   return txDurable(database, async (trx) => {
     const r = (
-      await trx.query<ReservationRow>(`${reservationSelect} for update`, [scope.tenantId, id])
-    ).rows[0];
+      await trx.run(lockDurableReservation, [scope.tenantId, id])
+    )[0];
     if (!r)
       throw new OfflineSyncError(
         'OFFLINE_SYNC_RESERVATION_NOT_FOUND',
@@ -465,23 +408,18 @@ export async function pgTransition(
         409,
         'Reservation cannot transition.',
       );
-    const userRef = action === 'settle' ? ((input as SettleNumberingInput).userRef ?? null) : null;
+    const userRef = action === 'settle' && 'userRef' in input ? input.userRef ?? null : null;
     const updated = (
-      await trx.query<ReservationRow>(
-        `update offline.numbering_reservations set status=$3,audit_actor_id=$4,
-      updated_at=$5::timestamptz,settlement_action=$6,settlement_reason=$7,settlement_user_ref=$8,settled_by=$4
-      where tenant_id=$1::uuid and id=$2::uuid returning *`,
+      await trx.run(transitionDurableReservation,
         [scope.tenantId, id, status, scope.actorId, now, action, input.reason ?? null, userRef],
       )
-    ).rows[0]!;
+    )[0]!;
     if (status === 'blocked')
-      await trx.query(
-        `update offline.numbering_consumption set status='blocked' where tenant_id=$1::uuid and reservation_id=$2::uuid and status='available'`,
+      await trx.run(blockReservationConsumption,
         [scope.tenantId, id],
       );
     if (status === 'consumed')
-      await trx.query(
-        `update offline.numbering_consumption set status='expired' where tenant_id=$1::uuid and reservation_id=$2::uuid and status='available'`,
+      await trx.run(expireDurableConsumption,
         [scope.tenantId, id],
       );
     return mapReservation(updated);
@@ -496,31 +434,20 @@ export async function pgConsumption(
   const observedAt = consumptionReadInstant(now);
   return txDurable(database, async (trx) => {
     const r = (
-      await trx.query<
-        Pick<ReservationRow, 'start_number' | 'end_number' | 'status'> & {
-          valid_until: string;
-        }
-      >(
-        `select start_number,end_number,${pgSortInstant('valid_until')} as valid_until,status from offline.numbering_reservations where tenant_id=$1::uuid and id=$2::uuid`,
+      await trx.run(consumptionReservation,
         [scope.tenantId, id],
       )
-    ).rows[0];
+    )[0];
     if (!r)
       throw new OfflineSyncError(
         'OFFLINE_SYNC_RESERVATION_NOT_FOUND',
         404,
         'Reservation was not found.',
       );
-    const rows = await trx.query<{
-      number: string;
-      status: NumberingConsumptionEntry['status'];
-      server_entity_id: string | null;
-      finalized_at: string | null;
-    }>(
-      `select number,status,server_entity_id,${pgSortInstant('finalized_at')} as finalized_at from offline.numbering_consumption where tenant_id=$1::uuid and reservation_id=$2::uuid`,
+    const rows = await trx.run(consumptionOverrides,
       [scope.tenantId, id],
     );
-    const overrides = new Map(rows.rows.map((e) => [Number(e.number), e]));
+    const overrides = new Map(rows.map((e) => [Number(e.number), e]));
     const consumption: NumberingConsumptionEntry[] = [];
     for (let number = Number(r.start_number); number <= Number(r.end_number); number += 1) {
       const entry = overrides.get(number);
@@ -560,12 +487,7 @@ async function pgRecordConcurrency(
   for (const pair of pairs) {
     for (const affected of new Set([pair.firstItemId, pair.secondItemId])) {
       const conflictId = randomUUID();
-      await trx.query(
-        `insert into offline.sync_conflicts
-                  (id,tenant_id,sync_queue_item_id,local_entity_id,payload_hash,conflict_type,description,status,created_at)
-                  select $3::uuid,tenant_id,id,local_entity_id,payload_hash,'concurrency',
-                    'Concurrent agent activity','open',$4::timestamptz
-                  from offline.sync_queue_items where tenant_id=$1::uuid and id=$2`,
+      await trx.run(appendConcurrencyConflict,
         [scope.tenantId, affected, conflictId, now],
       );
       const allowedActions = (await options.ports.conflictResolver?.allowedActions?.(
@@ -584,10 +506,7 @@ async function pgRecordConcurrency(
       });
       affectedPairs.set(affected, relatedQueueItemId);
       affectedRetryable.set(affected, allowedActions.includes('retry_after_correction'));
-      await trx.query(
-        `insert into offline.sync_conflict_evidence
-                  (tenant_id,conflict_id,queue_item_id,related_queue_item_id,allowed_actions,evidence)
-                  values ($1::uuid,$2::uuid,$3,$4,$5::jsonb,$6::jsonb)`,
+      await trx.run(appendConcurrencyEvidence,
         [
           scope.tenantId,
           conflictId,
@@ -602,15 +521,10 @@ async function pgRecordConcurrency(
           }),
         ],
       );
-      await trx.query(
-        `update offline.sync_queue_items set status='conflict',updated_at=$3::timestamptz
-                  where tenant_id=$1::uuid and id=$2`,
+      await trx.run(markConcurrencyQueue,
         [scope.tenantId, affected, now],
       );
-      await trx.query(
-        `update offline.sync_item_receipts set status='conflict',
-                  context_json=${mergeStynxSql('context_json', '$3', '$5')},updated_at=$4::timestamptz
-                  where tenant_id=$1::uuid and queue_item_id=$2`,
+      await trx.run(markConcurrencyReceipt,
         [
           scope.tenantId,
           affected,
@@ -713,8 +627,8 @@ export async function pgSubmit(
   let row: BatchRow;
   try {
     row = await txDurable(database, async (trx) => {
-      await trx.query(`set local lock_timeout = '100ms'`);
-      await trx.query(`select pg_advisory_xact_lock(hashtextextended($1,0))`, [
+      await trx.run(batchLockTimeout, []);
+      await trx.run(lockBatchIdentity, [
         `${scope.tenantId}:${input.deviceId}`,
       ]);
       const existing = await readBatch(trx, scope, input);
@@ -723,65 +637,47 @@ export async function pgSubmit(
         if (existing.status !== 'legacy_closed_unverified')
           await bindTransportKey(trx, scope, input, compositeKey, fingerprint);
         if (existing.status === 'legacy_closed_unverified')
-          await trx.query(
-            `insert into offline.sync_item_receipts
-          (tenant_id,idempotency_key,queue_item_id,device_id,device_batch_id,payload_hash,status,received_at)
-          select tenant_id,idempotency_key,id,device_id,device_batch_id,payload_hash,status,received_at
-          from offline.sync_queue_items where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3
-            and identity_mode='e6' on conflict (tenant_id,idempotency_key) do nothing`,
+          await trx.run(hydrateExistingLegacyReceipts,
             [scope.tenantId, input.deviceId, input.deviceBatchId],
           );
         if (existing.status === 'closed' || existing.status === 'legacy_closed_unverified')
           return existing;
         if (existing.lease_token && existing.lease_valid) return existing;
         const taken = (
-          await trx.query<BatchRow>(
-            `update offline.sync_batches set lease_token=$4::uuid,lease_generation=lease_generation+1,lease_expires_at=clock_timestamp()+interval '30 seconds' where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3 and (lease_token is null or lease_expires_at <= clock_timestamp()) returning *`,
+          await trx.run(takeExistingBatchLease,
             [scope.tenantId, input.deviceId, input.deviceBatchId, token],
           )
-        ).rows[0];
+        )[0];
         if (!taken) return existing;
         acquired = true;
         return taken;
       }
-      const e6Items = await trx.query<{ id: string; idempotency_key: string }>(
-        `select id,idempotency_key from offline.sync_queue_items where tenant_id=$1::uuid
-          and device_id=$2 and device_batch_id=$3 and identity_mode='e6' order by id collate "C"`,
+      const e6Items = await trx.run(existingLegacyBatchKeys,
         [scope.tenantId, input.deviceId, input.deviceBatchId],
       );
-      if (e6Items.rows.length) {
+      if (e6Items.length) {
         const legacy = (
-          await trx.query<BatchRow>(
-            `insert into offline.sync_batches
-          (tenant_id,device_id,device_batch_id,org_unit_id,agent_id,context_hash,declared_keys,status)
-          values ($1::uuid,$2,$3,$4,$5,'legacy-unverified',$6::jsonb,'legacy_closed_unverified')
-          returning *`,
+          await trx.run(insertUnverifiedLegacyBatch,
             [
               scope.tenantId,
               input.deviceId,
               input.deviceBatchId,
               input.orgUnitId,
               options.agentId,
-              JSON.stringify(e6Items.rows.map((r) => r.idempotency_key)),
+              JSON.stringify(e6Items.map((r) => r.idempotency_key)),
             ],
           )
-        ).rows[0]!;
-        await trx.query(
-          `insert into offline.sync_item_receipts
-          (tenant_id,idempotency_key,queue_item_id,device_id,device_batch_id,payload_hash,status,received_at)
-          select tenant_id,idempotency_key,id,device_id,device_batch_id,payload_hash,status,received_at
-          from offline.sync_queue_items where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3
-            and identity_mode='e6' on conflict (tenant_id,idempotency_key) do nothing`,
+        )[0]!;
+        await trx.run(hydrateImportedLegacyReceipts,
           [scope.tenantId, input.deviceId, input.deviceBatchId],
         );
         return legacy;
       }
       if (input.batchSequence != null) {
-        const sequences = await trx.query<{ batch_sequence: string }>(
-          `select batch_sequence from offline.sync_batches where tenant_id=$1::uuid and device_id=$2 and batch_sequence is not null order by batch_sequence desc limit 1 for update`,
+        const sequences = await trx.run(lockLastBatchSequence,
           [scope.tenantId, input.deviceId],
         );
-        const expected = Number(sequences.rows[0]?.batch_sequence ?? 0) + 1;
+        const expected = Number(sequences[0]?.batch_sequence ?? 0) + 1;
         if (input.batchSequence < expected)
           failure('OFFLINE_SYNC_BATCH_CONFLICT', 409, 'Batch sequence already used.', {
             expectedSequence: expected,
@@ -801,8 +697,7 @@ export async function pgSubmit(
           );
       }
       const inserted = (
-        await trx.query<BatchRow>(
-          `insert into offline.sync_batches (tenant_id,device_id,device_batch_id,org_unit_id,agent_id,batch_sequence,context_hash,declared_keys,status,lease_token,lease_generation,lease_expires_at,transport_key,transport_fingerprint,initial_queue_status) values ($1::uuid,$2,$3,$4,$5,$6,$7,$8::jsonb,'open',$9::uuid,1,clock_timestamp()+interval '30 seconds',$10,$11,$12) returning *`,
+        await trx.run(insertDurableBatch,
           [
             scope.tenantId,
             input.deviceId,
@@ -818,46 +713,39 @@ export async function pgSubmit(
             options.ports.initialQueueStatus ?? 'received',
           ],
         )
-      ).rows[0]!;
+      )[0]!;
       await bindTransportKey(trx, scope, input, compositeKey, fingerprint);
       acquired = true;
       return inserted;
     });
   } catch (error) {
-    if ((error as { code?: string }).code !== '55P03') upgrade(error);
-    row = (await txDurable(database, async (trx) => {
+    if (!(typeof error === 'object' && error !== null && 'code' in error && error.code === '55P03')) upgrade(error);
+    const contestedRow = await txDurable(database, async (trx) => {
       const contested = await readBatch(trx, scope, input);
       if (!contested) return null;
       verifyBatchIdentity(contested, input, contextHash, compositeKey, fingerprint);
       if (contested.status !== 'legacy_closed_unverified')
         await bindTransportKey(trx, scope, input, compositeKey, fingerprint);
       return contested;
-    })) as BatchRow;
-    if (!row)
+    });
+    if (!contestedRow)
       throw new OfflineSyncError(
         'OFFLINE_SYNC:BATCH:in-progress',
         503,
         'Batch is in progress.',
         true,
       );
+    row = contestedRow;
   }
   if (row.status === 'legacy_closed_unverified') {
     const legacyItems = await txDurable(
       database,
       async (trx) =>
         (
-          await trx.query<{
-            id: string;
-            entity_type: string;
-            local_entity_id: string;
-            idempotency_key: string;
-            payload_hash: string;
-          }>(
-            `select id,entity_type,local_entity_id,idempotency_key,payload_hash from offline.sync_queue_items
-       where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3 order by id collate "C"`,
+          await trx.run(legacyBatchIdentity,
             [scope.tenantId, input.deviceId, input.deviceBatchId],
           )
-        ).rows,
+        ),
     );
     const declared = [...input.items]
       .map((item) => ({
@@ -924,20 +812,16 @@ export async function pgSubmit(
       if (current?.status === 'closed' && current.response_body_bytes)
         return replayClosedBatch(current, options);
       const taken = await txDurable(database, async (trx) => {
-        await trx.query(`set local lock_timeout = '100ms'`);
+        await trx.run(retryBatchLockTimeout, []);
         return (
           (
-            await trx.query<BatchRow>(
-              `update offline.sync_batches set lease_token=$4::uuid,
-          lease_generation=lease_generation+1,lease_expires_at=clock_timestamp()+interval '30 seconds'
-          where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3 and status='open'
-            and (lease_token is null or lease_expires_at <= clock_timestamp()) returning *`,
+            await trx.run(takeOpenBatchLease,
               [scope.tenantId, input.deviceId, input.deviceBatchId, token],
             )
-          ).rows[0] ?? null
+          )[0] ?? null
         );
       }).catch((error) => {
-        if ((error as { code?: string }).code === '55P03') return null;
+        if (typeof error === 'object' && error !== null && 'code' in error && error.code === '55P03') return null;
         throw error;
       });
       if (taken) {
@@ -966,7 +850,7 @@ export async function pgSubmit(
         item.idempotencyKey && row.initial_queue_status === 'pending' ? 'pending' : 'received';
       const preflight = await txDurable(database, async (trx) => {
         await renewLease(trx, scope, input, token, generation);
-        await trx.query(`select pg_advisory_xact_lock(hashtextextended($1,0))`, [
+        await trx.run(lockItemIdentity, [
           `${scope.tenantId}:${key}`,
         ]);
         if (
@@ -990,15 +874,10 @@ export async function pgSubmit(
           // an original, D3 item 6 adds the integrity conflict row that references it (D4 item 4).
           const original =
             (
-              await trx.query<{
-                id: string;
-                payload_hash: string;
-                local_entity_id: string;
-              }>(
-                `select id,payload_hash,local_entity_id from offline.sync_queue_items where tenant_id=$1::uuid and idempotency_key=$2`,
+              await trx.run(originalItemIdentity,
                 [scope.tenantId, key],
               )
-            ).rows[0] ?? null;
+            )[0] ?? null;
           const stynx = await integrityRejection(
             trx,
             scope,
@@ -1020,12 +899,7 @@ export async function pgSubmit(
             },
           };
         }
-        await trx.query(
-          `insert into offline.sync_queue_items
-        (id,tenant_id,device_batch_id,org_unit_id,agent_id,device_id,entity_type,local_entity_id,
-         idempotency_key,payload_hash,payload_json,reserved_number,status,created_locally_at,received_at,identity_mode)
-        values ($1,$2::uuid,$3,$4,$5,$6,$7,$8,$9,$10,$11::jsonb,$12,$15,$13::timestamptz,$14::timestamptz,'ctg9')
-        on conflict do nothing`,
+        await trx.run(insertDurableQueueItem,
           [
             item.queueItemId,
             scope.tenantId,
@@ -1045,28 +919,12 @@ export async function pgSubmit(
           ],
         );
         const stored = (
-          await trx.query<{
-            id: string;
-            payload_hash: string;
-            identity_mode: string;
-            device_id: string;
-            device_batch_id: string;
-            org_unit_id: string;
-            agent_id: string;
-            status: SyncItemReceipt['status'];
-            local_entity_id: string;
-          }>(
-            `select id,payload_hash,identity_mode,device_id,device_batch_id,org_unit_id,agent_id,status,local_entity_id
-         from offline.sync_queue_items where tenant_id=$1::uuid and idempotency_key=$2`,
+          await trx.run(storedItemIdentity,
             [scope.tenantId, key],
           )
-        ).rows[0];
+        )[0];
         if (!stored) {
-          await trx.query(
-            `insert into offline.sync_item_attempts
-          (tenant_id,device_id,device_batch_id,queue_item_id,idempotency_key,payload_hash,status,error_code)
-          values ($1::uuid,$2,$3,$4,$5,$6,'rejected','OFFLINE_SYNC_QUEUE_ID_REUSED')
-          on conflict (tenant_id,device_id,device_batch_id,queue_item_id) do nothing`,
+          await trx.run(appendQueueReuseAttempt,
             [
               scope.tenantId,
               input.deviceId,
@@ -1087,11 +945,7 @@ export async function pgSubmit(
           };
         }
         if (stored.identity_mode === 'e6') {
-          await trx.query(
-            `insert into offline.sync_batches
-          (tenant_id,device_id,device_batch_id,org_unit_id,agent_id,context_hash,declared_keys,status)
-          values ($1::uuid,$2,$3,$4,$5,'legacy-unverified',$6::jsonb,'legacy_closed_unverified')
-          on conflict (tenant_id,device_id,device_batch_id) do nothing`,
+          await trx.run(ensureLegacyBatch,
             [
               scope.tenantId,
               stored.device_id,
@@ -1101,11 +955,7 @@ export async function pgSubmit(
               JSON.stringify([key]),
             ],
           );
-          await trx.query(
-            `insert into offline.sync_item_receipts
-          (tenant_id,idempotency_key,queue_item_id,device_id,device_batch_id,payload_hash,status)
-          values ($1::uuid,$2,$3,$4,$5,$6,$7)
-          on conflict (tenant_id,idempotency_key) do nothing`,
+          await trx.run(ensureLegacyReceipt,
             [
               scope.tenantId,
               key,
@@ -1117,11 +967,7 @@ export async function pgSubmit(
             ],
           );
           if (stored.status === 'received' && stored.payload_hash === item.payloadHash) {
-            await trx.query(
-              `insert into offline.sync_item_attempts
-            (tenant_id,device_id,device_batch_id,queue_item_id,idempotency_key,payload_hash,status,error_code)
-            values ($1::uuid,$2,$3,$4,$5,$6,'rejected','OFFLINE_SYNC_LEGACY_ITEM_NOT_APPLIED')
-            on conflict (tenant_id,device_id,device_batch_id,queue_item_id) do nothing`,
+            await trx.run(appendLegacyUnappliedAttempt,
               [
                 scope.tenantId,
                 input.deviceId,
@@ -1142,11 +988,7 @@ export async function pgSubmit(
             };
           }
         }
-        const insertedReceipt = await trx.query(
-          `insert into offline.sync_item_receipts
-        (tenant_id,idempotency_key,queue_item_id,device_id,device_batch_id,payload_hash,status,error_code)
-        values ($1::uuid,$2,$3,$4,$5,$6,$8,$7)
-        on conflict (tenant_id,idempotency_key) do nothing returning idempotency_key`,
+        const insertedReceipt = await executeTypedQueryResult(trx, insertInitialReceipt,
           [
             scope.tenantId,
             key,
@@ -1159,11 +1001,10 @@ export async function pgSubmit(
           ],
         );
         const receipt = (
-          await trx.query<ReceiptRow & { device_id: string; device_batch_id: string }>(
-            `select * from offline.sync_item_receipts where tenant_id=$1::uuid and idempotency_key=$2 for update`,
+          await trx.run(lockInitialReceipt,
             [scope.tenantId, key],
           )
-        ).rows[0]!;
+        )[0]!;
         if (receipt.payload_hash !== item.payloadHash) {
           const stynx = await integrityRejection(
             trx,
@@ -1199,12 +1040,7 @@ export async function pgSubmit(
             receipt.device_batch_id !== input.deviceBatchId ||
             receipt.queue_item_id !== item.queueItemId
           ) {
-            await trx.query(
-              `insert into offline.sync_item_attempts
-            (tenant_id,device_id,device_batch_id,queue_item_id,idempotency_key,payload_hash,status,error_code,context_json)
-            values ($1::uuid,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
-            on conflict (tenant_id,device_id,device_batch_id,queue_item_id)
-            do update set status=excluded.status,error_code=excluded.error_code,context_json=excluded.context_json`,
+            await trx.run(appendDuplicateAttempt,
               [
                 scope.tenantId,
                 input.deviceId,
@@ -1320,11 +1156,10 @@ export async function pgSubmit(
             async (trx) => {
               await renewLease(trx, scope, input, token, generation);
               const locked = (
-                await trx.query<ReceiptRow & { device_id: string; device_batch_id: string }>(
-                  `select * from offline.sync_item_receipts where tenant_id=$1::uuid and idempotency_key=$2 for update`,
+                await trx.run(lockApplyingReceipt,
                   [scope.tenantId, key],
                 )
-              ).rows[0];
+              )[0];
               // Under the receipt row lock a `pending` receipt leaves that state exactly once (D1 item 4); a
               // concurrent second submission sees the committed status here and receives it as a duplicate.
               if (
@@ -1355,11 +1190,10 @@ export async function pgSubmit(
                 originalContext,
                 options,
                 async (id) => {
-                  const found = await trx.query<{ present: boolean }>(
-                    `select exists(select 1 from offline.sync_queue_items where tenant_id=$1::uuid and id=$2) as present`,
+                  const found = await trx.run(queueIdentityExists,
                     [scope.tenantId, id],
                   );
-                  return found.rows[0]?.present === true;
+                  return found[0]?.present === true;
                 },
               );
               const context = prepared.context;
@@ -1381,29 +1215,15 @@ export async function pgSubmit(
                   concurrencySuspected: context.concurrencySuspected,
                   concurrentPairs: context.concurrentPairs,
                 });
-                await trx.query(
-                  `update offline.sync_item_receipts set context_json=coalesce(context_json,'{}'::jsonb) || jsonb_build_object('stynx',$3::jsonb),
-                  updated_at=$4::timestamptz where tenant_id=$1::uuid and idempotency_key=$2`,
+                await trx.run(recordConcurrencyContext,
                   [scope.tenantId, key, JSON.stringify(stynx), now],
                 );
                 return { kind: 'conflict' as const, conflict: recorded.conflict };
               }
-              let reservationId: string | null = null;
+              let claimedConsumption: { reservationId: string; reservedNumber: number } | undefined;
               if (item.reservedNumber != null) {
                 const covering = (
-                  await trx.query<{
-                    id: string;
-                    status: string;
-                    valid_until: Date | string;
-                  }>(
-                    `select r.id,r.status,r.valid_until from offline.numbering_reservations r
-               where tenant_id=$1::uuid and device_id=$2 and org_unit_id=$3 and entity_type=$4
-                 and start_number<=$5 and end_number>=$5
-                 and ($6::uuid is null or id=$6::uuid)
-                 and (r.status <> 'cancelled' or exists (
-                   select 1 from offline.numbering_consumption c where c.tenant_id=r.tenant_id
-                     and c.reservation_id=r.id and c.number=$5 and c.status in ('applied','claimed-locally')))
-               order by r.id for update of r`,
+                  await trx.run(lockNumberCoverage,
                     [
                       scope.tenantId,
                       input.deviceId,
@@ -1413,7 +1233,7 @@ export async function pgSubmit(
                       item.reservationId ?? null,
                     ],
                   )
-                ).rows;
+                );
                 if (covering.length === 0)
                   throw new OfflineSyncNumberingOutcome(
                     'OFFLINE_SYNC_NUMBERING_NO_COVERAGE',
@@ -1427,14 +1247,12 @@ export async function pgSubmit(
                     null,
                   );
                 const reservation = covering[0]!;
-                reservationId = reservation.id;
+                const reservationId = reservation.id;
                 const consumed = (
-                  await trx.query<{ status: string }>(
-                    `select status from offline.numbering_consumption
-              where tenant_id=$1::uuid and reservation_id=$2::uuid and number=$3 for update`,
+                  await trx.run(lockNumberConsumption,
                     [scope.tenantId, reservationId, item.reservedNumber],
                   )
-                ).rows[0];
+                )[0];
                 if (consumed?.status === 'applied')
                   throw new OfflineSyncNumberingOutcome(
                     'OFFLINE_SYNC_NUMBERING_ALREADY_APPLIED',
@@ -1456,12 +1274,7 @@ export async function pgSubmit(
                     item.reservedNumber,
                     reservationId,
                   );
-                const claimed = await trx.query(
-                  `insert into offline.numbering_consumption
-              (tenant_id,reservation_id,number,status) values ($1::uuid,$2::uuid,$3,'claimed-locally')
-              on conflict (tenant_id,reservation_id,number) do update set status='claimed-locally'
-                where offline.numbering_consumption.status in ('available','claimed-locally')
-              returning number`,
+                const claimed = await executeTypedQueryResult(trx, claimNumberConsumption,
                   [scope.tenantId, reservationId, item.reservedNumber],
                 );
                 if (!claimed.rowCount)
@@ -1470,6 +1283,7 @@ export async function pgSubmit(
                     item.reservedNumber,
                     reservationId,
                   );
+                claimedConsumption = { reservationId, reservedNumber: item.reservedNumber };
               }
               const applied = await itemApplier.apply(trx, portItem, context);
               const consumerAttributes = boundedConsumerAttributes(applied.consumerAttributes);
@@ -1504,23 +1318,16 @@ export async function pgSubmit(
               );
               const concurrencyConflict = recorded.conflict;
               const conflictMarks = recorded.marks;
-              if (reservationId !== null) {
-                await trx.query(
-                  `update offline.numbering_consumption set status='applied',
-              server_entity_id=$4,finalized_at=$5::timestamptz
-              where tenant_id=$1::uuid and reservation_id=$2::uuid and number=$3 and status='claimed-locally'`,
-                  [scope.tenantId, reservationId, item.reservedNumber, applied.serverEntityId, now],
+              if (claimedConsumption) {
+                await trx.run(applyNumberConsumption,
+                  [scope.tenantId, claimedConsumption.reservationId, claimedConsumption.reservedNumber, applied.serverEntityId, now],
                 );
               }
               if (!concurrencyConflict) {
-                await trx.query(
-                  `update offline.sync_queue_items set status='applied',updated_at=$3::timestamptz
-              where tenant_id=$1::uuid and id=$2`,
+                await trx.run(applyQueueItem,
                   [scope.tenantId, queueItemId, now],
                 );
-                await trx.query(
-                  `update offline.sync_item_receipts set status='applied',error_code=null,
-              updated_at=$3::timestamptz where tenant_id=$1::uuid and idempotency_key=$2`,
+                await trx.run(applyItemReceipt,
                   [scope.tenantId, key, now],
                 );
               }
@@ -1545,9 +1352,7 @@ export async function pgSubmit(
                 attempts,
                 consumerAttributes,
               });
-              await trx.query(
-                `update offline.sync_item_receipts set context_json=coalesce(context_json,'{}'::jsonb) || jsonb_build_object('stynx',$3::jsonb),
-            updated_at=$4::timestamptz where tenant_id=$1::uuid and idempotency_key=$2`,
+              await trx.run(recordAppliedContext,
                 [scope.tenantId, key, JSON.stringify(stynx), now],
               );
               // D1 item 6: a re-application never reuses the event key recorded for an earlier attempt.
@@ -1586,13 +1391,14 @@ export async function pgSubmit(
             error.getStatus() < 500 &&
             !(error instanceof OfflineSyncError && error.code === 'OFFLINE_SYNC_BATCH_CONFLICT');
           const numbering = error instanceof OfflineSyncNumberingOutcome ? error : null;
-          errorCode = !domainContext.valid
+          const failedErrorCode = !domainContext.valid
             ? 'OFFLINE_SYNC_DOMAIN_CONTEXT_INVALID'
             : !classification.valid
               ? 'OFFLINE_SYNC_DOMAIN_OUTCOME_INVALID'
               : options.ports.domainOutcomeClassifier
                 ? (classification.code ?? domainFailureCode(error) ?? 'OFFLINE_SYNC_ITEM_FAILED')
-                : ((error as { code?: string }).code ?? 'OFFLINE_SYNC_ITEM_FAILED');
+                : (typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string' ? error.code : 'OFFLINE_SYNC_ITEM_FAILED');
+          errorCode = failedErrorCode;
           // A retryable failure of a re-application leaves the receipt `pending` for the resumed batch.
           const expected: SyncItemReceipt['status'] = reapplying ? 'pending' : initialStatus;
           if (numbering) {
@@ -1631,10 +1437,7 @@ export async function pgSubmit(
                 now,
                 receiptId: key,
               };
-              await trx.query(
-                `insert into offline.sync_conflicts
-              (id,tenant_id,sync_queue_item_id,local_entity_id,payload_hash,conflict_type,description,status,created_at)
-              values ($1::uuid,$2::uuid,$3,$4,$5,$8,$6,'open',$7::timestamptz)`,
+              await trx.run(appendDomainConflict,
                 [
                   conflictId,
                   scope.tenantId,
@@ -1655,10 +1458,7 @@ export async function pgSubmit(
                 (conflictType === 'concurrency'
                   ? ['manual_review']
                   : ['reject', 'retry_after_correction']);
-              await trx.query(
-                `insert into offline.sync_conflict_evidence
-              (tenant_id,conflict_id,queue_item_id,allowed_actions,evidence)
-              values ($1::uuid,$2::uuid,$3,$4::jsonb,$5::jsonb)`,
+              await trx.run(appendDomainEvidence,
                 [
                   scope.tenantId,
                   conflictId,
@@ -1684,16 +1484,12 @@ export async function pgSubmit(
               );
               if (numbering) receiptContext = { ...numbering.context, conflictId, allowedActions };
             }
-            await trx.query(
-              `update offline.sync_item_receipts set status=$3,error_code=$4,
-            context_json=coalesce(context_json,'{}'::jsonb) || coalesce($8::jsonb,'{}'::jsonb) || jsonb_build_object('stynx',$9::jsonb),
-            updated_at=$5::timestamptz where tenant_id=$1::uuid and idempotency_key=$2
-            and device_id=$6 and status=$7`,
+            await trx.run(recordFailedReceipt,
               [
                 scope.tenantId,
                 key,
                 status,
-                errorCode,
+                failedErrorCode,
                 now,
                 input.deviceId,
                 expected,
@@ -1702,18 +1498,11 @@ export async function pgSubmit(
               ],
             );
             if (classified || outcome)
-              await trx.query(
-                `update offline.sync_queue_items set status=$3,
-            updated_at=$4::timestamptz where tenant_id=$1::uuid and id=$2`,
+              await trx.run(recordOutcomeQueue,
                 [scope.tenantId, queueItemId, status, now],
               );
             if (outcome && reapplying) {
-              await trx.query(
-                `insert into offline.sync_item_attempts
-                  (tenant_id,device_id,device_batch_id,queue_item_id,idempotency_key,payload_hash,status,error_code,context_json)
-                  values ($1::uuid,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
-                  on conflict (tenant_id,device_id,device_batch_id,queue_item_id)
-                  do update set status=excluded.status,error_code=excluded.error_code,context_json=excluded.context_json`,
+              await trx.run(appendReapplyAttempt,
                 [
                   scope.tenantId,
                   input.deviceId,
@@ -1722,7 +1511,7 @@ export async function pgSubmit(
                   key,
                   item.payloadHash,
                   status,
-                  errorCode,
+                  failedErrorCode,
                   JSON.stringify({
                     ...receiptContext,
                     ...(queueItemId !== item.queueItemId
@@ -1747,12 +1536,7 @@ export async function pgSubmit(
       if (reapplying && !refusalAttemptRecorded)
         await txDurable(database, async (trx) => {
           await renewLease(trx, scope, input, token, generation);
-          await trx.query(
-            `insert into offline.sync_item_attempts
-        (tenant_id,device_id,device_batch_id,queue_item_id,idempotency_key,payload_hash,status,error_code,context_json)
-        values ($1::uuid,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
-        on conflict (tenant_id,device_id,device_batch_id,queue_item_id)
-        do update set status=excluded.status,error_code=excluded.error_code,context_json=excluded.context_json`,
+          await trx.run(appendFinalAttempt,
             [
               scope.tenantId,
               input.deviceId,
@@ -1807,8 +1591,7 @@ export async function pgSubmit(
     const bytes = Buffer.from(JSON.stringify(result));
     await txDurable(database, async (trx) => {
       await renewLease(trx, scope, input, token, generation);
-      const updated = await trx.query(
-        `update offline.sync_batches set status=$4,response_status=$5,response_body_bytes=$6,response_headers=$9::jsonb,lease_token=null,lease_expires_at=null,updated_at=$7::timestamptz where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3 and lease_token=$8::uuid and lease_generation=$10`,
+      const updated = await executeTypedCommand(trx, finalizeDurableBatch,
         [
           scope.tenantId,
           input.deviceId,
@@ -1822,15 +1605,12 @@ export async function pgSubmit(
           generation,
         ],
       );
-      if (!updated.rowCount) failure('OFFLINE_SYNC_BATCH_CONFLICT', 409, 'Batch lease was fenced.');
+      if (!updated) failure('OFFLINE_SYNC_BATCH_CONFLICT', 409, 'Batch lease was fenced.');
     });
     return result;
   } catch (error) {
     await txDurable(database, async (trx) => {
-      await trx.query(
-        `update offline.sync_batches set lease_token=null,lease_expires_at=null
-        where tenant_id=$1::uuid and device_id=$2 and device_batch_id=$3
-          and lease_token=$4::uuid and lease_generation=$5 and status='open'`,
+      await trx.run(releaseDurableLease,
         [scope.tenantId, input.deviceId, input.deviceBatchId, token, generation],
       );
     }).catch(() => undefined);

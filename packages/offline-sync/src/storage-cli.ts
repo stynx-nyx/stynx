@@ -2,7 +2,8 @@
 import { existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
-import { createStynxPgClient } from '@stynx-nyx/data';
+import { createStynxPgClient, executeTypedQuery } from '@stynx-nyx/data';
+import { beginStorageVerification, rollbackStorageVerification } from './storage.repository.js';
 import { renderOfflineStorage, verifyOfflineStorage, type OfflineStorageOptions } from './storage.js';
 
 export interface OfflineStorageCommandIO {
@@ -92,12 +93,12 @@ async function execute(
   const client = createStynxPgClient({ connectionString: environment[key] });
   try {
     await client.connect();
-    await client.query('begin read only');
+    await executeTypedQuery(client, beginStorageVerification, []);
     const report = await verifyOfflineStorage(client, options);
     io.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
     return report.supported ? 0 : 1;
   } finally {
-    await client.query('rollback').catch(() => undefined);
+    await executeTypedQuery(client, rollbackStorageVerification, []).catch(() => undefined);
     await client.end();
   }
 }

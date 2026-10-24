@@ -33,6 +33,8 @@ import {
   type StynxDataModuleOptions,
 } from './tokens.js';
 import type { TxOptions } from './types.js';
+import { executeTransactionControl, executeTypedQuery } from './checked-executor.js';
+import { liveCommandIdentity } from './data-context.repository.js';
 
 interface TransactionContextState {
   client: PoolClient;
@@ -74,7 +76,7 @@ function isRetryableError(error: unknown): error is Error & { code: string } {
 
 function mapTransactionError(error: unknown): unknown {
   const code = transactionErrorCode(error);
-  if (code === '40001' && (error as Error).message === 'audit_chain_requires_read_committed') {
+  if (code === '40001' && error instanceof Error && error.message === 'audit_chain_requires_read_committed') {
     return new AuditChainIsolationError();
   }
   if (code === 'STY41') return new AuditChainKeyMismatchError();
@@ -156,7 +158,7 @@ export class Database extends CoreDatabase {
     const resolvedRole = options.role ?? 'app';
     const resolvedReadonly = options.readonly ?? false;
     const retry = options.retry ??
-      this.options.retry ?? { attempts: 3, jitterMs: [10, 50] as [number, number] };
+      this.options.retry ?? { attempts: 3, jitterMs: [10, 50] };
     const retryConfig = retry === false ? undefined : retry;
     if (options.requireActor && resolvedRole !== 'app') {
       throw new TransactionIdentityMismatchError(
@@ -199,14 +201,14 @@ export class Database extends CoreDatabase {
     let lastError: unknown;
 
     for (let attempt = 1; attempt <= attempts; attempt += 1) {
+      if (pool === undefined) throw new TypeError('Selected database pool is not initialized');
       const client = await pool.connect();
       let holder: ConnectionHolder | undefined;
       let trx: Transaction | undefined;
       try {
-        await client.query('BEGIN');
+        await executeTransactionControl(client, { kind: 'begin' });
         if (options.isolation) {
-          const isolation = options.isolation.toUpperCase();
-          await client.query(`SET TRANSACTION ISOLATION LEVEL ${isolation}`);
+          await executeTransactionControl(client, { kind: 'isolation', isolation: options.isolation });
         }
         await this.applySessionState(
           client,
@@ -238,10 +240,10 @@ export class Database extends CoreDatabase {
         holder = { held: true, strict: options.strictItemMode === true };
         const result = await connectionHolder.run(holder, () => fn(activeTrx));
         activeTrx.close();
-        await client.query('COMMIT');
+        await executeTransactionControl(client, { kind: 'commit' });
         return result;
       } catch (error) {
-        await client.query('ROLLBACK').catch(() => undefined);
+        await executeTransactionControl(client, { kind: 'rollback' }).catch(() => undefined);
         const mapped = mapTransactionError(error);
         if (attempt < attempts && isRetryableError(mapped)) {
           const [minJitter, maxJitter] = retryConfig!.jitterMs;
@@ -264,7 +266,7 @@ export class Database extends CoreDatabase {
         trx?.close();
         if (holder) holder.held = false;
         if (this.cls.get(TX_CONTEXT_KEY) !== undefined) {
-          this.cls.set(TX_CONTEXT_KEY, null as unknown as TransactionContextState);
+          this.cls.set(TX_CONTEXT_KEY, null);
         }
         client.release();
       }
@@ -307,17 +309,17 @@ export class Database extends CoreDatabase {
     role: 'owner' | 'app' | 'reader',
     fn: (trx: Transaction) => Promise<T>,
   ): Promise<T> {
-    const savepointName = `stynx_sp_${(active.savepointCounter += 1)}`;
-    await active.client.query(`SAVEPOINT ${savepointName}`);
+    const sequence = ++active.savepointCounter;
+    await executeTransactionControl(active.client, { kind: 'savepoint', sequence });
     const trx = new Transaction(active.client, active.db, role, this.metrics);
     try {
       const result = await fn(trx);
       trx.close();
-      await active.client.query(`RELEASE SAVEPOINT ${savepointName}`);
+      await executeTransactionControl(active.client, { kind: 'release-savepoint', sequence });
       return result;
     } catch (error) {
       trx.close();
-      await active.client.query(`ROLLBACK TO SAVEPOINT ${savepointName}`);
+      await executeTransactionControl(active.client, { kind: 'rollback-savepoint', sequence });
       throw mapTransactionError(error);
     }
   }
@@ -326,16 +328,7 @@ export class Database extends CoreDatabase {
     client: PoolClient,
     expected: ResolvedExecutionContext,
   ): Promise<void> {
-    const result = await client.query<{
-      current_user: string;
-      role: string | null;
-      tenant_id: string | null;
-      actor_id: string | null;
-    }>(`SELECT current_user,
-              current_setting('app.role', true) AS role,
-              current_setting('app.tenant_id', true) AS tenant_id,
-              current_setting('app.actor_id', true) AS actor_id`);
-    const live = result.rows[0];
+    const live = await executeTypedQuery(client, liveCommandIdentity, []);
     const mismatch: TransactionIdentityMismatchReason | undefined =
       !live || live.current_user !== this.resolvedAppRoleName
         ? 'sql_role'
@@ -382,38 +375,26 @@ export class Database extends CoreDatabase {
     deadlineMs?: number,
     lockTimeoutMs?: number,
   ): Promise<void> {
-    await client.query(`SELECT set_config('app.role', $1, true)`, [role]);
-
-    if (executionContext.requestId) {
-      await client.query(`SELECT set_config('app.request_id', $1, true)`, [
-        executionContext.requestId,
-      ]);
+    await executeTransactionControl(client, { kind: 'setting', name: 'app.role', value: role });
+    for (const [name, value] of [
+      ['app.request_id', executionContext.requestId],
+      ['app.tenant_id', executionContext.tenantId],
+      ['app.actor_id', executionContext.actorId],
+    ] as const) {
+      if (value) await executeTransactionControl(client, { kind: 'setting', name, value });
     }
-    if (executionContext.tenantId) {
-      await client.query(`SELECT set_config('app.tenant_id', $1, true)`, [
-        executionContext.tenantId,
-      ]);
-    }
-    if (executionContext.actorId) {
-      await client.query(`SELECT set_config('app.actor_id', $1, true)`, [executionContext.actorId]);
-    }
-    await client.query(`SELECT set_config('app.roles', $1, true)`, [
-      (executionContext.roles ?? []).join(','),
-    ]);
+    await executeTransactionControl(client, {
+      kind: 'setting', name: 'app.roles', value: (executionContext.roles ?? []).join(','),
+    });
     if (executionContext.sessionId) {
-      await client.query(`SELECT set_config('app.session_id', $1, true)`, [
-        executionContext.sessionId,
-      ]);
+      await executeTransactionControl(client, { kind: 'setting', name: 'app.session_id', value: executionContext.sessionId });
     }
-
-    if (readonly) {
-      await client.query('SET LOCAL TRANSACTION READ ONLY');
-    }
+    if (readonly) await executeTransactionControl(client, { kind: 'readonly' });
     if (deadlineMs !== undefined) {
-      await client.query(`SELECT set_config('statement_timeout', $1, true)`, [String(deadlineMs)]);
+      await executeTransactionControl(client, { kind: 'setting', name: 'statement_timeout', value: String(deadlineMs) });
     }
     if (lockTimeoutMs !== undefined) {
-      await client.query(`SELECT set_config('lock_timeout', $1, true)`, [String(lockTimeoutMs)]);
+      await executeTransactionControl(client, { kind: 'setting', name: 'lock_timeout', value: String(lockTimeoutMs) });
     }
   }
 

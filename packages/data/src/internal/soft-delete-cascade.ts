@@ -1,3 +1,5 @@
+import { executeTypedQuery, executeLegacyArchive } from '../checked-executor.js';
+import { archiveMoveContext, archiveSoftDeleteReason } from '../archive.repository.js';
 import type { QueryResult, QueryResultRow } from 'pg';
 import {
   ArchiveMirrorMissingError,
@@ -182,10 +184,10 @@ export async function softDeleteByReference(
     });
   }
 
-  await ctx.query(`select set_config('app.archive_move', 'in_progress', true)`);
-  await ctx.query(`select set_config('app.archive_reason', 'soft_delete', true)`);
+  await executeTypedQuery(ctx, archiveMoveContext, []);
+  await executeTypedQuery(ctx, archiveSoftDeleteReason, []);
 
-  const insert = await ctx.query<{ archive_id: string }>(
+  const insert = await executeLegacyArchive(ctx, 'soft-delete-insert',
     `
       insert into ${meta.mirrorQualifiedName} (${meta.columnNames.map(quoteIdent).join(', ')}, deleted_at, deleted_by)
       select ${meta.columnNames.map(quoteIdent).join(', ')}, $2::timestamptz, current_setting('app.actor_id', true)::uuid
@@ -201,9 +203,9 @@ export async function softDeleteByReference(
   }
 
   try {
-    await ctx.query(`delete from ${meta.qualifiedName} where id = $1`, [id]);
+    await executeLegacyArchive(ctx, 'soft-delete-live',`delete from ${meta.qualifiedName} where id = $1`, [id]);
   } catch (error) {
-    const code = (error as { code?: string })?.code;
+    const code = typeof error === 'object' && error !== null && 'code' in error ? error.code : undefined;
     if (code === '23503' || code === '23001') {
       throw new SoftDeleteBlockedError({
         parent: { schema: meta.schema, table: meta.table, id },

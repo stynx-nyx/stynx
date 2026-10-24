@@ -78,11 +78,12 @@ export function applyReplayResponse(
   transport: SubmitSyncBatchOptions,
   ports: StynxOfflineSyncModuleOptions,
   status: number,
-  headers: Readonly<Record<string, string>>,
+  headers: Readonly<Record<string, string>> | null,
 ): void {
   const response = transport.response;
   if (!response) return;
   response.status(status);
+  if (headers === null) throw new TypeError('Cannot convert undefined or null to object');
   for (const [name, value] of Object.entries(headers)) response.setHeader(name, value);
   response.setHeader(
     ports.replayKeyHeaderName ?? 'X-Idempotency-Key',

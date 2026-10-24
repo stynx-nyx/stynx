@@ -24,7 +24,7 @@ export function mirrorQualifiedName(schema: string, table: string): string {
 export function getTableMeta(table: AnyPgTable): TableMeta {
   const config = getTableConfig(table);
   const columns = Object.values(getTableColumns(table)).filter(
-    (column) => (column as { generated?: unknown }).generated === undefined,
+    (column) => column.generated === undefined,
   );
   return {
     schema: config.schema ?? 'public',

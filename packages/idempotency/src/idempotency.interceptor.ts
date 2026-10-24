@@ -59,6 +59,7 @@ const DEFAULT_OPTIONS: Required<
 
 interface HttpResponseLike {
   statusCode?: number;
+  headers?: Record<string, string>;
   setHeader(name: string, value: string): void;
   status(statusCode: number): unknown;
 }
@@ -76,14 +77,12 @@ function toUserId(request: RequestLike): string | undefined {
 }
 
 function toPath(request: RequestLike): string {
-  const withOriginal = request as RequestLike & { originalUrl?: string };
-  const withUrl = request as RequestLike & { url?: string };
-  const raw = withOriginal.originalUrl ?? withUrl.url ?? '';
+  const raw = request.originalUrl ?? request.url ?? '';
   return raw.split('?')[0]!;
 }
 
 function toBody(request: RequestLike): unknown {
-  return (request as RequestLike & { body?: unknown }).body;
+  return request.body;
 }
 
 @Injectable()
@@ -148,7 +147,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
   }
 
   private requestFingerprint(request: RequestLike): string {
-    const method = normalizeMethod((request as RequestLike & { method?: string }).method);
+    const method = normalizeMethod(request.method);
     const path = toPath(request);
     const body = this.stableStringify(toBody(request));
     return createHash('sha256').update(`${method}:${path}:${body}`).digest('hex');
@@ -162,7 +161,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
       return `[${value.map((item) => this.stableStringify(item)).join(',')}]`;
     }
     if (typeof value === 'object') {
-      const entries = Object.entries(value as Record<string, unknown>)
+      const entries = Object.entries(value)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(
           ([key, entry]) =>
@@ -219,7 +218,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     headerValue: string,
     ttlMs: number,
   ): IdempotencyDecisionContext {
-    const method = normalizeMethod((request as RequestLike & { method?: string }).method);
+    const method = normalizeMethod(request.method);
     const routeKey = `${method}:${toPath(request)}`;
     const tenantId = request.tenantId;
     const userId = toUserId(request);
@@ -306,7 +305,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
     setLookupTimingHeader(response, performance.now() - lookupStartedAt);
 
     try {
-      const body = await firstValueFrom(next.handle());
+      const body: unknown = await firstValueFrom(next.handle());
       const statusCode = response.statusCode ?? 200;
       const headers = this.captureReplayableHeaders(response);
       const entry: IdempotencyStoredEntry = {
@@ -384,7 +383,7 @@ export class IdempotencyInterceptor implements NestInterceptor {
   }
 
   private captureReplayableHeaders(response: HttpResponseLike): Record<string, string> {
-    const headers = (response as { headers?: Record<string, string> }).headers;
+    const headers = response.headers;
     // Stryker disable next-line ConditionalExpression,LogicalOperator: replayable header capture is covered with response-header object tests.
     if (headers && typeof headers === 'object') {
       return { ...headers };

@@ -80,7 +80,7 @@ export class ClaimFirstTenantEntitlementPolicy implements TenantEntitlementPolic
 
     if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
       try {
-        const parsed = JSON.parse(trimmed);
+        const parsed: unknown = JSON.parse(trimmed);
         if (Array.isArray(parsed)) {
           return parsed
             .filter((entry): entry is string => typeof entry === 'string')

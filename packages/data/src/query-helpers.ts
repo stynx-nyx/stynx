@@ -1,16 +1,28 @@
-import { sql, type SQL, type SQLWrapper } from 'drizzle-orm';
+import { PgColumn } from 'drizzle-orm/pg-core';
+import { getTableColumns, sql, SQL, type SQLWrapper } from 'drizzle-orm';
+import { QueryRowValidationError } from './errors.js';
+import { executeLegacyArchive } from './checked-executor.js';
 import type {
   AnyPgTable,
-  PgColumn,
   PgSelectBuilder,
+  PgTable,
+  TableConfig,
 } from 'drizzle-orm/pg-core';
-import type { PoolClient, QueryResultRow } from 'pg';
+import type { PoolClient } from 'pg';
 import { archiveOf } from './internal/archive-schema.js';
 import { getTableMeta, quoteIdent } from './internal/table-meta.js';
 import { isSoftDeletable } from './table-markers.js';
 import type { SoftDeletableTable } from './types.js';
 
-export type LiveSelectBuilder = ReturnType<PgSelectBuilder<undefined>['from']>;
+function makeLiveSelect<TConfig extends TableConfig>(
+  builderFactory: () => PgSelectBuilder<undefined>,
+  table: PgTable<TConfig>,
+) {
+  return builderFactory().from(table);
+}
+
+export type LiveSelectBuilder<TTable extends AnyPgTable = AnyPgTable> =
+  ReturnType<typeof makeLiveSelect<TTable['_']['config']>>;
 
 export type SelectBuilderLike = {
   config: {
@@ -61,14 +73,14 @@ export type ArchiveQueryRow<TTable extends AnyPgTable, TMode extends ArchiveMode
   ? WithDeletedRow<TTable>
   : OnlyDeletedRow<TTable>;
 
-export type SoftDeleteAwareSelect<TTable extends AnyPgTable> = LiveSelectBuilder & {
+export type SoftDeleteAwareSelect<TTable extends AnyPgTable> = LiveSelectBuilder<TTable> & {
   withDeleted(): ArchiveSelectQuery<TTable, 'withDeleted'>;
   onlyDeleted(): ArchiveSelectQuery<TTable, 'onlyDeleted'>;
 };
 
 export interface TransactionSelectRoot {
   from<TTable extends SoftDeletableTable<AnyPgTable>>(table: TTable): SoftDeleteAwareSelect<TTable>;
-  from<TTable extends AnyPgTable>(table: TTable): LiveSelectBuilder;
+  from<TTable extends AnyPgTable>(table: TTable): LiveSelectBuilder<TTable>;
 }
 
 function shiftPlaceholders(text: string, offset: number): string {
@@ -270,8 +282,8 @@ export class ArchiveSelectQuery<TTable extends AnyPgTable, TMode extends Archive
 
   async execute(): Promise<Array<ArchiveQueryRow<TTable, TMode>>> {
     const compiled = this.toSQL();
-    const result = await this.client.query<QueryResultRow>(compiled.sql, compiled.params);
-    return result.rows.map((row) => this.mapRow(row)) as Array<ArchiveQueryRow<TTable, TMode>>;
+    const result = await executeLegacyArchive(this.client, 'select', compiled.sql, compiled.params, (row, index) => this.validateRow(row, index));
+    return result.rows.map((row) => this.mapRow(row));
   }
 
   then<TResult1 = Array<ArchiveQueryRow<TTable, TMode>>, TResult2 = never>(
@@ -291,7 +303,55 @@ export class ArchiveSelectQuery<TTable extends AnyPgTable, TMode extends Archive
     return this.execute().finally(onfinally ?? undefined);
   }
 
-  private mapRow(row: QueryResultRow): ArchiveQueryRow<TTable, TMode> {
+  private validateRow(row: Record<string, unknown>, index: number): Record<string, unknown> {
+    const invalid = (field: string): never => {
+      throw new QueryRowValidationError('legacy.archive.select', index, [{ path: [field], code: 'invalid_type' }]);
+    };
+    for (const column of Object.values(getTableColumns(this.table))) {
+      const value = row[column.name];
+      if (value === null || value === undefined) {
+        if (column.notNull) invalid(column.name);
+        continue;
+      }
+      // Custom mappers and erased $type refinements are the documented legacy
+      // limit; do not coerce their values or claim their application shape is proven.
+      switch (column.dataType) {
+        case 'string': if (typeof value !== 'string') invalid(column.name); break;
+        case 'boolean': if (typeof value !== 'boolean') invalid(column.name); break;
+        case 'number':
+          if (typeof value !== 'number' && !(typeof value === 'string' && /^-?\d+(?:\.\d+)?$/u.test(value))) invalid(column.name);
+          break;
+        case 'bigint':
+          if (typeof value !== 'bigint' && !(typeof value === 'string' && /^-?\d+$/u.test(value))) invalid(column.name);
+          break;
+        case 'date': if (!(value instanceof Date)) invalid(column.name); break;
+        case 'array': if (!Array.isArray(value)) invalid(column.name); break;
+        case 'buffer': if (!Buffer.isBuffer(value)) invalid(column.name); break;
+      }
+    }
+    const required = this.mode === 'onlyDeleted';
+    const archiveId = row.archive_id;
+    if (archiveId === null || archiveId === undefined) {
+      if (required) invalid('archive_id');
+    } else if (!(typeof archiveId === 'bigint' ||
+      (typeof archiveId === 'number' && Number.isSafeInteger(archiveId)) ||
+      (typeof archiveId === 'string' && /^-?\d+$/u.test(archiveId)))) invalid('archive_id');
+    for (const name of ['archived_at', 'deleted_at', 'last_erasure_at']) {
+      const value = row[name];
+      if (value === null || value === undefined) {
+        if (required && name !== 'last_erasure_at') invalid(name);
+      } else if (!(value instanceof Date)) invalid(name);
+    }
+    if (row.deleted_by === null || row.deleted_by === undefined) {
+      if (required) invalid('deleted_by');
+    } else if (typeof row.deleted_by !== 'string') invalid('deleted_by');
+    return row;
+  }
+
+  // This overload preserves the historical Drizzle generic contract. The bridge
+  // validates built-in representations; custom/$type schemas remain erased.
+  private mapRow(row: Record<string, unknown>): ArchiveQueryRow<TTable, TMode>;
+  private mapRow(row: Record<string, unknown>): Record<string, unknown> {
     const mapped: Record<string, unknown> = {};
 
     for (const column of this.projections) {
@@ -301,50 +361,57 @@ export class ArchiveSelectQuery<TTable extends AnyPgTable, TMode extends Archive
     mapped.archiveId = row.archive_id === null || row.archive_id === undefined
       ? null
       : BigInt(String(row.archive_id));
-    mapped.archivedAt = (row.archived_at ?? null) as Date | null;
-    mapped.deletedAt = (row.deleted_at ?? null) as Date | null;
-    mapped.deletedBy = (row.deleted_by ?? null) as string | null;
-    mapped.lastErasureAt = (row.last_erasure_at ?? null) as Date | null;
+    mapped.archivedAt = row.archived_at ?? null;
+    mapped.deletedAt = row.deleted_at ?? null;
+    mapped.deletedBy = row.deleted_by ?? null;
+    mapped.lastErasureAt = row.last_erasure_at ?? null;
 
-    return mapped as ArchiveQueryRow<TTable, TMode>;
+    return mapped;
   }
+}
+
+function isSelectBuilderLike(value: unknown): value is SelectBuilderLike {
+  if (typeof value !== 'object' || value === null || !('config' in value) || !('dialect' in value)) return false;
+  const config = value.config;
+  const dialect = value.dialect;
+  if (typeof config !== 'object' || config === null || typeof dialect !== 'object' || dialect === null ||
+      !('sqlToQuery' in dialect) || typeof dialect.sqlToQuery !== 'function') return false;
+  if ('where' in config && config.where !== undefined && !(config.where instanceof SQL)) return false;
+  if ('orderBy' in config && config.orderBy !== undefined &&
+      (!Array.isArray(config.orderBy) || !config.orderBy.every((item: unknown) => item instanceof SQL || item instanceof SQL.Aliased || item instanceof PgColumn))) return false;
+  return (!('limit' in config) || config.limit === undefined || typeof config.limit === 'number') &&
+    (!('offset' in config) || config.offset === undefined || typeof config.offset === 'number');
 }
 
 export function createTransactionSelectRoot(
   client: PoolClient,
   builderFactory: () => PgSelectBuilder<undefined>,
 ): TransactionSelectRoot {
-  const from = (<TTable extends AnyPgTable>(table: TTable): LiveSelectBuilder => {
-    const builder = builderFactory().from(table as never);
-    if (!isSoftDeletable(table)) {
-      return builder;
-    }
-
-      let proxy: SoftDeleteAwareSelect<TTable>;
-    proxy = new Proxy(builder as unknown as SoftDeleteAwareSelect<TTable>, {
-      get(target, property, receiver) {
+  function from<TTable extends SoftDeletableTable<AnyPgTable>>(table: TTable): SoftDeleteAwareSelect<TTable>;
+  function from<TTable extends AnyPgTable>(table: TTable): LiveSelectBuilder<TTable>;
+  function from<TTable extends AnyPgTable>(table: TTable): LiveSelectBuilder<TTable> {
+    const builder = makeLiveSelect<TTable['_']['config']>(builderFactory, table);
+    if (!isSoftDeletable(table)) return builder;
+    if (!isSelectBuilderLike(builder)) throw new TypeError('Unsupported Drizzle archive select builder');
+    const archiveBuilder = builder;
+    let proxy: typeof builder;
+    proxy = new Proxy(builder, {
+      get(target, property, receiver): unknown {
         if (property === 'withDeleted') {
-          return () => new ArchiveSelectQuery(client, target as unknown as SelectBuilderLike, table, 'withDeleted');
+          return () => new ArchiveSelectQuery(client, archiveBuilder, table, 'withDeleted');
         }
         if (property === 'onlyDeleted') {
-          return () => new ArchiveSelectQuery(client, target as unknown as SelectBuilderLike, table, 'onlyDeleted');
+          return () => new ArchiveSelectQuery(client, archiveBuilder, table, 'onlyDeleted');
         }
-
-        const value = Reflect.get(target, property, receiver);
-        if (typeof value !== 'function') {
-          return value;
-        }
-
-        return (...args: unknown[]) => {
-          const result = value.apply(target, args);
+        const value: unknown = Reflect.get(target, property, receiver);
+        if (typeof value !== 'function') return value;
+        return (...args: unknown[]): unknown => {
+          const result: unknown = Reflect.apply(value, target, args);
           return result === target ? proxy : result;
         };
       },
     });
     return proxy;
-  }) as TransactionSelectRoot['from'];
-
-  return {
-    from,
-  };
+  }
+  return { from };
 }

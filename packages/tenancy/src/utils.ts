@@ -26,13 +26,11 @@ export function parseBearerTenantClaims(rawAuthorization: unknown): { sub?: stri
   }
 
   try {
-    const payload = JSON.parse(Buffer.from(parts[1] ?? '', 'base64url').toString('utf8')) as {
-      sub?: unknown;
-      tenant_id?: unknown;
-    };
+    const payload: unknown = JSON.parse(Buffer.from(parts[1] ?? '', 'base64url').toString('utf8'));
+    if (typeof payload !== 'object' || payload === null) return payload === null ? null : {};
     return {
-      ...(typeof payload.sub === 'string' ? { sub: payload.sub } : {}),
-      ...(typeof payload.tenant_id === 'string' ? { tenantId: payload.tenant_id } : {}),
+      ...('sub' in payload && typeof payload.sub === 'string' ? { sub: payload.sub } : {}),
+      ...('tenant_id' in payload && typeof payload.tenant_id === 'string' ? { tenantId: payload.tenant_id } : {}),
     };
   } catch {
     return null;

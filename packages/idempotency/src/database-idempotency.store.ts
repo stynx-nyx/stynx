@@ -1,5 +1,6 @@
+import { completeDurable, lookupDurable, reserveDurable, clearDurable } from './idempotency.repository.js';
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import { Database } from '@stynx-nyx/data';
+import { Database, executeTypedCommand, executeTypedQuery } from '@stynx-nyx/data';
 import { STYNX_IDEMPOTENCY_OPTIONS } from './constants.js';
 import type {
   IdempotencyDecisionContext,
@@ -8,19 +9,9 @@ import type {
   IdempotencyStore,
 } from './types.js';
 
-interface DurableRow {
-  request_fingerprint: string | null;
-  response: {
-    body?: unknown;
-    statusCode?: number;
-  } | null;
-  response_headers: Record<string, string> | null;
-  status: 'pending' | 'completed';
-  expires_at: string | null;
-}
 
 function stringifyIdempotencyValue(value: unknown): string {
-  return JSON.stringify(value, (_key, current) => (typeof current === 'bigint' ? current.toString() : current));
+  return JSON.stringify(value, (_key: string, current: unknown) => (typeof current === 'bigint' ? current.toString() : current));
 }
 
 @Injectable()
@@ -40,18 +31,10 @@ export class DatabaseIdempotencyStore implements IdempotencyStore {
     return database.withSystemContext('idempotency lookup', async () =>
       database.tx(
         async (trx) => {
-          const result = await trx.query<DurableRow>(
-            `
-              select request_fingerprint, response, response_headers, status, expires_at
-              from core.idempotency_keys
-              where tenant_id is not distinct from $1::uuid
-                and key = $2
-                and coalesce(expires_at, clock_timestamp() + interval '1 second') > clock_timestamp()
-              limit 1
-            `,
+          const result = await executeTypedQuery(trx, lookupDurable,
             [context.tenantId ?? null, context.compositeKey],
           );
-          const row = result.rows[0];
+          const row = result;
           if (!row) {
             return null;
           }
@@ -60,7 +43,7 @@ export class DatabaseIdempotencyStore implements IdempotencyStore {
             statusCode: row.response?.statusCode ?? null,
             body: row.response?.body ?? null,
             headers: row.response_headers ?? {},
-            expiresAt: row.expires_at ? Date.parse(row.expires_at) : Date.now() + (context.ttlMs ?? this.options?.ttlMs ?? 86_400_000),
+            expiresAt: row.expires_at ? Date.parse(String(row.expires_at)) : Date.now() + (context.ttlMs ?? this.options?.ttlMs ?? 86_400_000),
             status: row.status,
           };
         },
@@ -77,23 +60,10 @@ export class DatabaseIdempotencyStore implements IdempotencyStore {
     return database.withSystemContext('idempotency reserve', async () =>
       database.tx(
         async (trx) => {
-          const result = await trx.query<{ reserved: number }>(
-            `
-              insert into core.idempotency_keys (
-                tenant_id,
-                key,
-                status,
-                request_fingerprint,
-                expires_at,
-                updated_at
-              )
-              values ($1::uuid, $2, 'pending', $3, clock_timestamp() + make_interval(secs => $4::int), clock_timestamp())
-              on conflict (tenant_id, key) do nothing
-              returning 1 as reserved
-            `,
+          const result = await executeTypedQuery(trx, reserveDurable,
             [context.tenantId ?? null, context.compositeKey, context.requestFingerprint, Math.max(1, Math.floor(context.ttlMs / 1000))],
           );
-          return Boolean(result.rows[0]?.reserved);
+          return Boolean(result?.reserved);
         },
         { role: 'owner', readonly: false, replica: false },
       ),
@@ -113,17 +83,7 @@ export class DatabaseIdempotencyStore implements IdempotencyStore {
     return database.withSystemContext('idempotency persist', async () =>
       database.tx(
         async (trx) => {
-          const result = await trx.query(
-            `
-              update core.idempotency_keys
-                 set status = 'completed',
-                     response = $3::jsonb,
-                     response_headers = $4::jsonb,
-                     expires_at = clock_timestamp() + make_interval(secs => $5::int),
-                     updated_at = clock_timestamp()
-               where tenant_id is not distinct from $1::uuid
-                 and key = $2
-            `,
+          const result = await executeTypedCommand(trx, completeDurable,
             [
               context.tenantId ?? null,
               context.compositeKey,
@@ -132,7 +92,7 @@ export class DatabaseIdempotencyStore implements IdempotencyStore {
               Math.max(1, Math.floor(context.ttlMs / 1000)),
             ],
           );
-          return (result.rowCount ?? 0) > 0;
+          return (result ?? 0) > 0;
         },
         { role: 'owner', readonly: false, replica: false },
       ),
@@ -147,13 +107,7 @@ export class DatabaseIdempotencyStore implements IdempotencyStore {
     await database.withSystemContext('idempotency clear reservation', async () =>
       database.tx(
         async (trx) => {
-          await trx.query(
-            `
-              delete from core.idempotency_keys
-              where tenant_id is not distinct from $1::uuid
-                and key = $2
-                and status = 'pending'
-            `,
+          await executeTypedQuery(trx, clearDurable,
             [context.tenantId ?? null, context.compositeKey],
           );
         },

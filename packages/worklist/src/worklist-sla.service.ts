@@ -1,3 +1,4 @@
+import { detectBreaches } from './worklist.repository.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
@@ -9,7 +10,7 @@ import {
   type WorklistEventSink,
   type WorklistSchedulerPort,
 } from './ports.js';
-import { mapEventRow, type WorklistRow } from './row-utils.js';
+import { mapEventRow } from './row-utils.js';
 import { mapWorklistSqlError } from './sql-errors.js';
 import type { WorklistEvent } from './types.js';
 import { parseWorklistInput, scheduleBreachSchema } from './validation.js';
@@ -31,14 +32,10 @@ export class WorklistSlaService {
     }
     try {
       const events = await this.database.tx(async (trx) => {
-        const result = await trx.query<WorklistRow>(
-          `select event_id as "eventId", item_id as "itemId", tenant_id as "tenantId",
-             kind, actor_id as "actorId", from_assignee as "fromAssignee",
-             to_assignee as "toAssignee", reason, payload, created_at as "createdAt"
-           from worklist.detect_breaches($1)`,
+        const result = await trx.run(detectBreaches,
           [limit],
         );
-        return result.rows.map(mapEventRow);
+        return result.map(mapEventRow);
       });
       for (const event of events) {
         await this.eventSink.publish(event);

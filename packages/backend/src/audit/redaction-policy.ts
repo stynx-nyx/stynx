@@ -26,6 +26,10 @@ export interface PatternAuditMetadataRedactionPolicyOptions {
 const DEFAULT_SENSITIVE_KEY_PATTERN =
   /(authorization|cookie|password|passwd|pwd|token|secret|credential|app_password|app_login)/i;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 /**
  * Generic key-pattern metadata redaction policy derived from SGP production behavior.
  */
@@ -50,10 +54,10 @@ export class PatternAuditMetadataRedactionPolicy implements AuditMetadataRedacti
   ): Record<string, unknown> | undefined {
     if (!metadata) return metadata;
     const sanitized = this.redactAny(metadata, 0);
-    if (!sanitized || typeof sanitized !== 'object' || Array.isArray(sanitized)) {
+    if (!isRecord(sanitized)) {
       return undefined;
     }
-    return sanitized as Record<string, unknown>;
+    return sanitized;
   }
 
   private redactAny(value: unknown, depth: number): unknown {
@@ -76,7 +80,7 @@ export class PatternAuditMetadataRedactionPolicy implements AuditMetadataRedacti
 
     if (typeof value === 'object') {
       const output: Record<string, unknown> = {};
-      for (const [key, nested] of Object.entries(value as Record<string, unknown>)) {
+      for (const [key, nested] of Object.entries(value)) {
         output[key] = this.sensitiveKeyPattern.test(key)
           ? this.replacement
           : this.redactAny(nested, depth + 1);

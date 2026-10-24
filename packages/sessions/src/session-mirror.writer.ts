@@ -1,5 +1,6 @@
+import { ensureSessionsPartition } from './session-mirror.repository.js';
 import { generateRequestId, RequestContextMutator } from '@stynx-nyx/core';
-import { Database, sessions as authSessions } from '@stynx-nyx/data';
+import { Database, executeTypedQuery, sessions as authSessions } from '@stynx-nyx/data';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { randomUUID } from 'node:crypto';
@@ -29,7 +30,7 @@ export class SessionMirrorWriter implements SessionMirror {
           const createdAt = new Date(entry.createdAt);
           await database.tx(async (trx) => {
             // auth.sessions is partitioned by month; ensure the row's month exists.
-            await trx.query('select auth.ensure_sessions_partition($1::timestamptz)', [
+            await executeTypedQuery(trx, ensureSessionsPartition, [
               createdAt.toISOString(),
             ]);
             await trx.insert(authSessions).values({

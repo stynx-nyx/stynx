@@ -1,3 +1,4 @@
+import { cognitoUser, updateCognitoUser, insertCognitoUser } from './identity.repository.js';
 import { randomUUID } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
@@ -9,12 +10,6 @@ import { EffectiveHashComputer } from './effective-hash-computer.js';
 import { PermissionCache } from './permission-cache.js';
 import { PermissionQueryService } from './permission-query.service.js';
 import type { CognitoAccessTokenClaims } from './types.js';
-
-interface UserRow {
-  id: string;
-  external_subject: string | null;
-  email: string;
-}
 
 interface AuthDatabase {
   tx<T>(
@@ -183,32 +178,18 @@ export class StynxAuthService {
     const existing = await database.withSystemContext('auth cognito user lookup', () =>
       database.tx(
         async (trx) =>
-          trx.query<UserRow>(
-            `
-            select id, external_subject, email
-            from auth.users
-            where external_subject = $1
-               or ($2::text is not null and email = $2)
-            limit 1
-          `,
+          trx.run(cognitoUser,
             [claims.sub, claims.email ?? null],
           ),
         { role: 'owner', readonly: true },
       ),
     );
 
-    const current = existing.rows[0];
+    const current = existing[0];
     if (current) {
       return this.runWithActorContext(tenantId, current.id, async () => {
         await database.tx(async (trx) => {
-          await trx.query(
-            `
-              update auth.users
-              set external_subject = $2,
-                  email = $3,
-                  updated_at = clock_timestamp()
-              where id = $1::uuid
-            `,
+          await trx.run(updateCognitoUser,
             [current.id, claims.sub, claims.email ?? current.email],
           );
         });
@@ -219,11 +200,7 @@ export class StynxAuthService {
     const userId = randomUUID();
     return this.runWithActorContext(tenantId, userId, async () => {
       await database.tx(async (trx) => {
-        await trx.query(
-          `
-            insert into auth.users (id, email, external_subject, locale, created_at, updated_at)
-            values ($1::uuid, $2, $3, 'pt-BR', clock_timestamp(), clock_timestamp())
-          `,
+        await trx.run(insertCognitoUser,
           [userId, claims.email ?? `${claims.sub}@stynx.local`, claims.sub],
         );
       });
@@ -232,7 +209,7 @@ export class StynxAuthService {
   }
 
   private requireDatabase(): AuthDatabase {
-    const database = this.moduleRef.get(Database, { strict: false }) as AuthDatabase | undefined;
+    const database = this.moduleRef.get<AuthDatabase | undefined>(Database, { strict: false });
     if (!database) {
       throw new Error('Database provider is unavailable to StynxAuthService');
     }

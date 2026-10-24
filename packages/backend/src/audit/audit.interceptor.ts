@@ -45,7 +45,7 @@ export class AuditInterceptor implements NestInterceptor {
     const request = context.switchToHttp().getRequest<RequestLike>();
 
     return next.handle().pipe(
-      mergeMap((payload) =>
+      mergeMap((payload: unknown) =>
         from(
           this.writeEvent(metadata, request, context, payload).catch((error: unknown) => {
             const message = error instanceof Error ? error.message : String(error);

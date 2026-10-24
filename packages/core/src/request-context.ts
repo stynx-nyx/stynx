@@ -7,7 +7,6 @@ import { generateRequestId } from './request-id.js';
 
 const REQUEST_CONTEXT_KEY = Symbol('stynx.request-context');
 const SYSTEM_CONTEXT_KEY = Symbol('stynx.system-context');
-const optionalRequestContextKeys = ['tenantId', 'actorId', 'sessionId', 'locale', 'roles'] as const;
 
 export interface RequestContextState {
   requestId: string;
@@ -21,11 +20,12 @@ export interface RequestContextState {
 }
 
 export interface RequestContextPatch {
-  tenantId?: string;
-  actorId?: string;
-  sessionId?: string;
-  locale?: string;
-  roles?: readonly string[];
+  /** An explicit undefined removes the existing optional value. */
+  tenantId?: string | undefined;
+  actorId?: string | undefined;
+  sessionId?: string | undefined;
+  locale?: string | undefined;
+  roles?: readonly string[] | undefined;
 }
 
 export type CoreClsStore = {
@@ -157,12 +157,16 @@ export class RequestContextMutator {
   }
 }
 
-function omitUndefinedOptionals(state: RequestContextState): RequestContextState {
-  const next = { ...state };
-  for (const key of optionalRequestContextKeys) {
-    if (next[key] === undefined) {
-      delete next[key];
-    }
-  }
-  return next;
+function omitUndefinedOptionals(
+  state: Omit<RequestContextState, keyof RequestContextPatch> & RequestContextPatch,
+): RequestContextState {
+  const { tenantId, actorId, sessionId, locale, roles, ...required } = state;
+  return {
+    ...required,
+    ...(tenantId === undefined ? {} : { tenantId }),
+    ...(actorId === undefined ? {} : { actorId }),
+    ...(sessionId === undefined ? {} : { sessionId }),
+    ...(locale === undefined ? {} : { locale }),
+    ...(roles === undefined ? {} : { roles }),
+  };
 }

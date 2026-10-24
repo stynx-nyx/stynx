@@ -65,5 +65,7 @@ export interface RestoreResult {
 
 export type FkBehavior = 'hide' | 'cascade' | 'block';
 export type QueryBuilder = SQLWrapper;
-export type SoftDeletableTable<T> = T & { __stynxSoftDeletable: true };
-export type LiveOnlyTable<T> = T & { __stynxLiveOnly: true };
+export const SOFT_DELETABLE: unique symbol = Symbol.for('stynx.data.soft-deletable');
+export const LIVE_ONLY: unique symbol = Symbol.for('stynx.data.live-only');
+export type SoftDeletableTable<T> = T & { readonly [SOFT_DELETABLE]: true };
+export type LiveOnlyTable<T> = T & { readonly [LIVE_ONLY]: true };

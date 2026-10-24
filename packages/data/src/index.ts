@@ -20,7 +20,9 @@ export {
   type PlatformRoleNames,
 } from './platform-roles.js';
 /** Typed-query helper exports (02 §3, D-030). */
-export { defineQuery, sql, type Expects, type ResultOf, type TypedQuery } from './typed-query.js';
+export { executeTypedQuery, defineQuery, sql, type Expects, type ResultOf, type TypedQuery } from './typed-query.js';
+/** Controlled installation scripts; workspace lint admits only declared lifecycle callers. */
+export { bindQueryContext, createScopedQueryExecutor, type ContextualQueryExecutor, type CheckedQueryScope, executeConfiguredQuery, type ConfiguredSqlExecutor, executeTypedQueryResult, executeTypedCommand, executeGuardedQueryRows, executeRawScript, type CheckedQueryClient } from './checked-executor.js';
 /** Transaction and Drizzle helper exports. */
 export { Transaction, createDrizzle, type StynxDrizzleDatabase } from './transaction.js';
 /** PostgreSQL pool registry exports. */

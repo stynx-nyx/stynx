@@ -226,7 +226,7 @@ function canonicalJson(value: unknown, seen = new Set<object>()): string {
       throw new Error('Command body contains non-JSON object');
     }
     return `{${Object.keys(value).sort(compareCodePoint).map((key) =>
-      `${JSON.stringify(key)}:${canonicalJson((value as Record<string, unknown>)[key], seen)}`).join(',')}}`;
+      `${JSON.stringify(key)}:${canonicalJson(Reflect.get(value, key), seen)}`).join(',')}}`;
   } finally {
     seen.delete(value);
   }
@@ -325,12 +325,12 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
         const controller = wrapper.metatype;
         if (!controller) continue;
         const seenMethods = new Set<string>();
-        for (let prototype: object | null = controller.prototype;
+        for (let prototype: unknown = controller.prototype;
           prototype && prototype !== Object.prototype; prototype = Object.getPrototypeOf(prototype)) {
           for (const name of Object.getOwnPropertyNames(prototype)) {
             if (seenMethods.has(name)) continue;
             seenMethods.add(name);
-            const method = Object.getOwnPropertyDescriptor(prototype, name)?.value;
+            const method: unknown = Object.getOwnPropertyDescriptor(prototype, name)?.value;
             if (typeof method !== 'function') continue;
             const marked = this.reflector.getAllAndOverride<TransactionalCommandOptions | undefined>(
               STYNX_TRANSACTIONAL_COMMAND, [method, controller]);
@@ -430,7 +430,7 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
     type Phase = 'setup' | 'store' | 'handler' | 'ctg5-callback' | 'audit' | 'commit';
     const origin: { phase: Phase } = { phase: 'setup' };
     let callbackFailure: 'status-invalid' | 'status-policy-invalid' | 'response-not-json' | 'audit-metadata-failed' = 'status-invalid';
-    let selectedHttpException: HttpException | undefined;
+    let selectedHttpException: unknown;
     try {
       const committed = await this.database.tx(async (trx) => {
         origin.phase = 'store';
@@ -467,9 +467,9 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
           : (selectedError !== undefined || (statusCode >= 200 && statusCode < 300));
         if (typeof selected !== 'boolean') throw new Error('Command persistStatus must return boolean');
         if (selectedError && !selected) {
-          selectedHttpException = new HttpException(
-            selectedError.body as ConstructorParameters<typeof HttpException>[0], selectedError.statusCode,
-          );
+          selectedHttpException = Reflect.construct(HttpException, [
+            selectedError.body, selectedError.statusCode,
+          ]);
           throw selectedHttpException;
         }
         callbackFailure = 'response-not-json';
@@ -531,7 +531,7 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
     }
     if (!publicTenant || port?.mode === 'verified') {
       const principal = request.principal;
-      const verifiedTenant = Reflect.get(request, STYNX_VERIFIED_TENANT_ID);
+      const verifiedTenant: unknown = Reflect.get(request, STYNX_VERIFIED_TENANT_ID);
       if (!principal?.id || principal.id !== actorId || (publicTenant ? port?.tenantId : verifiedTenant) !== tenantId) {
         reject('COMMAND:FORBIDDEN:actor-provenance-invalid');
       }
@@ -549,8 +549,8 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
       action: metadata.action, entity: metadata.entity ?? context.getClass().name,
       request, ...(request.principal ? { principal: request.principal } : {}),
     });
-    const inferredId = payload && typeof payload === 'object' && typeof (payload as { id?: unknown }).id === 'string'
-      ? (payload as { id: string }).id : undefined;
+    const inferredId = payload && typeof payload === 'object' && 'id' in payload && typeof payload.id === 'string'
+      ? payload.id : undefined;
     const entityId = metadata.entityIdSelector?.(request) ?? inferredId;
     const envelope: AuditEventEnvelope = {
       occurredAt: new Date().toISOString(), action: metadata.action,

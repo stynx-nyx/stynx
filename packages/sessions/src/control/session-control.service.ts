@@ -246,7 +246,7 @@ export class SessionControlService {
         'revoke-all',
         'revoke-subject',
         'revoke-tenant',
-      ] as SessionAction[]) {
+      ] as const) {
         const found = await this.registry.operation(
           `${scope}:${context.actorId}:${action}:${operationId}`,
         );
@@ -260,11 +260,11 @@ export class SessionControlService {
     const lease = new Date(now.getTime() + 60_000).toISOString();
     const claimed = await this.registry.claimPending(now.toISOString(), lease, limit);
     for (const operation of claimed) {
-      const command = {
+      const command: SessionControlCommand = {
         action: operation.result.action,
         operationId: operation.result.operationId,
         scope: operation.result.scope,
-      } as SessionControlCommand;
+      };
       const registrations = await this.registry.list(context, { scope: operation.result.scope });
       for (const item of operation.result.results.filter((result) => result.status === 'pending')) {
         const registration = registrations.find((candidate) => candidate.sid === item.sid);

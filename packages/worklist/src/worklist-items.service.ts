@@ -1,16 +1,16 @@
+import { selectItemListQuery, selectItemCountQuery, selectEventListQuery, selectEventCountQuery } from './filtered-reads.repository.js';
+import { latestItemEvent, newItemEvents, allItemEvents, readWorkItem, eligibleWorkers } from './worklist.repository.js';
+import { enqueueWorkItem, claimNextWorkItem, assignNextWorkItem, assignSelectedWorkItem, claimWorkItem, releaseWorkItem, completeWorkItem, cancelWorkItem, reassignWorkItem, forceReleaseWorkItem, forceCompleteWorkItem, forceReassignWorkItem, countItemEvents } from './item-commands.repository.js';
 import { Inject, Injectable } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database, type Transaction } from '@stynx-nyx/data';
 import { resolveWorklistDeadline } from './deadline.js';
 import { WorklistConflictError, WorklistInputError, WorklistNotFoundError } from './errors.js';
 import {
-  EVENT_COLUMNS,
-  ITEM_COLUMNS,
   mapCandidateRow,
   mapEventRow,
   mapItemRow,
   pageLimitOffset,
-  type WorklistRow,
 } from './row-utils.js';
 import {
   WORKLIST_BUSINESS_CALENDAR,
@@ -74,10 +74,7 @@ export class WorklistItemsService {
 
     try {
       const mutation = await this.database.tx(async (trx) => {
-        const created = await trx.query<{ item_id: string }>(
-          `select worklist.item_enqueue(
-             $1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb
-           ) as item_id`,
+        const created = await trx.run(enqueueWorkItem,
           [
             value.queueCode,
             value.entityType,
@@ -91,7 +88,7 @@ export class WorklistItemsService {
             JSON.stringify(value.meta ?? {}),
           ],
         );
-        const itemId = created.rows[0]?.item_id;
+        const itemId = created[0]?.item_id;
         if (!itemId) throw new WorklistConflictError('Worklist enqueue returned no item');
         return this.mutationResult(trx, itemId);
       });
@@ -103,15 +100,15 @@ export class WorklistItemsService {
   }
 
   async claimNext(queueId: string, userId?: string): Promise<WorklistItemRecord | null> {
-    return this.claimingMutation(`select worklist.item_claim_next($1, $2) as item_id`, [
+    return this.claimingMutation((trx) => trx.run(claimNextWorkItem, [
       queueId,
       userId ?? null,
-    ]);
+    ]));
   }
 
   async claim(itemId: string, userId?: string): Promise<WorklistItemRecord> {
     return this.itemMutation(itemId, (trx) =>
-      trx.query(`select worklist.item_claim($1, $2)`, [itemId, userId ?? null]),
+      trx.run(claimWorkItem, [itemId, userId ?? null]),
     );
   }
 
@@ -121,7 +118,7 @@ export class WorklistItemsService {
       throw new WorklistConflictError('Pull queues distribute through claimNext', { queueId });
     }
     if (queue.strategy === 'round_robin' || queue.strategy === 'load_balanced') {
-      return this.claimingMutation(`select worklist.assign_next($1) as item_id`, [queueId]);
+      return this.claimingMutation((trx) => trx.run(assignNextWorkItem, [queueId]));
     }
 
     const strategy = this.strategies.require(queue.strategy);
@@ -142,16 +139,16 @@ export class WorklistItemsService {
         },
       );
     }
-    return this.claimingMutation(`select worklist.item_assign_next($1, $2, $3) as item_id`, [
+    return this.claimingMutation((trx) => trx.run(assignSelectedWorkItem, [
       queueId,
       selected,
       queue.strategy,
-    ]);
+    ]));
   }
 
   async release(itemId: string, reason?: string): Promise<WorklistItemRecord> {
     return this.itemMutation(itemId, (trx) =>
-      trx.query(`select worklist.item_release($1, $2, false)`, [itemId, reason ?? null]),
+      trx.run(releaseWorkItem, [itemId, reason ?? null]),
     );
   }
 
@@ -161,7 +158,7 @@ export class WorklistItemsService {
     payload?: Record<string, unknown>,
   ): Promise<WorklistItemRecord> {
     return this.itemMutation(itemId, (trx) =>
-      trx.query(`select worklist.item_complete($1, $2, $3::jsonb, false)`, [
+      trx.run(completeWorkItem, [
         itemId,
         note ?? null,
         JSON.stringify(payload ?? {}),
@@ -171,13 +168,13 @@ export class WorklistItemsService {
 
   async cancel(itemId: string, reason: string): Promise<WorklistItemRecord> {
     return this.itemMutation(itemId, (trx) =>
-      trx.query(`select worklist.item_cancel($1, $2)`, [itemId, reason]),
+      trx.run(cancelWorkItem, [itemId, reason]),
     );
   }
 
   async reassign(itemId: string, toUserId: string, reason: string): Promise<WorklistItemRecord> {
     return this.itemMutation(itemId, (trx) =>
-      trx.query(`select worklist.item_reassign($1, $2, $3, false)`, [itemId, toUserId, reason]),
+      trx.run(reassignWorkItem, [itemId, toUserId, reason]),
     );
   }
 
@@ -185,22 +182,28 @@ export class WorklistItemsService {
     const value = parseWorklistInput(supervisorOverrideSchema, input);
     if (value.operation === 'release') {
       return this.itemMutation(value.itemId, (trx) =>
-        trx.query(`select worklist.item_release($1, $2, true)`, [value.itemId, value.reason]),
+        trx.run(forceReleaseWorkItem, [value.itemId, value.reason]),
       );
     }
     if (value.operation === 'complete') {
       return this.itemMutation(value.itemId, (trx) =>
-        trx.query(`select worklist.item_complete($1, $2, $3::jsonb, true)`, [
+        trx.run(forceCompleteWorkItem, [
           value.itemId,
           value.reason,
           JSON.stringify(value.payload ?? {}),
         ]),
       );
     }
+    // superRefine already rejects missing targets before any transaction. Keep
+    // the checked scalar stable in the asynchronous mutation callback.
+    const toUserId = value.toUserId;
+    if (toUserId === undefined) {
+      throw new WorklistInputError('toUserId is required for reassign override');
+    }
     return this.itemMutation(value.itemId, (trx) =>
-      trx.query(`select worklist.item_reassign($1, $2, $3, true)`, [
+      trx.run(forceReassignWorkItem, [
         value.itemId,
-        value.toUserId,
+        toUserId,
         value.reason,
       ]),
     );
@@ -216,37 +219,26 @@ export class WorklistItemsService {
   async list(input: unknown = {}): Promise<WorklistPage<WorklistItemRecord>> {
     const query = parseWorklistInput(itemListQuerySchema, input);
     const { limit, offset } = pageLimitOffset(query);
-    const predicates: string[] = [];
+    let mask = 0;
     const values: unknown[] = [];
-    const add = (sql: string, value: unknown) => {
-      values.push(value);
-      predicates.push(sql.replace('?', `$${values.length}`));
-    };
-    if (query.queueId) add('queue_id = ?', query.queueId);
-    if (query.status) add('status = ?::worklist.item_status', query.status);
-    if (query.assigneeId) add('assignee_id = ?', query.assigneeId);
-    if (query.entityType) add('entity_type = ?', query.entityType);
-    const where = predicates.length > 0 ? `where ${predicates.join(' and ')}` : '';
-    values.push(limit, offset);
+    if (query.queueId) { mask |= 1; values.push(query.queueId); }
+    if (query.status) { mask |= 2; values.push(query.status); }
+    if (query.assigneeId) { mask |= 4; values.push(query.assigneeId); }
+    if (query.entityType) { mask |= 8; values.push(query.entityType); }
+    const listQuery = selectItemListQuery(mask);
+    const countQuery = selectItemCountQuery(mask);
+    if (!listQuery || !countQuery) throw new TypeError('Unknown worklist item filter mask');
 
     return this.database.tx(
       async (trx) => {
-        const rows = await trx.query<WorklistRow>(
-          `select ${ITEM_COLUMNS} from worklist.items ${where}
-         order by priority, due_at asc nulls last, created_at, id
-         limit $${values.length - 1} offset $${values.length}`,
-          values,
-        );
-        const count = await trx.query<{ total: string }>(
-          `select count(*)::text as total from worklist.items ${where}`,
-          values.slice(0, -2),
-        );
+        const rows = await trx.run(listQuery, [...values, limit, offset]);
+        const count = await trx.run(countQuery, values);
         return {
-          data: rows.rows.map(mapItemRow),
+          data: rows.map(mapItemRow),
           meta: {
             page: query.page,
             pageSize: query.pageSize,
-            total: Number(count.rows[0]?.total ?? 0),
+            total: Number(count[0]?.total ?? 0),
           },
         };
       },
@@ -257,35 +249,25 @@ export class WorklistItemsService {
   async listEvents(input: unknown = {}): Promise<WorklistPage<WorklistEvent>> {
     const query = parseWorklistInput(eventListQuerySchema, input);
     const { limit, offset } = pageLimitOffset(query);
-    const predicates: string[] = [];
+    let mask = 0;
     const values: unknown[] = [];
-    const add = (sql: string, value: unknown) => {
-      values.push(value);
-      predicates.push(sql.replace('?', `$${values.length}`));
-    };
-    if (query.itemId) add('item_id = ?', query.itemId);
-    if (query.after) add('created_at > ?', query.after);
-    if (query.afterId) add('id > ?', query.afterId);
-    const where = predicates.length > 0 ? `where ${predicates.join(' and ')}` : '';
-    values.push(limit, offset);
+    if (query.itemId) { mask |= 1; values.push(query.itemId); }
+    if (query.after) { mask |= 2; values.push(query.after); }
+    if (query.afterId) { mask |= 4; values.push(query.afterId); }
+    const listQuery = selectEventListQuery(mask);
+    const countQuery = selectEventCountQuery(mask);
+    if (!listQuery || !countQuery) throw new TypeError('Unknown worklist event filter mask');
 
     return this.database.tx(
       async (trx) => {
-        const rows = await trx.query<WorklistRow>(
-          `select ${EVENT_COLUMNS} from worklist.item_events ${where}
-         order by created_at, id limit $${values.length - 1} offset $${values.length}`,
-          values,
-        );
-        const count = await trx.query<{ total: string }>(
-          `select count(*)::text as total from worklist.item_events ${where}`,
-          values.slice(0, -2),
-        );
+        const rows = await trx.run(listQuery, [...values, limit, offset]);
+        const count = await trx.run(countQuery, values);
         return {
-          data: rows.rows.map(mapEventRow),
+          data: rows.map(mapEventRow),
           meta: {
             page: query.page,
             pageSize: query.pageSize,
-            total: Number(count.rows[0]?.total ?? 0),
+            total: Number(count[0]?.total ?? 0),
           },
         };
       },
@@ -294,23 +276,20 @@ export class WorklistItemsService {
   }
 
   private async claimingMutation(
-    sql: string,
-    values: unknown[],
+    claim: (trx: Transaction) => Promise<readonly { item_id: string | null }[]>,
   ): Promise<WorklistItemRecord | null> {
     try {
       const mutation = await this.database.tx(async (trx) => {
-        const result = await trx.query<{ item_id: string | null }>(sql, values);
-        const itemId = result.rows[0]?.item_id;
+        const result = await claim(trx);
+        const itemId = result[0]?.item_id;
         if (!itemId) return null;
         const item = await this.getInTransaction(trx, itemId);
-        const event = await trx.query<WorklistRow>(
-          `select ${EVENT_COLUMNS} from worklist.item_events
-           where item_id = $1 order by created_at desc, id desc limit 1`,
+        const event = await trx.run(latestItemEvent,
           [itemId],
         );
         return {
           item,
-          events: event.rows.map(mapEventRow),
+          events: event.map(mapEventRow),
         };
       });
       if (!mutation) return null;
@@ -327,18 +306,15 @@ export class WorklistItemsService {
   ): Promise<WorklistItemRecord> {
     try {
       const mutation = await this.database.tx(async (trx) => {
-        const before = await trx.query<{ total: string }>(
-          `select count(*)::text as total from worklist.item_events where item_id = $1`,
+        const before = await trx.run(countItemEvents,
           [itemId],
         );
         await mutate(trx);
         const item = await this.getInTransaction(trx, itemId);
-        const events = await trx.query<WorklistRow>(
-          `select ${EVENT_COLUMNS} from worklist.item_events
-           where item_id = $1 order by created_at, id offset $2`,
-          [itemId, Number(before.rows[0]?.total ?? 0)],
+        const events = await trx.run(newItemEvents,
+          [itemId, Number(before[0]?.total ?? 0)],
         );
-        return { item, events: events.rows.map(mapEventRow) };
+        return { item, events: events.map(mapEventRow) };
       });
       await this.publish(mutation.events);
       return mutation.item;
@@ -349,19 +325,17 @@ export class WorklistItemsService {
 
   private async mutationResult(trx: Transaction, itemId: string): Promise<ItemMutationResult> {
     const item = await this.getInTransaction(trx, itemId);
-    const events = await trx.query<WorklistRow>(
-      `select ${EVENT_COLUMNS} from worklist.item_events where item_id = $1 order by created_at, id`,
+    const events = await trx.run(allItemEvents,
       [itemId],
     );
-    return { item, events: events.rows.map(mapEventRow) };
+    return { item, events: events.map(mapEventRow) };
   }
 
   private async getInTransaction(trx: Transaction, id: string): Promise<WorklistItemRecord> {
-    const result = await trx.query<WorklistRow>(
-      `select ${ITEM_COLUMNS} from worklist.items where id = $1`,
+    const result = await trx.run(readWorkItem,
       [id],
     );
-    const row = result.rows[0];
+    const row = result[0];
     if (!row) throw new WorklistNotFoundError('item', id);
     return mapItemRow(row);
   }
@@ -369,15 +343,12 @@ export class WorklistItemsService {
   private async eligibleCandidates(queueId: string): Promise<WorklistCandidate[]> {
     const result = await this.database.tx(
       (trx) =>
-        trx.query<WorklistRow>(
-          `select user_id as "userId", is_available as available, weight,
-           last_assigned_at as "lastAssignedAt", open_item_count as "openItemCount"
-         from worklist.eligible_workers($1)`,
+        trx.run(eligibleWorkers,
           [queueId],
         ),
       { role: 'reader', readonly: true },
     );
-    return result.rows.map(mapCandidateRow);
+    return result.map(mapCandidateRow);
   }
 
   private async publish(events: WorklistEvent[]): Promise<void> {

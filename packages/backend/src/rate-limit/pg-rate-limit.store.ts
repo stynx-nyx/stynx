@@ -1,12 +1,9 @@
+import { executeConfiguredQuery } from '@stynx-nyx/data';
 import type {
   RateLimitDecisionContext,
   RateLimitSqlExecutor,
   RateLimitStore,
 } from './types.js';
-
-function toRows<T>(result: { rows: T[] } | T[]): T[] {
-  return Array.isArray(result) ? result : result.rows;
-}
 
 function assertIdentifierPath(value: string, name: string): string {
   const parts = value.split('.');
@@ -69,26 +66,7 @@ export class PgRateLimitStore implements RateLimitStore {
     const now = Date.now();
     const windowStartMs = Math.floor(now / context.ttlMs) * context.ttlMs;
     const expiresAtMs = windowStartMs + context.ttlMs * 2;
-    const result = await this.options.executor.query<{ hitCount: number }>(
-      `INSERT INTO ${this.table} (
-         ${this.tenantColumn},
-         ${this.bucketColumn},
-         ${this.windowStartColumn},
-         ${this.hitsColumn},
-         ${this.expiresAtColumn}
-       )
-       VALUES (
-         $1::uuid,
-         $2,
-         $3::timestamptz,
-         1,
-         $4::timestamptz
-       )
-       ON CONFLICT (${this.tenantColumn}, ${this.bucketColumn}, ${this.windowStartColumn})
-       DO UPDATE
-         SET ${this.hitsColumn} = ${this.table}.${this.hitsColumn} + 1,
-             ${this.expiresAtColumn} = EXCLUDED.${this.expiresAtColumn}
-       RETURNING ${this.hitsColumn} AS "hitCount"`,
+    const result = await executeConfiguredQuery(this.options.executor, 'ratelimit.increment', { table: this.table, tenantColumn: this.tenantColumn, bucketColumn: this.bucketColumn, windowStartColumn: this.windowStartColumn, hitsColumn: this.hitsColumn, expiresAtColumn: this.expiresAtColumn },
       [
         context.tenantId,
         context.bucketKey,
@@ -96,16 +74,13 @@ export class PgRateLimitStore implements RateLimitStore {
         new Date(expiresAtMs).toISOString(),
       ],
     );
-    const rows = toRows(result);
+    const rows = result.rows;
     return rows[0]?.hitCount ?? null;
   }
 
   async cleanup(context: RateLimitDecisionContext): Promise<void> {
     if (!context.tenantId) return;
-    await this.options.executor.query(
-      `DELETE FROM ${this.table}
-        WHERE ${this.tenantColumn}::text = $1
-          AND ${this.expiresAtColumn} < now()`,
+    await executeConfiguredQuery(this.options.executor, 'ratelimit.cleanup', { table: this.table, tenantColumn: this.tenantColumn, bucketColumn: this.bucketColumn, windowStartColumn: this.windowStartColumn, hitsColumn: this.hitsColumn, expiresAtColumn: this.expiresAtColumn },
       [context.tenantId],
     );
   }

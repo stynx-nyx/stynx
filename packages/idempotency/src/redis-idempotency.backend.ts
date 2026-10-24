@@ -1,4 +1,5 @@
 import { Inject, Injectable, Optional, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
+import { z } from 'zod';
 import {
   createClient,
   type RedisClientType,
@@ -15,8 +16,17 @@ import type {
 } from './types.js';
 
 function stringifyIdempotencyValue(value: unknown): string {
-  return JSON.stringify(value, (_key, current) => (typeof current === 'bigint' ? current.toString() : current));
+  return JSON.stringify(value, (_key: string, current: unknown) => (typeof current === 'bigint' ? current.toString() : current));
 }
+
+const storedEntry = z.object({
+  requestFingerprint: z.string(),
+  statusCode: z.number().finite().nullable(),
+  body: z.json().optional(),
+  headers: z.record(z.string(), z.string()),
+  expiresAt: z.number().finite(),
+  status: z.enum(['pending', 'completed']),
+}).catchall(z.json());
 
 /**
  * Client type for the RESP2-pinned connection created below. node-redis 6
@@ -54,7 +64,16 @@ export class RedisIdempotencyBackend implements IdempotencyBackend, OnModuleInit
       return null;
     }
     const raw = await this.client.get(this.entryKey(context));
-    return raw ? JSON.parse(raw) as IdempotencyStoredEntry : null;
+    if (!raw) return null;
+    let value: unknown;
+    try {
+      value = JSON.parse(raw);
+    } catch {
+      throw new Error('Invalid persisted idempotency entry');
+    }
+    const parsed = storedEntry.safeParse(value);
+    if (!parsed.success) throw new Error('Invalid persisted idempotency entry');
+    return { ...parsed.data, body: parsed.data.body };
   }
 
   async set(context: IdempotencyDecisionContext, entry: IdempotencyStoredEntry): Promise<void> {

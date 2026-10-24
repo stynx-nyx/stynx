@@ -1,3 +1,6 @@
+/** Raw PostgreSQL timestamp result; numeric values are only positive/negative Infinity. Date includes Invalid Date. */
+export type JobTimestampResult = Date | string | number;
+
 /** Recurring schedule cadence. Cron uses a 5-field local expression; interval is a fixed period. */
 export type ScheduleKind = 'cron' | 'interval';
 
@@ -25,17 +28,17 @@ export interface JobRecord {
   priority: number;
   attempts: number;
   maxAttempts: number;
-  runAt: Date;
+  runAt: JobTimestampResult;
   lockedBy: string | null;
-  lockedUntil: Date | null;
-  startedAt: Date | null;
-  finishedAt: Date | null;
+  lockedUntil: JobTimestampResult | null;
+  startedAt: JobTimestampResult | null;
+  finishedAt: JobTimestampResult | null;
   lastError: string | null;
   deadLetterReason: string | null;
   idempotencyKey: string | null;
   actorId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: JobTimestampResult;
+  updatedAt: JobTimestampResult;
 }
 
 /** A recurring schedule definition. */
@@ -56,11 +59,11 @@ export interface ScheduleRecord {
   isEnabled: boolean;
   /** Set when materialization disables an invalid persisted recurrence. */
   disabledReason: string | null;
-  nextRunAt: Date;
-  lastEnqueuedAt: Date | null;
+  nextRunAt: JobTimestampResult;
+  lastEnqueuedAt: JobTimestampResult | null;
   createdBy: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: JobTimestampResult;
+  updatedAt: JobTimestampResult;
 }
 
 /** Input for `JobsService.enqueue()` — a one-shot, optionally delayed job. */

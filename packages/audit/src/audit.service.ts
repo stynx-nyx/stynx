@@ -1,10 +1,11 @@
+import { auditPartitions, auditChainRows } from './audit.repository.js';
 import { createHash } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { Injectable, Logger, Optional, Inject } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database } from '@stynx-nyx/data';
+import { Database, executeConfiguredQuery } from '@stynx-nyx/data';
 import { planAuditDetach } from './retention.js';
 import {
   STYNX_AUDIT_ARCHIVE_STORE,
@@ -20,22 +21,15 @@ import type {
   AuditLogItem,
   AuditLogPage,
   AuditLogQuery,
-  AuditLogCursor,
   ChainVerificationResult,
   StynxAuditModuleOptions,
 } from './types.js';
 
-interface AuditPartitionRow {
-  partition_name: string;
-}
 
-interface AuditLgpdRow {
-  keep_longer: boolean | null;
-}
 
 interface AuditLogRow {
   id: string | number;
-  occurred_at: string | Date;
+  occurred_at: string | Date | number;
   table_schema: string;
   table_name: string;
   row_id: string | null;
@@ -60,6 +54,18 @@ interface AuditChainRow {
   new_data_text: string | null;
   previous_hash: string | null;
   row_hash: string;
+}
+
+function cursorField(value: unknown, key: 'occurredAt' | 'id'): unknown {
+  if (value === null || value === undefined) {
+    throw new TypeError(`Cannot read properties of ${String(value)} (reading '${key}')`);
+  }
+  const boxed: unknown = Object(value);
+  if (typeof boxed === 'object' && boxed !== null) {
+    const field: unknown = Reflect.get(boxed, key);
+    return field;
+  }
+  throw new TypeError('Unable to read cursor property');
 }
 
 @Injectable()
@@ -121,7 +127,7 @@ export class StynxAuditService {
         }
         if (cursor) {
           whereParts.push(`(occurred_at, id) < ($${index++}::timestamptz, $${index++}::bigint)`);
-          params.push(cursor.occurredAt, cursor.id);
+          params.push(cursorField(cursor, 'occurredAt'), cursorField(cursor, 'id'));
         }
 
         params.push(limit + 1);
@@ -169,37 +175,16 @@ export class StynxAuditService {
     const database = this.requireDatabase();
     return database.withSystemContext('audit detach dry-run', async () =>
       database.tx(async (trx) => {
-        const partitions = await trx.query<AuditPartitionRow>(
-          `
-            select child.relname as partition_name
-            from pg_inherits inherits
-            join pg_class parent on parent.oid = inherits.inhparent
-            join pg_namespace parent_ns on parent_ns.oid = parent.relnamespace
-            join pg_class child on child.oid = inherits.inhrelid
-            where parent_ns.nspname = 'audit'
-              and parent.relname = 'log'
-            order by child.relname
-          `,
+        const partitions = await trx.run(auditPartitions, [],
         );
 
         const plans: AuditDetachPlan[] = [];
-        for (const row of partitions.rows) {
+        for (const row of partitions) {
           const month = this.partitionMonth(row.partition_name);
           if (!month) {
             continue;
           }
-          const keepLonger = await trx.query<AuditLgpdRow>(
-            `
-              select coalesce(
-                bool_or(
-                  tags @> '{"lgpd_erasure": true}'::jsonb
-                  or tags @> '{"hard_delete": true, "from_archive": true}'::jsonb
-                ),
-                false
-              ) as keep_longer
-              from audit.${this.quoteIdent(row.partition_name)}
-            `,
-          );
+          const keepLonger = await executeConfiguredQuery(trx, 'audit.partition-retention', { partition: row.partition_name }, []);
           const plan = planAuditDetach(
             {
               partitionName: row.partition_name,
@@ -248,8 +233,8 @@ export class StynxAuditService {
               path: dumpPath,
               contentType: 'application/gzip',
             });
-            await trx.query(`alter table audit.log detach partition audit.${this.quoteIdent(plan.partitionName)}`);
-            await trx.query(`drop table audit.${this.quoteIdent(plan.partitionName)}`);
+            await executeConfiguredQuery(trx, 'audit.partition-detach', { partition: plan.partitionName }, []);
+            await executeConfiguredQuery(trx, 'audit.partition-drop', { partition: plan.partitionName }, []);
           } finally {
             await rm(dumpPath, { force: true }).catch(() => undefined);
           }
@@ -272,25 +257,7 @@ export class StynxAuditService {
 
     return database.withSystemContext('audit hash-chain verification', async () =>
       database.tx(async (trx) => {
-        const rows = await trx.query<AuditChainRow>(
-          `
-            select
-              event_id::text as event_id,
-              audit.format_hash_timestamp(occurred_at) as occurred_at_text,
-              tenancy_id::text as tenancy_id_text,
-              actor_id::text as actor_id_text,
-              entity,
-              entity_id,
-              operation::text as operation_text,
-              old_data::text as old_data_text,
-              new_data::text as new_data_text,
-              previous_hash,
-              row_hash
-            from audit.events
-            where tenancy_id = $1::uuid
-            order by occurred_at, event_id
-            limit $2
-          `,
+        const rows = await trx.run(auditChainRows,
           [tenancyId, sanitizedLimit],
         );
 
@@ -298,7 +265,7 @@ export class StynxAuditService {
         let previousEventId: string | null = null;
         let totalChecked = 0;
 
-        for (const row of rows.rows) {
+        for (const row of rows) {
           totalChecked += 1;
 
           if (!previousEventId && row.previous_hash !== null) {
@@ -360,15 +327,15 @@ export class StynxAuditService {
     return database;
   }
 
-  private decodeCursor(raw: string): AuditLogCursor {
-    return JSON.parse(Buffer.from(raw, 'base64url').toString('utf8')) as AuditLogCursor;
+  private decodeCursor(raw: string): unknown {
+    return JSON.parse(Buffer.from(raw, 'base64url').toString('utf8'));
   }
 
-  private encodeCursor(cursor: AuditLogCursor): string {
+  private encodeCursor(cursor: { occurredAt: string | number; id: number }): string {
     return Buffer.from(JSON.stringify(cursor), 'utf8').toString('base64url');
   }
 
-  private toIso(value: string | Date): string {
+  private toIso(value: string | Date | number): string | number {
     return value instanceof Date ? value.toISOString() : value;
   }
 
@@ -396,7 +363,5 @@ export class StynxAuditService {
     return `${match[1]}-${match[2]}`;
   }
 
-  private quoteIdent(value: string): string {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
+
 }

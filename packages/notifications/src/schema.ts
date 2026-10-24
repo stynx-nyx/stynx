@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { NOTIFICATION_CHANNELS } from './types.js';
 
 const subjectId = z.string().min(1).max(255);
-const channel = z.enum(NOTIFICATION_CHANNELS as unknown as [string, ...string[]]);
+const channel = z.enum(NOTIFICATION_CHANNELS);
 
 export const notificationRecipientSchema = z.strictObject({
   subjectId,

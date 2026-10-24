@@ -15,7 +15,7 @@ export class StynxStorageModule {
       imports: [
         StynxCoreModule.forRoot({
           appName: 'storage',
-          schema: z.object({}) as never,
+          schema: z.object({}),
         }),
       ],
       providers: [

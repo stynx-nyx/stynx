@@ -1,3 +1,5 @@
+import { executeRawScript, executeTypedQuery } from './checked-executor.js';
+import { appliedMigrations, recordMigration } from './migration.repository.js';
 import { readdir, readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -41,7 +43,11 @@ export class StynxMigrationRunner implements OnModuleInit {
     }
     await this.runPlatformMigrations();
     if (this.options.migrations.runner) {
-      await this.options.migrations.runner(this.pools.pools);
+      const { owner, app, reader } = this.pools.pools;
+      if (owner === undefined || app === undefined || reader === undefined) {
+        throw new TypeError('Migration pools are not initialized');
+      }
+      await this.options.migrations.runner({ owner, app, reader });
     }
   }
 
@@ -50,10 +56,11 @@ export class StynxMigrationRunner implements OnModuleInit {
     const roles = platformRoleNames(rolePrefix);
     await this.pools.onModuleInit();
     const owner = this.pools.pools.owner;
+    if (owner === undefined) throw new TypeError('Migration owner pool is not initialized');
     const client = await owner.connect();
 
     try {
-      await client.query(`
+      await executeRawScript(client, `
         create schema if not exists core;
         create table if not exists core.schema_migrations (
           id text primary key,
@@ -67,8 +74,8 @@ export class StynxMigrationRunner implements OnModuleInit {
         .filter((entry) => entry.endsWith('.sql'))
         .sort();
 
-      const applied = await client.query<{ id: string }>('select id from core.schema_migrations');
-      const appliedIds = new Set(applied.rows.map((row) => row.id));
+      const applied = await executeTypedQuery(client, appliedMigrations, []);
+      const appliedIds = new Set(applied.map((row) => row.id));
       const ownerRoleApplied = appliedIds.has('0002_extensions.sql');
 
       if (ownerRoleApplied) {
@@ -82,23 +89,16 @@ export class StynxMigrationRunner implements OnModuleInit {
 
         // The checksum stays the file's: the prefix is applied, never recorded.
         const migrationSql = await readFile(resolve(migrationDir, filename), 'utf8');
-        await client.query('BEGIN');
+        await executeRawScript(client, 'BEGIN');
         try {
-          await client.query(applyRolePrefix(migrationSql, rolePrefix));
-          await client.query(
-            `
-              insert into core.schema_migrations (id, checksum, applied_at)
-              values ($1, md5($2), clock_timestamp())
-              on conflict (id) do nothing
-            `,
-            [filename, migrationSql],
-          );
+          await executeRawScript(client, applyRolePrefix(migrationSql, rolePrefix));
+          await executeTypedQuery(client, recordMigration, [filename, migrationSql]);
           if (filename === '0002_extensions.sql') {
             await this.promoteBootstrapObjectsToOwner(client, roles);
           }
-          await client.query('COMMIT');
+          await executeRawScript(client, 'COMMIT');
         } catch (error) {
-          await client.query('ROLLBACK').catch(() => undefined);
+          await executeRawScript(client, 'ROLLBACK').catch(() => undefined);
           throw error;
         }
       }
@@ -112,8 +112,8 @@ export class StynxMigrationRunner implements OnModuleInit {
     roles: PlatformRoleNames,
   ): Promise<void> {
     // `roles.owner` is a validated lower-case identifier (platform-roles.ts).
-    await client.query(`ALTER SCHEMA core OWNER TO ${roles.owner}`);
-    await client.query(`ALTER TABLE core.schema_migrations OWNER TO ${roles.owner}`);
-    await client.query(`SET ROLE ${roles.owner}`);
+    await executeRawScript(client, `ALTER SCHEMA core OWNER TO ${roles.owner}`);
+    await executeRawScript(client, `ALTER TABLE core.schema_migrations OWNER TO ${roles.owner}`);
+    await executeRawScript(client, `SET ROLE ${roles.owner}`);
   }
 }
