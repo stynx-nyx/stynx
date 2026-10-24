@@ -878,14 +878,14 @@
       },
       "declarationHashes": {
         "angular.mjs": "c575cdebc9c6f9fe609dc731c2b1097a6118dbafc32ea1dbac68c0f5561b9b7a",
-        "import-resolver.mjs": "b156230fea8bfe7d575c586a7c1502d583b882aaa1df789a5afab73b38a5ee4c",
+        "import-resolver.mjs": "e9f9cd29912307e1e14a9c7fd5a215570a7df0dd0927f7f4e68940f9d067d138",
         "index.mjs": "3800cbb16c4e7d4465845aa451bcc31a181cdd9f6e442f66f260a87193fd70e4",
         "lib.mjs": "a129fd821b93f61d4cbf66b1204292b7b11cfeb201ac72a19089d6f36bf7a42f",
         "nest.mjs": "cae9ea26a7186e739ed622fae70eb138da31c1ddac9d138d602c35ecc889cc5a",
         "plugin.mjs": "4c86950ff93953cce4cb3151c096bd6950ab20050ed9f80c7db8fdc0559dc223",
         "scripts.mjs": "172faf7c68e3d516476d2528f28ba2cb22ada63710a01423afc3d3f8f73e901e",
         "test.mjs": "d94ee748c527b66a19deae5f3b4fe183fa6eebece42a8c6315360a38ec1a75c4",
-        "workspace.mjs": "133542eb7d857ca29dcbd4e6b85d2e44fafa9342bd3cb5ddf776016c9148739d"
+        "workspace.mjs": "272554965a656bd1b05c07e74d9cbf91196ef5d493b256f293345f8e0120904f"
       }
     },
     "@stynx-nyx/feature-flags": {
