@@ -58,7 +58,7 @@ describe('TransactionalIdempotencyStore', () => {
 
   it('reserves with a bounded lock timeout and restores the prior timeout', async () => {
     const { trx, query } = scriptedTransaction(
-      { rows: [{ timeout: '3s' }] }, {}, { rows: [{ id: 'reservation-1' }] }, {},
+      { rows: [{ timeout: '3s' }] }, {}, { rows: [{ id: '0190a8a4-0000-7000-8000-000000000001' }] }, {},
     );
     await expect(store.reserve(trx, identity)).resolves.toBe(true);
     expect(query).toHaveBeenNthCalledWith(2, expect.stringContaining("set_config('lock_timeout'"), ['500ms']);

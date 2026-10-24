@@ -27,6 +27,14 @@ function connection(result: unknown) {
 }
 
 describe('closed configured idempotency operations', () => {
+  it('preserves arbitrary timestamp text for the existing downstream parser', async () => {
+    const expiresAt = 'driver-secret-invalid-date';
+    const { client, query } = connection({ rows: [{ ...row, expiresAt }] });
+    const result = await executeConfiguredQuery(client, 'idempotency.lookup', identifiers, [tenant, 'key']);
+    expect(result.rows[0]?.expiresAt).toBe(expiresAt);
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
   it('quotes default identifiers and keeps hostile values exclusively in bound parameters', async () => {
     const hostileKey = "key'); DROP TABLE audit.log; --";
     const { client, query } = connection({ rows: [row], rowCount: 1 });
@@ -126,7 +134,7 @@ describe('closed configured idempotency operations', () => {
   it.each([
     { ...row, requestFingerprint: 42 },
     { ...row, statusCode: '201' },
-    { ...row, expiresAt: 'driver-secret-invalid-date' },
+    { ...row, expiresAt: { secret: 'driver-secret-invalid-date' } },
     { ...row, responseBody: { invalid: Number.NaN } },
   ])('rejects malformed populated lookup rows without leaking driver values', async (invalid) => {
     const { client, query } = connection({ rows: [invalid] });

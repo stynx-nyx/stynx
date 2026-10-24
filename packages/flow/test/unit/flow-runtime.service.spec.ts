@@ -1403,3 +1403,126 @@ describe('Flow operation-specific read boundaries', () => {
     expect(trx.query).toHaveBeenCalledTimes(1);
   });
 });
+
+
+describe('Flow task-list16 preconversion contract', () => {
+  it.each(Array.from({ length: 16 }, (_, mask) => mask))('captures exact mask %i data/count SQL and bindings', async (mask) => {
+    const input: Record<string, unknown> = { page: 3, pageSize: 7 };
+    const predicates: string[] = []; const values: unknown[] = [];
+    if (mask & 1) { input.runId = RUN; values.push(RUN); predicates.push(`t.run_id = $${values.length}::uuid`); }
+    if (mask & 2) { input.assigneeUserId = SCOPE; values.push(SCOPE); predicates.push(`t.assignee_user_id = $${values.length}::uuid`); }
+    if (mask & 4) { input.status = 'open'; values.push('open'); predicates.push(`t.status = $${values.length}`); }
+    if (mask & 8) { input.mine = true; values.push(USER); predicates.push(`t.assignee_user_id = $${values.length}::uuid`); }
+    const where = predicates.length ? ` where ${predicates.join(' and ')}` : '';
+    const expectedData = `
+          select t.*, n.code as node_code, n.name as node_name, n.kind
+          from flow.tasks t
+          join flow.nodes n on n.id = t.node_id
+          ${where}
+          order by t.created_at desc, t.id desc
+          limit $${values.length + 1} offset $${values.length + 2}
+        `;
+    const expectedCount = `select count(*)::text as total from flow.tasks t${where}`;
+    const { service, trx, db } = makeService([[{ id: TASK }], [{ total: '12' }]]);
+    await expect(service.listTasks(input)).resolves.toEqual({ data: [{ id: TASK }], meta: { page: 3, pageSize: 7, total: 12 } });
+    expect(trx.query.mock.calls).toEqual([[expectedData, [...values, 7, 14]], [expectedCount, values]]);
+    expect(db.tx).toHaveBeenCalledExactlyOnceWith(expect.any(Function), { role: 'reader', readonly: true });
+    console.info('TASK16_SQL_BASELINE', JSON.stringify({ mask, data: trx.query.mock.calls[0], count: trx.query.mock.calls[1] }));
+  });
+
+  it.each([
+    { input: {}, page: 1, size: 50, offset: 0 },
+    { input: { page: '3', pageSize: '25' }, page: 3, size: 25, offset: 50 },
+    { input: { page: 2.5, pageSize: 1.5 }, page: 2.5, size: 1.5, offset: 2.25 },
+    { input: { page: 0, pageSize: 0 }, page: 1, size: 50, offset: 0 },
+    { input: { page: -2, pageSize: -2 }, page: 1, size: 1, offset: 0 },
+    { input: { page: 'bad', pageSize: 'bad' }, page: 1, size: 50, offset: 0 },
+    { input: { page: Infinity, pageSize: Infinity }, page: Infinity, size: 100, offset: Infinity },
+    { input: { page: -Infinity, pageSize: -Infinity }, page: 1, size: 1, offset: 0 },
+    { input: { page: 9007199254740992, pageSize: 1000 }, page: 9007199254740992, size: 100, offset: (9007199254740992 - 1) * 100 },
+    { input: { page: null, pageSize: null }, page: 1, size: 50, offset: 0 },
+    { input: { page: true, pageSize: true }, page: 1, size: 1, offset: 0 },
+  ])('preserves pagination conversion $input', async ({ input, page, size, offset }) => {
+    const { service, trx } = makeService([[], []]);
+    await expect(service.listTasks(input)).resolves.toEqual({ data: [], meta: { page, pageSize: size, total: 0 } });
+    expect(trx.query.mock.calls[0]?.[1]).toEqual([size, offset]); expect(trx.query.mock.calls[1]?.[1]).toEqual([]);
+  });
+
+  for (const field of ['runId', 'assigneeUserId', 'status']) {
+    it.each([undefined, null, '', false, 0, {}, []].map((value) => ({ value })))(`ignores non-string or empty ${field} $value`, async ({ value }) => {
+      const { service, trx } = makeService([[], []]); await service.listTasks({ [field]: value });
+      expect(trx.query.mock.calls[0]?.[1]).toEqual([50, 0]); expect(trx.query.mock.calls[1]?.[1]).toEqual([]);
+    });
+    it(`retains whitespace ${field} as a driver-owned parameter`, async () => {
+      const { service, trx } = makeService([[], []]); await service.listTasks({ [field]: '  ' });
+      expect(trx.query.mock.calls[0]?.[1]).toEqual(['  ', 50, 0]); expect(trx.query.mock.calls[1]?.[1]).toEqual(['  ']);
+    });
+  }
+
+  it.each([true, 'true', false, 'false', 1, 'TRUE', null, undefined])('selects mine only for exact true forms %j', async (mine) => {
+    const { service, trx } = makeService([[], []]); await service.listTasks({ mine });
+    expect(trx.query.mock.calls[1]?.[1]).toEqual(mine === true || mine === 'true' ? [USER] : []);
+  });
+
+  it.each([{}, { actorId: '' }])('preserves absent or empty actor fallback %j', async (context) => {
+    const { service, trx } = makeService([[], []], context); await service.listTasks({ mine: true });
+    expect(trx.query.mock.calls[0]?.[1]).toEqual(['', 50, 0]);
+  });
+
+  it.each(['true', true, false])('preserves pagination/filter/mine/actor property read order %j', async (mine) => {
+    const reads: string[] = [];
+    const input = new Proxy({ page: 2, pageSize: 3, runId: RUN, assigneeUserId: USER, status: 'open', mine }, { get(target, key, receiver) { reads.push(String(key)); return Reflect.get(target, key, receiver); } });
+    const context = { get actorId() { reads.push('actorId'); return USER; } };
+    const { service, trx } = makeService([[], []], context);
+    await service.listTasks(input);
+    expect(reads).toEqual(['page', 'pageSize', 'runId', 'assigneeUserId', 'status', 'mine', ...(mine === 'true' ? [] : ['mine']), ...(mine === false ? [] : ['actorId'])]);
+    expect(trx.query).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves opaque camelization, row order and never reads unused rowCount', async () => {
+    const nested = { date: new Date(NaN), absent: undefined };
+    const row = { id: TASK, unknown_extension: nested, node_name: null };
+    Object.defineProperty(row, '__proto__', { value: nested, enumerable: true });
+    const { service, trx } = makeService();
+    const rowCount = vi.fn(() => { throw new Error('unused rowCount'); });
+    trx.query.mockResolvedValueOnce(Object.defineProperty({ rows: [row, { id: 'second' }] }, 'rowCount', { get: rowCount }));
+    trx.query.mockResolvedValueOnce(Object.defineProperty({ rows: [{ total: '2' }] }, 'rowCount', { get: rowCount }));
+    const result = await service.listTasks();
+    expect(result).toEqual({ data: [{ id: TASK, unknownExtension: nested, nodeName: null, _Proto__: nested }, { id: 'second' }], meta: { page: 1, pageSize: 50, total: 2 } });
+    expect(Reflect.get(result, 'data')[0].unknownExtension).toBe(nested); expect(rowCount).not.toHaveBeenCalled();
+  });
+
+  it.each([undefined, null, '0', '12', '9007199254740993', 'not-a-number'])('preserves first count Number/nullish semantics %j', async (total) => {
+    const { service, trx } = makeService([[], [{ total }, { total: '999' }]]);
+    await expect(service.listTasks()).resolves.toMatchObject({ meta: { total: Number(total ?? 0) } });
+    expect(trx.query).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([0, 1])('preserves statement %i error identity and stops subsequent work', async (at) => {
+    const failure = new Error('driver failure'); const { service, trx } = makeService([[]]);
+    if (at === 0) trx.query.mockRejectedValueOnce(failure);
+    else trx.query.mockResolvedValueOnce({ rows: [] }).mockRejectedValueOnce(failure);
+    await expect(service.listTasks({ mine: true })).rejects.toBe(failure);
+    expect(trx.query).toHaveBeenCalledTimes(at + 1);
+  });
+
+  it.each(['page', 'pageSize'])('preserves %s coercion error before DB and filters', async (field) => {
+    const failure = new Error('number coercion'); const { service, trx, db } = makeService();
+    const input = { [field]: { valueOf() { throw failure; } }, get runId() { throw new Error('filter must not run'); } };
+    expect(() => service.listTasks(input)).toThrow(failure); expect(db.tx).not.toHaveBeenCalled(); expect(trx.query).not.toHaveBeenCalled();
+  });
+});
+
+
+it('task-list16 waits for data fulfillment before starting count', async () => {
+  const { service, trx } = makeService();
+  let release!: (value: { rows: unknown[] }) => void;
+  trx.query.mockImplementationOnce(() => new Promise((resolve) => { release = resolve; }));
+  trx.query.mockResolvedValueOnce({ rows: [{ total: '1' }] });
+  const result = service.listTasks({ mine: true });
+  expect(trx.query).toHaveBeenCalledTimes(1);
+  await Promise.resolve(); expect(trx.query).toHaveBeenCalledTimes(1);
+  release({ rows: [{ id: TASK }] });
+  await expect(result).resolves.toMatchObject({ data: [{ id: TASK }], meta: { total: 1 } });
+  expect(trx.query).toHaveBeenCalledTimes(2);
+});

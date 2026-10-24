@@ -317,3 +317,117 @@ describe('typed-query helper', () => {
     expect(client.query).not.toHaveBeenCalled();
   });
 });
+
+// Row-only APIs must not observe metadata the caller did not request.
+describe('lazy driver rowCount metadata', () => {
+  function envelope(rows: unknown[], read: () => unknown) {
+    return Object.defineProperty({ rows }, 'rowCount', { get: read });
+  }
+  function identified(value: unknown): value is { id: string } {
+    return typeof value === 'object' && value !== null && 'id' in value && typeof value.id === 'string';
+  }
+  const transformed = defineQuery({
+    name: 'unit.metadata.transformed',
+    text: sql`select id from demo.note`,
+    params: z.tuple([]),
+    row: z.object({ id: z.string().transform((value) => value.toUpperCase()), label: z.string().default('default') }),
+    expects: 'many',
+  });
+
+  it('row-only execution preserves transforms/defaults without reading a throwing getter', async () => {
+    const rowCount = vi.fn(() => { throw new Error('metadata must remain unread'); });
+    const row = { id: 'one' };
+    const query = vi.fn(async () => envelope([row], rowCount));
+    await expect(dataModule.executeTypedQuery({ query }, transformed, [])).resolves.toEqual([{ id: 'ONE', label: 'default' }]);
+    expect(row).toEqual({ id: 'one' });
+    expect(query).toHaveBeenCalledExactlyOnceWith(transformed.text, []);
+    expect(rowCount).not.toHaveBeenCalled();
+  });
+
+  it('guarded execution preserves the original raw object and nested identity without metadata', async () => {
+    const rowCount = vi.fn(() => { throw new Error('metadata must remain unread'); });
+    const nested = { opaque: [undefined, new Date(Number.NaN)] };
+    const row = { id: 'one', nested };
+    const query = vi.fn(async () => envelope([row], rowCount));
+    const rows = await dataModule.executeGuardedQueryRows({ query }, transformed, [], identified);
+    expect(rows[0]).toBe(row);
+    expect(row.nested).toBe(nested);
+    expect(row.id).toBe('one');
+    expect(Object.isFrozen(rows)).toBe(true);
+    expect(query).toHaveBeenCalledExactlyOnceWith(transformed.text, []);
+    expect(rowCount).not.toHaveBeenCalled();
+  });
+
+  it.each(['run', 'runGuarded'] as const)('real Transaction.%s leaves metadata unread and checks closed state first', async (method) => {
+    const { tx, client } = createTx();
+    const row = { id: ID };
+    const rowCount = vi.fn(() => { throw new Error('metadata must remain unread'); });
+    client.query.mockResolvedValueOnce(envelope([row], rowCount));
+    const rows = method === 'run' ? await tx.run(listNotes, [5]) : await tx.runGuarded(listNotes, [5], identified);
+    expect(rows).toEqual([row]);
+    if (method === 'runGuarded') expect(rows[0]).toBe(row);
+    expect(client.query).toHaveBeenCalledExactlyOnceWith(listNotes.text, [5]);
+    expect(rowCount).not.toHaveBeenCalled();
+    tx.close();
+    const closed = method === 'run' ? tx.run(listNotes, [100]) : tx.runGuarded(listNotes, [100], identified);
+    await expect(closed).rejects.toBeInstanceOf(TransactionRequiredError);
+    expect(client.query).toHaveBeenCalledTimes(1);
+    expect(rowCount).not.toHaveBeenCalled();
+  });
+
+  for (const mode of ['result', 'command'] as const) {
+    it.each([
+      { value: undefined, count: null }, { value: null, count: null },
+      { value: 0, count: 0 }, { value: 17, count: 17 },
+    ])(`${mode} reads actual metadata once without deriving it from row length: %j`, async ({ value, count }) => {
+      const rowCount = vi.fn(() => value);
+      const query = vi.fn(async () => envelope(mode === 'result' ? [{ id: ID }] : [], rowCount));
+      if (mode === 'result') {
+        await expect(dataModule.executeTypedQueryResult({ query }, listNotes, [5])).resolves.toEqual({ value: [{ id: ID }], rowCount: count });
+      } else {
+        await expect(dataModule.executeTypedCommand({ query }, deleteNote, [ID])).resolves.toBe(count);
+      }
+      expect(query).toHaveBeenCalledTimes(1);
+      expect(rowCount).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([-1, 0.5, NaN, Infinity, -Infinity, '17'])(`${mode} refuses invalid metadata %s after exactly one read`, async (value) => {
+      const rowCount = vi.fn(() => value);
+      const query = vi.fn(async () => envelope([], rowCount));
+      const result = mode === 'result' ? dataModule.executeTypedQueryResult({ query }, listNotes, [5]) : dataModule.executeTypedCommand({ query }, deleteNote, [ID]);
+      await expect(result).rejects.toBeInstanceOf(QueryRowValidationError);
+      expect(query).toHaveBeenCalledTimes(1);
+      expect(rowCount).toHaveBeenCalledTimes(1);
+    });
+
+    it(`${mode} preserves getter receiver and thrown identity`, async () => {
+      const failure = new Error('driver getter failure');
+      const result = { rows: [] };
+      const rowCount = vi.fn(function (this: unknown) {
+        expect(this).toBe(result);
+        throw failure;
+      });
+      Object.defineProperty(result, 'rowCount', { get: rowCount });
+      const query = vi.fn(async () => result);
+      const execution = mode === 'result' ? dataModule.executeTypedQueryResult({ query }, listNotes, [5]) : dataModule.executeTypedCommand({ query }, deleteNote, [ID]);
+      await expect(execution).rejects.toBe(failure);
+      expect(query).toHaveBeenCalledTimes(1);
+      expect(rowCount).toHaveBeenCalledTimes(1);
+    });
+  }
+
+  it('row/cardinality validation and invalid parameters precede any metadata access', async () => {
+    const rowCount = vi.fn(() => { throw new Error('metadata must remain unread'); });
+    const malformed = vi.fn(async () => envelope([{ id: false }], rowCount));
+    await expect(dataModule.executeTypedQueryResult({ query: malformed }, listNotes, [5])).rejects.toBeInstanceOf(QueryRowValidationError);
+    const surplus = vi.fn(async () => envelope([{ id: ID }, { id: OTHER_ID }], rowCount));
+    await expect(dataModule.executeTypedQueryResult({ query: surplus }, findNote, [ID])).rejects.toBeInstanceOf(QueryCardinalityError);
+    await expect(dataModule.executeTypedCommand({ query: surplus }, deleteNote, [ID])).rejects.toBeInstanceOf(QueryCardinalityError);
+    const invalidParams = vi.fn(async () => envelope([], rowCount));
+    await expect(dataModule.executeTypedQueryResult({ query: invalidParams }, listNotes, [100])).rejects.toBeInstanceOf(QueryArgumentError);
+    expect(invalidParams).not.toHaveBeenCalled();
+    expect(malformed).toHaveBeenCalledTimes(1);
+    expect(surplus).toHaveBeenCalledTimes(2);
+    expect(rowCount).not.toHaveBeenCalled();
+  });
+});

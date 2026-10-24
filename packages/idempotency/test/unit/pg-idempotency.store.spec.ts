@@ -16,6 +16,18 @@ function context(overrides: Partial<IdempotencyDecisionContext> = {}): Idempoten
 }
 
 describe('PgIdempotencyStore', () => {
+  it('retains the historical NaN expiry for arbitrary timestamp text', async () => {
+    const query = vi.fn(async () => ({ rows: [{
+      requestFingerprint: 'fp-1', statusCode: 201, responseBody: { ok: true },
+      expiresAt: 'driver-secret-invalid-date',
+    }] }));
+    const store = new PgIdempotencyStore({ executor: { query } });
+    const result = await store.lookup(context());
+    expect(result?.expiresAt).toBeNaN();
+    expect(result).toMatchObject({ status: 'completed', statusCode: 201, body: { ok: true } });
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
   it('validates configured SQL identifiers', () => {
     expect(
       () =>
