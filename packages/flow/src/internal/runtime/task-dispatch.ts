@@ -1,6 +1,9 @@
+import { readTaskAccess } from './runtime-queries.repository.js';
+import { readAllowedTaskAction } from './runtime-queries.repository.js';
+import { completeTask, assignTask, unassignTask, acceptTask, declineTask, unacceptTask, withdrawTask } from './task-commands.repository.js';
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
-import { Database } from '@stynx-nyx/data';
+import { Database, type Transaction } from '@stynx-nyx/data';
 import { FlowAdapterRegistry } from '../../adapters.js';
 import {
   assignTaskSchema,
@@ -70,91 +73,64 @@ export class FlowTaskDispatch {
   }
 
   getTask(id: string): Promise<Record<string, unknown>> {
-    return this.readModel.getOne(
-      `
-        select t.*, n.code as node_code, n.name as node_name, n.kind
-        from flow.tasks t
-        join flow.nodes n on n.id = t.node_id
-        where t.id = $1::uuid
-        limit 1
-      `,
-      [id],
-      'Task not found',
-    );
+    return this.readModel.getTask(id);
   }
 
   async actTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskActionSchema, input);
     await this.assertAllowedAction(id, dto.action);
     await this.assertTaskExecutionAllowed(id);
-    return this.callTaskFunction('flow.task_complete($1::uuid, $2::text, $3::text, $4::jsonb)', [
+    return this.callTaskFunction(id, (trx) => trx.run(completeTask, [
       id,
       dto.action,
       dto.note ?? null,
       dto.payload ?? {},
-    ]);
+    ]));
   }
 
   async assignTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(assignTaskSchema, input);
     await this.assertTaskManagementAllowed(id);
-    return this.callTaskFunction('flow.task_assign($1::uuid, $2::uuid, $3::text)', [
+    return this.callTaskFunction(id, (trx) => trx.run(assignTask, [
       id,
       dto.userId,
       dto.note ?? null,
-    ]);
+    ]));
   }
 
   async unassignTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskNoteSchema, input);
     await this.assertTaskManagementAllowed(id);
-    return this.callTaskFunction('flow.task_unassign($1::uuid, $2::text)', [id, dto.note ?? null]);
+    return this.callTaskFunction(id, (trx) => trx.run(unassignTask, [id, dto.note ?? null]));
   }
 
   async acceptTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskNoteSchema, input);
     await this.assertTaskExecutionAllowed(id);
-    return this.callTaskFunction('flow.task_accept($1::uuid, $2::text)', [id, dto.note ?? null]);
+    return this.callTaskFunction(id, (trx) => trx.run(acceptTask, [id, dto.note ?? null]));
   }
 
   async declineTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskNoteSchema, input);
     await this.assertTaskExecutionAllowed(id);
-    return this.callTaskFunction('flow.task_decline($1::uuid, $2::text)', [id, dto.note ?? null]);
+    return this.callTaskFunction(id, (trx) => trx.run(declineTask, [id, dto.note ?? null]));
   }
 
   async unacceptTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskNoteSchema, input);
     await this.assertTaskExecutionAllowed(id);
-    return this.callTaskFunction('flow.task_unaccept($1::uuid, $2::text)', [id, dto.note ?? null]);
+    return this.callTaskFunction(id, (trx) => trx.run(unacceptTask, [id, dto.note ?? null]));
   }
 
   async withdrawTask(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(taskNoteSchema, input);
     await this.assertTaskExecutionAllowed(id);
-    return this.callTaskFunction('flow.task_withdraw($1::uuid, $2::text)', [id, dto.note ?? null]);
+    return this.callTaskFunction(id, (trx) => trx.run(withdrawTask, [id, dto.note ?? null]));
   }
 
   async taskCandidates(id: string): Promise<Record<string, unknown>[]> {
     await this.assertTaskManagementAllowed(id);
-    const candidates = await this.readModel.list(
-      `
-        select
-          candidate.*,
-          rule.params,
-          t.run_id,
-          t.node_id,
-          r.adapter_key,
-          r.target_type,
-          r.target_id
-        from flow.tasks t
-        cross join lateral flow.resolve_agents(t.node_id, t.run_id) candidate
-        left join flow.agent_rules rule on rule.id = candidate.rule_id
-        join flow.runs r on r.id = t.run_id
-        where t.id = $1::uuid
-      `,
-      [id],
-    );
+    const candidates = await this.readModel.taskCandidates(id);
     const resolved: Record<string, unknown>[] = [];
     for (const candidate of candidates) {
       if (candidate.agentType !== 'resolver') {
@@ -196,63 +172,29 @@ export class FlowTaskDispatch {
   }
 
   listUsersForRole(role: string, search?: string): Promise<Record<string, unknown>[]> {
-    const values: unknown[] = [role];
-    const searchSql = optionalString(search)
-      ? ` and (u.email::text ilike $2 or u.external_subject ilike $2)`
-      : '';
-    if (searchSql) {
-      values.push(`%${search}%`);
-    }
-
-    return this.readModel.list(
-      `
-        select distinct u.id, u.email, u.external_subject
-        from auth.users u
-        join auth.memberships m on m.user_id = u.id and m.is_active
-        join auth.membership_roles mr on mr.membership_id = m.id
-        join auth.roles r on r.id = mr.role_id
-        where r.key = $1
-        ${searchSql}
-        order by u.email
-        limit 50
-      `,
-      values,
-    );
+    return this.readModel.listUsersForRole(role, search);
   }
 
   getTaskUser(id: string): Promise<Record<string, unknown>> {
-    return this.readModel.getOne(
-      `
-        select distinct u.id, u.email, u.external_subject, u.locale
-        from auth.users u
-        join auth.memberships m on m.user_id = u.id and m.is_active
-        where u.id = $1::uuid
-        limit 1
-      `,
-      [id],
-      'User not found',
-    );
+    return this.readModel.getTaskUser(id);
   }
 
-  private async callTaskFunction(sqlFunctionCall: string, values: unknown[]): Promise<Record<string, unknown>> {
+  private async callTaskFunction(
+    taskId: string,
+    run: (trx: Transaction) => Promise<unknown>,
+  ): Promise<Record<string, unknown>> {
     return this.db.tx(async (trx) => {
-      await trx.query(`select ${sqlFunctionCall}`, values);
-      return this.readModel.getTaskFromTransaction(trx, String(values[0]));
+      await run(trx);
+      return this.readModel.getTaskFromTransaction(trx, taskId);
     });
   }
 
   private async assertAllowedAction(taskId: string, action: string): Promise<void> {
     await this.db.tx(async (trx) => {
-      const result = await trx.query<{ allowed: boolean }>(
-        `
-          select $2::text = any(t.allowed_actions) as allowed
-          from flow.tasks t
-          where t.id = $1::uuid
-          limit 1
-        `,
+      const result = await trx.run(readAllowedTaskAction,
         [taskId, action],
       );
-      const allowed = result.rows[0]?.allowed;
+      const allowed = result[0]?.allowed;
       if (allowed === undefined) {
         throw new NotFoundException('Task not found');
       }
@@ -296,27 +238,10 @@ export class FlowTaskDispatch {
 
   private async taskAccess(taskId: string, actorId: string | undefined): Promise<TaskAccessRow> {
     return this.db.tx(async (trx) => {
-      const result = await trx.query<TaskAccessRow>(
-        `
-          select
-            t.assignee_user_id as assignee_user_id,
-            r.adapter_key,
-            r.target_type,
-            r.target_id,
-            exists (
-              select 1
-              from flow.resolve_agents(t.node_id, t.run_id) candidate
-              where candidate.agent_type = 'user'
-                and candidate.agent_id = $2::text
-            ) as is_user_candidate
-          from flow.tasks t
-          join flow.runs r on r.id = t.run_id
-          where t.id = $1::uuid
-          limit 1
-        `,
+      const result = await trx.run(readTaskAccess,
         [taskId, actorId ?? ''],
       );
-      const row = result.rows[0];
+      const row = result[0];
       if (!row) {
         throw new NotFoundException('Task not found');
       }

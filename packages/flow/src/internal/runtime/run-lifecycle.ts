@@ -1,3 +1,6 @@
+import { buildRunFactsQuery, updateRunStatusQuery, isRunLifecycleRow } from './run-lifecycle.repository.js';
+import { ensureFlowRun } from './runtime-queries.repository.js';
+import { recordAdapterFailure } from './effect-commands.repository.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
@@ -40,20 +43,10 @@ export class FlowRunLifecycle {
     });
 
     return this.db.tx(async (trx) => {
-      const result = await trx.query<{ run_id: string }>(
-        `
-          select flow.run_ensure(
-            $1::text,
-            $2::text,
-            $3::text,
-            $4::text,
-            $5::text,
-            $6::text
-          ) as run_id
-        `,
+      const result = await trx.run(ensureFlowRun,
         [dto.graphCode, dto.version, scopeCode, dto.adapterKey ?? null, dto.targetType, dto.targetId],
       );
-      const runId = result.rows[0]?.run_id;
+      const runId = result[0]?.run_id;
       if (!runId) {
         throw new BadRequestException('Flow run was not created');
       }
@@ -96,24 +89,17 @@ export class FlowRunLifecycle {
   }
 
   getRun(id: string): Promise<Record<string, unknown>> {
-    return this.readModel.getOne('select * from flow.runs where id = $1::uuid limit 1', [id], 'Run not found');
+    return this.readModel.getRun(id);
   }
 
   updateRun(id: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(updateRunSchema, input);
     return this.db.tx(async (trx) => {
-      const result = await trx.query<FlowRow>(
-        `
-          update flow.runs
-          set status = $2::flow.run_status,
-              updated_by = $3::uuid,
-              updated_at = clock_timestamp()
-          where id = $1::uuid
-          returning *
-        `,
+      const result = await trx.runGuarded(updateRunStatusQuery,
         [id, dto.status, this.requestContext.actorId ?? null],
+        isRunLifecycleRow,
       );
-      const row = result.rows[0];
+      const row = result[0];
       if (!row) {
         throw new NotFoundException('Run not found');
       }
@@ -122,43 +108,15 @@ export class FlowRunLifecycle {
   }
 
   listRunNodeRuns(runId: string): Promise<Record<string, unknown>[]> {
-    return this.readModel.list(
-      `
-        select nr.*, n.code as node_code, n.name as node_name, n.kind
-        from flow.node_runs nr
-        join flow.nodes n on n.id = nr.node_id
-        where nr.run_id = $1::uuid
-        order by nr.opened_at, nr.id
-      `,
-      [runId],
-    );
+    return this.readModel.listRunNodeRuns(runId);
   }
 
   listRunTasks(runId: string): Promise<Record<string, unknown>[]> {
-    return this.readModel.list(
-      `
-        select t.*, n.code as node_code, n.name as node_name, n.kind
-        from flow.tasks t
-        join flow.nodes n on n.id = t.node_id
-        where t.run_id = $1::uuid
-        order by t.created_at desc, t.id
-      `,
-      [runId],
-    );
+    return this.readModel.listRunTasks(runId);
   }
 
   listRunEvents(runId: string): Promise<Record<string, unknown>[]> {
-    return this.readModel.list(
-      `
-        select e.*, n.code as node_code, t.status as task_status
-        from flow.events e
-        left join flow.nodes n on n.id = e.node_id
-        left join flow.tasks t on t.id = e.task_id
-        where e.run_id = $1::uuid
-        order by e.created_at desc, e.id desc
-      `,
-      [runId],
-    );
+    return this.readModel.listRunEvents(runId);
   }
 
   async getRunFacts(id: string): Promise<Record<string, unknown>> {
@@ -171,12 +129,11 @@ export class FlowRunLifecycle {
     });
 
     return this.db.tx(async (trx) => {
-      const result = await trx.query<{ facts: Record<string, unknown> }>(
-        'select flow.build_facts($1::uuid, $2::text, $3::text) as facts',
+      const result = await trx.run(buildRunFactsQuery,
         [run.scopeId, run.targetType, run.targetId],
       );
       return {
-        ...(result.rows[0]?.facts ?? {}),
+        ...(result[0]?.facts ?? {}),
         adapter: adapterFacts,
       };
     }, {
@@ -220,17 +177,7 @@ export class FlowRunLifecycle {
   }
 
   getNodeRun(id: string): Promise<Record<string, unknown>> {
-    return this.readModel.getOne(
-      `
-        select nr.*, n.code as node_code, n.name as node_name, n.kind
-        from flow.node_runs nr
-        join flow.nodes n on n.id = nr.node_id
-        where nr.id = $1::uuid
-        limit 1
-      `,
-      [id],
-      'Node run not found',
-    );
+    return this.readModel.getNodeRun(id);
   }
 
   private async buildAdapterFactsIfRegistered(input: {
@@ -271,20 +218,17 @@ export class FlowRunLifecycle {
     },
     error: unknown,
   ): Promise<void> {
-    if (!input.runId) {
+    const runId = input.runId;
+    if (!runId) {
       return;
     }
 
     const message = error instanceof Error ? error.message : String(error);
     await this.db.tx(async (trx) => {
-      await trx.query(
-        `
-          insert into flow.events (tenant_id, run_id, kind, actor_id, payload)
-          values ($1::uuid, $2::uuid, 'facts_changed', $3::uuid, $4::jsonb)
-        `,
+      await trx.run(recordAdapterFailure,
         [
           this.requestContext.tenantId,
-          input.runId,
+          runId,
           this.requestContext.actorId ?? null,
           {
             adapterKey: input.adapterKey,

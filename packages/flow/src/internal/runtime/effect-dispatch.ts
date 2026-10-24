@@ -1,3 +1,5 @@
+import { readPendingEffects } from './runtime-queries.repository.js';
+import { recordEffectResult, signalChanged } from './effect-commands.repository.js';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
@@ -72,7 +74,7 @@ export class FlowEffectDispatch {
     });
 
     return this.db.tx(async (trx) => {
-      await trx.query('select flow.signal_changed($1::uuid, $2::text, $3::text)', [
+      await trx.run(signalChanged, [
         scopeId,
         dto.targetType,
         dto.targetId,
@@ -86,39 +88,10 @@ export class FlowEffectDispatch {
     const limit = dto.limit ?? 50;
     const pending = await this.db.tx(
       async (trx) => {
-        const result = await trx.query<PendingEffectRow>(
-          `
-          select
-            e.id as event_id,
-            e.run_id,
-            e.node_id,
-            e.task_id,
-            e.payload,
-            r.adapter_key,
-            r.target_type,
-            r.target_id,
-            n.code as node_code,
-            t.decided_action as action
-          from flow.events e
-          join flow.runs r on r.id = e.run_id
-          left join flow.nodes n on n.id = e.node_id
-          left join flow.tasks t on t.id = e.task_id
-          where e.kind = 'effect_requested'
-            and ($1::uuid is null or e.run_id = $1::uuid)
-            and ($2::uuid is null or e.id = $2::uuid)
-            and not exists (
-              select 1
-              from flow.events terminal
-              where terminal.run_id = e.run_id
-                and terminal.kind in ('effect_succeeded', 'effect_failed')
-                and terminal.payload ->> 'effectEventId' = e.id::text
-            )
-          order by e.created_at, e.id
-          limit $3
-        `,
+        const result = await trx.run(readPendingEffects,
           [dto.runId ?? null, dto.effectEventId ?? null, limit],
         );
-        return result.rows;
+        return result;
       },
       {
         role: 'reader',
@@ -210,16 +183,12 @@ export class FlowEffectDispatch {
   }
 
   private async recordEffectResult(
-    event: PendingEffectRow,
+    event: Pick<PendingEffectRow, 'event_id' | 'run_id' | 'node_id' | 'task_id'>,
     kind: 'effect_succeeded' | 'effect_failed',
     payload: FlowJsonObject,
   ): Promise<void> {
     await this.db.tx(async (trx) => {
-      await trx.query(
-        `
-          insert into flow.events (tenant_id, run_id, node_id, task_id, kind, actor_id, payload)
-          values ($1::uuid, $2::uuid, $3::uuid, $4::uuid, $5::flow.event_kind, $6::uuid, $7::jsonb)
-        `,
+      await trx.run(recordEffectResult,
         [
           this.requireTenantId(),
           event.run_id,

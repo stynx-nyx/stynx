@@ -1,3 +1,17 @@
+import {
+  isGraphPackageRow,
+  publishNodesQuery,
+  publishEdgesQuery,
+  recordPublicationQuery,
+  lockedGraphQuery,
+  exportNodesQuery,
+  exportEdgesQuery,
+  exportTransitionEffectsQuery,
+  exportAgentRulesQuery,
+  exportNodeFormRulesQuery,
+  exportPolicySetsQuery,
+  exportPolicyRulesQuery,
+} from './graph-package.repository.js';
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database, Transaction } from '@stynx-nyx/data';
@@ -36,10 +50,10 @@ export class FlowGraphPackage {
       }
 
       const [nodes, edges] = await Promise.all([
-        trx.query<DesignFlowRow>('select id, code, kind from flow.nodes where graph_id = $1::uuid order by sort_order, code', [id]),
-        trx.query<DesignFlowRow>('select id, from_node_id, to_node_id from flow.edges where graph_id = $1::uuid', [id]),
+        trx.runGuarded(publishNodesQuery, [id], isGraphPackageRow),
+        trx.runGuarded(publishEdgesQuery, [id], isGraphPackageRow),
       ]);
-      this.validatePublishableGraph(nodes.rows, edges.rows);
+      this.validatePublishableGraph(nodes, edges);
 
       const existingPublish = graphPublishMeta(graph.meta);
       const publishedVersion = (existingPublish?.publishedVersion ?? 0) + 1;
@@ -56,14 +70,9 @@ export class FlowGraphPackage {
         },
       };
 
-      await trx.query<DesignFlowRow>(
-        `
-          update flow.graphs
-          set meta = $2::jsonb, updated_by = $3::uuid, updated_at = $4::timestamptz
-          where id = $1::uuid
-          returning *
-        `,
+      await trx.runGuarded(recordPublicationQuery,
         [id, meta, publishedBy, publishedAt],
+        isGraphPackageRow,
       );
 
       return {
@@ -137,11 +146,8 @@ export class FlowGraphPackage {
   }
 
   private async getGraphForUpdate(trx: Transaction, id: string): Promise<FlowJsonObject> {
-    const result = await trx.query<DesignFlowRow>(
-      'select * from flow.graphs where id = $1::uuid limit 1 for update',
-      [id],
-    );
-    const row = result.rows[0];
+    const result = await trx.runGuarded(lockedGraphQuery, [id], isGraphPackageRow);
+    const row = result[0];
     if (!row) {
       throw new NotFoundException('Flow row not found');
     }
@@ -158,65 +164,29 @@ export class FlowGraphPackage {
     const scopeId = requireString(graph.scopeId, 'graph.scopeId');
 
     const [nodes, edges, transitionEffects, agentRules, nodeFormRules, policySets] = await Promise.all([
-      trx.query<DesignFlowRow>('select * from flow.nodes where graph_id = $1::uuid order by sort_order, code', [id]),
-      trx.query<DesignFlowRow>(
-        `
-          select edge.*, from_node.code as from_node_code, to_node.code as to_node_code
-          from flow.edges edge
-          join flow.nodes from_node on from_node.id = edge.from_node_id
-          join flow.nodes to_node on to_node.id = edge.to_node_id
-          where edge.graph_id = $1::uuid
-          order by edge.sort_order, edge.id
-        `,
-        [id],
-      ),
-      trx.query<DesignFlowRow>(
-        'select * from flow.transition_effects where graph_id = $1::uuid order by sort_order, id',
-        [id],
-      ),
-      trx.query<DesignFlowRow>(
-        `
-          select rule.*, node.code as node_code
-          from flow.agent_rules rule
-          join flow.nodes node on node.id = rule.node_id
-          where node.graph_id = $1::uuid
-          order by node.sort_order, rule.sort_order, rule.id
-        `,
-        [id],
-      ),
-      trx.query<DesignFlowRow>(
-        `
-          select rule.*, node.code as node_code
-          from flow.node_form_rules rule
-          join flow.nodes node on node.id = rule.node_id
-          where node.graph_id = $1::uuid
-          order by node.sort_order, rule.id
-        `,
-        [id],
-      ),
-      trx.query<DesignFlowRow>('select * from flow.policy_sets where scope_id = $1::uuid order by version, id', [
-        scopeId,
-      ]),
+      trx.runGuarded(exportNodesQuery, [id], isGraphPackageRow),
+      trx.runGuarded(exportEdgesQuery, [id], isGraphPackageRow),
+      trx.runGuarded(exportTransitionEffectsQuery, [id], isGraphPackageRow),
+      trx.runGuarded(exportAgentRulesQuery, [id], isGraphPackageRow),
+      trx.runGuarded(exportNodeFormRulesQuery, [id], isGraphPackageRow),
+      trx.runGuarded(exportPolicySetsQuery, [scopeId], isGraphPackageRow),
     ]);
 
-    const policySetIds = policySets.rows
+    const policySetIds = policySets
       .map((row) => row.id)
       .filter((value): value is string => typeof value === 'string');
     const policyRules = policySetIds.length === 0
       ? []
-      : (await trx.query<DesignFlowRow>(
-          'select * from flow.policy_rules where policy_set_id = any($1::uuid[]) order by priority, id',
-          [policySetIds],
-        )).rows;
+      : await trx.runGuarded(exportPolicyRulesQuery, [policySetIds], isGraphPackageRow);
 
     return {
       graph,
-      nodes: nodes.rows.map(camelizeDesignRow),
-      edges: edges.rows.map(camelizeDesignRow),
-      transitionEffects: transitionEffects.rows.map(camelizeDesignRow),
-      agentRules: agentRules.rows.map(camelizeDesignRow),
-      nodeFormRules: nodeFormRules.rows.map(camelizeDesignRow),
-      policySets: policySets.rows.map(camelizeDesignRow),
+      nodes: nodes.map(camelizeDesignRow),
+      edges: edges.map(camelizeDesignRow),
+      transitionEffects: transitionEffects.map(camelizeDesignRow),
+      agentRules: agentRules.map(camelizeDesignRow),
+      nodeFormRules: nodeFormRules.map(camelizeDesignRow),
+      policySets: policySets.map(camelizeDesignRow),
       policyRules: policyRules.map(camelizeDesignRow),
     };
   }
@@ -251,7 +221,7 @@ export class FlowGraphPackage {
     }
   }
 
-  private validatePublishableGraph(nodes: DesignFlowRow[], edges: DesignFlowRow[]): void {
+  private validatePublishableGraph(nodes: readonly DesignFlowRow[], edges: readonly DesignFlowRow[]): void {
     const startNodes = nodes.filter((node) => node.kind === 'start');
     if (startNodes.length !== 1) {
       throw new BadRequestException('Graph publish requires exactly one start node');

@@ -1,3 +1,4 @@
+import { putQuestionScoreQuery, upsertAnswerQuery, isFormsWriteRow } from './forms-write.repository.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database, Transaction } from '@stynx-nyx/data';
@@ -80,26 +81,7 @@ export class FlowFormsService {
       await this.assertExists(trx, 'flow.questions', questionId, 'Question not found');
       const tenantId = this.requireTenantId();
       const actorId = this.requestContext.actorId ?? null;
-      const result = await trx.query<FlowRow>(
-        `
-          insert into flow.scores (
-            tenant_id,
-            question_id,
-            pass_points,
-            fail_points,
-            meta,
-            created_by,
-            updated_by
-          )
-          values ($1::uuid, $2::uuid, $3::numeric, $4::numeric, $5::jsonb, $6::uuid, $6::uuid)
-          on conflict (tenant_id, question_id) do update
-          set pass_points = excluded.pass_points,
-              fail_points = excluded.fail_points,
-              meta = excluded.meta,
-              updated_by = excluded.updated_by,
-              updated_at = clock_timestamp()
-          returning *
-        `,
+      const result = await trx.runGuarded(putQuestionScoreQuery,
         [
           tenantId,
           questionId,
@@ -108,8 +90,9 @@ export class FlowFormsService {
           dto.meta ?? {},
           actorId,
         ],
+        isFormsWriteRow,
       );
-      return camelizeRow(result.rows[0] ?? {});
+      return camelizeRow(result[0] ?? {});
     });
   }
 
@@ -293,28 +276,11 @@ export class FlowFormsService {
     fillId: string,
     dto: { questionId?: string | undefined; value?: unknown; attachment?: unknown },
   ): Promise<Record<string, unknown>> {
-    const result = await trx.query<FlowRow>(
-      `
-        insert into flow.answers (
-          tenant_id,
-          fill_id,
-          question_id,
-          value,
-          attachment,
-          created_by,
-          updated_by
-        )
-        values ($1::uuid, $2::uuid, $3::uuid, $4::jsonb, $5::jsonb, $6::uuid, $6::uuid)
-        on conflict (tenant_id, fill_id, question_id) do update
-        set value = excluded.value,
-            attachment = excluded.attachment,
-            updated_by = excluded.updated_by,
-            updated_at = clock_timestamp()
-        returning *
-      `,
+    const result = await trx.runGuarded(upsertAnswerQuery,
       [tenantId, fillId, dto.questionId, dto.value ?? null, dto.attachment ?? null, actorId],
+      isFormsWriteRow,
     );
-    return camelizeRow(result.rows[0] ?? {});
+    return camelizeRow(result[0] ?? {});
   }
 
   private normalizeAnswerInput(input: unknown): Record<string, unknown> {

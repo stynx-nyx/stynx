@@ -3,6 +3,7 @@ import { Database, type Transaction } from '@stynx-nyx/data';
 import { FlowDesignService } from './flow-design.service.js';
 import type { FlowJsonObject } from './types.js';
 import { parseDto, policyEvaluationSchema } from './validation.js';
+import { resolvePolicySetIdQuery, evaluatePolicyConditionQuery } from './policy-queries.repository.js';
 
 @Injectable()
 export class FlowPolicyService {
@@ -103,20 +104,8 @@ export class FlowPolicyService {
     trx: Transaction,
     dto: { scopeId?: string | undefined; scopeCode?: string | undefined },
   ): Promise<string | undefined> {
-    const result = await trx.query<{ id: string }>(
-      `
-        select ps.id
-        from flow.policy_sets ps
-        join flow.scopes s on s.id = ps.scope_id
-        where ps.is_active
-          and ($1::uuid is null or ps.scope_id = $1::uuid)
-          and ($2::text is null or s.code = $2::text)
-        order by ps.updated_at desc, ps.id
-        limit 1
-      `,
-      [dto.scopeId ?? null, dto.scopeCode ?? null],
-    );
-    return result.rows[0]?.id;
+    const rows = await trx.run(resolvePolicySetIdQuery, [dto.scopeId ?? null, dto.scopeCode ?? null]);
+    return rows[0]?.id;
   }
 
   private async conditionsMatch(
@@ -129,11 +118,8 @@ export class FlowPolicyService {
       return true;
     }
     if (typeof value.jsonpath === 'string') {
-      const result = await trx.query<{ matched: boolean }>(
-        'select flow.eval_rule($1::text, $2::jsonb) as matched',
-        [value.jsonpath, facts],
-      );
-      return result.rows[0]?.matched === true;
+      const rows = await trx.run(evaluatePolicyConditionQuery, [value.jsonpath, facts]);
+      return rows[0]?.matched === true;
     }
     return Object.entries(value).every(([key, expected]) => facts[key] === expected);
   }

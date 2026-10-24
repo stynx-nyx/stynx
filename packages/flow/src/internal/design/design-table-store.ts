@@ -1,3 +1,5 @@
+import { selectNodeInsertQuery } from './generated/nodes-insert.repository.js';
+import { selectNodeUpdateQuery } from './generated/nodes-update.repository.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import {
@@ -16,6 +18,11 @@ import {
 import type { FlowJsonObject } from '../../types.js';
 
 export type DesignFlowRow = Record<string, unknown>;
+
+function isOpaqueNodeRow(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 type ColumnMap = Record<string, string>;
 
 export interface DesignTableConfig {
@@ -184,6 +191,18 @@ function definedEntries(input: FlowJsonObject, columns: ColumnMap): Array<[strin
   return entries;
 }
 
+function nodeMutationMask(
+  entries: ReadonlyArray<readonly [string, unknown]>,
+): number {
+  const columns: readonly string[] = Object.values(TABLES.nodes.columns);
+  let mask = 0;
+  for (const [column] of entries) {
+    const index = columns.indexOf(column);
+    if (index >= 0) mask |= 1 << index;
+  }
+  return mask;
+}
+
 function ensureNonEmptyUpdate(entries: Array<[string, unknown]>): void {
   if (entries.length === 0) {
     throw new BadRequestException('At least one update field is required');
@@ -245,11 +264,13 @@ export class FlowDesignTableStore {
 
       const assignments = entries.map(([column], index) => `${column} = $${index + 2}`);
       const values = [id, ...entries.map(([, value]) => value)];
-      const result = await trx.query<DesignFlowRow>(
-        `update ${config.sqlName} set ${assignments.join(', ')} where id = $1::uuid returning *`,
-        values,
-      );
-      const row = result.rows[0];
+      const rows = key === 'nodes'
+        ? await trx.runGuarded(selectNodeUpdateQuery(nodeMutationMask(entries)), values, isOpaqueNodeRow)
+        : (await trx.query<DesignFlowRow>(
+          `update ${config.sqlName} set ${assignments.join(', ')} where id = $1::uuid returning *`,
+          values,
+        )).rows;
+      const row = rows[0];
       if (!row) {
         throw new NotFoundException('Flow row not found');
       }
@@ -280,11 +301,14 @@ export class FlowDesignTableStore {
 
     const columns = entries.map(([column]) => column);
     const placeholders = entries.map((_entry, index) => `$${index + 1}`);
-    const result = await trx.query<DesignFlowRow>(
-      `insert into ${config.sqlName} (${columns.join(', ')}) values (${placeholders.join(', ')}) returning *`,
-      entries.map(([, value]) => value),
-    );
-    const row = result.rows[0];
+    const values = entries.map(([, value]) => value);
+    const rows = key === 'nodes'
+      ? await trx.runGuarded(selectNodeInsertQuery(nodeMutationMask(entries)), values, isOpaqueNodeRow)
+      : (await trx.query<DesignFlowRow>(
+        `insert into ${config.sqlName} (${columns.join(', ')}) values (${placeholders.join(', ')}) returning *`,
+        values,
+      )).rows;
+    const row = rows[0];
     if (!row) {
       throw new BadRequestException('Flow insert did not return a row');
     }
