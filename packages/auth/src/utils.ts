@@ -60,7 +60,7 @@ export function decodeJwtClaims(token: string): {
 
 export function verifyJwtWithJwk(
   token: string,
-  jwk: Record<string, string | undefined>,
+  jwk: Record<string, unknown>,
 ): Record<string, unknown> {
   const decoded = decodeJwtClaims(token);
   const key = createPublicKey({ key: jwk, format: 'jwk' });

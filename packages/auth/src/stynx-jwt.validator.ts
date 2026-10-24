@@ -7,12 +7,14 @@ import { STYNX_AUTH_OPTIONS } from './tokens.js';
 import type { ResolvedStynxAuthModuleOptions, StynxAccessTokenClaims } from './types.js';
 import { decodeJwtClaims, verifyJwtWithJwk } from './utils.js';
 
+type UsableRsaKey = Record<string, unknown> & { kty: 'RSA'; n: string; e: string };
+
 interface CachedKeySet {
   expiresAt: number;
   version: number;
   source: SessionJwtSigningService | string;
   forcedRefreshStartedAt?: number;
-  keys: Array<Record<string, string | undefined>>;
+  keys: UsableRsaKey[];
 }
 
 interface RefreshState {
@@ -20,13 +22,26 @@ interface RefreshState {
   inFlight?: Promise<CachedKeySet>;
 }
 
+function nonEmptyStringArray(value: unknown): value is string[] {
+  if (!Array.isArray(value)) return false;
+  for (let index = 0; index < value.length; index += 1) {
+    const entry: unknown = value[index];
+    if (!Object.hasOwn(value, index) || typeof entry !== 'string' || entry.length === 0) return false;
+  }
+  return true;
+}
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 function stringListClaim(payload: Record<string, unknown>, name: string): string[] | undefined {
   const value = payload[name];
   if (value === undefined) return undefined;
-  if (!Array.isArray(value) || !value.every((entry) => typeof entry === 'string' && entry.length > 0)) {
+  if (!nonEmptyStringArray(value)) {
     throw new InvalidCredentialError(`STYNX token ${name} claim is malformed`);
   }
-  return [...new Set(value as string[])];
+  return [...new Set(value)];
 }
 
 @Injectable()
@@ -142,19 +157,19 @@ export class StynxJwtValidator {
     const startedAtVersion = this.cacheVersion;
 
     let jwks: unknown;
-    if (signingService) {
-      jwks = await signingService.getJwks();
-    } else {
-      const response = await fetch(source as string);
+    if (typeof source === 'string') {
+      const response = await fetch(source);
       if (!response.ok) throw new Error(`Failed to load STYNX JWKS: ${response.status}`);
       jwks = await response.json();
+    } else {
+      jwks = await source.getJwks();
     }
 
     const rawKeys = jwks && typeof jwks === 'object' && 'keys' in jwks ? jwks.keys : undefined;
     if (!Array.isArray(rawKeys) || rawKeys.length === 0) {
       throw new Error('STYNX JWKS contains no usable verification keys');
     }
-    const keys = rawKeys.filter((key): key is Record<string, string | undefined> => this.isUsableKey(key));
+    const keys = rawKeys.filter((key: unknown): key is UsableRsaKey => this.isUsableKey(key));
     if (keys.length === 0) throw new Error('STYNX JWKS contains no usable verification keys');
     if (!forceRefresh && this.cache?.source === source && this.cache.version > startedAtVersion) {
       return this.cache;
@@ -169,9 +184,9 @@ export class StynxJwtValidator {
     return this.cache;
   }
 
-  private isUsableKey(key: unknown): boolean {
-    if (!key || typeof key !== 'object') return false;
-    const jwk = key as Record<string, unknown>;
+  private isUsableKey(key: unknown): key is UsableRsaKey {
+    if (!isObjectRecord(key)) return false;
+    const jwk = key;
     if (jwk.kty !== 'RSA' || typeof jwk.n !== 'string' || !jwk.n || typeof jwk.e !== 'string' || !jwk.e) return false;
     if (jwk.use !== undefined && jwk.use !== 'sig') return false;
     if (jwk.alg !== undefined && jwk.alg !== 'RS256') return false;

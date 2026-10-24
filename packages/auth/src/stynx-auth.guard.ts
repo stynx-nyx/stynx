@@ -12,7 +12,6 @@ import {
   STYNX_PUBLIC_TENANT_ROUTE,
   STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL,
   STYNX_VERIFIED_TENANT_ID,
-  type PublicTenantRouteOptions,
 } from '@stynx-nyx/contracts';
 import { SessionRevocationList } from '@stynx-nyx/sessions';
 import { StynxJwtValidator } from './stynx-jwt.validator.js';
@@ -23,15 +22,36 @@ import { clearVerifiedPrincipal, markVerifiedPrincipal } from './verified-princi
 
 function responseLike(
   request: RequestLike,
-): { setHeader(name: string, value: string): void } | null {
-  const candidate = (request.res ?? request.response) as
-    { setHeader?: (name: string, value: string) => void } | undefined;
-  if (!candidate?.setHeader) {
+): { setHeader(name: string, value: string): unknown } | null {
+  const candidate = request.res ?? request.response;
+  if (candidate === null || candidate === undefined || !readProperty(candidate, 'setHeader')) {
     return null;
   }
+  const setHeader = readProperty(candidate, 'setHeader');
+  if (typeof setHeader !== 'function') throw new TypeError('Response setHeader is not a function');
   return {
-    setHeader: candidate.setHeader.bind(candidate),
+    setHeader(name, value): unknown {
+      const result: unknown = Reflect.apply(setHeader, candidate, [name, value]);
+      return result;
+    },
   };
+}
+
+function readProperty(value: unknown, key: PropertyKey): unknown {
+  if (value === null || value === undefined) {
+    throw new TypeError(`Cannot read properties of ${String(value)} (reading '${String(key)}')`);
+  }
+  const boxed: unknown = Object(value);
+  if ((typeof boxed !== 'object' || boxed === null) && typeof boxed !== 'function') {
+    throw new TypeError('Auth property receiver could not be boxed');
+  }
+  return Reflect.get(boxed, key, value);
+}
+
+function writeRequestProperty(request: RequestLike, key: string, value: unknown): void {
+  if (!Reflect.set(request, key, value)) {
+    throw new TypeError(`Cannot assign to request property '${key}'`);
+  }
 }
 
 /** Verified-token claims after the guard's completeness checks. */
@@ -46,7 +66,25 @@ function nonEmptyString(value: unknown): value is string {
 }
 
 function stringList(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every(nonEmptyString);
+  if (!Array.isArray(value)) return false;
+  for (let index = 0; index < value.length; index += 1) {
+    const entry: unknown = value[index];
+    if (!Object.hasOwn(value, index) || !nonEmptyString(entry)) return false;
+  }
+  return true;
+}
+
+function authorizedClaims(
+  claims: StynxAccessTokenClaims | null | undefined,
+): claims is AuthorizedClaims {
+  return Boolean(claims &&
+    nonEmptyString(claims.sub) &&
+    nonEmptyString(claims.sid) &&
+    nonEmptyString(claims.tenantId) &&
+    typeof claims.expiresAt === 'number' &&
+    Number.isFinite(claims.expiresAt) &&
+    stringList(claims.permissions) &&
+    stringList(claims.roles));
 }
 
 /**
@@ -71,7 +109,7 @@ export class StynxAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestLike>();
     Reflect.deleteProperty(request, STYNX_VERIFIED_TENANT_ID);
-    const publicTenant = this.reflector.getAllAndOverride<PublicTenantRouteOptions | boolean>(
+    const publicTenant = this.reflector.getAllAndOverride<unknown>(
       STYNX_PUBLIC_TENANT_ROUTE,
       [context.getHandler(), context.getClass()],
     );
@@ -88,18 +126,16 @@ export class StynxAuthGuard implements CanActivate {
       delete (request as RequestLike & { verifiedTenantEntitlement?: unknown })
         .verifiedTenantEntitlement;
       delete (request as RequestLike & { principalContext?: unknown }).principalContext;
-      (
-        request as RequestLike & { publicTenantRoute: boolean; publicTenantOptionalAuth: boolean }
-      ).publicTenantRoute = true;
-      (request as RequestLike & { publicTenantOptionalAuth: boolean }).publicTenantOptionalAuth =
-        publicTenant === true ? false : Boolean(publicTenant.optionalAuth);
+      writeRequestProperty(request, 'publicTenantRoute', true);
+      writeRequestProperty(request, 'publicTenantOptionalAuth',
+        publicTenant === true ? false : Boolean(readProperty(publicTenant, 'optionalAuth')));
       request.stynxReadonly = Boolean(
         this.reflector.getAllAndOverride<boolean>(STYNX_READONLY_ROUTE, [
           context.getHandler(),
           context.getClass(),
         ]),
       );
-      if (!publicTenant || publicTenant === true || !publicTenant.optionalAuth) return true;
+      if (!publicTenant || publicTenant === true || !readProperty(publicTenant, 'optionalAuth')) return true;
       const authorization = headerToString(request.headers.authorization);
       const token = authorization?.match(/^Bearer +(\S+)$/u)?.[1];
       if (!token) return true;
@@ -208,22 +244,13 @@ export class StynxAuthGuard implements CanActivate {
     claims: StynxAccessTokenClaims | null | undefined,
     message: string,
   ): AuthorizedClaims {
-    if (
-      !claims ||
-      !nonEmptyString(claims.sub) ||
-      !nonEmptyString(claims.sid) ||
-      !nonEmptyString(claims.tenantId) ||
-      typeof claims.expiresAt !== 'number' ||
-      !Number.isFinite(claims.expiresAt) ||
-      !stringList(claims.permissions) ||
-      !stringList(claims.roles)
-    ) {
+    if (!authorizedClaims(claims)) {
       throw new UnauthorizedException(message);
     }
     if (claims.expiresAt * 1000 <= Date.now()) {
       throw new UnauthorizedException('STYNX bearer token has expired');
     }
-    return claims as AuthorizedClaims;
+    return claims;
   }
 
   /**

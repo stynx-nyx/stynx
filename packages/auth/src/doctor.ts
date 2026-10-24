@@ -10,9 +10,9 @@ const expectedMutationMethods = [
 ];
 
 export function verifyAuthMutationCoverage(): { ok: boolean; missing: string[]; extra: string[] } {
-  const prototype = EffectiveHashComputer.prototype as unknown as Record<string, unknown>;
+  const prototype = EffectiveHashComputer.prototype;
   const available = Object.getOwnPropertyNames(prototype).filter(
-    (name) => typeof prototype[name] === 'function' && name !== 'constructor' && name.startsWith('after'),
+    (name) => typeof Reflect.get(prototype, name) === 'function' && name !== 'constructor' && name.startsWith('after'),
   );
   return {
     ok: expectedMutationMethods.every((method) => available.includes(method)) && available.length === expectedMutationMethods.length,
