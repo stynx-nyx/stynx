@@ -1531,6 +1531,12 @@
       "commit": "e40efeea8bb1cf950c935cace880a614f1917ce5",
       "authorized_by": "Owner",
       "reason": "The Owner authorized this receipt on 2026-10-22 for SM-17 as rebase-merged to main by #400 (the same change as 75f2562c). createTestApp drops only the uniquely named local scratch database it created on the supplied DATABASE_URL; it does not target production. Same case as FORBID-DROP-PROD@0018f245."
+    },
+    {
+      "forbidden_id": "FORBID-RM-RF",
+      "commit": "9bf31e01c48454a1905b75d58bdb0549016aa22a",
+      "authorized_by": "Owner",
+      "reason": "Records the narrowly reviewed non-actuating lexical match in this exact Inspector commit under the Owner's 2026-10-24 ADR0035 answer, 'Approve bounded ordinary-test scheduling', and the continuing consolidated STYNX verification-blocker and integration mandate. The added historical preservation fixture test/fixtures/unit-budget/f85c9b8c.json has SHA-256 eabf52e9cf3ac0619b4237996b2aeeb352c1963c0a5b1327ce75269b7a3a5d67 and retains script maps from f85c9b8c89b4d22cce2626e749c92ce98673a8ab. Its 46 matched strings are 41 clean entries 'rm -rf dist coverage', one clean entry 'rm -rf dist', two build entries 'rm -rf dist && tsc -p tsconfig.build.json', and two build entries 'rm -rf dist && tsc -p tsconfig.json'. The ordinary-unit-budget reader parses, clones and compares these strings as historical preservation data; its runtime barriers construct separate worker commands and extract only ordinary test-runner caps from current manifests. Neither this fixture nor its reader executes the historical clean/build strings. This records the exact bounded textual match, following the preserved non-actuating precedents 953bddbdfaa3523be4e0e82cfe26e1917473768f, caedd16938e41fba04a1fbfa594ff6c982bde6f0 and its landed identity 7275c6e27d52ef93bcb24de054f9a31105bdae10; those receipts themselves do not cover this commit. It grants no actual deletion, uncommitted-work cleanup, arbitrary cleanup, gate weakening, unrelated remote action, publication or downstream acceptance. The agent computed and reviewed this exact commit; the Owner supplied the existing bounded scheduling and verification mandate, not its literal SHA or a new decision on this receipt. Any rewritten commit needs its own exact identity review. Recording this receipt creates a new candidate that must undergo ordinary verification and signed RC; it does not relabel evidence from the prior candidate."
     }
   ]
 }
