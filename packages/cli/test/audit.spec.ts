@@ -117,7 +117,7 @@ describe('verifyAuditChain', () => {
 
 
   it.each(['success', 'connect', 'query', 'end'])('preserves native client receiver and rejection identity: %s', async (phase) => {
-    
+
     const failure = new Error('native client rejection');
     const calls: string[] = [];
     const client = {
@@ -149,4 +149,31 @@ describe('verifyAuditChain', () => {
     }
   });
 
+});
+
+
+describe('audit actual default/custom finally precedence', () => {
+  it.each(['native-default', 'custom'])('preserves end rejection overriding query failure for %s', async (mode) => {
+
+    const client = new FakeAuditClient(); const queryError = new Error('query failed first'); const endError = new Error('end failed last');
+    const calls: string[] = [];
+    vi.spyOn(client, 'connect').mockImplementation(async function () { expect(this).toBe(client); calls.push('connect'); });
+    vi.spyOn(client, 'query').mockImplementation(async function () { expect(this).toBe(client); calls.push('query'); throw queryError; });
+    vi.spyOn(client, 'end').mockImplementation(async function () { expect(this).toBe(client); calls.push('end'); throw endError; });
+    const clientFactory = mode === 'custom' ? () => client : undefined;
+    if (mode === 'native-default') mockPg.clients.push(client);
+    try { await expect(verifyAuditChain('postgresql://custom-boundary', { clientFactory })).rejects.toBe(endError); expect(calls).toEqual(['connect', 'query', 'end']); }
+    finally { // No external resource is created by this fake client.
+    }
+  });
+
+  it('does not query or end when a custom connect rejects', async () => {
+
+    const client = new FakeAuditClient(); const failure = new Error('custom connect failure');
+    const connect = vi.spyOn(client, 'connect').mockRejectedValueOnce(failure); const query = vi.spyOn(client, 'query'); const end = vi.spyOn(client, 'end');
+    const clientFactory = () => client;
+    try { await expect(verifyAuditChain('postgresql://custom-boundary', { clientFactory })).rejects.toBe(failure); expect(connect).toHaveBeenCalledTimes(1); expect(query).not.toHaveBeenCalled(); expect(end).not.toHaveBeenCalled(); }
+    finally { // No external resource is created by this fake client.
+    }
+  });
 });

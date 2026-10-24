@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
-import { Database } from '@stynx-nyx/data';
+import { Database, executeTypedQuery, type TypedQuery } from '@stynx-nyx/data';
+import type { z } from 'zod';
 import { PermissionCache, PermissionQueryService, StynxJwtValidator } from '@stynx-nyx/auth';
 import { RequestContext, RequestContextMutator } from '@stynx-nyx/core';
 import { SessionService } from '@stynx-nyx/sessions';
@@ -19,6 +20,9 @@ import type { Mock } from 'vitest';
 function methods(names: string[]) {
   return Object.fromEntries(names.map((name) => [name, vi.fn(() => ({ name }))]));
 }
+
+const ARCHIVE_ID = '0190a8a4-0000-7000-8000-000000000001';
+const ARCHIVE_TENANT = '0190a8a4-0000-7000-8000-000000000002';
 
 function queryBuilder() {
   const limits: number[] = [];
@@ -39,7 +43,11 @@ function queryBuilder() {
     set: vi.fn(() => chain),
     where: vi.fn(() => undefined),
   };
+  const query = vi.fn(async (_text: string, _values?: unknown[]): Promise<{ rows: Record<string, unknown>[]; rowCount: number }> => ({ rows: [{ archive_id: '7' }], rowCount: 1 }));
   return {
+    run<Q extends TypedQuery>(definition: Q, values: z.input<Q['params']>) {
+      return executeTypedQuery({ query }, definition, values);
+    },
     insert: vi.fn(() => chain),
     update: vi.fn(() => chain),
     select: vi.fn(() => ({
@@ -63,7 +71,7 @@ function queryBuilder() {
     softDelete: vi.fn(async () => ({ id: 'row-1', archiveId: 7n })),
     restoreFromArchive: vi.fn(async () => undefined),
     hardDeleteFromArchive: vi.fn(async () => undefined),
-    query: vi.fn(async () => ({ rows: [{ archive_id: '7' }], rowCount: 1 })),
+    query,
     limits,
   };
 }
@@ -409,7 +417,7 @@ describe('@stynx-nyx/reference-api sample service', () => {
     const database = { tx: vi.fn(async (callback: (input: typeof trx) => unknown) => callback(trx)) };
     const service = new ReferenceSampleService(
       database as never,
-      { tenantId: 'tenant-1', actorId: 'actor-1' } as RequestContext,
+      { tenantId: ARCHIVE_TENANT, actorId: 'actor-1' } as RequestContext,
       {} as never,
     );
     vi.spyOn(service as never, 'requireLive').mockResolvedValue({ id: 'row-1' } as never);
@@ -417,9 +425,9 @@ describe('@stynx-nyx/reference-api sample service', () => {
 
     await expect(service.softDeleteRecord('record-1')).resolves.toMatchObject({ archiveId: '7' });
     await expect(service.restoreWorkItem('work-1')).resolves.toEqual({ id: 'row-1' });
-    await expect(service.hardDeleteRecordNote('note-1')).resolves.toEqual({
+    await expect(service.hardDeleteRecordNote(ARCHIVE_ID)).resolves.toEqual({
       status: 'hard-deleted',
-      id: 'note-1',
+      id: ARCHIVE_ID,
     });
     expect(trx.hardDeleteFromArchive).toHaveBeenCalledWith(7n, expect.objectContaining({
       confirm: 'I understand this is irrecoverable',
@@ -472,10 +480,10 @@ describe('@stynx-nyx/reference-api sample service', () => {
     };
     const missingArchiveService = new ReferenceSampleService(
       missingArchiveDb as never,
-      { tenantId: 'tenant-1', actorId: 'actor-1' } as RequestContext,
+      { tenantId: ARCHIVE_TENANT, actorId: 'actor-1' } as RequestContext,
       {} as never,
     );
-    await expect(missingArchiveService.hardDeleteWorkItem('work-1')).rejects.toThrow('RESOURCE_NOT_FOUND');
+    await expect(missingArchiveService.hardDeleteWorkItem(ARCHIVE_ID)).rejects.toThrow('RESOURCE_NOT_FOUND');
 
     await expect((service as unknown as {
       requireLive(table: unknown, id: string): Promise<unknown>;
@@ -710,5 +718,87 @@ describe('@stynx-nyx/reference-api dev auth service and probes', () => {
     await expect(controller.rateLimit({ setHeader: vi.fn() })).rejects.toThrow(
       'Rate limit store is unavailable',
     );
+  });
+});
+
+const archiveRoutes = [
+  { method: 'hardDeleteRecord', table: 'archive.sample_record' },
+  { method: 'hardDeleteRecordNote', table: 'archive.sample_record_note' },
+  { method: 'hardDeleteWorkItem', table: 'archive.sample_work_item' },
+  { method: 'hardDeleteWorkItemEntry', table: 'archive.sample_work_item_entry' },
+  { method: 'hardDeleteWorkItemLock', table: 'archive.sample_work_item_lock' },
+] as const;
+
+function archiveFixture(context: Partial<RequestContext> = { tenantId: ARCHIVE_TENANT }) {
+  const trx = queryBuilder();
+  const database = { tx: vi.fn(async (callback: (input: typeof trx) => unknown) => callback(trx)) };
+  const service = new ReferenceSampleService(database as never, context as RequestContext, {} as never);
+  return { trx, database, service };
+}
+
+describe('five closed reference archive selections', () => {
+  it.each(archiveRoutes)('$method selects the exact physical table and preserves archive bigint', async ({ method, table }) => {
+    const { service, trx, database } = archiveFixture();
+    trx.query.mockResolvedValueOnce({ rows: [{ archive_id: '9007199254740993' }], rowCount: 1 });
+    await expect(service[method](ARCHIVE_ID)).resolves.toEqual({ status: 'hard-deleted', id: ARCHIVE_ID });
+    expect(trx.query).toHaveBeenCalledExactlyOnceWith(
+      `select archive_id::text as archive_id from ${table} where id = $1::uuid and tenant_id = $2::uuid limit 1`,
+      [ARCHIVE_ID, ARCHIVE_TENANT],
+    );
+    expect(trx.hardDeleteFromArchive).toHaveBeenCalledExactlyOnceWith(9007199254740993n, { archiveTable: table, confirm: 'I understand this is irrecoverable' });
+    expect(trx.query.mock.invocationCallOrder[0]).toBeLessThan(trx.hardDeleteFromArchive.mock.invocationCallOrder[0]!);
+    expect(database.tx).toHaveBeenCalledTimes(1);
+    console.log('REFERENCE_ARCHIVE_BASELINE ' + JSON.stringify({ method, table, calls: trx.query.mock.calls }));
+  });
+
+  it.each(archiveRoutes)('$method retains missing-row RESOURCE_NOT_FOUND without deletion', async ({ method }) => {
+    const { service, trx } = archiveFixture();
+    trx.query.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+    await expect(service[method](ARCHIVE_ID)).rejects.toThrow('RESOURCE_NOT_FOUND');
+    expect(trx.query).toHaveBeenCalledTimes(1);
+    expect(trx.hardDeleteFromArchive).not.toHaveBeenCalled();
+  });
+
+  it.each(archiveRoutes)('$method checks missing tenant before issuing SQL', async ({ method }) => {
+    const { service, trx, database } = archiveFixture({});
+    await expect(service[method](ARCHIVE_ID)).rejects.toThrow('TENANT_CONTEXT_MISSING');
+    expect(database.tx).toHaveBeenCalledTimes(1);
+    expect(trx.query).not.toHaveBeenCalled();
+    expect(trx.hardDeleteFromArchive).not.toHaveBeenCalled();
+  });
+
+  it.each(archiveRoutes)('$method preserves driver rejection and does not delete', async ({ method }) => {
+    const { service, trx } = archiveFixture();
+    const failure = new Error('archive lookup failure');
+    trx.query.mockRejectedValueOnce(failure);
+    await expect(service[method](ARCHIVE_ID)).rejects.toBe(failure);
+    expect(trx.query).toHaveBeenCalledTimes(1);
+    expect(trx.hardDeleteFromArchive).not.toHaveBeenCalled();
+  });
+
+  it('captures the archive key before tenant lookup, and preserves the original post-query key read', async () => {
+    const events: string[] = [];
+    const context = Object.defineProperty({}, 'tenantId', { get() { events.push('tenant'); return ARCHIVE_TENANT; } });
+    const { service, trx } = archiveFixture(context);
+    trx.query.mockImplementationOnce(async () => { events.push('query'); return { rows: [{ archive_id: '7' }], rowCount: 1 }; });
+    trx.hardDeleteFromArchive.mockImplementationOnce(async () => { events.push('delete'); });
+    const config = { get archiveTable() { events.push('archiveTable'); return 'archive.sample_record'; } };
+    const hardDelete: unknown = Reflect.get(service, 'hardDelete');
+    if (typeof hardDelete !== 'function') throw new Error('Actual private archive entry missing');
+    await Reflect.apply(hardDelete, service, [ARCHIVE_ID, config]);
+    expect(events).toEqual(['archiveTable', 'tenant', 'query', 'archiveTable', 'delete']);
+  });
+
+  it('retains tenant error precedence after reading an invalid internal archive key', async () => {
+    const events: string[] = [];
+    const context = Object.defineProperty({}, 'tenantId', { get() { events.push('tenant'); return undefined; } });
+    const { service, trx } = archiveFixture(context);
+    const config = { get archiveTable() { events.push('archiveTable'); return 'unknown.archive'; } };
+    const hardDelete: unknown = Reflect.get(service, 'hardDelete');
+    if (typeof hardDelete !== 'function') throw new Error('Actual private archive entry missing');
+    await expect(Reflect.apply(hardDelete, service, [ARCHIVE_ID, config])).rejects.toThrow('TENANT_CONTEXT_MISSING');
+    expect(events).toEqual(['archiveTable', 'tenant']);
+    expect(trx.query).not.toHaveBeenCalled();
+    expect(trx.hardDeleteFromArchive).not.toHaveBeenCalled();
   });
 });

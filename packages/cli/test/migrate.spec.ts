@@ -442,4 +442,29 @@ describe('migrate command surface', () => {
     } finally { rmSync(resolve(migrationDir, '..'), { recursive: true, force: true }); }
   });
 
+
+  describe('migrate actual default/custom finally precedence', () => {
+  it.each(['native-default', 'custom'])('preserves end rejection overriding query failure for %s', async (mode) => {
+    const migrationDir = createFixtureDir();
+    const client = new FakeMigrationClient(); const queryError = new Error('query failed first'); const endError = new Error('end failed last');
+    const calls: string[] = [];
+    vi.spyOn(client, 'connect').mockImplementation(async function () { expect(this).toBe(client); calls.push('connect'); });
+    vi.spyOn(client, 'query').mockImplementation(async function () { expect(this).toBe(client); calls.push('query'); throw queryError; });
+    vi.spyOn(client, 'end').mockImplementation(async function () { expect(this).toBe(client); calls.push('end'); throw endError; });
+    const clientFactory = mode === 'custom' ? () => client : undefined;
+    if (mode === 'native-default') mockPg.clients.push(client);
+    try { await expect(migrationStatus(process.cwd(), undefined, { migrationDir, clientFactory })).rejects.toBe(endError); expect(calls).toEqual(['connect', 'query', 'end']); }
+    finally { rmSync(resolve(migrationDir, '..'), { recursive: true, force: true }); }
+  });
+
+  it('does not query or end when a custom connect rejects', async () => {
+    const migrationDir = createFixtureDir();
+    const client = new FakeMigrationClient(); const failure = new Error('custom connect failure');
+    const connect = vi.spyOn(client, 'connect').mockRejectedValueOnce(failure); const query = vi.spyOn(client, 'query'); const end = vi.spyOn(client, 'end');
+    const clientFactory = () => client;
+    try { await expect(migrationStatus(process.cwd(), undefined, { migrationDir, clientFactory })).rejects.toBe(failure); expect(connect).toHaveBeenCalledTimes(1); expect(query).not.toHaveBeenCalled(); expect(end).not.toHaveBeenCalled(); }
+    finally { rmSync(resolve(migrationDir, '..'), { recursive: true, force: true }); }
+  });
+});
+
 });
