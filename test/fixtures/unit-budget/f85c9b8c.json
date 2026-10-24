@@ -1,0 +1,1653 @@
+{
+  "baselineCommit": "f85c9b8c89b4d22cce2626e749c92ce98673a8ab",
+  "rootScripts": {
+    "check:outbox-storage": "node scripts/outbox-storage-generate.mjs --check && node scripts/verify-outbox-storage-references.mjs",
+    "build": "turbo run build --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*' --filter=@stynx-nyx/docs-site",
+    "lint": "turbo run lint --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*' -- --max-warnings=0",
+    "lint:tests": "eslint --config tools/eslint-config/test.mjs --max-warnings=0 --no-error-on-unmatched-pattern 'packages/*/test/**/*.{spec,test}.ts' 'packages-web/*/test/**/*.{spec,test}.ts'",
+    "typecheck": "turbo run typecheck --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter=@stynx-nyx/docs-site",
+    "test": "pnpm api:baselines && STYNX_API_BASELINE_MODE=preverified-test-graph turbo run test --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*'",
+    "test:int": "turbo run test:int --concurrency=1 --filter='./packages/*'",
+    "check:engines": "node scripts/check-engines.mjs",
+    "check:trace": "node scripts/verify-devai-trace.mjs",
+    "lint:deadcode": "knip --config tools/repo-config/knip.config.ts --no-config-hints",
+    "lint:deps": "depcheck --ignore-patterns='**/*.test.ts,**/*.spec.ts' --skip-missing --ignores='@aarusso-nyx/devai,@commitlint/cli,@commitlint/config-conventional,@stryker-mutator/core,@stryker-mutator/typescript-checker,@stryker-mutator/vitest-runner,@vitest/coverage-v8,eslint-plugin-boundaries,eslint-plugin-jsdoc,github-actionlint,prettier'",
+    "lint:migrations": "pnpm --filter migration-linter run lint:repo",
+    "lint:cycles": "madge --circular packages/ packages-web/ tools/ --extensions ts,mjs --exclude '(^|/)(dist|build|coverage|node_modules)/'",
+    "lint:workflows": "node scripts/lint-workflows.mjs",
+    "verify:branch-protection": "node scripts/verify-branch-protection.mjs",
+    "db:verify": "node scripts/db-verify.mjs",
+    "db:acceptance": "node scripts/verify-db-acceptance.mjs",
+    "api:coverage": "node scripts/verify-api-coverage.mjs --strict",
+    "api:docs:write": "node scripts/verify-api-coverage.mjs --write-openapi --strict",
+    "api:contract": "node scripts/verify-openapi-contract.mjs",
+    "api:baselines": "node scripts/verify-public-api-baselines.mjs",
+    "api:baselines:write": "node scripts/verify-public-api-baselines.mjs --write",
+    "sdk:route-smoke": "node scripts/verify-sdk-route-smoke.mjs",
+    "check:rls-negative": "node scripts/verify-rls-negative.mjs",
+    "frontend:production-smoke": "node scripts/verify-frontend-production.mjs",
+    "frontend:a11y-gate": "node scripts/verify-frontend-a11y-gate.mjs",
+    "production:readiness-reference": "node scripts/verify-production-readiness-reference.mjs",
+    "stynx-boundary:check": "node --experimental-strip-types scripts/verify-stynx-boundary.ts",
+    "ci:stynx": "pnpm check:engines && pnpm check:outbox-storage && pnpm check:offline-storage && pnpm check:trace && pnpm api:coverage && pnpm api:contract && pnpm sdk:route-smoke && pnpm check:rls-negative && pnpm frontend:production-smoke && pnpm frontend:a11y-gate && pnpm production:readiness-reference && pnpm lint && pnpm lint:tests && pnpm lint:deadcode && pnpm lint:deps && pnpm lint:cycles && pnpm typecheck && pnpm test && pnpm test:int && pnpm build && pnpm run doctor",
+    "ci:stynx:remote-full": "pnpm ci:stynx && pnpm test:e2e && pnpm test:perf && pnpm check:rls-smoke",
+    "ci:stynx:release": "pnpm test:coverage && node scripts/run-release-preparation.mjs",
+    "ci:reference-apps": "pnpm --filter @stynx-nyx/reference-api... build && pnpm --filter @stynx-nyx/reference-api test && pnpm --filter @stynx-nyx/reference-api test:int && pnpm --filter @stynx-nyx/reference-web build && pnpm --filter @stynx-nyx/reference-web build:web",
+    "ci:local": "bash scripts/ci-local/run.sh",
+    "clean": "node scripts/clean-workspace.mjs",
+    "clean:dry": "node scripts/clean-workspace.mjs --dry-run",
+    "changeset": "changeset",
+    "release:status": "node scripts/run-release-preparation.mjs --release-status",
+    "release:drafts": "pnpm release:status && node scripts/generate-release-drafts.mjs",
+    "release:policy": "pnpm package-readmes:check && node scripts/verify-release-policy.mjs && node scripts/verify-web-sourcemaps.mjs",
+    "release:provenance": "node scripts/verify-release-provenance.mjs",
+    "release:consumer-fixtures": "node scripts/verify-consumer-fixtures.mjs",
+    "release:web-sourcemaps": "node scripts/verify-web-sourcemaps.mjs",
+    "security:sbom": "node scripts/generate-sbom.mjs --write",
+    "security:sbom:check": "node scripts/generate-sbom.mjs --check",
+    "security:licenses": "node scripts/verify-license-policy.mjs",
+    "security:secrets": "node scripts/verify-secret-scan.mjs",
+    "security:audit": "node scripts/audit-workspace-dependencies.mjs --prod",
+    "security:release": "pnpm security:sbom:check && pnpm security:licenses && pnpm security:secrets && pnpm security:audit",
+    "package-readmes:write": "node scripts/generate-package-readmes.mjs --write",
+    "package-readmes:check": "node scripts/generate-package-readmes.mjs --check",
+    "version-packages": "node scripts/version-packages.mjs",
+    "release:preview": "node scripts/version-packages.mjs --preview",
+    "release": "changeset publish",
+    "release:publish:ci": "node scripts/verify-missing-evidence.mjs && node scripts/changesets-publish-ci.mjs",
+    "doctor": "node scripts/stynx-doctor.mjs",
+    "test:e2e": "turbo run test:e2e --force --filter='./packages/*' --filter='./packages-web/*' --filter='./reference/*'",
+    "test:mutation": "node scripts/run-mutation-evidence.mjs",
+    "check:rls-smoke": "bash scripts/check-rls-smoke.sh",
+    "smoke:local": "pnpm --filter @stynx-nyx/reference-api smoke:local",
+    "prepare": "husky",
+    "test:coverage": "node scripts/run-coverage.mjs",
+    "test:coverage:aggregate": "node scripts/run-coverage.mjs",
+    "test:perf": "node scripts/perf-smoke.mjs",
+    "devai:doctor": "devai doctor --repo-root . --format json",
+    "devai:rc:prepare": "node scripts/devai-local-rc.mjs prepare",
+    "devai:rc:publish": "node scripts/devai-local-rc.mjs publish",
+    "devai:api-contracts": "pnpm api:coverage && pnpm api:contract && pnpm api:baselines && pnpm sdk:route-smoke",
+    "devai:lint-families": "pnpm lint && pnpm lint:tests && pnpm lint:deadcode && pnpm lint:deps && pnpm lint:migrations && pnpm lint:cycles && pnpm lint:workflows && pnpm stynx-boundary:check",
+    "devai:db-rls": "pnpm --filter @stynx-nyx/cli build && node packages/cli/dist/cli/src/main.js migrate up --database-url \"${STYNX_DATABASE_URL:-${DATABASE_URL:-}}\" && pnpm db:verify && pnpm db:acceptance && pnpm check:rls-negative && pnpm check:rls-smoke",
+    "devai:docs": "pnpm --dir docs/site build",
+    "i18n:check": "node tools/i18n-extract.mjs --check",
+    "i18n:extract": "node tools/i18n-extract.mjs --write",
+    "check:offline-storage": "node scripts/offline-import-schema-generate.mjs --check && node scripts/offline-storage-generate.mjs --check && node scripts/verify-offline-storage-references.mjs"
+  },
+  "manifests": {
+    "packages/audit/package.json": {
+      "name": "@stynx-nyx/audit",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/auth/package.json": {
+      "name": "@stynx-nyx/auth",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/backend/package.json": {
+      "name": "@stynx-nyx/backend",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "test:coverage": "vitest run --config ./vitest.coverage.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs"
+      }
+    },
+    "packages/cli/package.json": {
+      "name": "@stynx-nyx/cli",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "node ../../test/packages/cli-generator/run-integration.mjs",
+        "test:adopt": "vitest run --config ./vitest.config.ts test/adopt.spec.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/contracts/package.json": {
+      "name": "@stynx-nyx/contracts",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts && node --test test/contracts.test.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs"
+      }
+    },
+    "packages/core/package.json": {
+      "name": "@stynx-nyx/core",
+      "scripts": {
+        "@stynx:emit-openapi": "node ./scripts/emit-openapi.mjs",
+        "build": "tsc -p tsconfig.json && pnpm run @stynx:emit-openapi",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/data/package.json": {
+      "name": "@stynx-nyx/data",
+      "scripts": {
+        "build": "rm -rf dist && tsc -p tsconfig.build.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/feature-flags/package.json": {
+      "name": "@stynx-nyx/feature-flags",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/flow/package.json": {
+      "name": "@stynx-nyx/flow",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/health/package.json": {
+      "name": "@stynx-nyx/health",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/i18n/package.json": {
+      "name": "@stynx-nyx/i18n",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/idempotency/package.json": {
+      "name": "@stynx-nyx/idempotency",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/integration-adapter/package.json": {
+      "name": "@stynx-nyx/integration-adapter",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/jobs/package.json": {
+      "name": "@stynx-nyx/jobs",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "node -e \"for (const path of ['dist', 'coverage']) require('node:fs').rmSync(path, { recursive: true, force: true })\"",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:mutation": "pnpm run stryker",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/logging/package.json": {
+      "name": "@stynx-nyx/logging",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/mobile-runtime/package.json": {
+      "name": "@stynx-nyx/mobile-runtime",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:mutation": "pnpm run stryker",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/notifications/package.json": {
+      "name": "@stynx-nyx/notifications",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "node -e \"const fs=require('node:fs'); fs.rmSync('dist',{recursive:true,force:true}); fs.rmSync('coverage',{recursive:true,force:true})\"",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/offline-sync/package.json": {
+      "name": "@stynx-nyx/offline-sync",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:mutation": "pnpm run stryker",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/outbox/package.json": {
+      "name": "@stynx-nyx/outbox",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "node -e \"const fs=require('node:fs'); fs.rmSync('dist',{recursive:true,force:true}); fs.rmSync('coverage',{recursive:true,force:true})\"",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.coverage.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/pdf/package.json": {
+      "name": "@stynx-nyx/pdf",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/pdf-a/package.json": {
+      "name": "@stynx-nyx/pdf-a",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/pdf-a-vera-docker/package.json": {
+      "name": "@stynx-nyx/pdf-a-vera-docker",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "bench": "vitest run --config ./vitest.config.ts test/bench/throughput.bench.ts",
+        "test:coverage": "vitest run --config ./vitest.coverage.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/preferences/package.json": {
+      "name": "@stynx-nyx/preferences",
+      "scripts": {
+        "build": "rm -rf dist && tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:mutation": "pnpm run stryker",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/privacy/package.json": {
+      "name": "@stynx-nyx/privacy",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.coverage.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/ratelimit/package.json": {
+      "name": "@stynx-nyx/ratelimit",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/sessions/package.json": {
+      "name": "@stynx-nyx/sessions",
+      "scripts": {
+        "build": "rm -rf dist && tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/signature/package.json": {
+      "name": "@stynx-nyx/signature",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/storage/package.json": {
+      "name": "@stynx-nyx/storage",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/tenancy/package.json": {
+      "name": "@stynx-nyx/tenancy",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/testing/package.json": {
+      "name": "@stynx-nyx/testing",
+      "scripts": {
+        "build": "rm -rf dist && tsc -p tsconfig.build.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages/worklist/package.json": {
+      "name": "@stynx-nyx/worklist",
+      "scripts": {
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:int": "vitest run --config ./vitest.int.config.ts",
+        "stryker": "pnpm exec stryker run stryker.conf.mjs",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular/package.json": {
+      "name": "@stynx-nyx/angular",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "build:tsc": "tsc -p tsconfig.json",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular-audit/package.json": {
+      "name": "@stynx-nyx/angular-audit",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "test:mutation": "pnpm run stryker",
+        "build:tsc": "tsc -p tsconfig.json",
+        "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular-auth/package.json": {
+      "name": "@stynx-nyx/angular-auth",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+        "build:tsc": "tsc -p tsconfig.json",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular-flow/package.json": {
+      "name": "@stynx-nyx/angular-flow",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "build:tsc": "tsc -p tsconfig.json",
+        "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular-i18n/package.json": {
+      "name": "@stynx-nyx/angular-i18n",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+        "build:tsc": "tsc -p tsconfig.json",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular-iam/package.json": {
+      "name": "@stynx-nyx/angular-iam",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "test:mutation": "pnpm run stryker",
+        "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+        "build:tsc": "tsc -p tsconfig.json",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular-profile/package.json": {
+      "name": "@stynx-nyx/angular-profile",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "build:tsc": "tsc -p tsconfig.json",
+        "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular-sessions/package.json": {
+      "name": "@stynx-nyx/angular-sessions",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "build:tsc": "tsc -p tsconfig.json",
+        "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular-storage/package.json": {
+      "name": "@stynx-nyx/angular-storage",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "build:tsc": "tsc -p tsconfig.json",
+        "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular-tenancy/package.json": {
+      "name": "@stynx-nyx/angular-tenancy",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "build:tsc": "tsc -p tsconfig.json",
+        "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular-trash/package.json": {
+      "name": "@stynx-nyx/angular-trash",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "build:tsc": "tsc -p tsconfig.json",
+        "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/angular-ui/package.json": {
+      "name": "@stynx-nyx/angular-ui",
+      "scripts": {
+        "build": "ng-packagr -p ng-package.json && pnpm run normalize:dist-exports",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.spec.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "build:tsc": "tsc -p tsconfig.json",
+        "normalize:dist-exports": "node -e \"const fs=require('node:fs');const path='dist/package.json';const pkg=JSON.parse(fs.readFileSync(path,'utf8'));pkg.exports['./catalogs/en.json']={default:'./catalogs/en.json'};pkg.exports['./catalogs/pt-BR.json']={default:'./catalogs/pt-BR.json'};fs.writeFileSync(path, JSON.stringify(pkg,null,2)+'\\n');\"",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "packages-web/sdk/package.json": {
+      "name": "@stynx-nyx/sdk",
+      "scripts": {
+        "codegen": "node ./scripts/codegen.mjs",
+        "build": "pnpm run codegen && ng-packagr -p ng-package.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\" --ignore-pattern \"src/generated/**\"",
+        "test": "vitest run --config ./vitest.config.ts",
+        "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
+        "build:tsc": "pnpm run codegen && tsc -p tsconfig.json",
+        "test:coverage": "vitest run --config ./vitest.config.ts --coverage --coverage.reporter=json --coverage.reporter=json-summary"
+      }
+    },
+    "tools/eslint-config/package.json": {
+      "name": "@stynx-nyx/eslint-config",
+      "scripts": {
+        "test:coverage": "node ../../scripts/node-test-coverage.mjs test/eslint-config.spec.mjs test/rule-families.spec.mjs",
+        "clean": "node -e \"for (const path of ['dist', 'coverage']) require('node:fs').rmSync(path, { recursive: true, force: true })\"",
+        "test": "node --test test/eslint-config.spec.mjs test/rule-families.spec.mjs"
+      }
+    },
+    "tools/migration-linter/package.json": {
+      "name": "@stynx-nyx/migration-linter",
+      "scripts": {
+        "test:coverage": "pnpm run build && node ../../scripts/node-test-coverage.mjs dist/test/migration-linter.spec.js dist/test/context-rules.spec.js",
+        "build": "tsc -p tsconfig.json",
+        "clean": "rm -rf dist coverage",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
+        "lint:repo": "pnpm run build && node scripts/lint-repo.mjs",
+        "test": "pnpm run build && node --test dist/test/migration-linter.spec.js dist/test/context-rules.spec.js"
+      }
+    },
+    "tools/tsconfig/package.json": {
+      "name": "@stynx-nyx/tsconfig",
+      "scripts": {
+        "clean": "node -e \"for (const path of ['dist', 'coverage']) require('node:fs').rmSync(path, { recursive: true, force: true })\"",
+        "test": "node --test test/tsconfig.spec.mjs"
+      }
+    },
+    "test/db/package.json": {
+      "name": "stynx-db-tests",
+      "scripts": {
+        "test": "vitest run --config ./vitest.config.ts",
+        "test:db": "vitest run --config ./vitest.config.ts",
+        "lint": "eslint --config ../../tools/eslint-config/test.mjs \"./**/*.ts\""
+      }
+    },
+    "test/packages/package.json": {
+      "name": "stynx-package-tests",
+      "scripts": {
+        "test": "vitest run --config ./vitest.config.ts",
+        "lint": "eslint --config ../../tools/eslint-config/test.mjs \"./**/*.ts\""
+      }
+    },
+    "test/scripts/package.json": {
+      "name": "stynx-script-tests",
+      "scripts": {
+        "test": "node --test ./*.test.mjs && node validate.js",
+        "lint": "eslint --config ../../tools/eslint-config/scripts.mjs \"./**/*.js\" \"./**/*.mjs\""
+      }
+    }
+  },
+  "unchangedFiles": {
+    "packages/audit/vitest.stryker.config.ts": "b12d344ba9c57b54fd1712453d4531b7c6933aabe7d70e967e9ffa3c3cf7d698",
+    "packages/audit/vitest.config.ts": "81894dbf75dc89828a69db1ed4c8835bfb300b7b53433b4e7076972f51fc20ab",
+    "packages/audit/vitest.int.config.ts": "5fa587f0e6b8d132b2f40a09bc2e777ab3fe2ca5a6182de9b81acf65f0bd2042",
+    "packages/auth/vitest.stryker.config.ts": "f40b0ca5f6d1ea5c34f34824840f4bd842b5d1f2f9317537a458b44be1e558c4",
+    "packages/auth/vitest.config.ts": "d8d6afc315b88f2a86d1f514962fa3718a5387c4183cee8b95ce1888c8576910",
+    "packages/auth/vitest.int.config.ts": "a6d25359e7af9afa9cdb73c066d4e9d50fceb9ce9c4fb4c0a4ebe54c7c311c22",
+    "packages/backend/vitest.stryker.config.ts": "5b75bd2e23f81a16ebba66dd8a70bdd3df105b97f23d124cc0f57b847babeaea",
+    "packages/backend/vitest.config.ts": "8cfb8ddb9837e581d2b8e8f2a2c931b6bb4e1d4bbe2f500304c9cee55a792f0b",
+    "packages/backend/vitest.coverage.config.ts": "376cd47e3feb97567b06ae309e8ec951f44d67746eba58dc37d6176c66fd81d7",
+    "packages/backend/vitest.int.config.ts": "b2a3f4677999b993cf0a7dd8278974e01b15508bd51343e8a13b8809a69ca898",
+    "packages/cli/vitest.config.ts": "b937ae23667509ed36d22292aa7b515e720c61f843c566a2a2e477d8995e880d",
+    "packages/contracts/vitest.config.ts": "ba84f99e868e413150401139f0e0c8f88ec328ba5323007575ea98aa7a0b1d39",
+    "packages/core/vitest.stryker.config.ts": "257de0c8d6a1c651c88d820952e7586669e7171701f3223250b7725e5a134c4c",
+    "packages/core/vitest.config.ts": "a3f9fa4694d1083c4a5eaa08ec8a7a04425165efc01e4c524ff0c32f62f41a44",
+    "packages/core/vitest.int.config.ts": "e2763b655ac388c074c51afa229fc494c169e6c36369eabec40400b0fe7adf4d",
+    "packages/data/vitest.stryker.config.ts": "49261b761bfc5e088bf6cc0feef57b70b66eb9ce79e52c36515bc69dd2a64387",
+    "packages/data/vitest.config.ts": "aafea1070c0f51c1a26a42390a9af2205f3fe18a22d911d2b3260a6d8f71290f",
+    "packages/data/vitest.int.config.ts": "9e87e39575ebb6c5e10b309c58981f496575b9d8c9bb91d4b8c2d5ece15adcb0",
+    "packages/feature-flags/vitest.config.ts": "6f1160b30e2cb02570368215b0407e6944e9270573a0043c9e0da47fe34197b7",
+    "packages/flow/vitest.stryker.config.ts": "740056a007b029c75ed9f87b140fbd9000392e958f1f05db800268638e55c8bc",
+    "packages/flow/vitest.config.ts": "49f013b5ad08a644af6beb70ec92e92b1ae45edf88651f9aaf166761d2812150",
+    "packages/flow/vitest.int.config.ts": "4e81b8082e39ec0ac137c0c5644972c2b89e8c99229be98578611223353dfa0c",
+    "packages/health/vitest.config.ts": "eb0e4306402085ec106bb2af2662ee8741aaf4b92501277dbd6b4717283cdeff",
+    "packages/health/vitest.int.config.ts": "b7986f8c6272137d65bed2aed3587b40d6c9055cdfe1044ad19639cf167040f8",
+    "packages/i18n/vitest.stryker.config.ts": "2e1e40026801799f05fecfd6172867c062d338746a91ca4c9b6c98e4f5089044",
+    "packages/i18n/vitest.config.ts": "95076a45dd329e6dc298fa51a42cd86c8b1518319f3ae9340ef58cc3a67088e9",
+    "packages/i18n/vitest.int.config.ts": "084e20a1050d45d81ce5094a7129fbb2f035340c09be15d2ef3cc539638f4e82",
+    "packages/idempotency/vitest.stryker.config.ts": "3628285f2b2bc7d1e2e93aeed120735848bb178c1b64d0c595180677538dbbf3",
+    "packages/idempotency/vitest.config.ts": "58b76f573a103e0525a77103731d466b39481ad2772bb627bd99d440f8e19a3f",
+    "packages/idempotency/vitest.int.config.ts": "a679491e29be0a5206f818bd5f0424f7770caca13a8da25983da1ffffea1483f",
+    "packages/integration-adapter/vitest.config.ts": "d77f08382ce3c8eef1aba109a272d253d19dbacac5ea2a946a0f9f01797f8546",
+    "packages/jobs/vitest.stryker.config.ts": "618b476405b341dfc9a67b2bfb76447c55045af93db44208764529dbd18f3866",
+    "packages/jobs/vitest.config.ts": "0552d383fc2602765bbb68d30e13a718308c552950ba2e1f133fadfa4515935b",
+    "packages/jobs/vitest.int.config.ts": "0d58210b0c9179e9fc664705d9eab1f1d71372ed2f9e438de45475eff0b6c8a2",
+    "packages/logging/vitest.config.ts": "c73ff2d0fbe7b9ba42bbfea235bb6be6f4d5afa793204ca1f62643e5a73929f1",
+    "packages/logging/vitest.int.config.ts": "1467c78836ffe345b17ec6e024d034cc1a3629064451b7608110d3588aa3c8cf",
+    "packages/mobile-runtime/vitest.config.ts": "21721009f0ce7521512867a06d289f4ec4359a9dc2df44575e84023a29ffc168",
+    "packages/notifications/vitest.stryker.config.ts": "395fa25b02d4e1ae008cdba6a3f4242903b72e7146be1ab17492a8ca7dc6f2f9",
+    "packages/notifications/vitest.config.ts": "569de39abc5c00afa638c460654f9ca6da56e33d197aa136df0ef79b6d81b445",
+    "packages/notifications/vitest.int.config.ts": "c734db22a1c8177efea581fb5a443c64ab9c6d1c0f38258dcf482e72b33ce239",
+    "packages/offline-sync/vitest.config.ts": "494b3151b060bf35812d7d7c5c52a051f80d0a10095cd4d2926eaa524ceebbe1",
+    "packages/offline-sync/vitest.int.config.ts": "2f12208f1f8dc334dd0f3ba75fb624c0a509dd721e71dff83cbf114c546d5e18",
+    "packages/outbox/vitest.stryker.config.ts": "4638dcdb5806d7b61492aba50baebe44bc8512af977c493ec23c8c60fbaa0433",
+    "packages/outbox/vitest.config.ts": "7e31835da1479482d9ab936ba4159e79c5ef5975f66acd889c0f01f4583e4a20",
+    "packages/outbox/vitest.coverage.config.ts": "f563667e9ea78636b2614d49212cd8c248519ea27e50148a1292f57a58950ecd",
+    "packages/outbox/vitest.int.config.ts": "44dc3767d8e1e443d23e858811e2196ad90a8fc7c614dcb6a7b29db45c8e0e13",
+    "packages/pdf/vitest.config.ts": "eff026f3eb4e98ea70a9c3414f932334f9f94aa565826aa89c70900e7ae3bba7",
+    "packages/pdf-a/vitest.config.ts": "86854d793bc906716a39c73b409d80f68e12838f35f3a5a68b8a2b45c89688e0",
+    "packages/pdf-a-vera-docker/vitest.config.ts": "a37b78bc2a06abb55c0a1e58b71a84bd52a843a4a950bb3808cfdec6cc548bb6",
+    "packages/pdf-a-vera-docker/vitest.coverage.config.ts": "951c6e3d6d030dd17694040f73cbe6a3cd66ad24daa8e7399486c411d0c673ea",
+    "packages/pdf-a-vera-docker/vitest.int.config.ts": "3afacdddd7d43a3f06b154ac5922c16151f3312707f1a7051a4cec6a2f91241b",
+    "packages/preferences/vitest.config.ts": "598959a27ec453004b2a6a0599b665a81744608bae72891a8d7f2923c5b84ba9",
+    "packages/preferences/vitest.int.config.ts": "b28a84e5627d091055f0946318aebe9879691af8180e073f2a7e20a3dabe1f41",
+    "packages/privacy/vitest.stryker.config.ts": "aecedba993253286a5eb71ffde0c3a92b198b7fae71f16e69245e5bfafd73298",
+    "packages/privacy/vitest.config.ts": "a77fbb7124aebc3f7211c8e069765df8dc8f7445ac6ce0daec94d6de7f907617",
+    "packages/privacy/vitest.coverage.config.ts": "7da8450400841759db23d22b20df692afe5f924a034892ad39476f6410c65b5b",
+    "packages/privacy/vitest.int.config.ts": "20bf3295aaf672d1026a79b6df1721f2e9d80a5f07b09cdceed4cfe802e7e9c8",
+    "packages/ratelimit/vitest.stryker.config.ts": "7853b5258f6b32b0bdf8c4cb71e60d7c183bd1e77b14a2c6bbcd1a0c48c205ec",
+    "packages/ratelimit/vitest.config.ts": "84b890d619ee44944b06cc879ec3dd01a3672df7b83ffa4d76f0768348053101",
+    "packages/ratelimit/vitest.int.config.ts": "c1169170bc6449d28149b8768d009b278440dd9d169a839cf16cdad7ebe76a31",
+    "packages/sessions/vitest.stryker.config.ts": "29ec061eed4bc8d08d566156045f8d1ad95560b190b5de328c5e2af76848af07",
+    "packages/sessions/vitest.config.ts": "b32837c09bd8d61abf16368857dc4bd55d959f0fab2756e5549ce15dabd7431d",
+    "packages/sessions/vitest.int.config.ts": "34cb5a1359b58927a43904673693ae357b1b7a67f04b9d6e54d75039f7e61448",
+    "packages/signature/vitest.config.ts": "8db2617e733918fe0de7b4fad3e330d07527e351c022135d3e5f24370a1cfa7f",
+    "packages/storage/vitest.stryker.config.ts": "a5eaf8daf8fe0b1248c87fe6a5e762cafd9167b4568633903c31f3133b5ab186",
+    "packages/storage/vitest.config.ts": "15b190241cbf8ac873dde63dbb98e962eb4f915d0620e23acd2fbcb042be29ba",
+    "packages/storage/vitest.int.config.ts": "7910f29c201371a1a1d832f747b9357b78077b01a553b8e4dc78275217bc6880",
+    "packages/tenancy/vitest.stryker.config.ts": "dabdb4e51bcf469d61c4621b24c5768618766ca309da92b5989d54b77afe4221",
+    "packages/tenancy/vitest.config.ts": "33512fbc5e2212d6efef4547dd73c7bdbc611da76c5b02ac38c6eff0317660e8",
+    "packages/tenancy/vitest.int.config.ts": "cf317cce00b4dabad7048f565ec60dca8f4e661cc8759194008e480f0e6ef927",
+    "packages/testing/vitest.config.ts": "f418cf1abfd350f83bf39c0c0824dc20d8e499986f197624ae4ce06c3f4ae8a4",
+    "packages/testing/vitest.int.config.ts": "e1742ad57e3b313d8ec2297bb5e5036109cc0800b94d3271de3a3ab43cdaefd1",
+    "packages/worklist/vitest.stryker.config.ts": "5b19bf33acf8bd666c44454a68020cbdfc2420c27725618511e657aa5d34efdd",
+    "packages/worklist/vitest.config.ts": "5b8d793a9d1749bab47637ac7e466bb48a9145a7158e5055bfdbbdac2a13ad99",
+    "packages/worklist/vitest.int.config.ts": "abec94f19f086bcb6bdd3efbb791d4e4ab248ea1f7e5f0e69a3fc190c600b6e7",
+    "packages-web/angular/vitest.config.ts": "740632fcb02a317a0dafc04d41b7aaccaf653e4f181a975ee37b04898c393e18",
+    "packages-web/angular-audit/vitest.config.ts": "2cec91327876948440ebf8e923ae11562638f80227c3f8eac43f21f0532de386",
+    "packages-web/angular-auth/vitest.config.ts": "f2b760471ae2fd9ee451ebbd74e0812f8dd3555d2d4d3376ac0dd5abd6d267cf",
+    "packages-web/angular-flow/vitest.config.ts": "5ed2553da6321517fafc3d8e8783789ea32986a266450061d4cb0134a1a7d9af",
+    "packages-web/angular-i18n/vitest.config.ts": "8186117c0a75d48fc62159e4f23dfbfab52bc5ab090e306f3cfdaa21788d0344",
+    "packages-web/angular-iam/vitest.config.ts": "fcf3ffb57a26371ee78ad27deab70363ea68d4e6429052d11f19292bb1b320c9",
+    "packages-web/angular-profile/vitest.config.ts": "72f840f34f3ca6cb7513dae7d87c2dcb6c921fbd263474e63dc42996476a5763",
+    "packages-web/angular-sessions/vitest.config.ts": "27917a18248f986955838f3e6b8bf3d19110f8fd751f8dec975046b2a8f74a5e",
+    "packages-web/angular-storage/vitest.config.ts": "ae61f8a46c1dd244ae4cd365ea99e8aebc9568fc666f6b1bf85d0a8d7dd956a4",
+    "packages-web/angular-tenancy/vitest.config.ts": "ee170845a3dd74f7007c42750bdc5a8f0ecc6a12dddcfa7b55f684049a70211b",
+    "packages-web/angular-trash/vitest.config.ts": "9015c6b1cf54197bf7a8ecd1a00bbbf4558de795c3f25db69dc907baf1bab315",
+    "packages-web/angular-ui/vitest.config.ts": "0b566813839c678cf908bccda79cb81eaa20ddb96deec124555682106fd99a32",
+    "packages-web/sdk/vitest.config.ts": "b8ffab8f37cfe25dc204fdfbd9797d542fa39ab2be3d1fa68bc1a107e32e8cb3",
+    "test/db/vitest.config.ts": "ef9b2fc03f703b896e4dd1767ef42f6b9a4b6f187b35c215a27f2387a8fdb92a",
+    "test/packages/vitest.config.ts": "f3a80289fc808cb1a6449450edf21763bce1c611ba5ff4a1adfd4ba8024f3184",
+    "turbo.json": "d32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467",
+    "tools/repo-config/vitest.base.mjs": "bedaee6c8672a73a8ec152b25df0514b96589a56b5227310a1f24dc0a3374cc4",
+    "tools/repo-config/test-thresholds.mjs": "456507e52ed2119b507602d2607fde4dbf90ade109f9d389d24c6b1540c2d440",
+    "tools/repo-config/test-policy.json": "e793d3ab53c8d0b42294d98211ad73ff455ee63d40d19085a0e3b1c4b864a64f",
+    "pnpm-workspace.yaml": "562585fd0266ff786e33732fb967ae1f928e801ffd4fcd4a026321f7d1687d6c",
+    "scripts/run-coverage.mjs": "ddcb936a1cd5c7b4a7c639b2f5e89fb1ddd8893ae483f6917575654dd637a17c"
+  },
+  "taskDescriptor": {
+    "schemaVersion": "1.0.0",
+    "descriptorVersion": "stynx-devai-1.9.0-v1",
+    "repositoryId": "stynx-nyx/stynx",
+    "fallbackNodeId": "test:local-full",
+    "dynamicFallbackSelectors": [
+      {
+        "kind": "prefix",
+        "pattern": "law/"
+      },
+      {
+        "kind": "prefix",
+        "pattern": "product/"
+      },
+      {
+        "kind": "prefix",
+        "pattern": ".devai/"
+      },
+      {
+        "kind": "prefix",
+        "pattern": ".github/"
+      },
+      {
+        "kind": "exact",
+        "pattern": "package.json"
+      },
+      {
+        "kind": "exact",
+        "pattern": "pnpm-lock.yaml"
+      },
+      {
+        "kind": "exact",
+        "pattern": "pnpm-workspace.yaml"
+      },
+      {
+        "kind": "exact",
+        "pattern": "turbo.json"
+      }
+    ],
+    "tasks": [
+      {
+        "nodeId": "engines",
+        "dependencies": [],
+        "argv": ["pnpm", "run", "check:engines"],
+        "cwd": ".",
+        "runner": "node-script-v1",
+        "inputSelectors": [
+          {
+            "kind": "exact",
+            "pattern": "package.json"
+          },
+          {
+            "kind": "exact",
+            "pattern": "pnpm-lock.yaml"
+          },
+          {
+            "kind": "exact",
+            "pattern": "pnpm-workspace.yaml"
+          },
+          {
+            "kind": "exact",
+            "pattern": ".node-version"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm"],
+        "allowlistedEnv": ["CI"],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      },
+      {
+        "nodeId": "api:contracts",
+        "dependencies": ["build"],
+        "argv": ["pnpm", "run", "devai:api-contracts"],
+        "cwd": ".",
+        "runner": "stynx-contracts-v1",
+        "inputSelectors": [
+          {
+            "kind": "prefix",
+            "pattern": "packages/contracts/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "packages/cli/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "reference/api/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "domain/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "docs/framework/contracts/"
+          },
+          {
+            "kind": "glob",
+            "pattern": "scripts/verify-*api*.mjs"
+          },
+          {
+            "kind": "glob",
+            "pattern": "scripts/verify-*route*.mjs"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "typescript"],
+        "allowlistedEnv": ["CI"],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      },
+      {
+        "nodeId": "lint:families",
+        "dependencies": ["engines"],
+        "argv": ["pnpm", "run", "devai:lint-families"],
+        "cwd": ".",
+        "runner": "stynx-lint-v2",
+        "inputSelectors": [
+          {
+            "kind": "exact",
+            "pattern": "package.json"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "packages/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "packages-web/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "domain/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "reference/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "tools/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "scripts/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": ".github/workflows/"
+          },
+          {
+            "kind": "glob",
+            "pattern": "*.config.*"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "typescript"],
+        "allowlistedEnv": ["CI"],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      },
+      {
+        "nodeId": "typecheck",
+        "dependencies": ["engines"],
+        "argv": ["pnpm", "run", "typecheck"],
+        "cwd": ".",
+        "runner": "turbo-typescript-v1",
+        "inputSelectors": [
+          {
+            "kind": "prefix",
+            "pattern": "packages/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "packages-web/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "domain/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "reference/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "tools/"
+          },
+          {
+            "kind": "glob",
+            "pattern": "tsconfig*.json"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "typescript"],
+        "allowlistedEnv": ["CI"],
+        "sensorKinds": ["type_check"],
+        "outputContract": {
+          "kind": "command-result",
+          "requiredResult": "pass",
+          "population": "workspace-typecheck"
+        }
+      },
+      {
+        "nodeId": "test:unit",
+        "dependencies": ["typecheck"],
+        "argv": ["pnpm", "run", "test"],
+        "cwd": ".",
+        "runner": "turbo-vitest-v1",
+        "inputSelectors": [
+          {
+            "kind": "glob",
+            "pattern": "packages/*/src/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages/*/test/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages-web/*/src/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages-web/*/test/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "tools/*/src/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "tools/*/test/**"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "test/"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "vitest"],
+        "allowlistedEnv": [
+          "CI",
+          "DOCKER_CONFIG",
+          "DOCKER_HOST",
+          "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+          "TESTCONTAINERS_REUSE_ENABLE"
+        ],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      },
+      {
+        "nodeId": "test:integration",
+        "dependencies": ["test:unit"],
+        "argv": ["pnpm", "run", "test:int"],
+        "cwd": ".",
+        "runner": "turbo-vitest-integration-v1",
+        "inputSelectors": [
+          {
+            "kind": "glob",
+            "pattern": "packages/*/test/integration/**"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "packages/data/migrations/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "domain/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "reference/api/"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "vitest", "postgres"],
+        "allowlistedEnv": [
+          "CI",
+          "DOCKER_CONFIG",
+          "DOCKER_HOST",
+          "DATABASE_URL",
+          "STYNX_DATABASE_URL",
+          "STYNX_TEST_PG_HOST",
+          "STYNX_TEST_PG_PORT",
+          "STYNX_TEST_PG_USER",
+          "STYNX_TEST_PG_PASSWORD",
+          "STYNX_TEST_PG_SOCKET_DIR",
+          "STYNX_TEST_PG_TEMPLATE",
+          "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+          "TESTCONTAINERS_REUSE_ENABLE"
+        ],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      },
+      {
+        "nodeId": "build",
+        "dependencies": ["typecheck"],
+        "argv": ["pnpm", "run", "build"],
+        "cwd": ".",
+        "runner": "turbo-build-v1",
+        "inputSelectors": [
+          {
+            "kind": "glob",
+            "pattern": "packages/*/src/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages-web/*/src/**"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "domain/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "reference/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "tools/"
+          },
+          {
+            "kind": "exact",
+            "pattern": "turbo.json"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "typescript"],
+        "allowlistedEnv": ["CI", "NODE_ENV"],
+        "sensorKinds": ["build"],
+        "outputContract": {
+          "kind": "workspace-build",
+          "requiredResult": "pass",
+          "paths": [
+            "packages/data/dist/data/src/index.js",
+            "packages/preferences/dist/preferences/src/index.js",
+            "packages/cli/dist/cli/src/main.js"
+          ],
+          "population": "workspace-build"
+        }
+      },
+      {
+        "nodeId": "reference:apps",
+        "dependencies": ["build", "test:integration"],
+        "argv": ["pnpm", "run", "ci:reference-apps"],
+        "cwd": ".",
+        "runner": "stynx-reference-v1",
+        "inputSelectors": [
+          {
+            "kind": "prefix",
+            "pattern": "reference/api/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "reference/web/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "domain/"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages/*/src/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages-web/*/src/**"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "vitest", "typescript", "postgres"],
+        "allowlistedEnv": [
+          "CI",
+          "DOCKER_CONFIG",
+          "DOCKER_HOST",
+          "DATABASE_URL",
+          "STYNX_DATABASE_URL",
+          "STYNX_TEST_PG_HOST",
+          "STYNX_TEST_PG_PORT",
+          "STYNX_TEST_PG_USER",
+          "STYNX_TEST_PG_PASSWORD",
+          "STYNX_TEST_PG_SOCKET_DIR",
+          "STYNX_TEST_PG_TEMPLATE",
+          "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+          "TESTCONTAINERS_REUSE_ENABLE"
+        ],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      },
+      {
+        "nodeId": "db:rls",
+        "dependencies": ["build", "test:integration"],
+        "argv": ["pnpm", "run", "devai:db-rls"],
+        "cwd": ".",
+        "runner": "stynx-postgresql-v1",
+        "inputSelectors": [
+          {
+            "kind": "prefix",
+            "pattern": "packages/data/"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages/*/migrations/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "domain/*/db/**"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "reference/api/migrations/"
+          },
+          {
+            "kind": "glob",
+            "pattern": "scripts/*db*.mjs"
+          },
+          {
+            "kind": "glob",
+            "pattern": "scripts/*rls*"
+          },
+          {
+            "kind": "exact",
+            "pattern": "packages/cli/engines/rls-negative.mjs"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "postgres"],
+        "allowlistedEnv": [
+          "CI",
+          "DATABASE_URL",
+          "STYNX_DATABASE_URL",
+          "STYNX_TEST_PG_HOST",
+          "STYNX_TEST_PG_PORT",
+          "STYNX_TEST_PG_USER",
+          "STYNX_TEST_PG_PASSWORD",
+          "STYNX_TEST_PG_SOCKET_DIR",
+          "STYNX_TEST_PG_TEMPLATE"
+        ],
+        "sensorKinds": ["migration_check"],
+        "outputContract": {
+          "kind": "command-result",
+          "requiredResult": "pass",
+          "population": "migration-rls"
+        }
+      },
+      {
+        "nodeId": "test:e2e",
+        "dependencies": ["reference:apps", "db:rls"],
+        "argv": ["pnpm", "run", "test:e2e"],
+        "cwd": ".",
+        "runner": "turbo-playwright-v1",
+        "inputSelectors": [
+          {
+            "kind": "glob",
+            "pattern": "reference/*/test/e2e/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages/*/test/e2e/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages-web/*/test/e2e/**"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "reference/"
+          },
+          {
+            "kind": "glob",
+            "pattern": "playwright*.config.*"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "postgres"],
+        "allowlistedEnv": [
+          "CI",
+          "DOCKER_CONFIG",
+          "DOCKER_HOST",
+          "DATABASE_URL",
+          "STYNX_DATABASE_URL",
+          "STYNX_POSTGRES_PORT",
+          "STYNX_TEST_PG_HOST",
+          "STYNX_TEST_PG_PORT",
+          "STYNX_TEST_PG_USER",
+          "STYNX_TEST_PG_PASSWORD",
+          "STYNX_TEST_PG_SOCKET_DIR",
+          "STYNX_TEST_PG_TEMPLATE",
+          "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+          "TESTCONTAINERS_REUSE_ENABLE"
+        ],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      },
+      {
+        "nodeId": "docs",
+        "dependencies": ["build"],
+        "argv": ["pnpm", "run", "devai:docs"],
+        "cwd": ".",
+        "runner": "docusaurus-v1",
+        "inputSelectors": [
+          {
+            "kind": "prefix",
+            "pattern": "docs/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "law/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "product/"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages/*/README.md"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages-web/*/README.md"
+          },
+          {
+            "kind": "glob",
+            "pattern": "scripts/gen-*.mjs"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "typescript"],
+        "allowlistedEnv": ["CI"],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      },
+      {
+        "nodeId": "test:mutation",
+        "dependencies": ["test:unit", "test:integration"],
+        "argv": ["pnpm", "run", "test:mutation"],
+        "cwd": ".",
+        "runner": "stryker-v1",
+        "inputSelectors": [
+          {
+            "kind": "glob",
+            "pattern": "packages/*/src/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages/*/test/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages-web/*/src/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages-web/*/test/**"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages/*/package.json"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages/*/stryker.*"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages-web/*/package.json"
+          },
+          {
+            "kind": "glob",
+            "pattern": "packages-web/*/stryker.*"
+          },
+          {
+            "kind": "exact",
+            "pattern": "scripts/run-mutation-evidence.mjs"
+          },
+          {
+            "kind": "exact",
+            "pattern": "scripts/lib/mutation-evidence.mjs"
+          },
+          {
+            "kind": "exact",
+            "pattern": "scripts/lib/mutation-roster.mjs"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "tools/stryker/"
+          },
+          {
+            "kind": "exact",
+            "pattern": "tools/repo-config/test-policy.json"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "vitest", "typescript", "postgres"],
+        "allowlistedEnv": [
+          "CI",
+          "DOCKER_CONFIG",
+          "DOCKER_HOST",
+          "DATABASE_URL",
+          "STYNX_DATABASE_URL",
+          "STYNX_TEST_PG_HOST",
+          "STYNX_TEST_PG_PORT",
+          "STYNX_TEST_PG_USER",
+          "STYNX_TEST_PG_PASSWORD",
+          "STYNX_TEST_PG_SOCKET_DIR",
+          "STYNX_TEST_PG_TEMPLATE",
+          "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+          "TESTCONTAINERS_REUSE_ENABLE"
+        ],
+        "outputContract": {
+          "kind": "mutation-report-set-discovery-v1",
+          "workspaceRoots": ["packages", "packages-web"],
+          "testPolicyPath": "tools/repo-config/test-policy.json",
+          "artifactRoot": ".devai/state/check-cache/v1/artifacts/mutation",
+          "summaryPath": ".devai/state/check-cache/v1/artifacts/mutation/summary.json"
+        }
+      },
+      {
+        "nodeId": "test:performance",
+        "dependencies": ["reference:apps", "db:rls"],
+        "argv": ["pnpm", "run", "test:perf"],
+        "cwd": ".",
+        "runner": "stynx-performance-v1",
+        "inputSelectors": [
+          {
+            "kind": "exact",
+            "pattern": "scripts/perf-smoke.mjs"
+          },
+          {
+            "kind": "exact",
+            "pattern": "scripts/perf-smoke.spec.mjs"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "test/perf/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "reference/api/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "packages/ratelimit/"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm", "postgres"],
+        "allowlistedEnv": [
+          "CI",
+          "DOCKER_CONFIG",
+          "DOCKER_HOST",
+          "DATABASE_URL",
+          "STYNX_DATABASE_URL",
+          "STYNX_TEST_PG_HOST",
+          "STYNX_TEST_PG_PORT",
+          "STYNX_TEST_PG_USER",
+          "STYNX_TEST_PG_PASSWORD",
+          "STYNX_TEST_PG_SOCKET_DIR",
+          "STYNX_TEST_PG_TEMPLATE",
+          "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+          "TESTCONTAINERS_REUSE_ENABLE"
+        ],
+        "sensorKinds": ["perf_test"],
+        "outputContract": {
+          "kind": "command-result",
+          "requiredResult": "pass",
+          "population": "cold-unit-perf"
+        }
+      },
+      {
+        "nodeId": "security",
+        "dependencies": ["build"],
+        "argv": ["pnpm", "run", "security:release"],
+        "cwd": ".",
+        "runner": "stynx-security-v1",
+        "inputSelectors": [
+          {
+            "kind": "exact",
+            "pattern": "package.json"
+          },
+          {
+            "kind": "exact",
+            "pattern": "pnpm-lock.yaml"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "scripts/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "docs/meta/security/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": ".github/workflows/"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm"],
+        "allowlistedEnv": ["CI", "NODE_AUTH_TOKEN"],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      },
+      {
+        "nodeId": "doctor",
+        "dependencies": [],
+        "argv": ["pnpm", "run", "devai:doctor"],
+        "cwd": ".",
+        "runner": "devai-doctor-v1",
+        "inputSelectors": [
+          {
+            "kind": "prefix",
+            "pattern": ".devai/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "law/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "product/"
+          },
+          {
+            "kind": "exact",
+            "pattern": "package.json"
+          },
+          {
+            "kind": "exact",
+            "pattern": "pnpm-lock.yaml"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm"],
+        "allowlistedEnv": ["CI"],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      },
+      {
+        "nodeId": "test:local-full",
+        "dependencies": ["api:contracts", "lint:families", "test:unit", "build", "docs", "doctor"],
+        "argv": ["pnpm", "run", "check:engines"],
+        "cwd": ".",
+        "runner": "stynx-local-closure-v1",
+        "inputSelectors": [
+          {
+            "kind": "exact",
+            "pattern": "package.json"
+          },
+          {
+            "kind": "exact",
+            "pattern": "test-tasks.json"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm"],
+        "allowlistedEnv": ["CI"],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      },
+      {
+        "nodeId": "release:prepare",
+        "dependencies": [
+          "api:contracts",
+          "lint:families",
+          "test:e2e",
+          "docs",
+          "test:performance",
+          "security",
+          "doctor"
+        ],
+        "argv": ["pnpm", "run", "ci:stynx:release"],
+        "cwd": ".",
+        "runner": "stynx-release-v1",
+        "inputSelectors": [
+          {
+            "kind": "prefix",
+            "pattern": ".changeset/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "docs/adopters/stynx/"
+          },
+          {
+            "kind": "prefix",
+            "pattern": "scripts/"
+          },
+          {
+            "kind": "exact",
+            "pattern": "package.json"
+          },
+          {
+            "kind": "exact",
+            "pattern": "pnpm-lock.yaml"
+          },
+          {
+            "kind": "exact",
+            "pattern": "test-tasks.json"
+          }
+        ],
+        "toolchainKeys": ["node", "pnpm"],
+        "allowlistedEnv": ["CI", "NODE_AUTH_TOKEN"],
+        "outputContract": {
+          "kind": "command",
+          "requiredResult": "pass"
+        }
+      }
+    ],
+    "profiles": [
+      {
+        "profileId": "affected",
+        "mode": "affected",
+        "requiredNodes": ["engines", "doctor"],
+        "eligibleNodes": [
+          "engines",
+          "api:contracts",
+          "lint:families",
+          "typecheck",
+          "test:unit",
+          "test:integration",
+          "build",
+          "reference:apps",
+          "db:rls",
+          "test:e2e",
+          "docs",
+          "test:performance",
+          "security",
+          "doctor",
+          "test:local-full",
+          "release:prepare"
+        ]
+      },
+      {
+        "profileId": "rc",
+        "mode": "fixed",
+        "requiredNodes": ["release:prepare"]
+      }
+    ]
+  }
+}

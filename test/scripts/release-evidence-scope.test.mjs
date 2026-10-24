@@ -42,14 +42,16 @@ function fixture(t, version = '1.6.0') {
     ),
     join(root, 'law/policy/stynx-package-roster.json'),
   );
-  // Each scope binds the task descriptor bytes it was released with; 1.6.1
-  // through 3.0.0 share one reviewed descriptor.
+  // Historical scopes retain their original descriptor bytes. ADR0035 binds
+  // only active 3.0.0 to the reviewed ordinary-unit scheduling inputs.
   cpSync(
     join(
       repository,
-      version === '1.6.0'
-        ? 'test/fixtures/release-scope/test-tasks-1.6.0.json'
-        : 'test/fixtures/release-scope/test-tasks-3.0.0.json',
+      version === '3.0.0'
+        ? 'test-tasks.json'
+        : version === '1.6.0'
+          ? 'test/fixtures/release-scope/test-tasks-1.6.0.json'
+          : 'test/fixtures/release-scope/test-tasks-3.0.0.json',
     ),
     join(root, 'test-tasks.json'),
   );
@@ -584,3 +586,25 @@ for (const [label, change] of [
       /STYNX_RELEASE_SCOPE_INVALID/u,
     );
   });
+
+// ADR0035 updates only the active reviewed descriptor, not historical receipts.
+test('3.0.0 rejects an unreviewed scheduling input while historical descriptor scopes remain valid', (t) => {
+  for (const version of ['1.6.0', '1.6.1', '1.6.2']) {
+    assert.equal(
+      resolvePublicationEvidenceRequirements(fixture(t, version)).scope.version,
+      version,
+    );
+  }
+  const root = fixture(t, '3.0.0');
+  assert.equal(resolvePublicationEvidenceRequirements(root).scope.version, '3.0.0');
+  mutate(root, 'test-tasks.json', (descriptor) => {
+    descriptor.tasks
+      .find((task) => task.nodeId === 'test:unit')
+      .inputSelectors.push({ kind: 'exact', pattern: 'unreviewed.json' });
+    return descriptor;
+  });
+  assert.throws(
+    () => resolvePublicationEvidenceRequirements(root),
+    /reviewed task commands or execution controls changed/u,
+  );
+});
