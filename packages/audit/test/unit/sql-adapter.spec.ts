@@ -526,7 +526,7 @@ describe('AuditSqlReader.list', () => {
         to: 't',
       });
       const [sql, params] = executor.query.mock.calls[0]!;
-      expect(sql).toContain('FROM audit.logged_actions');
+      expect(sql).toContain('FROM "audit"."logged_actions"');
       expect(sql).toContain("(schema_name || '.' || table_name) = $1");
       expect(sql).toContain('op = $2');
       expect(params).toEqual(['public.users', 'D', 'r', 'f', 't', 100, 0]);
@@ -780,7 +780,7 @@ describe('AuditSqlReader — empty-query coverage for non-audit_log modes', () =
       const executor = makeExecutor([{ rows: [] }]);
       await new AuditSqlReader(executor, { mode: 'porm_logged_actions' }).list();
       const [sql, params] = executor.query.mock.calls[0]!;
-      expect(sql).toContain('FROM audit.logged_actions');
+      expect(sql).toContain('FROM "audit"."logged_actions"');
       expect(sql).not.toContain('WHERE');
       // Filter-clause forms (distinct from SELECT-clause column names).
       expect(sql).not.toContain("(schema_name || '.' || table_name) = $");

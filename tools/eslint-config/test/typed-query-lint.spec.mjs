@@ -12,7 +12,59 @@ const workspace = resolve(import.meta.dirname, '../../..');
 const transactionPath = join(workspace, 'packages/data/src/transaction.ts');
 const typedQueryPath = join(workspace, 'packages/data/src/typed-query.ts');
 const executorPath = join(workspace, 'packages/data/src/checked-executor.ts');
+const auditPormOperations = Array.from({ length: 32 }, (_, mask) => `audit.read-porm.mask.${mask}`);
 const imports = `import type { PoolClient, Client, Pool } from 'pg';\nimport type { Transaction } from ${JSON.stringify(transactionPath)};\n`;
+
+test('audit32 configured operation census is exact in registry, caller and admissions', () => {
+  const paths = [
+    'packages/data/src/configured-query.repository.ts',
+    'packages/audit/src/sql-adapter.ts',
+    'tools/eslint-config/query-rules.mjs',
+  ];
+  for (const path of paths) {
+    const operations = [...readFileSync(join(workspace, path), 'utf8').matchAll(/['"](audit\.read-porm\.mask\.\d+)['"]/g)].map((match) => match[1]);
+    assert.deepEqual(operations, auditPormOperations, path);
+  }
+});
+
+test('audit32 actual configured entries admit all direct, aliased and destructured exact IDs', async () => {
+  const calls = auditPormOperations.map((operation) => {
+    const args = `{} as never, ${JSON.stringify(operation)}, {} as never, [] as never`;
+    return `executor.executeConfiguredQuery(${args}); alias(${args}); run(${args});`;
+  }).join('\n');
+  const source = `import * as executor from ${JSON.stringify(executorPath)}; const alias = executor.executeConfiguredQuery; const { executeConfiguredQuery: run } = executor; ${calls}`;
+  assert.deepEqual(await lint(source, 'packages/audit/src/sql-adapter.ts', 'no-raw-query'), []);
+});
+
+test('audit32 wrong caller refuses every exact operation and callable spelling', async () => {
+  const calls = auditPormOperations.map((operation) => {
+    const args = `{} as never, ${JSON.stringify(operation)}, {} as never, [] as never`;
+    return `executor.executeConfiguredQuery(${args}); alias(${args}); run(${args});`;
+  }).join('\n');
+  const source = `import * as executor from ${JSON.stringify(executorPath)}; const alias = executor.executeConfiguredQuery; const { executeConfiguredQuery: run } = executor; ${calls}`;
+  const errors = await lint(source, 'packages/health/src/probe.ts', 'no-raw-query');
+  assert.equal(errors.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 96);
+});
+
+test('audit32 invalid and dynamic operation values remain refused at the genuine caller', async () => {
+  const source = `import { executeConfiguredQuery } from ${JSON.stringify(executorPath)};
+    declare const dynamic: Parameters<typeof executeConfiguredQuery>[1];
+    executeConfiguredQuery({} as never, dynamic, {} as never, [] as never);
+    executeConfiguredQuery({} as never, 'audit.read-porm.mask.32', {} as never, [] as never);
+    executeConfiguredQuery({} as never, 'audit.read-porm.mask.-1', {} as never, [] as never);
+    executeConfiguredQuery({} as never, '__proto__', {} as never, [] as never);`;
+  const errors = await lint(source, 'packages/audit/src/sql-adapter.ts', 'no-raw-query');
+  assert.equal(errors.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 4);
+});
+
+test('audit32 barrel origins preserve exact caller ownership for all operation IDs', async () => {
+  const calls = auditPormOperations.map((operation) => `run({} as never, ${JSON.stringify(operation)}, {} as never, [] as never);`).join('\n');
+  const source = `import { run } from './audit-entry.js'; ${calls}`;
+  const entry = `export { executeConfiguredQuery as run } from ${JSON.stringify(executorPath)};`;
+  assert.deepEqual(await lint(source, 'packages/audit/src/sql-adapter.ts', 'no-raw-query', { 'packages/audit/src/audit-entry.ts': entry }), []);
+  const errors = await lint(source, 'packages/health/src/probe.ts', 'no-raw-query', { 'packages/health/src/audit-entry.ts': entry });
+  assert.equal(errors.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 32);
+});
 
 // A real TypeScript checker sees actual pg and Transaction declarations. Virtual
 // files exercise exact admitted paths without writing or modifying production.
