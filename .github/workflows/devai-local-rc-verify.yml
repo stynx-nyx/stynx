@@ -230,6 +230,51 @@ jobs:
           test ! -e "$proof/.git"
           echo "path=$proof" >> "$GITHUB_OUTPUT"
 
+      # Auxiliary-only A+B admission. Never merge this workflow into the product.
+      - name: Admit exact S10 A+B descriptor transition
+        id: descriptor
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { appendFileSync, readFileSync } from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          import { dirname, join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { canonicalBytes, sha256Hex } = await import(pathToFileURL(join(dirname(process.env.DEVAI_EVIDENCE_POLICY), 'canonical.js')).href);
+          const refuse = (reason) => { throw new Error('S10_AB_DESCRIPTOR_ADMISSION_REFUSED:' + reason); };
+          // Literal reviewed product identities; auxiliary verification never executes candidate code.
+          const candidateCommit = '677b7770413d7123df19fd9dfad3f723285d9b20';
+          const candidateTree = '7260437fa73aeb37776da6fe1be3605cd52966be';
+          const controlCommit = 'aa2c11305034918ba253d57ba66e0438f9ff1e78';
+          if (!/^[0-9a-f]{40}$/u.test(candidateCommit ?? '') || !/^[0-9a-f]{40}$/u.test(candidateTree ?? '')) refuse('candidate-not-bound');
+          const gitIdentity = (directory, revision) => execFileSync('git', ['-C', directory, 'rev-parse', '--verify', revision], { encoding: 'utf8' }).trim();
+          if (process.env.CANDIDATE_SHA !== candidateCommit || gitIdentity('candidate', 'HEAD') !== candidateCommit || gitIdentity('candidate', 'HEAD^{tree}') !== candidateTree) refuse('candidate-identity');
+          if (gitIdentity('control', 'HEAD') !== controlCommit) refuse('control-identity');
+          const control = JSON.parse(readFileSync('control/test-tasks.json', 'utf8'));
+          const candidate = JSON.parse(readFileSync('candidate/test-tasks.json', 'utf8'));
+          const controlBytes = canonicalBytes(control);
+          const candidateBytes = canonicalBytes(candidate);
+          let descriptor = 'control/test-tasks.json';
+          if (!controlBytes.equals(candidateBytes)) {
+            if (sha256Hex(controlBytes) !== 'b7f8b028b6cbe3037532be611fc2d4b5f5b14c72b23f43a25fbd254cf009256a') refuse('control-digest');
+            if (sha256Hex(candidateBytes) !== 'f2450c2d1881ec027ab36834caeb8f2299dcd3b667be012d6e3c2856197ad8a0') refuse('candidate-digest');
+            const expected = structuredClone(control);
+            if (!Array.isArray(expected.tasks) || expected.tasks.length !== 17) refuse('task-population');
+            const task = (nodeId) => {
+              const matches = expected.tasks.filter((entry) => entry.nodeId === nodeId);
+              if (matches.length !== 1 || !Array.isArray(matches[0].inputSelectors)) refuse('task-binding:' + nodeId);
+              return matches[0];
+            };
+            task('lint:families').inputSelectors.push({ kind: 'prefix', pattern: 'database/migrations/' });
+            task('test:unit').inputSelectors.push({ kind: 'prefix', pattern: 'database/' });
+            task('db:rls').inputSelectors.push({ kind: 'prefix', pattern: 'database/' });
+            if (!canonicalBytes(expected).equals(candidateBytes)) refuse('unreviewed-delta');
+            descriptor = 'candidate/test-tasks.json';
+          }
+          appendFileSync(process.env.GITHUB_OUTPUT, 'path=' + descriptor + '\n');
+          NODE
+
       - name: Reconstruct exact RC task policy
         id: policy
         shell: bash
@@ -238,7 +283,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/devai-local-rc"
           node "$DEVAI_EVIDENCE_POLICY" \
             --repo candidate \
-            --descriptor control/test-tasks.json \
+            --descriptor "${{ steps.descriptor.outputs.path }}" \
             --profile rc \
             --commit "$CANDIDATE_SHA" \
             --tree "${{ steps.identity.outputs.tree }}" \
