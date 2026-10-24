@@ -230,6 +230,62 @@ jobs:
           test ! -e "$proof/.git"
           echo "path=$proof" >> "$GITHUB_OUTPUT"
 
+      # Auxiliary-only S8 admission. Never merge this workflow into the product.
+      - name: Admit exact S8 descriptor transition
+        id: descriptor
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { appendFileSync, readFileSync } from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          import { dirname, join } from 'node:path';
+          import { pathToFileURL } from 'node:url';
+          const { canonicalBytes, sha256Hex } = await import(pathToFileURL(join(dirname(process.env.DEVAI_EVIDENCE_POLICY), 'canonical.js')).href);
+          const refuse = (reason) => { throw new Error('S8_DESCRIPTOR_ADMISSION_REFUSED:' + reason); };
+          const candidateCommit = 'f3e4d91051ae9d3259c35c244cae8e6a2c3258db';
+          const candidateTree = 'dd98256af15c34a37ed8d0efcfdfef1394a8ab77';
+          const controlCommit = '10514fea7af80746e419eab07cdb274ff9dfd324';
+          const gitIdentity = (directory, revision) => execFileSync('git', ['-C', directory, 'rev-parse', '--verify', revision], { encoding: 'utf8' }).trim();
+          if (process.env.CANDIDATE_SHA !== candidateCommit || gitIdentity('candidate', 'HEAD') !== candidateCommit || gitIdentity('candidate', 'HEAD^{tree}') !== candidateTree) refuse('candidate-identity');
+          if (gitIdentity('control', 'HEAD') !== controlCommit) refuse('control-identity');
+          const control = JSON.parse(readFileSync('control/test-tasks.json', 'utf8'));
+          const candidate = JSON.parse(readFileSync('candidate/test-tasks.json', 'utf8'));
+          const controlBytes = canonicalBytes(control);
+          const candidateBytes = canonicalBytes(candidate);
+          let descriptor = 'control/test-tasks.json';
+          if (!controlBytes.equals(candidateBytes)) {
+            if (sha256Hex(controlBytes) !== '9874165c7677c070c472d6facfe8666fd48fb680244e8cf3b51e8b44fbf77b92') refuse('control-digest');
+            if (sha256Hex(candidateBytes) !== 'b7f8b028b6cbe3037532be611fc2d4b5f5b14c72b23f43a25fbd254cf009256a') refuse('candidate-digest');
+            const expected = structuredClone(control);
+            if (!Array.isArray(expected.tasks) || expected.tasks.length !== 17) refuse('task-population');
+            const task = (nodeId) => {
+              const matches = expected.tasks.filter((entry) => entry.nodeId === nodeId);
+              if (matches.length !== 1 || !Array.isArray(matches[0].inputSelectors)) refuse('task-binding:' + nodeId);
+              return matches[0];
+            };
+            task('test:unit').inputSelectors.push(
+              { kind: 'exact', pattern: 'package.json' },
+              { kind: 'exact', pattern: 'pnpm-workspace.yaml' },
+              { kind: 'exact', pattern: 'turbo.json' },
+              { kind: 'exact', pattern: 'test-tasks.json' },
+              { kind: 'exact', pattern: 'tools/repo-config/vitest.base.mjs' },
+              { kind: 'glob', pattern: 'packages/*/package.json' },
+              { kind: 'glob', pattern: 'packages-web/*/package.json' },
+              { kind: 'glob', pattern: 'tools/*/package.json' },
+              { kind: 'glob', pattern: 'test/*/package.json' },
+              { kind: 'glob', pattern: 'packages/*/vitest.config.*' },
+              { kind: 'glob', pattern: 'packages-web/*/vitest.config.*' },
+              { kind: 'glob', pattern: 'tools/*/vitest.config.*' },
+              { kind: 'glob', pattern: 'test/*/vitest.config.*' },
+            );
+            task('db:rls').inputSelectors.push({ kind: 'exact', pattern: 'packages/cli/engines/rls-negative.mjs' });
+            if (!canonicalBytes(expected).equals(candidateBytes)) refuse('unreviewed-delta');
+            descriptor = 'candidate/test-tasks.json';
+          }
+          appendFileSync(process.env.GITHUB_OUTPUT, 'path=' + descriptor + '\n');
+          NODE
+
       - name: Reconstruct exact RC task policy
         id: policy
         shell: bash
@@ -238,7 +294,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/devai-local-rc"
           node "$DEVAI_EVIDENCE_POLICY" \
             --repo candidate \
-            --descriptor control/test-tasks.json \
+            --descriptor "${{ steps.descriptor.outputs.path }}" \
             --profile rc \
             --commit "$CANDIDATE_SHA" \
             --tree "${{ steps.identity.outputs.tree }}" \
