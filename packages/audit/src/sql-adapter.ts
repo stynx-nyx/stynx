@@ -32,12 +32,12 @@ export interface AuditSqlListItem {
   operation: string;
   entity: string;
   entityId?: string | null;
-  pk?: Record<string, unknown> | null;
+  pk?: Record<string, unknown> | unknown[] | string | number | boolean | null;
   requestId?: string | null;
   ipAddress?: string | null;
-  metadata?: Record<string, unknown> | null;
-  oldData?: Record<string, unknown> | null;
-  newData?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | unknown[] | string | number | boolean | null;
+  oldData?: Record<string, unknown> | unknown[] | string | number | boolean | null;
+  newData?: Record<string, unknown> | unknown[] | string | number | boolean | null;
   previousHash?: string | null;
   rowHash?: string | null;
 }
@@ -147,12 +147,12 @@ type SelectRow = {
   entity?: string;
   entity_id?: string | null;
   row_id?: string | null;
-  pk?: Record<string, unknown> | null;
+  pk?: Record<string, unknown> | unknown[] | string | number | boolean | null;
   request_id?: string | null;
   ip_address?: string | null;
-  metadata?: Record<string, unknown> | null;
-  old_data?: Record<string, unknown> | null;
-  new_data?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | unknown[] | string | number | boolean | null;
+  old_data?: Record<string, unknown> | unknown[] | string | number | boolean | null;
+  new_data?: Record<string, unknown> | unknown[] | string | number | boolean | null;
   previous_hash?: string | null;
   row_hash?: string | null;
   payload?: Record<string, unknown> | null;
@@ -377,49 +377,103 @@ export class AuditSqlReader {
     const limit = sanitizeLimit(query.limit, 100);
     const offset = sanitizeOffset(query.offset);
 
-    const whereParts: string[] = [];
-    const params: unknown[] = [];
-    let index = 1;
-
+// BEGIN GENERATED audit-porm32 dispatch
+    let mask = 0;
+    let entity: string | undefined;
     if (query.entity) {
-      whereParts.push(`(schema_name || '.' || table_name) = $${index++}`);
-      params.push(query.entity);
+      mask |= 1;
+      entity = query.entity;
     }
+    let operation: string | undefined;
     if (query.operation) {
-      whereParts.push(`op = $${index++}`);
-      params.push(query.operation);
+      mask |= 2;
+      operation = query.operation;
     }
+    let requestId: string | undefined;
     if (query.requestId) {
-      whereParts.push(`request_id = $${index++}`);
-      params.push(query.requestId);
+      mask |= 4;
+      requestId = query.requestId;
     }
+    let from: string | undefined;
     if (query.from) {
-      whereParts.push(`occurred_at >= $${index++}::timestamptz`);
-      params.push(query.from);
+      mask |= 8;
+      from = query.from;
     }
+    let to: string | undefined;
     if (query.to) {
-      whereParts.push(`occurred_at <= $${index++}::timestamptz`);
-      params.push(query.to);
+      mask |= 16;
+      to = query.to;
     }
-
-    const whereSql = whereParts.length > 0 ? `WHERE ${whereParts.join(' AND ')}` : '';
-    const querySql = `SELECT
-        occurred_at,
-        op,
-        schema_name,
-        table_name,
-        old_data,
-        new_data,
-        request_id,
-        COUNT(*) OVER() AS total
-      FROM ${schema}.${table}
-      ${whereSql}
-      ORDER BY occurred_at DESC
-      LIMIT $${index++}
-      OFFSET $${index}`;
-    params.push(limit, offset);
-
-    const rows = toRows<SelectRow>(await this.executor.query(querySql, params));
+    const rows = await (async () => {
+      switch (mask) {
+        case 0:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.0', { schema, table }, [limit, offset])).rows;
+        case 1:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.1', { schema, table }, [entity, limit, offset])).rows;
+        case 2:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.2', { schema, table }, [operation, limit, offset])).rows;
+        case 3:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.3', { schema, table }, [entity, operation, limit, offset])).rows;
+        case 4:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.4', { schema, table }, [requestId, limit, offset])).rows;
+        case 5:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.5', { schema, table }, [entity, requestId, limit, offset])).rows;
+        case 6:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.6', { schema, table }, [operation, requestId, limit, offset])).rows;
+        case 7:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.7', { schema, table }, [entity, operation, requestId, limit, offset])).rows;
+        case 8:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.8', { schema, table }, [from, limit, offset])).rows;
+        case 9:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.9', { schema, table }, [entity, from, limit, offset])).rows;
+        case 10:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.10', { schema, table }, [operation, from, limit, offset])).rows;
+        case 11:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.11', { schema, table }, [entity, operation, from, limit, offset])).rows;
+        case 12:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.12', { schema, table }, [requestId, from, limit, offset])).rows;
+        case 13:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.13', { schema, table }, [entity, requestId, from, limit, offset])).rows;
+        case 14:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.14', { schema, table }, [operation, requestId, from, limit, offset])).rows;
+        case 15:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.15', { schema, table }, [entity, operation, requestId, from, limit, offset])).rows;
+        case 16:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.16', { schema, table }, [to, limit, offset])).rows;
+        case 17:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.17', { schema, table }, [entity, to, limit, offset])).rows;
+        case 18:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.18', { schema, table }, [operation, to, limit, offset])).rows;
+        case 19:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.19', { schema, table }, [entity, operation, to, limit, offset])).rows;
+        case 20:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.20', { schema, table }, [requestId, to, limit, offset])).rows;
+        case 21:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.21', { schema, table }, [entity, requestId, to, limit, offset])).rows;
+        case 22:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.22', { schema, table }, [operation, requestId, to, limit, offset])).rows;
+        case 23:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.23', { schema, table }, [entity, operation, requestId, to, limit, offset])).rows;
+        case 24:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.24', { schema, table }, [from, to, limit, offset])).rows;
+        case 25:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.25', { schema, table }, [entity, from, to, limit, offset])).rows;
+        case 26:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.26', { schema, table }, [operation, from, to, limit, offset])).rows;
+        case 27:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.27', { schema, table }, [entity, operation, from, to, limit, offset])).rows;
+        case 28:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.28', { schema, table }, [requestId, from, to, limit, offset])).rows;
+        case 29:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.29', { schema, table }, [entity, requestId, from, to, limit, offset])).rows;
+        case 30:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.30', { schema, table }, [operation, requestId, from, to, limit, offset])).rows;
+        case 31:
+          return (await executeConfiguredQuery(this.executor, 'audit.read-porm.mask.31', { schema, table }, [entity, operation, requestId, from, to, limit, offset])).rows;
+        default: throw new TypeError('Unknown PORM audit reader filter mask');
+      }
+    })();
+// END GENERATED audit-porm32 dispatch
     return {
       items: rows.map((row) => ({
         occurredAt: toIso(row.occurred_at),

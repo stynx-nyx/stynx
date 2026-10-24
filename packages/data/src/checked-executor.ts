@@ -356,18 +356,37 @@ export async function executeConfiguredQuery(
   }
   // This fallback historically read only object.rows; a bare-array port meant absent.
   if (operation === 'outbox.legacy-acked-row' && Array.isArray(result)) return { rows: [], rowCount: null };
-  const driverRows: unknown = Array.isArray(result) ? result :
-    typeof result === 'object' && result !== null && 'rows' in result ? result.rows : undefined;
-  if (!Array.isArray(driverRows)) return invalid('rows');
+  // Only closed audit-reader definitions retain their historical empty-wrapper
+  // fallback and ordinary property Get. Other configured ports stay unchanged.
+  const legacyAuditRead = 'legacyAuditReadResult' in definition && definition.legacyAuditReadResult === true;
+  let driverRows: unknown;
+  if (Array.isArray(result)) {
+    driverRows = result;
+  } else if (legacyAuditRead) {
+    if (result !== null && result !== undefined) {
+      const boxed: unknown = Object(result);
+      if ((typeof boxed === 'object' && boxed !== null) || typeof boxed === 'function') {
+        driverRows = Reflect.get(boxed, 'rows', result);
+      }
+    }
+  } else {
+    driverRows = typeof result === 'object' && result !== null && 'rows' in result ? result.rows : undefined;
+  }
+  if (!Array.isArray(driverRows)) {
+    if (legacyAuditRead) return { rows: [], rowCount: null };
+    return invalid('rows');
+  }
   // This single historical empty-row shape belongs only to idempotency lookup.
   const rows: unknown[] = operation === 'idempotency.lookup' && driverRows.length === 1 && driverRows[0] === undefined ? [] : driverRows;
   if (definition.expects !== 'many' && rows.length > 1) throw new QueryCardinalityError(name, definition.expects, rows.length);
-  const parsedRows = rows.map((row, index) => {
-    const parsed = definition.row.safeParse(row);
+  const parsedRows: unknown[] = [];
+  const rowsLength = rows.length;
+  for (let index = 0; index < rowsLength; index += 1) {
+    const parsed = definition.row.safeParse(rows[index]);
     if (!parsed.success) throw new QueryRowValidationError(name, index, toIssues(parsed.error));
-    return parsed.data;
-  });
-  const rowCount = Array.isArray(result) ? result.length :
+    parsedRows.push(parsed.data);
+  }
+  const rowCount = legacyAuditRead ? null : Array.isArray(result) ? result.length :
     typeof result === 'object' && result !== null && 'rowCount' in result ? checkedRowCount(name, result.rowCount) : null;
   return { rows: parsedRows, rowCount };
 }

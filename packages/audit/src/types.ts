@@ -26,8 +26,8 @@ export interface AuditLogItem {
   actorId?: string | null;
   requestId?: string | null;
   sessionId?: string | null;
-  tags: Record<string, unknown>;
-  payload: Record<string, unknown>;
+  tags: Record<string, unknown> | unknown[] | string | number | boolean;
+  payload: Record<string, unknown> | unknown[] | string | number | boolean;
 }
 
 export interface AuditLogPage {
@@ -47,8 +47,8 @@ export interface AuditLogWireItem {
   actorId?: string | null;
   requestId?: string | null;
   sessionId?: string | null;
-  tags: Record<string, unknown>;
-  payload: Record<string, unknown>;
+  tags?: Record<string, unknown> | unknown[] | string | number | boolean | null;
+  payload?: Record<string, unknown> | unknown[] | string | number | boolean | null;
 }
 
 export interface AuditLogWirePage {

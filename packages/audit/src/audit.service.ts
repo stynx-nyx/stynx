@@ -38,8 +38,8 @@ interface AuditLogRow {
   actor_id: string | null;
   request_id: string | null;
   session_id: string | null;
-  tags: Record<string, unknown> | null;
-  payload: Record<string, unknown> | null;
+  tags: Record<string, unknown> | unknown[] | string | number | boolean | null;
+  payload: Record<string, unknown> | unknown[] | string | number | boolean | null;
 }
 
 interface AuditChainRow {

@@ -155,6 +155,32 @@ const legacyOutboxRow = z.object({ id: uuid, tenantId: uuid, entity: text, entit
  createdAt: legacyOutboxTimestamp, updatedAt: legacyOutboxTimestamp,
 });
 
+// BEGIN GENERATED audit-porm32 schemas
+// ADR0034/0039: preserve mapper-owned InvalidDate and opaque nested values.
+const auditPormTimestamp = z.union([text, z.instanceof(Date),
+  z.custom<number>((value) => value === Number.POSITIVE_INFINITY || value === Number.NEGATIVE_INFINITY)]);
+const auditPormPayload = z.custom<Record<string, unknown> | unknown[] | string | number | boolean>(
+  (value) => typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ||
+    (typeof value === 'object' && value !== null),
+);
+const auditPormTotal = z.union([text, z.bigint(), z.custom<number>((value) => typeof value === 'number')]);
+const auditPormRow = z.object({
+  occurred_at: auditPormTimestamp,
+  op: text.nullish(), schema_name: text.nullish(), table_name: text.nullish(),
+  request_id: text.nullish(), old_data: auditPormPayload.nullish(), new_data: auditPormPayload.nullish(),
+  total: auditPormTotal.nullish(),
+});
+const auditPormLimit = z.number().min(0).max(500).refine(Number.isInteger);
+// The original offset sanitizer permits integral values above MAX_SAFE_INTEGER.
+const auditPormOffset = z.custom<number>((value) => typeof value === 'number' && Number.isFinite(value) && value >= 0 && Math.trunc(value) === value);
+const auditPormParams0 = z.tuple([auditPormLimit, auditPormOffset]);
+const auditPormParams1 = z.tuple([text.optional(), auditPormLimit, auditPormOffset]);
+const auditPormParams2 = z.tuple([text.optional(), text.optional(), auditPormLimit, auditPormOffset]);
+const auditPormParams3 = z.tuple([text.optional(), text.optional(), text.optional(), auditPormLimit, auditPormOffset]);
+const auditPormParams4 = z.tuple([text.optional(), text.optional(), text.optional(), text.optional(), auditPormLimit, auditPormOffset]);
+const auditPormParams5 = z.tuple([text.optional(), text.optional(), text.optional(), text.optional(), text.optional(), auditPormLimit, auditPormOffset]);
+// END GENERATED audit-porm32 schemas
+
 // Closed ADR0029 definitions: callers supply identifier slots and bound values,
 // never SQL text, fragments, registration functions or a row type assertion.
 export const configuredOperations = {
@@ -421,6 +447,681 @@ export const configuredOperations = {
                on conflict (message_id) do nothing`;
     },
   },
+// BEGIN GENERATED audit-porm32 operations
+  'audit.read-porm.mask.0': {
+    identifiers: auditTableIdentifiers, params: auditPormParams0,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      
+      ORDER BY occurred_at DESC
+      LIMIT $1
+      OFFSET $2`;
+    },
+  },
+  'audit.read-porm.mask.1': {
+    identifiers: auditTableIdentifiers, params: auditPormParams1,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-porm.mask.2': {
+    identifiers: auditTableIdentifiers, params: auditPormParams1,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE op = $1
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-porm.mask.3': {
+    identifiers: auditTableIdentifiers, params: auditPormParams2,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND op = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-porm.mask.4': {
+    identifiers: auditTableIdentifiers, params: auditPormParams1,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-porm.mask.5': {
+    identifiers: auditTableIdentifiers, params: auditPormParams2,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND request_id = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-porm.mask.6': {
+    identifiers: auditTableIdentifiers, params: auditPormParams2,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE op = $1 AND request_id = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-porm.mask.7': {
+    identifiers: auditTableIdentifiers, params: auditPormParams3,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND op = $2 AND request_id = $3
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-porm.mask.8': {
+    identifiers: auditTableIdentifiers, params: auditPormParams1,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE occurred_at >= $1::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-porm.mask.9': {
+    identifiers: auditTableIdentifiers, params: auditPormParams2,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-porm.mask.10': {
+    identifiers: auditTableIdentifiers, params: auditPormParams2,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE op = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-porm.mask.11': {
+    identifiers: auditTableIdentifiers, params: auditPormParams3,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND op = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-porm.mask.12': {
+    identifiers: auditTableIdentifiers, params: auditPormParams2,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-porm.mask.13': {
+    identifiers: auditTableIdentifiers, params: auditPormParams3,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-porm.mask.14': {
+    identifiers: auditTableIdentifiers, params: auditPormParams3,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE op = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-porm.mask.15': {
+    identifiers: auditTableIdentifiers, params: auditPormParams4,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND op = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-porm.mask.16': {
+    identifiers: auditTableIdentifiers, params: auditPormParams1,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE occurred_at <= $1::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-porm.mask.17': {
+    identifiers: auditTableIdentifiers, params: auditPormParams2,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-porm.mask.18': {
+    identifiers: auditTableIdentifiers, params: auditPormParams2,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE op = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-porm.mask.19': {
+    identifiers: auditTableIdentifiers, params: auditPormParams3,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND op = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-porm.mask.20': {
+    identifiers: auditTableIdentifiers, params: auditPormParams2,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-porm.mask.21': {
+    identifiers: auditTableIdentifiers, params: auditPormParams3,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND request_id = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-porm.mask.22': {
+    identifiers: auditTableIdentifiers, params: auditPormParams3,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE op = $1 AND request_id = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-porm.mask.23': {
+    identifiers: auditTableIdentifiers, params: auditPormParams4,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND op = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-porm.mask.24': {
+    identifiers: auditTableIdentifiers, params: auditPormParams2,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE occurred_at >= $1::timestamptz AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-porm.mask.25': {
+    identifiers: auditTableIdentifiers, params: auditPormParams3,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-porm.mask.26': {
+    identifiers: auditTableIdentifiers, params: auditPormParams3,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE op = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-porm.mask.27': {
+    identifiers: auditTableIdentifiers, params: auditPormParams4,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND op = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-porm.mask.28': {
+    identifiers: auditTableIdentifiers, params: auditPormParams3,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-porm.mask.29': {
+    identifiers: auditTableIdentifiers, params: auditPormParams4,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-porm.mask.30': {
+    identifiers: auditTableIdentifiers, params: auditPormParams4,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE op = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-porm.mask.31': {
+    identifiers: auditTableIdentifiers, params: auditPormParams5,
+    row: auditPormRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        op,
+        schema_name,
+        table_name,
+        old_data,
+        new_data,
+        request_id,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (schema_name || '.' || table_name) = $1 AND op = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+// END GENERATED audit-porm32 operations
+
   'audit.write-table': {
     identifiers: auditTableIdentifiers,
     params: z.tuple([text, text.nullable(), text, text, text.nullable(), text.nullable(), text.nullable(), text]),
