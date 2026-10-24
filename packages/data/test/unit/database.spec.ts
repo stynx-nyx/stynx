@@ -17,6 +17,10 @@ import { Database } from '../../src/database.js';
 import { StynxPoolRegistry } from '../../src/pools.js';
 import type { StynxDataModuleOptions } from '../../src/tokens.js';
 import type { Mock } from 'vitest';
+import { z } from 'zod';
+import { defineQuery, sql } from '../../src/typed-query.js';
+import { QueryRowValidationError, TransactionRequiredError } from '../../src/errors.js';
+import type { Transaction } from '../../src/transaction.js';
 
 describe('Database', () => {
   const options: StynxDataModuleOptions = {
@@ -327,6 +331,50 @@ describe('Database', () => {
 
     expect(client.query).toHaveBeenCalledWith('ROLLBACK');
     expect(client.release).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['schema', 'guard', 'driver'] as const)('rolls back and closes the live transaction after a guarded-row %s failure', async (failure) => {
+    const statement = defineQuery({
+      name: 'unit.database.guarded', text: sql`select id from sample.record`,
+      params: z.tuple([]), row: z.object({ id: z.string() }), expects: 'many',
+    });
+    const { client } = createClient();
+    const original = new Error('original driver failure');
+    client.query.mockImplementation(async (text: string) => {
+      if (text === statement.text) {
+        if (failure === 'driver') throw original;
+        return { rows: [{ id: failure === 'schema' ? 42 : 'one' }], rowCount: 1 };
+      }
+      return { rows: [], rowCount: 0 };
+    });
+    const database = createPoolBackedDatabase(client);
+    let captured: unknown;
+    let transaction: Transaction | undefined;
+    const guard = vi.fn((row: unknown): row is { id: string } => {
+      if (failure === 'guard') return false;
+      return typeof row === 'object' && row !== null && 'id' in row && typeof row.id === 'string';
+    });
+    const error: unknown = await database.tx(async (trx) => {
+      transaction = trx;
+      try {
+        return await trx.runGuarded(statement, [], guard);
+      } catch (caught) {
+        captured = caught;
+        throw caught;
+      }
+    }, { retry: false }).catch((caught: unknown) => caught);
+    expect(error).toBe(captured);
+    if (failure === 'driver') expect(error).toBe(original);
+    else expect(error).toBeInstanceOf(QueryRowValidationError);
+    expect(client.query.mock.calls.filter(([text]) => text === statement.text)).toHaveLength(1);
+    expect(client.query).toHaveBeenCalledWith('ROLLBACK');
+    expect(client.query).not.toHaveBeenCalledWith('COMMIT');
+    expect(client.release).toHaveBeenCalledTimes(1);
+    expect(guard).toHaveBeenCalledTimes(failure === 'guard' ? 1 : 0);
+    expect(transaction).toBeDefined();
+    if (!transaction) throw new Error('real Database.tx callback did not run');
+    await expect(transaction.runGuarded(statement, [], guard)).rejects.toBeInstanceOf(TransactionRequiredError);
+    expect(client.query.mock.calls.filter(([text]) => text === statement.text)).toHaveLength(1);
   });
 
   it('does not retry non-PostgreSQL errors or retryable codes when retry is disabled', async () => {

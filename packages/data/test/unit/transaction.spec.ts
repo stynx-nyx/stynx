@@ -322,7 +322,7 @@ describe('Transaction', () => {
       incrementHardDelete: vi.fn(),
       setArchiveSizeBytes: vi.fn(),
     };
-    const { tx } = createTx('app', metrics);
+    const { tx, client } = createTx('app', metrics);
     const api = tx as unknown as {
       softDeleteByReference: (
         meta: TableMeta,
@@ -343,7 +343,7 @@ describe('Transaction', () => {
     api.loadRegistryByParent = vi.fn(async () => []);
     api.describeBlockingChildren = vi.fn(async () => []);
     api.sampleArchiveSize = vi.fn(async () => undefined);
-    api.query = vi.fn(async (text: string) => {
+    client.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         return { rows: [{ archive_id: '44' }], rowCount: 1 };
       }
@@ -353,11 +353,11 @@ describe('Transaction', () => {
 
     await api.softDeleteByReference(parentMeta, 'customer-1', '2026-01-01T00:00:00.000Z', 2, 5, 0, cascaded);
     expect(cascaded).toEqual([{ schema: 'demo', table: 'customer', archiveId: 44n, id: 'customer-1' }]);
-    expect(api.query).toHaveBeenCalledWith(`select set_config('app.archive_move', 'in_progress', true)`);
-    expect(api.query).toHaveBeenCalledWith(`select set_config('app.archive_reason', 'soft_delete', true)`);
+    expect(client.query).toHaveBeenCalledWith(`select set_config('app.archive_move', 'in_progress', true)`, []);
+    expect(client.query).toHaveBeenCalledWith(`select set_config('app.archive_reason', 'soft_delete', true)`, []);
     expect(metrics.incrementSoftDelete).toHaveBeenCalledWith('demo.customer');
 
-    api.query = vi.fn(async (text: string) => (
+    client.query = vi.fn(async (text: string) => (
       text.includes('insert into') ? { rows: [{}], rowCount: 1 } : { rows: [], rowCount: 1 }
     ));
     const missingArchiveId: Array<{ schema: string; table: string; archiveId: bigint; id: string }> = [];
@@ -374,7 +374,7 @@ describe('Transaction', () => {
       { schema: 'demo', table: 'customer', archiveId: 0n, id: 'missing-archive-id' },
     ]);
 
-    api.query = vi.fn(async (text: string) => (
+    client.query = vi.fn(async (text: string) => (
       text.includes('insert into') ? { rows: [], rowCount: 0 } : { rows: [], rowCount: 1 }
     ));
     await expect(
@@ -386,7 +386,7 @@ describe('Transaction', () => {
 
     const fkError = new Error('fk') as Error & { code: string };
     fkError.code = '23503';
-    api.query = vi.fn(async (text: string) => {
+    client.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         return { rows: [{ archive_id: '45' }], rowCount: 1 };
       }
@@ -407,7 +407,7 @@ describe('Transaction', () => {
 
     const restrictError = new Error('restrict') as Error & { code: string };
     restrictError.code = '23001';
-    api.query = vi.fn(async (text: string) => {
+    client.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         return { rows: [{ archive_id: '46' }], rowCount: 1 };
       }
@@ -421,7 +421,7 @@ describe('Transaction', () => {
     ).rejects.toBeInstanceOf(SoftDeleteBlockedError);
 
     const unknownDeleteError = new Error('other failure');
-    api.query = vi.fn(async (text: string) => {
+    client.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         return { rows: [{ archive_id: '47' }], rowCount: 1 };
       }
@@ -435,8 +435,64 @@ describe('Transaction', () => {
     ).rejects.toBe(unknownDeleteError);
   });
 
+  it.each([
+    { label: 'missing ID', rows: [{}], rowCount: 1 },
+    { label: 'null ID', rows: [{ archive_id: null }], rowCount: 1 },
+    { label: 'undefined ID', rows: [{ archive_id: undefined }], rowCount: 1 },
+    { label: 'empty rows with positive count', rows: [], rowCount: 1 },
+    { label: 'empty rows with unavailable count', rows: [], rowCount: undefined },
+  ])('preserves soft-delete archive ID fallback for $label through the real client', async ({ rows, rowCount }) => {
+    const metrics = {
+      incrementSoftDelete: vi.fn(),
+      incrementHardDelete: vi.fn(),
+      incrementRestore: vi.fn(),
+      setArchiveSizeBytes: vi.fn(),
+    };
+    const { tx, client } = createTx('app', metrics);
+    client.query = vi.fn(async (text: string) => {
+      if (text.includes('to_regclass')) return { rows: [{ exists: true }], rowCount: 1 };
+      if (text.includes('insert into')) return { rows, rowCount };
+      if (text.includes('set_config')) return { rows: [{ set_config: 'context' }], rowCount: 1 };
+      return { rows: [], rowCount: 0 };
+    });
+    await expect(tx.softDelete(documents, 'fallback-id')).resolves.toMatchObject({ archiveId: 0n });
+    expect(client.query.mock.calls.filter(([text]) => text.includes('insert into'))).toHaveLength(1);
+    expect(client.query.mock.calls.filter(([text]) => text.includes('delete from'))).toHaveLength(1);
+    expect(metrics.incrementSoftDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { label: 'boolean ID', row: { archive_id: false } },
+    { label: 'object ID', row: { archive_id: { secret: 'private-archive-id' } } },
+    { label: 'malformed string ID', row: { archive_id: 'private-archive-id' } },
+    { label: 'null row', row: null },
+    { label: 'boolean row', row: false },
+    { label: 'array row', row: [] },
+  ])('rejects soft-delete $label before deleting live data or incrementing metrics', async ({ row }) => {
+    const metrics = {
+      incrementSoftDelete: vi.fn(),
+      incrementHardDelete: vi.fn(),
+      incrementRestore: vi.fn(),
+      setArchiveSizeBytes: vi.fn(),
+    };
+    const { tx, client } = createTx('app', metrics);
+    client.query = vi.fn(async (text: string) => {
+      if (text.includes('to_regclass')) return { rows: [{ exists: true }], rowCount: 1 };
+      if (text.includes('insert into')) return { rows: [row], rowCount: 1 };
+      if (text.includes('set_config')) return { rows: [{ set_config: 'context' }], rowCount: 1 };
+      return { rows: [], rowCount: 0 };
+    });
+    const failure: unknown = await tx.softDelete(documents, 'malformed-id').catch((error: unknown) => error);
+    expect(failure).toMatchObject({ name: 'QueryRowValidationError' });
+    expect(String(failure)).not.toContain('private-archive-id');
+    expect(JSON.stringify(failure)).not.toContain('private-archive-id');
+    expect(client.query.mock.calls.filter(([text]) => text.includes('insert into'))).toHaveLength(1);
+    expect(client.query.mock.calls.filter(([text]) => text.includes('delete from'))).toHaveLength(0);
+    expect(metrics.incrementSoftDelete).not.toHaveBeenCalled();
+  });
+
   it('blocks soft-delete references when cascade depth, row count, or blocking children fail', async () => {
-    const { tx } = createTx();
+    const { tx, client } = createTx();
     const api = tx as unknown as {
       softDeleteByReference: (
         meta: TableMeta,
@@ -480,7 +536,7 @@ describe('Transaction', () => {
     );
     api.listChildIds = vi.fn(async () => ['child-1']);
     api.describeBlockingChildren = vi.fn(async () => []);
-    (api as unknown as { query: Mock; sampleArchiveSize: Mock }).query = vi.fn(async (text: string) => {
+    client.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         return { rows: [{ archive_id: '48' }], rowCount: 1 };
       }
@@ -555,7 +611,7 @@ describe('Transaction', () => {
       incrementHardDelete: vi.fn(),
       setArchiveSizeBytes: vi.fn(),
     };
-    const { tx } = createTx('app', metrics);
+    const { tx, client } = createTx('app', metrics);
     const api = tx as unknown as {
       restoreByReference: (
         meta: TableMeta,
@@ -588,7 +644,7 @@ describe('Transaction', () => {
     );
     api.loadColumnNames = vi.fn(async () => ['id', 'customer_id']);
     api.sampleArchiveSize = vi.fn(async () => undefined);
-    api.query = vi.fn(async (text: string) => {
+    client.query = vi.fn(async (text: string) => {
       if (text.includes('select id') && text.includes('"archive"."demo_invoice"')) {
         return { rows: [{ id: 'invoice-1' }], rowCount: 1 };
       }
@@ -600,8 +656,8 @@ describe('Transaction', () => {
       id: 'customer-1',
       cascadeChildren: [{ schema: 'demo', table: 'invoice', id: 'invoice-1' }],
     });
-    expect(api.query).toHaveBeenCalledWith(`select set_config('app.archive_move', 'in_progress', true)`);
-    expect(api.query).toHaveBeenCalledWith(`select set_config('app.archive_reason', 'restore', true)`);
+    expect(client.query).toHaveBeenCalledWith(`select set_config('app.archive_move', 'in_progress', true)`, []);
+    expect(client.query).toHaveBeenCalledWith(`select set_config('app.archive_reason', 'restore', true)`, []);
     expect(metrics.incrementRestore).toHaveBeenCalledWith('demo.customer');
 
     api.loadArchivedRow = vi.fn(async () => ({
@@ -614,7 +670,7 @@ describe('Transaction', () => {
     api.loadRegistryByParent = vi.fn(async () => {
       throw new Error('cascade registry should not be loaded');
     });
-    api.query = vi.fn(async (text: string) => {
+    client.query = vi.fn(async (text: string) => {
       expect(text).not.toBe('');
       return { rows: [], rowCount: 1 };
     });
@@ -649,7 +705,7 @@ describe('Transaction', () => {
     api.findRestoreConflict = vi.fn(async () => undefined);
     const unique = new Error('unique') as Error & { code: string; constraint?: string };
     unique.code = '23505';
-    api.query = vi.fn(async (text: string) => {
+    client.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         throw unique;
       }
@@ -661,7 +717,7 @@ describe('Transaction', () => {
 
     const insertError = new Error('insert failed') as Error & { code: string };
     insertError.code = '22000';
-    api.query = vi.fn(async (text: string) => {
+    client.query = vi.fn(async (text: string) => {
       if (text.includes('insert into')) {
         throw insertError;
       }
@@ -747,7 +803,7 @@ describe('Transaction', () => {
   });
 
   it('describes blocking children with counts and samples only for non-empty block rows', async () => {
-    const { tx } = createTx();
+    const { tx, client } = createTx();
     const api = tx as unknown as {
       describeBlockingChildren: (meta: TableMeta, id: string) => Promise<Array<Record<string, unknown>>>;
       loadRegistryByParent: Mock;
@@ -758,11 +814,11 @@ describe('Transaction', () => {
       { ...childRegistryEntry, childTable: 'empty_payment', behavior: 'block' },
       { ...childRegistryEntry, childTable: 'payment', behavior: 'block' },
     ]);
-    api.query = vi.fn(async (_text: string, values: unknown[]) => {
+    client.query = vi.fn(async (_text: string, values: unknown[]) => {
       if (values[0] !== 'customer-1') {
         throw new Error('unexpected parent id');
       }
-      const call = api.query.mock.calls.length;
+      const call = client.query.mock.calls.length;
       if (call === 1) {
         return { rows: [{ count: '0' }], rowCount: 1 };
       }
@@ -777,12 +833,12 @@ describe('Transaction', () => {
     ]);
 
     api.loadRegistryByParent = vi.fn(async () => [{ ...childRegistryEntry, behavior: 'block' }]);
-    api.query = vi.fn(async () => ({ rows: [] }));
+    client.query = vi.fn(async () => ({ rows: [] }));
     await expect(api.describeBlockingChildren(parentMeta, 'empty-default')).resolves.toEqual([]);
   });
 
   it('finds archived parents only when the parent is absent from live rows and present in archive', async () => {
-    const { tx } = createTx();
+    const { tx, client } = createTx();
     const api = tx as unknown as {
       findArchivedParents: (meta: TableMeta, rowData: Record<string, unknown>) => Promise<unknown>;
       loadRegistryByChild: Mock;
@@ -795,7 +851,7 @@ describe('Transaction', () => {
       { ...childRegistryEntry, behavior: 'cascade', childColumn: 'archived_parent_id' },
       { ...childRegistryEntry, behavior: 'cascade', childColumn: 'missing_parent_id' },
     ]);
-    api.query = vi.fn(async (_text: string, values: unknown[]) => {
+    client.query = vi.fn(async (_text: string, values: unknown[]) => {
       const id = values[0];
       if (id === 'live-parent') {
         return { rows: [{ exists: true }], rowCount: 1 };
@@ -804,7 +860,7 @@ describe('Transaction', () => {
         throw new Error('hide registry rows must not be checked');
       }
       if (id === 'archived-parent') {
-        return api.query.mock.calls.filter((call) => call[1]?.[0] === 'archived-parent').length === 1
+        return client.query.mock.calls.filter((call) => call[1]?.[0] === 'archived-parent').length === 1
           ? { rows: [{ exists: false }], rowCount: 1 }
           : { rows: [{ exists: true }], rowCount: 1 };
       }
@@ -878,7 +934,7 @@ describe('Transaction', () => {
       incrementHardDelete: vi.fn(),
       setArchiveSizeBytes: vi.fn(),
     };
-    const { tx } = createTx('app', metrics);
+    const { tx, client } = createTx('app', metrics);
     const api = tx as unknown as {
       loadColumnNames: (schema: string, table: string) => Promise<string[]>;
       ensureMirrorExists: (meta: TableMeta) => Promise<void>;
@@ -886,7 +942,7 @@ describe('Transaction', () => {
       normalizeArchiveMetricLabel: (table: string) => string;
       query: Mock;
     };
-    api.query = vi.fn(async (text: string, values?: unknown[]): Promise<Partial<QueryResult>> => {
+    client.query = vi.fn(async (text: string, values?: unknown[]): Promise<Partial<QueryResult>> => {
       if (text.includes('information_schema.columns')) {
         return { rows: [{ column_name: 'id' }, { column_name: 'tenant_id' }] };
       }
@@ -917,7 +973,7 @@ describe('Transaction', () => {
 
     await api.sampleArchiveSizeByName('"archive"."demo_customer"');
     expect(metrics.setArchiveSizeBytes).toHaveBeenCalledWith('"archive"."demo_customer"', 4096);
-    api.query = vi.fn(async () => ({ rows: [] }));
+    client.query = vi.fn(async () => ({ rows: [] }));
     await api.sampleArchiveSizeByName('"archive"."demo_customer"', 'demo.customer');
     expect(metrics.setArchiveSizeBytes).toHaveBeenCalledWith('demo.customer', 0);
   });

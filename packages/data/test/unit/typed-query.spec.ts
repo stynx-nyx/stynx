@@ -77,7 +77,7 @@ describe('typed-query helper', () => {
     expect(() => bypass(invalidEscape as unknown as TemplateStringsArray)).toThrow(/escape/u);
   });
 
-  it('rejects sql`${x}` at compile time (tsc --noEmit on the negative fixture)', () => {
+  it('rejects sql`${x}` when compiling the real negative fixture', () => {
     const configPath = resolve(__dirname, '../fixtures/typed-query/tsconfig.json');
     const config = ts.getParsedCommandLineOfConfigFile(
       configPath,
@@ -91,7 +91,14 @@ describe('typed-query helper', () => {
     );
     if (!config) throw new Error('fixture tsconfig did not parse');
     const program = ts.createProgram({ rootNames: config.fileNames, options: config.options });
-    const diagnostics = ts.getPreEmitDiagnostics(program);
+    const fixturePath = resolve(__dirname, '../fixtures/typed-query/sql-hole.fixture.ts');
+    const fixtureSource = program.getSourceFile(fixturePath);
+    if (!fixtureSource || resolve(fixtureSource.fileName) !== fixturePath) {
+      throw new Error('exact negative fixture source file is missing');
+    }
+    // Keep the actual program and imported production signature; the workspace
+    // typecheck gate separately checks unrelated source diagnostics.
+    const diagnostics = ts.getPreEmitDiagnostics(program, fixtureSource);
     const holeErrors = diagnostics.filter(
       (diagnostic) =>
         diagnostic.file?.fileName.endsWith('sql-hole.fixture.ts') && diagnostic.code === 2345,
@@ -172,6 +179,49 @@ describe('typed-query helper', () => {
           expects: 'many',
         }).text,
       ).toBe(text);
+    }
+  });
+
+  it('recognizes Unicode dollar tags and keeps their closing delimiter case-sensitive', () => {
+    for (const text of [
+      sql`select $é$ $99 $é$, $1`,
+      sql`select $标签_2$ $999 $标签_2$, $1`,
+      sql`select $𐐀_tag$ $88 $𐐀_tag$, $1`,
+      sql`select $É_2$ $é_2$ $77 $É_2$, $1`,
+      sql`select café$é$, $1 from source`,
+      sql`select 名称$标签$, $1 from source`,
+    ]) {
+      expect(defineQuery({
+        name: 'unit.placeholder.unicode-tag',
+        text,
+        params: z.tuple([z.number()]),
+        row: z.object({}),
+        expects: 'many',
+      }).text).toBe(text);
+    }
+    const quotedOnly = sql`select $é$ $1 $é$`;
+    expect(defineQuery({
+      name: 'unit.placeholder.unicode-no-arguments',
+      text: quotedOnly,
+      params: z.tuple([]),
+      row: z.object({}),
+      expects: 'many',
+    }).text).toBe(quotedOnly);
+  });
+
+  it('still rejects invalid real parameters outside Unicode dollar-quoted bodies', () => {
+    for (const text of [
+      sql`select $é$ $1 $é$, $2`,
+      sql`select $标签$ $999 $标签$, $0`,
+      sql`select $𐐀$ $2 $𐐀$, $1, $3`,
+    ]) {
+      expect(() => defineQuery({
+        name: 'unit.placeholder.unicode-real-parameter',
+        text,
+        params: z.tuple([z.number()]),
+        row: z.object({}),
+        expects: 'many',
+      })).toThrow(TypeError);
     }
   });
 
