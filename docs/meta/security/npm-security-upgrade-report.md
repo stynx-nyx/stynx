@@ -115,12 +115,24 @@ the verifier's assertion-call-site projection; no artificial trace rebind or
 version bump is required. Existing invariant links and thresholds remain
 unchanged.
 
-Remaining work includes license/secret/fork checks in the Inspector window,
-intended emitted-declaration review and official API baseline regeneration,
-remaining STYNX gates, and a new successful signed local RC under the
-coordinated resource window. `pnpm api:baselines:write` removes disposable
-published-package dist outputs and runs the full build before writing; it has
-not been bypassed or claimed complete at this checkpoint. Historical advisory
+The Inspector follow-up also passed license policy for 91 direct external
+dependencies across 48 release manifests, the high-confidence secret scan, and
+all 81 maintained-fork/workspace/CDK audit contract tests. The corresponding
+`licenses-final.log`, `secrets-final.log` and `security-contracts-final.log` are
+retained with the verification evidence above.
+
+The official `pnpm api:baselines:write` completed successfully using Node
+24.20.0 and pnpm 9.15.0. It removed disposable published-package dist outputs
+and ran the full build, including the documentation site, before regenerating
+the baseline. The regenerated file is byte-identical to the committed baseline:
+all 47 package export maps and 2,224 normalized declaration/preset projections
+remain unchanged. A read-only comparison through the same official engine and
+full published-package roster also reported zero differences. No baseline rebind, manual hash edit or preverified-build bypass was
+needed. This verifies that the dependency repair introduced no emitted public
+declaration delta in this candidate.
+
+Remaining work includes the remaining STYNX gates and a new successful signed
+exact-candidate local RC under the coordinated resource window. Historical advisory
 and exception records remain preserved; retiring an obsolete allowlist is a
 separate governed change.
 
