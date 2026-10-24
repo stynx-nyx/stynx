@@ -5,6 +5,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR0036 — Post-publication workspace and final release observations](2026-10-24-post-publication-version-observation-proposal.md) — Architect applicability clarification under existing verification authorization; Inspector policy cohort 137/137 passed, full root/RC pending.
+
 - [ADR0035 — Fixed ordinary-unit execution budget](2026-10-24-ordinary-unit-execution-budget-proposal.md) — Owner approved 2026-10-24; implementation and focused verification checkpointed, full unit/RC pending.
 
 - [ADR-RELEASE-0006 — STYNX 3.0.0 SM-21 fixed-group release and exact publication scope](2026-10-22-stynx-3.0.0-sm-21-release.md)
