@@ -56,10 +56,12 @@ export function addTextFilter(
   where.push(`${column} = $${values.length}`);
 }
 
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 export function asJsonObject(value: unknown): FlowJsonObject {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? value as FlowJsonObject
-    : {};
+  return isObjectRecord(value) ? value : {};
 }
 
 export { camelizeRow, pageLimitOffset, type FlowRow };

@@ -374,24 +374,28 @@ export function withGraphPublishState(row: FlowJsonObject): FlowJsonObject {
   };
 }
 
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 export function graphPublishMeta(meta: unknown): {
   publishedVersion: number;
   publishedAt: string;
   publishedBy?: string | null;
 } | null {
-  if (meta === null || typeof meta !== 'object' || Array.isArray(meta)) {
+  if (!isObjectRecord(meta)) {
     return null;
   }
-  const publish = (meta as Record<string, unknown>)[GRAPH_PUBLISH_META_KEY];
-  if (publish === null || typeof publish !== 'object' || Array.isArray(publish)) {
+  const publish = meta[GRAPH_PUBLISH_META_KEY];
+  if (!isObjectRecord(publish)) {
     return null;
   }
-  const publishedVersion = (publish as Record<string, unknown>).publishedVersion;
-  const publishedAt = (publish as Record<string, unknown>).publishedAt;
+  const publishedVersion = publish.publishedVersion;
+  const publishedAt = publish.publishedAt;
   if (typeof publishedVersion !== 'number' || !Number.isFinite(publishedVersion) || typeof publishedAt !== 'string') {
     return null;
   }
-  const publishedBy = (publish as Record<string, unknown>).publishedBy;
+  const publishedBy = publish.publishedBy;
   return {
     publishedVersion,
     publishedAt,
@@ -400,9 +404,7 @@ export function graphPublishMeta(meta: unknown): {
 }
 
 export function jsonObject(value: unknown): FlowJsonObject {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? value as FlowJsonObject
-    : {};
+  return isObjectRecord(value) ? value : {};
 }
 
 export function requireString(value: unknown, label: string): string {

@@ -3,7 +3,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { RequestContext } from '@stynx-nyx/core';
 import { Database, Transaction } from '@stynx-nyx/data';
 import { FORM_TABLES, formEntries, type FormTableKey } from './internal/forms/form-tables.js';
-import { camelizeRow, type FlowRow } from './row-utils.js';
+import { camelizeRow, requireObject, type FlowRow } from './row-utils.js';
 import {
   answerWriteSchema,
   bulkAnswerWriteSchema,
@@ -417,10 +417,7 @@ export class FlowFormsService {
   }
 
   private objectInput(input: unknown): Record<string, unknown> {
-    if (input !== null && typeof input === 'object' && !Array.isArray(input)) {
-      return input as Record<string, unknown>;
-    }
-    throw new BadRequestException('Request body must be an object');
+    return requireObject(input);
   }
 
   private stringField(row: Record<string, unknown>, key: string, message: string): string {

@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
 import { Database } from '@stynx-nyx/data';
 import { FlowGraphPackage } from './internal/design/graph-package.js';
 import { FlowDesignTableStore } from './internal/design/design-table-store.js';
 import type { FlowGraphExportDocument, FlowGraphImportDocument, FlowJsonObject } from './types.js';
+import { requireObject } from './row-utils.js';
 import {
   createAgentRuleSchema,
   createEdgeSchema,
@@ -247,9 +248,6 @@ export class FlowDesignService {
   }
 
   private objectInput(input: unknown): FlowJsonObject {
-    if (input !== null && typeof input === 'object' && !Array.isArray(input)) {
-      return input as FlowJsonObject;
-    }
-    throw new BadRequestException('Request body must be an object');
+    return requireObject(input);
   }
 }

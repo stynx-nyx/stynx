@@ -14,9 +14,13 @@ export function camelizeRow<T extends FlowRow>(row: T): Record<string, unknown> 
   return mapped;
 }
 
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 export function requireObject(input: unknown): Record<string, unknown> {
-  if (input !== null && typeof input === 'object' && !Array.isArray(input)) {
-    return input as Record<string, unknown>;
+  if (isObjectRecord(input)) {
+    return input;
   }
   throw new BadRequestException('Request body must be an object');
 }
