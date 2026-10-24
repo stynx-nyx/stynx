@@ -77,7 +77,7 @@ describe('typed-query helper', () => {
     expect(() => bypass(invalidEscape as unknown as TemplateStringsArray)).toThrow(/escape/u);
   });
 
-  it('rejects sql`${x}` at compile time (tsc --noEmit on the negative fixture)', () => {
+  it('rejects sql`${x}` when compiling the real negative fixture', () => {
     const configPath = resolve(__dirname, '../fixtures/typed-query/tsconfig.json');
     const config = ts.getParsedCommandLineOfConfigFile(
       configPath,
@@ -91,7 +91,14 @@ describe('typed-query helper', () => {
     );
     if (!config) throw new Error('fixture tsconfig did not parse');
     const program = ts.createProgram({ rootNames: config.fileNames, options: config.options });
-    const diagnostics = ts.getPreEmitDiagnostics(program);
+    const fixturePath = resolve(__dirname, '../fixtures/typed-query/sql-hole.fixture.ts');
+    const fixtureSource = program.getSourceFile(fixturePath);
+    if (!fixtureSource || resolve(fixtureSource.fileName) !== fixturePath) {
+      throw new Error('exact negative fixture source file is missing');
+    }
+    // Keep the actual program and imported production signature; the workspace
+    // typecheck gate separately checks unrelated source diagnostics.
+    const diagnostics = ts.getPreEmitDiagnostics(program, fixtureSource);
     const holeErrors = diagnostics.filter(
       (diagnostic) =>
         diagnostic.file?.fileName.endsWith('sql-hole.fixture.ts') && diagnostic.code === 2345,
