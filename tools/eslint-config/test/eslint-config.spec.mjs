@@ -150,3 +150,35 @@ test('activates boundaries plugin and internal dependency rule', () => {
     }
   }
 });
+
+
+test('root hook TypeScript redeclarations preserve overloads and reject duplicate values', async () => {
+  const workspaceRoot = join(import.meta.dirname, '../../..');
+  // Resolve the actual root config exactly as the ordinary hook does. Do not
+  // reconstruct rules or supply an override that could hide a broken root gate.
+  const eslint = new ESLint({ cwd: workspaceRoot });
+  const overload = 'export function convert(value: string): string; export function convert(value: number): number; export function convert(value: string | number): string | number { return value; }';
+  const single = 'export function convert(value: string): string { return value; }';
+  const duplicate = 'var repeated = 1; var repeated = 2; export { repeated };';
+  for (const extension of ['ts', 'mts', 'cts']) {
+    const filePath = join(workspaceRoot, `packages/core/src/__root-hook-contract.${extension}`);
+    const config = await eslint.calculateConfigForFile(filePath);
+    assert.ok(config, `actual ${extension} root config must resolve`);
+    assert.ok(config.languageOptions.parser, 'actual TypeScript parser must remain installed');
+    assert.ok(config.plugins['@typescript-eslint'], 'actual TypeScript plugin must remain installed');
+    assert.equal(config.languageOptions.parserOptions.project, undefined);
+    assert.equal(config.languageOptions.parserOptions.projectService, undefined);
+    const [validOverload] = await eslint.lintText(overload, { filePath });
+    assert.deepEqual(validOverload.messages, [], `${extension}: one implementation plus overload signatures`);
+    const [validSingle] = await eslint.lintText(single, { filePath });
+    assert.deepEqual(validSingle.messages, [], `${extension}: ordinary single implementation`);
+    assert.equal(config.rules['no-redeclare'][0], 0);
+    assert.equal(config.rules['@typescript-eslint/no-redeclare'][0], 2);
+    const [invalid] = await eslint.lintText(duplicate, { filePath });
+    assert.deepEqual(invalid.messages.filter((message) => message.fatal), []);
+    assert.equal(invalid.messages.filter((message) =>
+      message.ruleId === '@typescript-eslint/no-redeclare' && message.severity === 2).length, 1,
+    `${extension}: actual duplicate values remain errors`);
+    assert.equal(invalid.messages.filter((message) => message.ruleId === 'no-redeclare').length, 0);
+  }
+});
