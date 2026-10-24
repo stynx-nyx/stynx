@@ -44,7 +44,7 @@ This is the repository-local engineering contract for all contributors.
    Coverage executes all six through its dedicated configuration without
    changing thresholds or timeouts. The preserved unrelated-concurrency restriction
    is prospectively amended only for ordinary `test` commands by
-   [ADR0035](../../law/adr/2026-10-24-ordinary-unit-execution-budget-proposal.md),
+   [ADR0035](/docs/adr/ADR-0035),
    approved by the Owner on 2026-10-24: two root Turbo package slots and one
    Vitest/Node test-file worker per ordinary package command, including direct
    package invocation. Integration, E2E, coverage, mutation and standalone build
