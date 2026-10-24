@@ -285,7 +285,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/integration-adapter`: `workspace:*`
 - `@stynx-nyx/logging`: `workspace:*`
 - `@stynx-nyx/preferences`: `workspace:*`
-- `zod`: `^4.3.6`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 

@@ -180,7 +180,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/data`: `workspace:*`
 - `@stynx-nyx/idempotency`: `workspace:*`
 - `intl-messageformat`: `^11.2.8`
-- `zod`: `^4.3.6`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 

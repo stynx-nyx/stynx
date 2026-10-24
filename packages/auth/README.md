@@ -305,7 +305,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/sessions`: `workspace:*`
 - `jose`: `^6.2.2`
 - `redis`: `^6.0.0`
-- `zod`: `^4.3.6`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 

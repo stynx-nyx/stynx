@@ -257,7 +257,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@aws-sdk/client-secrets-manager`: `^3.1068.0`
 - `@aws-sdk/client-ssm`: `^3.1068.0`
 - `nestjs-cls`: `^6.2.1`
-- `zod`: `^4.3.6`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 

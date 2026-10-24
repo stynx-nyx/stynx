@@ -164,7 +164,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/core`: `workspace:*`
 - `@stynx-nyx/data`: `workspace:*`
 - `drizzle-orm`: `^0.45.2`
-- `zod`: `^4.3.6`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 
