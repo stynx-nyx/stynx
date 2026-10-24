@@ -1,21 +1,23 @@
 ---
 adr_id: ADR-DEVAI-ADOPTION-0039
 title: Honest audit opaque read results and JSON wire projection
-status: proposed
+status: accepted
 date: 2026-10-24
 authors: ['Architect']
-tags: [stynx, audit, types, compatibility, proposal]
+tags: [stynx, audit, types, compatibility, accepted]
 ---
 
 # ADR-DEVAI-ADOPTION-0039 — Honest audit opaque read results and JSON wire projection
 
-**Proposed — pending Owner decision.** Existing ADR0032/0033/0034 approvals remain accepted and unchanged. This record requests only the additional audited result-field scope below; no implementation or approval is inferred from its preparation.
+**Status:** Accepted on 2026-10-24; implementation and independent verification remain pending. The original proposal filename and evidence are retained.
 
-## Authority finding
+**Authority:** The Owner answered **“Approve the bounded audit result corrections”** for this exact proposal. The selected decision covers only the six audited read-result fields and their official legacy HTTP/OpenAPI/SDK propagation below. Existing ADR0032/0033/0034 approvals remain accepted and unchanged. Release classification, publication, formal DEVAI acceptance and downstream DETRAN/PORM acceptance remain separate.
+
+## Original authority finding and supplemental decision
 
 ADR0032's six families do not include audit. ADR0033 B1's four audit browser calls use curated `/audit/events` and its authoritative `before`/`after` object declarations; the record explicitly separates that endpoint from `/_audit/log`. ADR0034 accepted decision item1 and its affected-field list name audit `occurredAt` and its HTTP projection only. The exact answer “Approve the three bounded result corrections” does not grant every result-field change in those packages. ADR0029 allows the existing configured audit read family and requires opaque payload preservation, but it does not turn an inaccurate exported Record declaration into proof or grant a blanket public API correction.
 
-Consequently internal preservation of actual opaque values is already required, but changing the exported guarantees below needs this bounded supplemental disposition. No new approval is needed merely to implement existing guards/SQL shapes, prepare the proposal or continue independent work.
+Consequently internal preservation of actual opaque values is already required, but changing the exported guarantees below is now authorized by this bounded supplemental disposition. No new approval is needed merely to implement existing guards/SQL shapes, prepare the proposal or continue independent work.
 
 ## Actual return-path census
 
@@ -37,9 +39,9 @@ The exact source locations are `packages/audit/src/sql-adapter.ts` exported item
 
 ## Concrete minimal choices
 
-### Recommended: honest result unions, original runtime preserved
+### Selected: honest result unions, original runtime preserved
 
-Correct only the affected result fields above. The proposed direct-result domain is `Record<string,unknown> | unknown[] | string | number | boolean`; add null/optional exactly where the old named construction allowed it or the mapper returns it. This preserves all previously permitted Record construction without pretending recursive consumer payloads have a newly known business shape. Existing nullable old/new/pk/metadata fields retain optionalness and null; LogItem tags/payload remain present and use their existing nullish-to-object fallback.
+Correct only the affected result fields above. The accepted direct-result domain is `Record<string,unknown> | unknown[] | string | number | boolean`; add null/optional exactly where the old named construction allowed it or the mapper returns it. This preserves all previously permitted Record construction without pretending recursive consumer payloads have a newly known business shape. Existing nullable old/new/pk/metadata fields retain optionalness and null; LogItem tags/payload remain present and use their existing nullish-to-object fallback.
 
 Do not replace the old Record construction domain with a recursively restrictive JsonValue type: Record<string,unknown> may contain opaque extension values, and existing approved work preserves those identities. Validation should establish the admitted top-level representation while preserving opaque nested values, not clone/strip/coerce them. Do not add a numeric finiteness limit based on timestamp rules; JSON numeric conversion is a different path. An exotic configured parser result outside the measured/source-supported domain must be reported, not asserted into this union. This top-level domain is not a recursive assertion of JSON purity.
 
@@ -49,7 +51,7 @@ For the wire fields, describe **serialized JSON**, not the direct opaque objects
 
 A result may no longer be assignable to a Record-only consumer or write envelope without narrowing. That is the explicit compile-time consequence; all previously valid object construction remains possible. Release classification remains separately reserved.
 
-### Alternative: retain the declared public shape and defer these exact conversions
+### Historical alternative — not selected: retain the declared shape and defer
 
 Keep the existing raw adapter implementations and disclose that the affected static conversion/strict typing work remains incomplete. This does not make SM09/SM11 or the final C+D candidate complete and creates no new exception. It permits independent work to continue, but does not satisfy the remaining goal by itself.
 
@@ -61,7 +63,7 @@ Rejecting scalar/array rows, coercing them to `{}`, wrapping them, recursive str
 
 `AuditLogPage.items` and `AuditLogWirePage.items` propagate tags/payload changes. Official API writer updates exactly the default primary/legacy snapshots and offline-e6/offline-ctg9 compositions if discovery confirms the same route inclusion. The existing official SDK single dual-composition generation then updates `AuditLogWireItem` and its schema in default and OfflineCtg9 trees; pages/services reference these models. Keep handwritten legacy `AuditLogItem`/`AuditLogPage` and schema aliases bound to the generated Wire identities, not duplicate types. No new endpoint, route annotation, generic transport change, manual generated edit or generator exemption is needed.
 
-Current focused ADR0034 writer/SDK/emitted-consumer successes remain true for their then-current bytes; they do not verify this supplemental change. If accepted, rerun the targeted official writer/checks and a single dual generation after stable inputs, then emitted consumer/schema identity tests. Do not relabel old hashes as the new output.
+Current focused ADR0034 writer/SDK/emitted-consumer successes remain true for their then-current bytes; they do not verify this supplemental change. Rerun the targeted official writer/checks and a single dual generation after stable inputs, then emitted consumer/schema identity tests. Do not relabel old hashes as the new output.
 
 ## Completed observation evidence and implementation acceptance
 
@@ -78,17 +80,17 @@ Logs: `/Users/aarusso/.local/share/stynx/consolidation-2026-10-23/inspector/cd-p
 
 Baseline custody and compile/import/provenance costs are recorded in `inspector/cd-audit32-baseline-20261024/baseline-summary.json`: original 32 filter masks and 118 behavior observations, actual audit/data compiles and imports, and three still-raw reader sites. The baseline is not a claim of strict-lint or static-conversion completion. Existing ADR0034 generated SDK/emitted-consumer 3/3 successes remain preserved evidence for their previous exact bytes.
 
-After an accepted decision, add emitted-public-consumer tests retaining old object construction, requiring narrowing for new scalars/arrays, preserving optional/null distinctions, and proving optional wire omission, preserved serializer failures, and write/curated frontend inputs unchanged. Preserve prior tests and all gate populations. Final baseline/RC remain later combined-C+D work.
+Under the accepted decision, add emitted-public-consumer tests retaining old object construction, requiring narrowing for new scalars/arrays, preserving optional/null distinctions, and proving optional wire omission, preserved serializer failures, and write/curated frontend inputs unchanged. Preserve prior tests and all gate populations. Final baseline/RC remain later combined-C+D work.
 
-## Independent work now
+## Authorized implementation and independent work
 
-Engineer may prepare/review the exact32 SQL definitions, operation/caller admissions and wrapper behavior externally; do not apply a misleading object-only payload schema or widen exported types before the decision. Continue unrelated strict/provenance/source checks, validated node work, other approved static families and role checkpoint preparation. No generation of the128/128/256 audit families or another permission is implied. Root can now present this complete audit-result decision while preserving all existing ADR0032/0033/0034 approvals.
+Engineer may implement the bounded result corrections and resume the reviewed exact32 SQL-definition tranche with its operation/caller and wrapper constraints. Do not impose an object-only payload schema or broaden any excluded type/input. Continue unrelated strict/provenance work under existing approvals. The result approval does not authorize speculative generation of the128/128/256 audit families or waive their baseline, provenance and measurement requirements. Official writer/checks and single dual-composition SDK generation follow stable source inputs; implementation, emitted consumers and final combined qualification remain pending.
 
-## Exact recommended decision for Owner review
+## Original review question — selected by the recorded answer
 
 Approve the bounded audit **read-result** correction: AuditSqlListItem oldData/newData/pk/metadata and AuditLogItem tags/payload admit the observed scalar/array/object forms with existing optionalness/defaults; the legacy AuditLogWireItem tags/payload and official generated SDK describe actual JSON serialization, including optional wire presence when an opaque value serializes to omission. Preserve opaque nested values and every existing SQL, runtime mapping/error, cursor, input and curated endpoint contract. Include only necessary official generation, caller narrowing and validation. Release classification/publication, formal DEVAI and downstream DETRAN/PORM acceptance remain separate.
 
-The alternative is to defer these exact result corrections and corresponding static conversions while continuing independent work, explicitly leaving that portion of SM09/SM11 incomplete. Neither option authorizes a new broad query or lint exception.
+The unselected alternative was to defer these exact result corrections and corresponding static conversions while continuing independent work, explicitly leaving that portion of SM09/SM11 incomplete. Neither option authorizes a new broad query or lint exception.
 
 ### Serializer-presence precision — verified actual Nest controls
 
@@ -96,4 +98,4 @@ The complete adjacent file now passes **23/23**, retaining the earlier18 cases a
 
 Evidence: `/Users/aarusso/.local/share/stynx/consolidation-2026-10-23/inspector/cd-post-ab-focals-20261024/audit-json-serializer-controls.{json,stdout.log,stderr.log}`; actual test source `packages/audit/test/wiring/audit-json-results.wiring-spec.ts`. Function/symbol omission follows the standard serializer rule but is not claimed as an additional executed case here. A toJSON-thrown error also remains an existing serializer error, not a newly normalized result.
 
-Therefore this proposal explicitly makes only **wire** tags/payload presence optional. Direct required-key/default semantics remain intact. This is the same two legacy-log result fields within the six-field audit correction, not another input, endpoint or permission expansion. The final review question is ready; approval and implementation remain pending.
+Therefore this proposal explicitly makes only **wire** tags/payload presence optional. Direct required-key/default semantics remain intact. This is the same two legacy-log result fields within the six-field audit correction, not another input, endpoint or permission expansion. The exact Owner answer above accepts this bounded correction; implementation and independent verification remain pending.

@@ -1,15 +1,17 @@
 ---
 adr_id: ADR-DEVAI-ADOPTION-0040
 title: Exact root tooling lifecycle SQL admissions
-status: proposed
+status: accepted
 date: 2026-10-24
 authors: ['Architect']
-tags: [stynx, sql, tooling, compatibility, proposal]
+tags: [stynx, sql, tooling, compatibility, accepted]
 ---
 
 # ADR-DEVAI-ADOPTION-0040 — Exact root tooling lifecycle SQL admissions
 
-**Proposed — pending Owner decision.** This record covers eleven existing execution sites in four root tooling files: five fixed script origins and six database-name operations. It grants no authority until accepted. Existing S10 approvals remain intact; preparing this record does not implement an exception or qualify a release.
+**Status:** Accepted on 2026-10-24; implementation and independent verification remain pending. The original proposal filename and source census are retained.
+
+**Authority:** The Owner answered **“Approve the eleven bounded lifecycle sites”** for this exact proposal. The accepted population is eleven existing execution sites in four root tooling files: five fixed script origins and six database-name operations, with every caller, source and preservation constraint below. Existing S10 approvals remain intact. This decision does not itself implement an admission, qualify a release or create a forbidden-action receipt.
 
 ## Existing authority and delegation finding
 
@@ -25,7 +27,7 @@ No existing admitted API is a behavior-equivalent substitute:
 
 Moving domain SQL into a public data export, or invoking these broader APIs to obtain their admission, would alter the boundary rather than preserve it.
 
-## Exact proposed population
+## Exact accepted population
 
 Line numbers identify the reviewed source snapshot, not permissions independent of source origin. Exact path, lexical scope and operation/source identity are binding.
 
@@ -43,7 +45,7 @@ The five script origins are platform replay in each generator, offline objects, 
 
 **Outside the new exception:** all 24 directly static statements in the four files, plus the offline generator's literal BEGIN, COMMIT and ROLLBACK, must become ordinary zero-hole repository definitions through the existing checked executor. The static statements include two fixed SET ROLE commands, parameterized backend termination and 21 demo verification/admission catalog statements. Their existing effects are preserved; static classification does not make termination read-only. No new grant to `executeTransactionControl` is needed for the three literal controls.
 
-## Proposed implementation constraints
+## Binding implementation constraints
 
 1. Keep every actual raw driver call in the single checked executor. Database operations use a closed internal operation union and validated identifier input, never caller SQL, identifier fragments or a free FORCE flag. Separate generator create/drop-force from template create/drop. Bind each operation to the exact paths/scopes above; no public barrel or runtime service entry is introduced.
 2. Preserve generator name construction, the same maintenance database/client, exact quoting, original template regexp/default/CLI option, and existing CREATE/DROP order. An implementation must not broaden targets, prefixes, deletion purpose, FORCE behavior or automatic invocation. No arbitrary caller-supplied database lifecycle function is authorized.
@@ -69,8 +71,8 @@ Inspector acceptance must cover:
 - Actual typed-JavaScript routing, static24 plus three controls, strict provenance and unsupported raw calls; no lexical count alone establishes closure.
 - Official disposable-database generation/check output and source hashes in a coordinated window, followed by combined C+D trace, API review and required full qualification. No generation or successful runtime test is claimed by this source review.
 
-## Recommended bounded decision
+## Accepted bounded decision
 
-Approve only these eleven existing root lifecycle sites through closed database operations and proven fixed script origins, with exact caller/scope binding and the preservation/negative controls above. Continue the 27 static conversions under existing authority. The alternative is to defer these eleven admissions while completing independent static work, explicitly leaving their SM09/SM11 enforcement unresolved.
+The decision authorizes only these eleven existing root lifecycle sites through closed database operations and proven fixed script origins, with exact caller/scope binding and the preservation/negative controls above. Continue the 27 static conversions under existing authority. The historical alternative, not selected, was to defer these eleven admissions while completing independent static work, explicitly leaving their SM09/SM11 enforcement unresolved.
 
-Neither option changes runtime public contracts, enables additional infrastructure effects, adopts a DEVAI version, publishes a package, accepts downstream DETRAN/PORM behavior or closes historical rounds. Release classification/publication and formal DEVAI acceptance remain separate. No Owner answer has been recorded for this proposal.
+Neither option changes runtime public contracts, enables additional infrastructure effects, adopts a DEVAI version, publishes a package, accepts downstream DETRAN/PORM behavior or closes historical rounds. Release classification/publication and formal DEVAI acceptance remain separate. The exact Owner answer is recorded above; implementation, negative controls and final combined qualification remain pending. No new workflow, publication or exact-commit forbidden-action receipt is inferred.
