@@ -15,7 +15,7 @@ import test from 'node:test';
 
 const root = resolve(import.meta.dirname, '../..');
 
-function discover(source, { refuse = false } = {}) {
+function discover(source, { refuse = false, inspectContract, refusal } = {}) {
   const fixture = mkdtempSync(join(tmpdir(), 'stynx-api-discovery-'));
   try {
     mkdirSync(join(fixture, 'packages', 'fixture', 'src'), { recursive: true });
@@ -38,12 +38,14 @@ function discover(source, { refuse = false } = {}) {
     if (refuse) {
       assert.notEqual(result.status, 0, 'unresolved operation must refuse generation');
       assert.match(result.stderr, /fixture\.controller\.ts/u);
+      if (refusal) assert.match(result.stderr, refusal);
       return;
     }
     assert.equal(result.status, 0, result.stderr);
     const contract = JSON.parse(
       readFileSync(join(fixture, 'docs', 'framework', 'contracts', 'openapi.json'), 'utf8'),
     );
+    inspectContract?.(contract);
     return Object.entries(contract.paths).flatMap(([path, item]) =>
       Object.entries(item).map(([method, operation]) => ({
         method,
@@ -1153,3 +1155,97 @@ test('unbounded numeric Record body keys refuse instead of widening to arbitrary
     assert.match(result.stderr, /Record|key|unsupported|schema/iu);
     assert.equal(existsSync(join(fixture, contractPath)), false);
   }));
+
+
+// ADR0034: source return values and JSON wire values are distinct contracts.
+const annotatedResponseDeclarations = `
+export interface DirectAuditItem { occurredAt: string | number; }
+export interface DirectAuditPage { items: DirectAuditItem[]; nextCursor?: string; }
+export interface WireAuditItem { occurredAt: string | null; }
+export interface WireAuditPage { items: WireAuditItem[]; nextCursor?: string; }
+`;
+
+function annotatedResponseSource(annotation = '@stynx-json-response-type WireAuditPage', declarations = annotatedResponseDeclarations) {
+  return `${declarations}
+@Controller('/_audit')
+export class AuditProbeController {
+  /** ${annotation} */
+  @Get('/log')
+  list(): Promise<DirectAuditPage> { throw new Error('discovery must not execute controller code'); }
+}
+@Controller('/audit')
+export class AngularAuditProbeController {
+  @Get('/events')
+  events(): DirectAuditPage { throw new Error('discovery must not execute controller code'); }
+}
+`;
+}
+
+test('method JSON response annotation separates direct metadata from nullable wire schema without widening another route', () => {
+  discover(annotatedResponseSource(), {
+    inspectContract(contract) {
+      const media = contract.paths['/_audit/log'].get.responses['200'].content['application/json'];
+      assert.equal(media['x-stynx-source-type'], 'Promise<DirectAuditPage>');
+      assert.equal(media['x-stynx-json-response-type'], 'WireAuditPage');
+      assert.deepEqual(media.schema, { $ref: '#/components/schemas/WireAuditPage' });
+      const schemas = contract.components.schemas;
+      assert.deepEqual(schemas.WireAuditPage.properties.items.items, { $ref: '#/components/schemas/WireAuditItem' });
+      assert.deepEqual(schemas.WireAuditItem.properties.occurredAt, {
+        anyOf: [{ type: 'string' }, { type: 'null', const: null }],
+      });
+      const ordinary = contract.paths['/audit/events'].get.responses['200'].content['application/json'];
+      assert.equal(ordinary['x-stynx-source-type'], 'DirectAuditPage');
+      assert.equal(Object.hasOwn(ordinary, 'x-stynx-json-response-type'), false);
+      assert.deepEqual(ordinary.schema, { $ref: '#/components/schemas/DirectAuditPage' });
+      assert.deepEqual(schemas.DirectAuditItem.properties.occurredAt, {
+        anyOf: [{ type: 'string' }, { type: 'number' }],
+      });
+    },
+  });
+});
+
+for (const [name, annotation, declarations] of [
+  ['empty annotation', '@stynx-json-response-type', annotatedResponseDeclarations],
+  ['duplicate annotation', '@stynx-json-response-type WireAuditPage\n   * @stynx-json-response-type WireAuditPage', annotatedResponseDeclarations],
+  ['generic expression', '@stynx-json-response-type WireAuditPage<string>', annotatedResponseDeclarations],
+  ['missing declaration', '@stynx-json-response-type MissingPage', annotatedResponseDeclarations],
+  ['UnknownJson escape', '@stynx-json-response-type UnknownJson', annotatedResponseDeclarations],
+  ['generic declaration', '@stynx-json-response-type GenericPage', annotatedResponseDeclarations + 'export interface GenericPage<T> { item: T; }'],
+  ['unresolved nested declaration', '@stynx-json-response-type WireAuditPage', annotatedResponseDeclarations.replace('items: WireAuditItem[]', 'items: MissingNested[]')],
+  ['ambiguous declaration', '@stynx-json-response-type WireAuditPage', annotatedResponseDeclarations + 'export interface WireAuditPage { unexpected: boolean; }'],
+]) {
+  test(`JSON response annotation refuses ${name}`, () => {
+    discover(annotatedResponseSource(annotation, declarations), { refuse: true, refusal: /JSON response/iu });
+  });
+}
+
+for (const [name, source] of [
+  ['non-route method', `${annotatedResponseDeclarations}
+@Controller('/probe') export class Probe {
+  /** @stynx-json-response-type WireAuditPage */
+  helper(): DirectAuditPage { throw new Error('not a route'); }
+  @Get() read(): DirectAuditPage { throw new Error('not executed'); }
+}`],
+  ['parameter annotation', `${annotatedResponseDeclarations}
+@Controller('/probe') export class Probe {
+  @Post() write(/** @stynx-json-response-type WireAuditPage */ body: DirectAuditPage): DirectAuditPage { return body; }
+}`],
+  ['request DTO annotation', `${annotatedResponseDeclarations}
+/** @stynx-json-response-type WireAuditPage */
+export interface RequestBody { value: string; }
+@Controller('/probe') export class Probe { @Post() write(body: RequestBody): DirectAuditPage { throw new Error('not executed'); } }
+`],
+]) {
+  test(`JSON response annotation refuses ${name}`, () => discover(source, { refuse: true, refusal: /JSON response/iu }));
+}
+
+test('annotation-shaped strings and ordinary comments do not override source response metadata', () => {
+  const source = annotatedResponseSource().replace(
+    '/** @stynx-json-response-type WireAuditPage */',
+    '// @stynx-json-response-type WireAuditPage',
+  ) + "\nconst example = '@stynx-json-response-type WireAuditPage';\n";
+  const operations = discover(source);
+  const media = operations.find((operation) => operation.path === '/_audit/log').operation.responses['200'].content['application/json'];
+  assert.equal(Object.hasOwn(media, 'x-stynx-json-response-type'), false);
+  assert.deepEqual(media.schema, { $ref: '#/components/schemas/DirectAuditPage' });
+});

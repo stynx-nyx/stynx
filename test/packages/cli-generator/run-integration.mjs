@@ -30,6 +30,7 @@ const thirdParty = {
   rxjs: '7.8.2',
   supertest: '7.2.2',
   typescript: '6.0.3',
+  zod: '4.3.6',
 };
 
 class SensorFailure extends Error { kind = 'FAIL'; }

@@ -1,3 +1,4 @@
+import { QueryRowValidationError } from '@stynx-nyx/data';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
@@ -107,6 +108,29 @@ describe('migrate command surface', () => {
     writeFileSync(resolve(dir, '0002_second.down.sql'), 'select 22;', 'utf8');
     return dir;
   }
+
+  it.each([{}, { id: 17 }, { id: null }])(
+    'rejects malformed applied migration IDs before applying any migration: %j', async (row) => {
+      const migrationDir = createFixtureDir();
+      const fake = new FakeMigrationClient();
+      const original = fake.query.bind(fake);
+      vi.spyOn(fake, 'query').mockImplementation(async (sql, values) => {
+        if (/select id from core\.schema_migrations order by id/u.test(sql)) return { rows: [row] };
+        return original(sql, values);
+      });
+      try {
+        await expect(migrateUp(process.cwd(), 'postgresql://example', false, {
+          migrationDir, clientFactory: clientFactoryFor(fake),
+        })).rejects.toBeInstanceOf(QueryRowValidationError);
+        expect(fake.applied.size).toBe(0);
+        expect(fake.journal).toEqual([]);
+        expect(fake.executedSql).not.toContain('select 1;');
+        expect(fake.executedSql).not.toContain('select 2;');
+        expect(fake.connected).toBe(false);
+      } finally {
+        rmSync(resolve(migrationDir, '..'), { recursive: true, force: true });
+      }
+    });
 
   it('reports pending/applied/rollbackable migrations', async () => {
     const migrationDir = createFixtureDir();
@@ -386,4 +410,36 @@ describe('migrate command surface', () => {
       'SET ROLE stynx_owner',
     ]));
   });
+
+  it.each(['success', 'connect', 'query', 'end'])('preserves native client receiver and rejection identity: %s', async (phase) => {
+    const migrationDir = createFixtureDir();
+    const failure = new Error('native client rejection');
+    const calls: string[] = [];
+    const client = {
+      async connect() {
+        expect(this).toBe(client); calls.push('connect');
+        if (phase === 'connect') throw failure;
+        return this;
+      },
+      async query(_sql: string, _values?: unknown[]) {
+        expect(this).toBe(client); calls.push('query');
+        if (phase === 'query') throw failure;
+        return { rows: [] };
+      },
+      async end() {
+        expect(this).toBe(client); calls.push('end');
+        if (phase === 'end') throw failure;
+      },
+    };
+    mockPg.clients.push(client);
+    try {
+      const result = migrationStatus(process.cwd(), undefined, { migrationDir });
+      if (phase === 'success') await expect(result).resolves.toBeDefined();
+      else await expect(result).rejects.toBe(failure);
+      expect(calls[0]).toBe('connect');
+      if (phase === 'connect') expect(calls).toEqual(['connect']);
+      else { expect(calls).toContain('query'); expect(calls.at(-1)).toBe('end'); }
+    } finally { rmSync(resolve(migrationDir, '..'), { recursive: true, force: true }); }
+  });
+
 });
