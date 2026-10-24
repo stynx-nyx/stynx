@@ -103,7 +103,9 @@ export async function executeGuardedQueryRows<
   if (query.expects !== 'many') throw new TypeError('executeGuardedQueryRows requires many cardinality');
   const { rawRows } = await executeCheckedQuery(client, query, params);
   const rows: Row[] = [];
-  for (const [rowIndex, row] of rawRows.entries()) {
+  const count = rawRows.length;
+  for (let rowIndex = 0; rowIndex < count; rowIndex += 1) {
+    const row = rawRows[rowIndex];
     if (!isRow(row)) {
       throw new QueryRowValidationError(query.name, rowIndex, [{ path: [], code: 'invalid_type' }]);
     }
@@ -157,18 +159,23 @@ async function executeCheckedQuery(client: CheckedQueryClient, query: TypedQuery
   const parsedParams = query.params.safeParse(params);
   if (!parsedParams.success) throw new QueryArgumentError(query.name, toIssues(parsedParams.error));
   const result = await client.query(query.text, [...parsedParams.data]);
-  const count = result.rows.length;
+  const driverRows = result.rows;
+  const count = driverRows.length;
   if (query.expects === 'one' && count === 0) throw new NotFoundError({ query: query.name });
   if ((query.expects === 'none' && count > 0) ||
       ((query.expects === 'one' || query.expects === 'zero-or-one') && count > 1)) {
     throw new QueryCardinalityError(query.name, query.expects, count);
   }
-  const rows = result.rows.map((row, rowIndex) => {
+  const rows: Record<string, unknown>[] = [];
+  const rawRows: unknown[] = [];
+  for (let rowIndex = 0; rowIndex < count; rowIndex += 1) {
+    const row = driverRows[rowIndex];
     const parsed = query.row.safeParse(row);
     if (!parsed.success) throw new QueryRowValidationError(query.name, rowIndex, toIssues(parsed.error));
-    return parsed.data;
-  });
-  return { rows, rawRows: result.rows, readRowCount: () => result.rowCount };
+    rows.push(parsed.data);
+    rawRows.push(row);
+  }
+  return { rows, rawRows, readRowCount: () => result.rowCount };
 }
 
 /** @internal Historical Transaction.query result contract, not typed-row evidence. */
@@ -290,16 +297,21 @@ export async function executeLegacyArchive(
   const schema = legacyRows[operation];
   if (operation === 'select' && !validateSelectRow) throw new TypeError('Archive select requires its column validator');
   const result = await client.query(text, values);
-  const rows = result.rows.map((row, index) => {
+  const driverRows = result.rows;
+  const count = driverRows.length;
+  const rows: unknown[] = [];
+  for (let index = 0; index < count; index += 1) {
+    const row = driverRows[index];
     const parsed = schema.safeParse(row);
     if (!parsed.success) throw new QueryRowValidationError(`legacy.archive.${operation}`, index, toIssues(parsed.error));
     if (operation === 'select' && validateSelectRow) {
       const selected = legacyRows.select.safeParse(row);
       if (!selected.success) throw new QueryRowValidationError(`legacy.archive.${operation}`, index, toIssues(selected.error));
-      return validateSelectRow(selected.data, index);
+      rows.push(validateSelectRow(selected.data, index));
+    } else {
+      rows.push(parsed.data);
     }
-    return parsed.data;
-  });
+  }
   return { rows, rowCount: checkedRowCount(`legacy.archive.${operation}`, result.rowCount) };
 }
 
