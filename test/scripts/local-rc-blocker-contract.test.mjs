@@ -601,7 +601,8 @@ function assertD14HelperContract(helper, rootManifest) {
   assert.equal((helper.match(/\bawait sleep\(/gu) ?? []).length, 1);
   assert.match(helper, /while \(isProcessAlive\(parentPid\)\) \{\s*await sleep\(250\);\s*\}/su);
   assert.doesNotMatch(rootManifest.scripts['test:e2e'], /--concurrency/u);
-  assert.doesNotMatch(rootManifest.scripts.test, /--concurrency/u);
+  assert.match(rootManifest.scripts.test, /(?:^|\s)--concurrency=2$/u);
+  assert.equal((rootManifest.scripts.test.match(/--concurrency/gu) ?? []).length, 1);
 }
 
 const startupProtocol = 'stynx-reference-api-startup-v1';
@@ -4382,7 +4383,7 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': '01915cb27dbce983328841880159e670efa47ed3456bb56e3c37c305a5e83935',
+    'package.json': '52a026774e3090f6d5e75f04aeef446c774691281176f09a0c5847ebe4e61f7f',
     'reference/api/package.json':
       'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
     'reference/web/package.json':
@@ -4639,7 +4640,7 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': '01915cb27dbce983328841880159e670efa47ed3456bb56e3c37c305a5e83935',
+    'package.json': '52a026774e3090f6d5e75f04aeef446c774691281176f09a0c5847ebe4e61f7f',
     'reference/api/package.json':
       'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
     'reference/web/package.json':
@@ -4727,7 +4728,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': '95fd04b29c57830982b7669f13c5f4466d11ca54b913241599b6e4685478146f',
     'reference/web/playwright.config.mjs':
       'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
-    'package.json': '01915cb27dbce983328841880159e670efa47ed3456bb56e3c37c305a5e83935',
+    'package.json': '52a026774e3090f6d5e75f04aeef446c774691281176f09a0c5847ebe4e61f7f',
     'reference/api/package.json':
       'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
     'reference/web/package.json':
@@ -4886,7 +4887,7 @@ test('D14 oracle resolves only one valid owned Redis mapping and honors the host
     'while (isProcessAlive(parentPid)) { await sleep(250); }',
   ].join('\n');
   assertD14HelperContract(contractFixture, {
-    scripts: { 'test:e2e': 'turbo run test:e2e --force', test: 'turbo run test' },
+    scripts: { 'test:e2e': 'turbo run test:e2e --force', test: 'turbo run test --concurrency=2' },
   });
 });
 
@@ -5066,8 +5067,12 @@ test('privacy ordinary, integration, and coverage tiers resolve exact disjoint p
     rootManifest.scripts['test:int'],
     "turbo run test:int --concurrency=1 --filter='./packages/*'",
   );
-  assert.doesNotMatch(rootManifest.scripts.test, /--concurrency/u);
-  assert.equal(privacyManifest.scripts.test, 'vitest run --config ./vitest.config.ts');
+  assert.match(rootManifest.scripts.test, /(?:^|\s)--concurrency=2$/u);
+  assert.equal((rootManifest.scripts.test.match(/--concurrency/gu) ?? []).length, 1);
+  assert.equal(
+    privacyManifest.scripts.test,
+    'vitest run --maxWorkers=1 --config ./vitest.config.ts',
+  );
   assert.equal(privacyManifest.scripts['test:int'], 'vitest run --config ./vitest.int.config.ts');
   assert.doesNotMatch(turbo, /"test"\s*:\s*\{[^}]*"cache"\s*:\s*false/su);
   assert.doesNotMatch(
@@ -5347,7 +5352,7 @@ test('clean preferences build emits both exact exports and reference-api fails c
       { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
     );
     assert.ifError(installed.error);
-    assert.equal(installed.status, 0, installed.stderr);
+    assert.equal(installed.status, 0, `${installed.stdout}\n${installed.stderr}`);
     removeInsideFixture(fixture, fixturePreferencesDist, { recursive: true, force: true });
     const built = spawnInFixture(
       fixture,
