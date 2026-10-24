@@ -1,3 +1,4 @@
+import type { FlowFillInput } from './types';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import type { OnChanges } from '@angular/core';
 import { StynxHasPermissionDirective } from '@stynx-nyx/angular-auth';
@@ -7,6 +8,10 @@ import type { StynxDocumentUploadCompletedEvent } from '@stynx-nyx/angular-stora
 import { StynxBannerComponent, StynxIconComponent, StynxLoadingSpinnerComponent } from '@stynx-nyx/angular-ui';
 import { FlowApiService } from './flow-api.service';
 import type { FlowAnswer, FlowFill, FlowQuestion } from './types';
+
+function isOptionRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
 
 @Component({
   selector: 'stynx-flow-fills',
@@ -219,10 +224,10 @@ export class StynxFlowFillsComponent implements OnChanges {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowFillEditorComponent implements OnChanges {
-  @Input() fill: Partial<FlowFill> | undefined;
+  @Input() fill: FlowFillInput | undefined;
   @Input() questions: FlowQuestion[] = [];
   @Input() answers: FlowAnswer[] = [];
-  @Output() readonly submitted = new EventEmitter<Partial<FlowFill>>();
+  @Output() readonly submitted = new EventEmitter<FlowFillInput>();
   @Output() readonly answer = new EventEmitter<Partial<FlowAnswer>>();
   @Output() readonly saveAnswers = new EventEmitter<Array<Partial<FlowAnswer>>>();
   @Output() readonly waiveQuestion = new EventEmitter<FlowQuestion>();
@@ -331,7 +336,9 @@ export class StynxFlowFillEditorComponent implements OnChanges {
   }
 
   clearSignature(question: FlowQuestion, event: Event): void {
-    const canvas = (event.target as HTMLElement | null)?.closest('.signature')?.querySelector('canvas');
+    const canvas = event.target instanceof Element
+      ? event.target.closest('.signature')?.querySelector('canvas')
+      : undefined;
     const context = canvas?.getContext('2d');
     if (canvas && context) {
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -436,11 +443,10 @@ export class StynxFlowFillEditorComponent implements OnChanges {
   }
 
   private normalizeOption(item: unknown): { label: string; value: unknown; key: string } {
-    if (item && typeof item === 'object') {
-      const record = item as Record<string, unknown>;
-      const value = record.value ?? record.id ?? item;
+    if (isOptionRecord(item)) {
+      const value = item.value ?? item.id ?? item;
       return {
-        label: String(record.label ?? record.title ?? record.value ?? record.id ?? JSON.stringify(item)),
+        label: String(item.label ?? item.title ?? item.value ?? item.id ?? JSON.stringify(item)),
         value,
         key: this.optionKey(value),
       };

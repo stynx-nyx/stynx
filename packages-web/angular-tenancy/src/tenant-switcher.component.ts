@@ -27,8 +27,9 @@ export class TenantSwitcherComponent {
   readonly tenantContext = inject(TenantContextService);
 
   selectTenant(event: Event): void {
-    const tenantId = (event.target as HTMLSelectElement).value;
-    if (!tenantId) {
+    const target = event.target;
+    const tenantId = target && 'value' in target ? target.value : undefined;
+    if (typeof tenantId !== 'string' || !tenantId) {
       return;
     }
     this.tenantContext.setTenant(tenantId, 'manual');

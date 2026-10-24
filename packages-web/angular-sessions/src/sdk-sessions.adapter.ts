@@ -1,3 +1,4 @@
+import { decodeSessions, decodeMutation, type SdkActiveSessionResponse } from './response-validation';
 import { Injectable, inject } from '@angular/core';
 import { StynxSessionService, parseJwtPayload } from '@stynx-nyx/angular-auth';
 import { from, map } from 'rxjs';
@@ -5,30 +6,6 @@ import type { Observable } from 'rxjs';
 import { STYNX_SESSIONS_CLIENT } from './tokens';
 import type { StynxActiveSession, StynxSessionMutationResult, StynxSessionsAdapter } from './types';
 
-interface SdkActiveSessionResponse {
-  sid?: string;
-  sessionId?: string;
-  tenantId?: string;
-  tenant_id?: string;
-  createdAt?: string;
-  created_at?: string;
-  expiresAt?: string;
-  expires_at?: string;
-  lastIp?: string | null;
-  last_ip?: string | null;
-  userAgent?: string | null;
-  user_agent?: string | null;
-  lastSeenAt?: string | null;
-  last_seen_at?: string | null;
-  current?: boolean;
-  scope?: 'tenant' | 'platform';
-  state?: StynxActiveSession['state'];
-  provider?: string;
-  deviceLabel?: string;
-  client?: string;
-  capabilities?: StynxActiveSession['capabilities'];
-  guarantee?: StynxActiveSession['guarantee'];
-}
 
 @Injectable()
 export class SdkSessionsAdapter implements StynxSessionsAdapter {
@@ -37,17 +14,17 @@ export class SdkSessionsAdapter implements StynxSessionsAdapter {
 
   list(): Observable<StynxActiveSession[]> {
     const currentSid = this.currentSid();
-    return from(this.requireClient().get<SdkActiveSessionResponse[]>('/auth/sessions')).pipe(
+    return from(this.requireClient().get('/auth/sessions').then(decodeSessions)).pipe(
       map((sessions) => sessions.map((session) => this.normalizeSession(session, currentSid))),
     );
   }
 
-  revoke(sid: string): Observable<void> {
-    return from(this.requireClient().delete<void>(`/auth/sessions/${encodeURIComponent(sid)}`));
+  revoke(sid: string): Observable<unknown> {
+    return from(this.requireClient().delete(`/auth/sessions/${encodeURIComponent(sid)}`));
   }
 
-  revokeOthers(): Observable<void> {
-    return from(this.requireClient().post<void>('/auth/sessions/revoke-others', {}));
+  revokeOthers(): Observable<unknown> {
+    return from(this.requireClient().post('/auth/sessions/revoke-others', {}));
   }
 
   revokeWithStatus(
@@ -55,11 +32,11 @@ export class SdkSessionsAdapter implements StynxSessionsAdapter {
     operationId?: string,
   ): Observable<StynxSessionMutationResult | null> {
     return from(
-      this.requireClient().delete<StynxSessionMutationResult | null>(
+      this.requireClient().delete(
         `/auth/sessions/${encodeURIComponent(sid)}`,
         this.options(operationId),
       ),
-    ).pipe(map((result) => result ?? null));
+    ).pipe(map(decodeMutation));
   }
 
   revokeOthersWithStatus(operationId?: string): Observable<StynxSessionMutationResult | null> {
@@ -107,12 +84,12 @@ export class SdkSessionsAdapter implements StynxSessionsAdapter {
     operationId?: string,
   ): Observable<StynxSessionMutationResult | null> {
     return from(
-      this.requireClient().post<StynxSessionMutationResult | null>(
+      this.requireClient().post(
         path,
         {},
         this.options(operationId),
       ),
-    ).pipe(map((result) => result ?? null));
+    ).pipe(map(decodeMutation));
   }
 
   private options(operationId?: string): { headers?: Record<string, string> } | undefined {

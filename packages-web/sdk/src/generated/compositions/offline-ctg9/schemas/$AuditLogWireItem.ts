@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $AuditLogItem = {
+export const $AuditLogWireItem = {
   properties: {
     actorId: {
       type: 'any-of',
@@ -20,7 +20,15 @@ export const $AuditLogItem = {
       isRequired: true,
     },
     occurredAt: {
-      type: 'string',
+      type: 'any-of',
+      contains: [
+        {
+          type: 'string',
+        },
+        {
+          type: 'null',
+        },
+      ],
       isRequired: true,
     },
     operation: {

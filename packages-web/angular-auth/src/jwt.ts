@@ -44,10 +44,15 @@ export function parseJwtPayload(token: string): Record<string, unknown> | null {
   }
 
   try {
-    return JSON.parse(decodeBase64Url(parts[1])) as Record<string, unknown>;
+    const parsed: unknown = JSON.parse(decodeBase64Url(parts[1]));
+    return isClaimsRecord(parsed) ? parsed : null;
   } catch {
     return null;
   }
+}
+
+function isClaimsRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export function normalizePermissions(payload: Record<string, unknown> | null): string[] {

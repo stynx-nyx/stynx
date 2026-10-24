@@ -18,8 +18,13 @@ export const parseJwtPayload = (token: string): Record<string, unknown> | null =
 
   try {
     const payload = decodeBase64Url(parts[1]);
-    return JSON.parse(payload) as Record<string, unknown>;
+    const parsed: unknown = JSON.parse(payload);
+    return isClaimsRecord(parsed) ? parsed : null;
   } catch {
     return null;
   }
 };
+
+function isClaimsRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}

@@ -3,11 +3,11 @@ import type { EnvironmentProviders } from '@angular/core';
 import type { Observable } from 'rxjs';
 
 export interface StynxFlowClient {
-  get<T>(path: string, options?: unknown): Promise<T>;
-  post<T>(path: string, body: unknown, options?: unknown): Promise<T>;
-  put<T>(path: string, body: unknown, options?: unknown): Promise<T>;
-  patch<T>(path: string, body: unknown, options?: unknown): Promise<T>;
-  delete<T>(path: string, options?: unknown): Promise<T>;
+  get(path: string, options?: unknown): Promise<unknown>;
+  post(path: string, body: unknown, options?: unknown): Promise<unknown>;
+  put(path: string, body: unknown, options?: unknown): Promise<unknown>;
+  patch(path: string, body: unknown, options?: unknown): Promise<unknown>;
+  delete(path: string, options?: unknown): Promise<unknown>;
 }
 
 export interface StynxFlowProviderOptions {

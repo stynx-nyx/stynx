@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AuditLogItem } from './AuditLogItem';
-export type AuditLogPage = {
-  items: Array<AuditLogItem>;
+import type { AuditLogWireItem } from './AuditLogWireItem';
+export type AuditLogWirePage = {
+  items: Array<AuditLogWireItem>;
   nextCursor?: string;
 };

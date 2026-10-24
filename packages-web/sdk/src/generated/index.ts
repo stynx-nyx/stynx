@@ -12,8 +12,8 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AccessibilityPreferences } from './models/AccessibilityPreferences';
 export type { ArchiveTenantResult } from './models/ArchiveTenantResult';
-export type { AuditLogItem } from './models/AuditLogItem';
-export type { AuditLogPage } from './models/AuditLogPage';
+export type { AuditLogWireItem } from './models/AuditLogWireItem';
+export type { AuditLogWirePage } from './models/AuditLogWirePage';
 export type { BulkFlowAnswerWriteDto } from './models/BulkFlowAnswerWriteDto';
 export type { BulkFlowAnswerWriteRequestDto } from './models/BulkFlowAnswerWriteRequestDto';
 export type { CancelNumberingReservationInput } from './models/CancelNumberingReservationInput';
@@ -161,8 +161,8 @@ export type { UpdateWorkItemLockDto } from './models/UpdateWorkItemLockDto';
 
 export { $AccessibilityPreferences } from './schemas/$AccessibilityPreferences';
 export { $ArchiveTenantResult } from './schemas/$ArchiveTenantResult';
-export { $AuditLogItem } from './schemas/$AuditLogItem';
-export { $AuditLogPage } from './schemas/$AuditLogPage';
+export { $AuditLogWireItem } from './schemas/$AuditLogWireItem';
+export { $AuditLogWirePage } from './schemas/$AuditLogWirePage';
 export { $BulkFlowAnswerWriteDto } from './schemas/$BulkFlowAnswerWriteDto';
 export { $BulkFlowAnswerWriteRequestDto } from './schemas/$BulkFlowAnswerWriteRequestDto';
 export { $CancelNumberingReservationInput } from './schemas/$CancelNumberingReservationInput';

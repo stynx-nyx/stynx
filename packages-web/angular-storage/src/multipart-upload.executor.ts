@@ -12,11 +12,14 @@ import type {
   StynxMultipartUploadExecutorOptions,
   StynxMultipartUploadInitiateRequest,
   StynxMultipartUploadInitiateResponse,
-  StynxMultipartUploadStatusResponse,
   StynxMultipartUploadedPart,
   StynxUploadExecutor,
 } from './types';
 import { XhrUploadExecutor } from './xhr-upload.executor';
+import {
+  validateMultipartInitiateResponse,
+  validateMultipartStatusResponse,
+} from './multipart-response-validation';
 
 function trimEdgeSlash(value: string): string {
   return value.replace(/\/+$/, '');
@@ -85,7 +88,8 @@ export class MultipartUploadExecutor implements StynxUploadExecutor {
     if (!response.ok) {
       throw new Error(`Multipart upload initiation failed with status ${response.status}`);
     }
-    return response.json() as Promise<StynxMultipartUploadInitiateResponse>;
+    const result: unknown = await response.json();
+    return validateMultipartInitiateResponse(result);
   }
 
   private async uploadChunks(
@@ -174,7 +178,8 @@ export class MultipartUploadExecutor implements StynxUploadExecutor {
     if (!response.ok) {
       return;
     }
-    const status = (await response.json()) as StynxMultipartUploadStatusResponse;
+    const result: unknown = await response.json();
+    const status = validateMultipartStatusResponse(result);
     for (const part of status.completedParts) {
       const normalized = typeof part === 'number' ? { partNumber: part } : part;
       completed.set(normalized.partNumber, normalized);

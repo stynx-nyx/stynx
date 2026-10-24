@@ -29,8 +29,8 @@ function compareCodePoints(left: string, right: string): number {
 }
 
 function normalizeJson(value: unknown, key: string, active: Set<object>, applyToJson = true): unknown {
-  if (value !== null && typeof value === 'object' && applyToJson) {
-    const toJson = (value as { toJSON?: unknown }).toJSON;
+  if (isRecord(value) && applyToJson) {
+    const toJson = value.toJSON;
     if (typeof toJson === 'function') {
       return normalizeJson(toJson.call(value, key), key, active, false);
     }
@@ -44,7 +44,7 @@ function normalizeJson(value: unknown, key: string, active: Set<object>, applyTo
   if (typeof value !== 'object') throw new TypeError('Idempotency body is not wire JSON');
   if (active.has(value)) throw new TypeError('Idempotency body contains a cycle');
 
-  const prototype = Object.getPrototypeOf(value);
+  const prototype: unknown = Object.getPrototypeOf(value);
   if (!Array.isArray(value) && prototype !== Object.prototype && prototype !== null) {
     throw new TypeError('Idempotency body contains a non-JSON object');
   }
@@ -69,9 +69,10 @@ function normalizeJson(value: unknown, key: string, active: Set<object>, applyTo
       return normalized;
     }
 
+    if (!isRecord(value)) throw new TypeError('Idempotency body contains a non-JSON object');
     const normalized = new Map<string, unknown>();
     for (const property of Object.keys(value).sort(compareCodePoints)) {
-      normalized.set(property, normalizeJson((value as Record<string, unknown>)[property], property, active));
+      normalized.set(property, normalizeJson(value[property], property, active));
     }
     return normalized;
   } finally {
@@ -124,8 +125,12 @@ function validateCompositeParts(action: string, target: string): void {
 function isJsonBody(body: unknown): body is object {
   if (body === null || typeof body !== 'object') return false;
   if (Array.isArray(body)) return true;
-  const prototype = Object.getPrototypeOf(body);
+  const prototype: unknown = Object.getPrototypeOf(body);
   return prototype === Object.prototype || prototype === null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
 }
 
 @Injectable()

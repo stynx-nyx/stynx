@@ -1,3 +1,5 @@
+import * as response from './response-validation';
+import type { FlowGraphInput, FlowNodeInput, FlowEdgeInput, FlowAgentRuleInput, FlowTransitionEffectInput, FlowNodeFormRuleInput, FlowFormInput, FlowFillInput, FlowWaiverInput, FlowPolicySetInput, FlowPolicyRuleInput } from './types';
 import { Injectable, inject } from '@angular/core';
 import { STYNX_FLOW_CLIENT } from './tokens';
 import type {
@@ -64,47 +66,47 @@ export class FlowApiService {
   private readonly client = inject(STYNX_FLOW_CLIENT);
 
   listScopes(): Promise<FlowScope[]> {
-    return this.client.get<FlowScope[]>('/flow/scopes');
+    return this.client.get('/flow/scopes').then(response.decode(response.array(response.isFlowScope), 'FlowScope[]'));
   }
 
   getScope(id: string): Promise<FlowScope> {
-    return this.client.get<FlowScope>(`/flow/scopes/${id}`);
+    return this.client.get(`/flow/scopes/${id}`).then(response.decode(response.isFlowScope, 'FlowScope'));
   }
 
   createScope(input: Partial<FlowScope>): Promise<FlowScope> {
-    return this.client.post<FlowScope>('/flow/scopes', input);
+    return this.client.post('/flow/scopes', input).then(response.decode(response.isFlowScope, 'FlowScope'));
   }
 
   updateScope(id: string, input: Partial<FlowScope>): Promise<FlowScope> {
-    return this.client.patch<FlowScope>(`/flow/scopes/${id}`, input);
+    return this.client.patch(`/flow/scopes/${id}`, input).then(response.decode(response.isFlowScope, 'FlowScope'));
   }
 
   deleteScope(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/scopes/${id}`);
+    return this.client.delete(`/flow/scopes/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listGraphs(scopeId?: string): Promise<FlowGraph[]> {
-    return this.client.get<FlowGraph[]>('/flow/graphs', options({ scopeId }));
+    return this.client.get('/flow/graphs', options({ scopeId })).then(response.decode(response.array(response.isFlowGraph), 'FlowGraph[]'));
   }
 
   getGraph(id: string): Promise<FlowGraph> {
-    return this.client.get<FlowGraph>(`/flow/graphs/${id}`);
+    return this.client.get(`/flow/graphs/${id}`).then(response.decode(response.isFlowGraph, 'FlowGraph'));
   }
 
   exportGraph(id: string): Promise<FlowGraphExport> {
-    return this.client.get<FlowGraphExport>(`/flow/graphs/${id}/export`);
+    return this.client.get(`/flow/graphs/${id}/export`).then(response.decode(response.isFlowGraphExport, 'FlowGraphExport'));
   }
 
   importGraph(input: unknown): Promise<FlowGraphExport> {
-    return this.client.post<FlowGraphExport>('/flow/graphs/import', input);
+    return this.client.post('/flow/graphs/import', input).then(response.decode(response.isFlowGraphExport, 'FlowGraphExport'));
   }
 
-  createGraph(input: Partial<FlowGraph>): Promise<FlowGraph> {
-    return this.client.post<FlowGraph>('/flow/graphs', input);
+  createGraph(input: FlowGraphInput): Promise<FlowGraph> {
+    return this.client.post('/flow/graphs', input).then(response.decode(response.isFlowGraph, 'FlowGraph'));
   }
 
-  updateGraph(id: string, input: Partial<FlowGraph>): Promise<FlowGraph> {
-    return this.client.patch<FlowGraph>(`/flow/graphs/${id}`, input);
+  updateGraph(id: string, input: FlowGraphInput): Promise<FlowGraph> {
+    return this.client.patch(`/flow/graphs/${id}`, input).then(response.decode(response.isFlowGraph, 'FlowGraph'));
   }
 
   publishGraph(
@@ -112,139 +114,139 @@ export class FlowApiService {
     input: PublishFlowGraphRequest = {},
     idempotencyKey?: string,
   ): Promise<PublishFlowGraphResponse> {
-    return this.client.post<PublishFlowGraphResponse>(
+    return this.client.post(
       `/flow/graphs/${id}/publish`,
       input,
       idempotencyKey ? { headers: { 'Idempotency-Key': idempotencyKey } } : undefined,
-    );
+    ).then(response.decode(response.isPublishFlowGraphResponse, 'PublishFlowGraphResponse'));
   }
 
   deleteGraph(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/graphs/${id}`);
+    return this.client.delete(`/flow/graphs/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listGraphNodes(graphId: string): Promise<FlowNode[]> {
-    return this.client.get<FlowNode[]>(`/flow/graphs/${graphId}/nodes`);
+    return this.client.get(`/flow/graphs/${graphId}/nodes`).then(response.decode(response.array(response.isFlowNode), 'FlowNode[]'));
   }
 
-  createGraphNode(graphId: string, input: Partial<FlowNode>): Promise<FlowNode> {
-    return this.client.post<FlowNode>(`/flow/graphs/${graphId}/nodes`, input);
+  createGraphNode(graphId: string, input: FlowNodeInput): Promise<FlowNode> {
+    return this.client.post(`/flow/graphs/${graphId}/nodes`, input).then(response.decode(response.isFlowNode, 'FlowNode'));
   }
 
-  updateNode(id: string, input: Partial<FlowNode>): Promise<FlowNode> {
-    return this.client.patch<FlowNode>(`/flow/nodes/${id}`, input);
+  updateNode(id: string, input: FlowNodeInput): Promise<FlowNode> {
+    return this.client.patch(`/flow/nodes/${id}`, input).then(response.decode(response.isFlowNode, 'FlowNode'));
   }
 
   deleteNode(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/nodes/${id}`);
+    return this.client.delete(`/flow/nodes/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listGraphEdges(graphId: string): Promise<FlowEdge[]> {
-    return this.client.get<FlowEdge[]>(`/flow/graphs/${graphId}/edges`);
+    return this.client.get(`/flow/graphs/${graphId}/edges`).then(response.decode(response.array(response.isFlowEdge), 'FlowEdge[]'));
   }
 
-  createGraphEdge(graphId: string, input: Partial<FlowEdge>): Promise<FlowEdge> {
-    return this.client.post<FlowEdge>(`/flow/graphs/${graphId}/edges`, input);
+  createGraphEdge(graphId: string, input: FlowEdgeInput): Promise<FlowEdge> {
+    return this.client.post(`/flow/graphs/${graphId}/edges`, input).then(response.decode(response.isFlowEdge, 'FlowEdge'));
   }
 
-  updateEdge(id: string, input: Partial<FlowEdge>): Promise<FlowEdge> {
-    return this.client.patch<FlowEdge>(`/flow/edges/${id}`, input);
+  updateEdge(id: string, input: FlowEdgeInput): Promise<FlowEdge> {
+    return this.client.patch(`/flow/edges/${id}`, input).then(response.decode(response.isFlowEdge, 'FlowEdge'));
   }
 
   deleteEdge(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/edges/${id}`);
+    return this.client.delete(`/flow/edges/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listNodeAgentRules(nodeId: string): Promise<FlowAgentRule[]> {
-    return this.client.get<FlowAgentRule[]>(`/flow/nodes/${nodeId}/agent-rules`);
+    return this.client.get(`/flow/nodes/${nodeId}/agent-rules`).then(response.decode(response.array(response.isFlowAgentRule), 'FlowAgentRule[]'));
   }
 
-  createNodeAgentRule(nodeId: string, input: Partial<FlowAgentRule>): Promise<FlowAgentRule> {
-    return this.client.post<FlowAgentRule>(`/flow/nodes/${nodeId}/agent-rules`, input);
+  createNodeAgentRule(nodeId: string, input: FlowAgentRuleInput): Promise<FlowAgentRule> {
+    return this.client.post(`/flow/nodes/${nodeId}/agent-rules`, input).then(response.decode(response.isFlowAgentRule, 'FlowAgentRule'));
   }
 
-  updateAgentRule(id: string, input: Partial<FlowAgentRule>): Promise<FlowAgentRule> {
-    return this.client.patch<FlowAgentRule>(`/flow/agent-rules/${id}`, input);
+  updateAgentRule(id: string, input: FlowAgentRuleInput): Promise<FlowAgentRule> {
+    return this.client.patch(`/flow/agent-rules/${id}`, input).then(response.decode(response.isFlowAgentRule, 'FlowAgentRule'));
   }
 
   deleteAgentRule(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/agent-rules/${id}`);
+    return this.client.delete(`/flow/agent-rules/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listNodeFormRules(nodeId: string): Promise<FlowNodeFormRule[]> {
-    return this.client.get<FlowNodeFormRule[]>(`/flow/nodes/${nodeId}/form-rules`);
+    return this.client.get(`/flow/nodes/${nodeId}/form-rules`).then(response.decode(response.array(response.isFlowNodeFormRule), 'FlowNodeFormRule[]'));
   }
 
-  createNodeFormRule(nodeId: string, input: Partial<FlowNodeFormRule>): Promise<FlowNodeFormRule> {
-    return this.client.post<FlowNodeFormRule>(`/flow/nodes/${nodeId}/form-rules`, input);
+  createNodeFormRule(nodeId: string, input: FlowNodeFormRuleInput): Promise<FlowNodeFormRule> {
+    return this.client.post(`/flow/nodes/${nodeId}/form-rules`, input).then(response.decode(response.isFlowNodeFormRule, 'FlowNodeFormRule'));
   }
 
-  updateNodeFormRule(id: string, input: Partial<FlowNodeFormRule>): Promise<FlowNodeFormRule> {
-    return this.client.patch<FlowNodeFormRule>(`/flow/node-form-rules/${id}`, input);
+  updateNodeFormRule(id: string, input: FlowNodeFormRuleInput): Promise<FlowNodeFormRule> {
+    return this.client.patch(`/flow/node-form-rules/${id}`, input).then(response.decode(response.isFlowNodeFormRule, 'FlowNodeFormRule'));
   }
 
   deleteNodeFormRule(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/node-form-rules/${id}`);
+    return this.client.delete(`/flow/node-form-rules/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listGraphTransitionEffects(graphId: string): Promise<FlowTransitionEffect[]> {
-    return this.client.get<FlowTransitionEffect[]>(`/flow/graphs/${graphId}/transition-effects`);
+    return this.client.get(`/flow/graphs/${graphId}/transition-effects`).then(response.decode(response.array(response.isFlowTransitionEffect), 'FlowTransitionEffect[]'));
   }
 
-  createGraphTransitionEffect(graphId: string, input: Partial<FlowTransitionEffect>): Promise<FlowTransitionEffect> {
-    return this.client.post<FlowTransitionEffect>(`/flow/graphs/${graphId}/transition-effects`, input);
+  createGraphTransitionEffect(graphId: string, input: FlowTransitionEffectInput): Promise<FlowTransitionEffect> {
+    return this.client.post(`/flow/graphs/${graphId}/transition-effects`, input).then(response.decode(response.isFlowTransitionEffect, 'FlowTransitionEffect'));
   }
 
-  updateTransitionEffect(id: string, input: Partial<FlowTransitionEffect>): Promise<FlowTransitionEffect> {
-    return this.client.patch<FlowTransitionEffect>(`/flow/transition-effects/${id}`, input);
+  updateTransitionEffect(id: string, input: FlowTransitionEffectInput): Promise<FlowTransitionEffect> {
+    return this.client.patch(`/flow/transition-effects/${id}`, input).then(response.decode(response.isFlowTransitionEffect, 'FlowTransitionEffect'));
   }
 
   deleteTransitionEffect(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/transition-effects/${id}`);
+    return this.client.delete(`/flow/transition-effects/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listRuns(filters: { scopeId?: string; graphId?: string; targetType?: string; targetId?: string; status?: string } = {}): Promise<FlowPage<FlowRun>> {
-    return this.client.get<FlowPage<FlowRun>>('/flow/runs', options(filters));
+    return this.client.get('/flow/runs', options(filters)).then(response.decode(response.isFlowPage(response.isFlowRun), 'FlowPage<FlowRun>'));
   }
 
   ensureRun(input: unknown): Promise<{ runId: string }> {
-    return this.client.post<{ runId: string }>('/flow/runs/ensure', input);
+    return this.client.post('/flow/runs/ensure', input).then(response.decode(response.isEnsureResult, '{ runId: string }'));
   }
 
   getRun(id: string): Promise<FlowRun> {
-    return this.client.get<FlowRun>(`/flow/runs/${id}`);
+    return this.client.get(`/flow/runs/${id}`).then(response.decode(response.isFlowRun, 'FlowRun'));
   }
 
   updateRun(id: string, input: Partial<FlowRun>): Promise<FlowRun> {
-    return this.client.patch<FlowRun>(`/flow/runs/${id}`, input);
+    return this.client.patch(`/flow/runs/${id}`, input).then(response.decode(response.isFlowRun, 'FlowRun'));
   }
 
   listRunNodeRuns(runId: string): Promise<FlowNodeRun[]> {
-    return this.client.get<FlowNodeRun[]>(`/flow/runs/${runId}/nodes`);
+    return this.client.get(`/flow/runs/${runId}/nodes`).then(response.decode(response.array(response.isFlowNodeRun), 'FlowNodeRun[]'));
   }
 
   listRunTasks(runId: string): Promise<FlowTask[]> {
-    return this.client.get<FlowTask[]>(`/flow/runs/${runId}/tasks`);
+    return this.client.get(`/flow/runs/${runId}/tasks`).then(response.decode(response.array(response.isFlowTask), 'FlowTask[]'));
   }
 
   listRunEvents(runId: string): Promise<FlowEvent[]> {
-    return this.client.get<FlowEvent[]>(`/flow/runs/${runId}/events`);
+    return this.client.get(`/flow/runs/${runId}/events`).then(response.decode(response.array(response.isFlowEvent), 'FlowEvent[]'));
   }
 
   listRunActivity(runId: string, filters: { cursor?: string; page?: number; pageSize?: number } = {}): Promise<FlowPage<FlowRunActivityEvent>> {
-    return this.client.get<FlowPage<FlowRunActivityEvent>>(`/flow/runs/${runId}/activity`, options(filters));
+    return this.client.get(`/flow/runs/${runId}/activity`, options(filters)).then(response.decode(response.isFlowPage(response.isFlowRunActivityEvent), 'FlowPage<FlowRunActivityEvent>'));
   }
 
   getRunFacts(runId: string): Promise<Record<string, unknown>> {
-    return this.client.get<Record<string, unknown>>(`/flow/runs/${runId}/facts`);
+    return this.client.get(`/flow/runs/${runId}/facts`).then(response.decode(response.record, 'Record<string, unknown>'));
   }
 
   listNodeRuns(filters: { runId?: string; status?: string } = {}): Promise<FlowPage<FlowNodeRun>> {
-    return this.client.get<FlowPage<FlowNodeRun>>('/flow/node-runs', options(filters));
+    return this.client.get('/flow/node-runs', options(filters)).then(response.decode(response.isFlowPage(response.isFlowNodeRun), 'FlowPage<FlowNodeRun>'));
   }
 
   getNodeRun(id: string): Promise<FlowNodeRun> {
-    return this.client.get<FlowNodeRun>(`/flow/node-runs/${id}`);
+    return this.client.get(`/flow/node-runs/${id}`).then(response.decode(response.isFlowNodeRun, 'FlowNodeRun'));
   }
 
   listTasks(filters: FlowTaskFilters = {}): Promise<FlowPage<FlowTask>> {
@@ -254,246 +256,246 @@ export class FlowApiService {
       : assignee
         ? { ...rest, assigneeUserId: assignee }
         : rest;
-    return this.client.get<FlowPage<FlowTask>>('/flow/tasks', options(normalized));
+    return this.client.get('/flow/tasks', options(normalized)).then(response.decode(response.isFlowPage(response.isFlowTask), 'FlowPage<FlowTask>'));
   }
 
   getTask(id: string): Promise<FlowTask> {
-    return this.client.get<FlowTask>(`/flow/tasks/${id}`);
+    return this.client.get(`/flow/tasks/${id}`).then(response.decode(response.isFlowTask, 'FlowTask'));
   }
 
   taskCandidates(taskId: string): Promise<FlowTaskCandidate[]> {
-    return this.client.get<FlowTaskCandidate[]>(`/flow/tasks/${taskId}/candidates`);
+    return this.client.get(`/flow/tasks/${taskId}/candidates`).then(response.decode(response.array(response.isFlowTaskCandidate), 'FlowTaskCandidate[]'));
   }
 
   usersByRole(role: string, search?: string): Promise<FlowTaskUser[]> {
-    return this.client.get<FlowTaskUser[]>(`/flow/tasks/roles/${role}/users`, options({ search }));
+    return this.client.get(`/flow/tasks/roles/${role}/users`, options({ search })).then(response.decode(response.array(response.isFlowTaskUser), 'FlowTaskUser[]'));
   }
 
   taskUser(id: string): Promise<FlowTaskUser> {
-    return this.client.get<FlowTaskUser>(`/flow/tasks/users/${id}`);
+    return this.client.get(`/flow/tasks/users/${id}`).then(response.decode(response.isFlowTaskUser, 'FlowTaskUser'));
   }
 
   actTask(taskId: string, action: string, note?: string): Promise<FlowTask> {
-    return this.client.post<FlowTask>(`/flow/tasks/${taskId}/act`, { action, note });
+    return this.client.post(`/flow/tasks/${taskId}/act`, { action, note }).then(response.decode(response.isFlowTask, 'FlowTask'));
   }
 
   acceptTask(taskId: string, note?: string): Promise<FlowTask> {
-    return this.client.post<FlowTask>(`/flow/tasks/${taskId}/accept`, { note });
+    return this.client.post(`/flow/tasks/${taskId}/accept`, { note }).then(response.decode(response.isFlowTask, 'FlowTask'));
   }
 
   declineTask(taskId: string, note?: string): Promise<FlowTask> {
-    return this.client.post<FlowTask>(`/flow/tasks/${taskId}/decline`, { note });
+    return this.client.post(`/flow/tasks/${taskId}/decline`, { note }).then(response.decode(response.isFlowTask, 'FlowTask'));
   }
 
   unacceptTask(taskId: string, note?: string): Promise<FlowTask> {
-    return this.client.post<FlowTask>(`/flow/tasks/${taskId}/unaccept`, { note });
+    return this.client.post(`/flow/tasks/${taskId}/unaccept`, { note }).then(response.decode(response.isFlowTask, 'FlowTask'));
   }
 
   withdrawTask(taskId: string, note?: string): Promise<FlowTask> {
-    return this.client.post<FlowTask>(`/flow/tasks/${taskId}/withdraw`, { note });
+    return this.client.post(`/flow/tasks/${taskId}/withdraw`, { note }).then(response.decode(response.isFlowTask, 'FlowTask'));
   }
 
   assignTask(taskId: string, userId: string, note?: string): Promise<FlowTask> {
-    return this.client.post<FlowTask>(`/flow/tasks/${taskId}/assign`, { userId, note });
+    return this.client.post(`/flow/tasks/${taskId}/assign`, { userId, note }).then(response.decode(response.isFlowTask, 'FlowTask'));
   }
 
   unassignTask(taskId: string, note?: string): Promise<FlowTask> {
-    return this.client.post<FlowTask>(`/flow/tasks/${taskId}/unassign`, { note });
+    return this.client.post(`/flow/tasks/${taskId}/unassign`, { note }).then(response.decode(response.isFlowTask, 'FlowTask'));
   }
 
   listForms(scopeId?: string): Promise<FlowForm[]> {
-    return this.client.get<FlowForm[]>('/flow/forms', options({ scopeId }));
+    return this.client.get('/flow/forms', options({ scopeId })).then(response.decode(response.array(response.isFlowForm), 'FlowForm[]'));
   }
 
   getForm(id: string): Promise<FlowForm> {
-    return this.client.get<FlowForm>(`/flow/forms/${id}`);
+    return this.client.get(`/flow/forms/${id}`).then(response.decode(response.isFlowForm, 'FlowForm'));
   }
 
-  createForm(input: Partial<FlowForm>): Promise<FlowForm> {
-    return this.client.post<FlowForm>('/flow/forms', input);
+  createForm(input: FlowFormInput): Promise<FlowForm> {
+    return this.client.post('/flow/forms', input).then(response.decode(response.isFlowForm, 'FlowForm'));
   }
 
-  updateForm(id: string, input: Partial<FlowForm>): Promise<FlowForm> {
-    return this.client.patch<FlowForm>(`/flow/forms/${id}`, input);
+  updateForm(id: string, input: FlowFormInput): Promise<FlowForm> {
+    return this.client.patch(`/flow/forms/${id}`, input).then(response.decode(response.isFlowForm, 'FlowForm'));
   }
 
   deleteForm(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/forms/${id}`);
+    return this.client.delete(`/flow/forms/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listQuestions(formId: string): Promise<FlowQuestion[]> {
-    return this.client.get<FlowQuestion[]>(`/flow/forms/${formId}/questions`);
+    return this.client.get(`/flow/forms/${formId}/questions`).then(response.decode(response.array(response.isFlowQuestion), 'FlowQuestion[]'));
   }
 
   createQuestion(formId: string, input: Partial<FlowQuestion>): Promise<FlowQuestion> {
-    return this.client.post<FlowQuestion>(`/flow/forms/${formId}/questions`, input);
+    return this.client.post(`/flow/forms/${formId}/questions`, input).then(response.decode(response.isFlowQuestion, 'FlowQuestion'));
   }
 
   updateQuestion(id: string, input: Partial<FlowQuestion>): Promise<FlowQuestion> {
-    return this.client.patch<FlowQuestion>(`/flow/questions/${id}`, input);
+    return this.client.patch(`/flow/questions/${id}`, input).then(response.decode(response.isFlowQuestion, 'FlowQuestion'));
   }
 
   deleteQuestion(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/questions/${id}`);
+    return this.client.delete(`/flow/questions/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   getQuestionScore(questionId: string): Promise<FlowScore> {
-    return this.client.get<FlowScore>(`/flow/questions/${questionId}/score`);
+    return this.client.get(`/flow/questions/${questionId}/score`).then(response.decode(response.isFlowScore, 'FlowScore'));
   }
 
   putQuestionScore(questionId: string, input: Partial<FlowScore>): Promise<FlowScore> {
-    return this.client.put<FlowScore>(`/flow/questions/${questionId}/score`, input);
+    return this.client.put(`/flow/questions/${questionId}/score`, input).then(response.decode(response.isFlowScore, 'FlowScore'));
   }
 
   deleteQuestionScore(questionId: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/questions/${questionId}/score`);
+    return this.client.delete(`/flow/questions/${questionId}/score`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listFills(filters: { formId?: string; scopeId?: string; runId?: string; taskId?: string; targetId?: string; targetType?: string } = {}): Promise<FlowFill[]> {
-    return this.client.get<FlowFill[]>('/flow/fills', options(filters));
+    return this.client.get('/flow/fills', options(filters)).then(response.decode(response.array(response.isFlowFill), 'FlowFill[]'));
   }
 
   getFill(id: string): Promise<FlowFill> {
-    return this.client.get<FlowFill>(`/flow/fills/${id}`);
+    return this.client.get(`/flow/fills/${id}`).then(response.decode(response.isFlowFill, 'FlowFill'));
   }
 
   getFormFill(formId: string, fillId: string): Promise<FlowFill> {
-    return this.client.get<FlowFill>(`/flow/forms/${formId}/fills/${fillId}`);
+    return this.client.get(`/flow/forms/${formId}/fills/${fillId}`).then(response.decode(response.isFlowFill, 'FlowFill'));
   }
 
-  createFill(formId: string, input: Partial<FlowFill>): Promise<FlowFill> {
-    return this.client.post<FlowFill>(`/flow/forms/${formId}/fills`, input);
+  createFill(formId: string, input: FlowFillInput): Promise<FlowFill> {
+    return this.client.post(`/flow/forms/${formId}/fills`, input).then(response.decode(response.isFlowFill, 'FlowFill'));
   }
 
-  createFillAlias(input: Partial<FlowFill> & { formId: string }): Promise<FlowFill> {
-    return this.client.post<FlowFill>('/flow/fills', input);
+  createFillAlias(input: FlowFillInput & { formId: string }): Promise<FlowFill> {
+    return this.client.post('/flow/fills', input).then(response.decode(response.isFlowFill, 'FlowFill'));
   }
 
-  updateFill(id: string, input: Partial<FlowFill>): Promise<FlowFill> {
-    return this.client.patch<FlowFill>(`/flow/fills/${id}`, input);
+  updateFill(id: string, input: FlowFillInput): Promise<FlowFill> {
+    return this.client.patch(`/flow/fills/${id}`, input).then(response.decode(response.isFlowFill, 'FlowFill'));
   }
 
   deleteFill(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/fills/${id}`);
+    return this.client.delete(`/flow/fills/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listAnswers(fillId: string): Promise<FlowAnswer[]> {
-    return this.client.get<FlowAnswer[]>(`/flow/fills/${fillId}/answers`);
+    return this.client.get(`/flow/fills/${fillId}/answers`).then(response.decode(response.array(response.isFlowAnswer), 'FlowAnswer[]'));
   }
 
   listFormFillAnswers(formId: string, fillId: string): Promise<FlowAnswer[]> {
-    return this.client.get<FlowAnswer[]>(`/flow/forms/${formId}/fills/${fillId}/answers`);
+    return this.client.get(`/flow/forms/${formId}/fills/${fillId}/answers`).then(response.decode(response.array(response.isFlowAnswer), 'FlowAnswer[]'));
   }
 
   upsertAnswer(fillId: string, input: Partial<FlowAnswer>): Promise<FlowAnswer> {
-    return this.client.post<FlowAnswer>(`/flow/fills/${fillId}/answers`, input);
+    return this.client.post(`/flow/fills/${fillId}/answers`, input).then(response.decode(response.isFlowAnswer, 'FlowAnswer'));
   }
 
   bulkUpsertAnswers(fillId: string, input: Array<Partial<FlowAnswer>>): Promise<FlowAnswer[]> {
-    return this.client.put<FlowAnswer[]>(`/flow/fills/${fillId}/answers`, input);
+    return this.client.put(`/flow/fills/${fillId}/answers`, input).then(response.decode(response.array(response.isFlowAnswer), 'FlowAnswer[]'));
   }
 
   updateAnswer(id: string, input: Partial<FlowAnswer>): Promise<FlowAnswer> {
-    return this.client.patch<FlowAnswer>(`/flow/answers/${id}`, input);
+    return this.client.patch(`/flow/answers/${id}`, input).then(response.decode(response.isFlowAnswer, 'FlowAnswer'));
   }
 
   deleteAnswer(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/answers/${id}`);
+    return this.client.delete(`/flow/answers/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listWaivers(filters: { scopeId?: string; formId?: string; questionId?: string; targetId?: string; targetType?: string } = {}): Promise<FlowWaiver[]> {
-    return this.client.get<FlowWaiver[]>('/flow/waivers', options(filters));
+    return this.client.get('/flow/waivers', options(filters)).then(response.decode(response.array(response.isFlowWaiver), 'FlowWaiver[]'));
   }
 
-  createWaiver(input: Partial<FlowWaiver>): Promise<FlowWaiver> {
-    return this.client.post<FlowWaiver>('/flow/waivers', input);
+  createWaiver(input: FlowWaiverInput): Promise<FlowWaiver> {
+    return this.client.post('/flow/waivers', input).then(response.decode(response.isFlowWaiver, 'FlowWaiver'));
   }
 
   listFormFillWaivers(formId: string, fillId: string): Promise<FlowWaiver[]> {
-    return this.client.get<FlowWaiver[]>(`/flow/forms/${formId}/fills/${fillId}/waivers`);
+    return this.client.get(`/flow/forms/${formId}/fills/${fillId}/waivers`).then(response.decode(response.array(response.isFlowWaiver), 'FlowWaiver[]'));
   }
 
   listFillWaivers(fillId: string): Promise<FlowWaiver[]> {
-    return this.client.get<FlowWaiver[]>(`/flow/fills/${fillId}/waivers`);
+    return this.client.get(`/flow/fills/${fillId}/waivers`).then(response.decode(response.array(response.isFlowWaiver), 'FlowWaiver[]'));
   }
 
-  createFormFillWaiver(formId: string, fillId: string, input: Partial<FlowWaiver>): Promise<FlowWaiver> {
-    return this.client.post<FlowWaiver>(`/flow/forms/${formId}/fills/${fillId}/waivers`, input);
+  createFormFillWaiver(formId: string, fillId: string, input: FlowWaiverInput): Promise<FlowWaiver> {
+    return this.client.post(`/flow/forms/${formId}/fills/${fillId}/waivers`, input).then(response.decode(response.isFlowWaiver, 'FlowWaiver'));
   }
 
-  updateWaiver(id: string, input: Partial<FlowWaiver>): Promise<FlowWaiver> {
-    return this.client.patch<FlowWaiver>(`/flow/waivers/${id}`, input);
+  updateWaiver(id: string, input: FlowWaiverInput): Promise<FlowWaiver> {
+    return this.client.patch(`/flow/waivers/${id}`, input).then(response.decode(response.isFlowWaiver, 'FlowWaiver'));
   }
 
   deleteWaiver(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/waivers/${id}`);
+    return this.client.delete(`/flow/waivers/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listEvents(filters: { runId?: string; nodeId?: string; taskId?: string; kind?: string; actorId?: string } = {}): Promise<FlowPage<FlowEvent>> {
-    return this.client.get<FlowPage<FlowEvent>>('/flow/events', options(filters));
+    return this.client.get('/flow/events', options(filters)).then(response.decode(response.isFlowPage(response.isFlowEvent), 'FlowPage<FlowEvent>'));
   }
 
   signal(input: unknown): Promise<Record<string, unknown>> {
-    return this.client.post<Record<string, unknown>>('/flow/signal', input);
+    return this.client.post('/flow/signal', input).then(response.decode(response.record, 'Record<string, unknown>'));
   }
 
   dispatchEffects(input: unknown): Promise<FlowEffectDispatchSummary> {
-    return this.client.post<FlowEffectDispatchSummary>('/flow/effects/dispatch', input);
+    return this.client.post('/flow/effects/dispatch', input).then(response.decode(response.isFlowEffectDispatchSummary, 'FlowEffectDispatchSummary'));
   }
 
   openTasks(filters: { scopeId?: string; scopeCode?: string; graphId?: string; status?: string; page?: number; pageSize?: number } = {}): Promise<FlowPage<FlowOpenTask>> {
-    return this.client.get<FlowPage<FlowOpenTask>>('/flow/open-tasks', options(filters));
+    return this.client.get('/flow/open-tasks', options(filters)).then(response.decode(response.isFlowPage(response.isFlowOpenTask), 'FlowPage<FlowOpenTask>'));
   }
 
   runsSummary(filters: { scopeId?: string; scopeCode?: string; graphId?: string; status?: string; page?: number; pageSize?: number } = {}): Promise<FlowPage<FlowRunSummary>> {
-    return this.client.get<FlowPage<FlowRunSummary>>('/flow/runs/summary', options(filters));
+    return this.client.get('/flow/runs/summary', options(filters)).then(response.decode(response.isFlowPage(response.isFlowRunSummary), 'FlowPage<FlowRunSummary>'));
   }
 
   dashboardAnalytics(filters: { scopeId?: string; scopeCode?: string; graphId?: string } = {}): Promise<FlowDashboardAnalytics> {
-    return this.client.get<FlowDashboardAnalytics>('/flow/analytics/dashboard', options(filters));
+    return this.client.get('/flow/analytics/dashboard', options(filters)).then(response.decode(response.isFlowDashboardAnalytics, 'FlowDashboardAnalytics'));
   }
 
   listPolicySets(scopeId?: string): Promise<FlowPolicySet[]> {
-    return this.client.get<FlowPolicySet[]>('/flow/policies/sets', options({ scopeId }));
+    return this.client.get('/flow/policies/sets', options({ scopeId })).then(response.decode(response.array(response.isFlowPolicySet), 'FlowPolicySet[]'));
   }
 
   getPolicySet(id: string): Promise<FlowPolicySet> {
-    return this.client.get<FlowPolicySet>(`/flow/policies/sets/${id}`);
+    return this.client.get(`/flow/policies/sets/${id}`).then(response.decode(response.isFlowPolicySet, 'FlowPolicySet'));
   }
 
-  createPolicySet(input: Partial<FlowPolicySet>): Promise<FlowPolicySet> {
-    return this.client.post<FlowPolicySet>('/flow/policies/sets', input);
+  createPolicySet(input: FlowPolicySetInput): Promise<FlowPolicySet> {
+    return this.client.post('/flow/policies/sets', input).then(response.decode(response.isFlowPolicySet, 'FlowPolicySet'));
   }
 
-  updatePolicySet(id: string, input: Partial<FlowPolicySet>): Promise<FlowPolicySet> {
-    return this.client.patch<FlowPolicySet>(`/flow/policies/sets/${id}`, input);
+  updatePolicySet(id: string, input: FlowPolicySetInput): Promise<FlowPolicySet> {
+    return this.client.patch(`/flow/policies/sets/${id}`, input).then(response.decode(response.isFlowPolicySet, 'FlowPolicySet'));
   }
 
   deletePolicySet(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/policies/sets/${id}`);
+    return this.client.delete(`/flow/policies/sets/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   listPolicyRules(policySetId: string): Promise<FlowPolicyRule[]> {
-    return this.client.get<FlowPolicyRule[]>(`/flow/policies/sets/${policySetId}/rules`);
+    return this.client.get(`/flow/policies/sets/${policySetId}/rules`).then(response.decode(response.array(response.isFlowPolicyRule), 'FlowPolicyRule[]'));
   }
 
   getPolicyRule(id: string): Promise<FlowPolicyRule> {
-    return this.client.get<FlowPolicyRule>(`/flow/policies/rules/${id}`);
+    return this.client.get(`/flow/policies/rules/${id}`).then(response.decode(response.isFlowPolicyRule, 'FlowPolicyRule'));
   }
 
-  createPolicyRule(policySetId: string, input: Partial<FlowPolicyRule>): Promise<FlowPolicyRule> {
-    return this.client.post<FlowPolicyRule>(`/flow/policies/sets/${policySetId}/rules`, input);
+  createPolicyRule(policySetId: string, input: FlowPolicyRuleInput): Promise<FlowPolicyRule> {
+    return this.client.post(`/flow/policies/sets/${policySetId}/rules`, input).then(response.decode(response.isFlowPolicyRule, 'FlowPolicyRule'));
   }
 
-  updatePolicyRule(id: string, input: Partial<FlowPolicyRule>): Promise<FlowPolicyRule> {
-    return this.client.patch<FlowPolicyRule>(`/flow/policies/rules/${id}`, input);
+  updatePolicyRule(id: string, input: FlowPolicyRuleInput): Promise<FlowPolicyRule> {
+    return this.client.patch(`/flow/policies/rules/${id}`, input).then(response.decode(response.isFlowPolicyRule, 'FlowPolicyRule'));
   }
 
   deletePolicyRule(id: string): Promise<{ id: string; deleted: boolean }> {
-    return this.client.delete<{ id: string; deleted: boolean }>(`/flow/policies/rules/${id}`);
+    return this.client.delete(`/flow/policies/rules/${id}`).then(response.decode(response.isDeleteResult, '{ id: string; deleted: boolean }'));
   }
 
   evaluatePolicy(input: unknown): Promise<FlowPolicyDecision> {
-    return this.client.post<FlowPolicyDecision>('/flow/policies/evaluate', input);
+    return this.client.post('/flow/policies/evaluate', input).then(response.decode(response.isFlowPolicyDecision, 'FlowPolicyDecision'));
   }
 }

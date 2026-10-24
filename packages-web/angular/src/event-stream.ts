@@ -146,14 +146,14 @@ class FrameParser {
 }
 
 @Injectable()
-export class StynxEventStreamService<T = unknown> {
+export class StynxEventStreamService {
   private readonly config = inject(SSE_CONFIG);
   private readonly clock = this.config.clock ?? systemClock;
   private readonly transport = this.config.transport ?? inject(HttpStynxEventStreamTransport);
   private readonly tenant = inject(TenantContextService, { optional: true });
   private readonly statusState = signal<StynxEventStreamStatus>('idle');
   private readonly cursorState = signal<string | null>(null);
-  private readonly eventSubject = new Subject<StynxEventStreamEvent<T>>();
+  private readonly eventSubject = new Subject<StynxEventStreamEvent>();
   private readonly tickSubject = new Subject<void>();
   private readonly resyncSubject = new Subject<StynxEventStreamResync>();
   private readonly errorState = signal<StynxEventStreamError | null>(null);
@@ -308,8 +308,8 @@ export class StynxEventStreamService<T = unknown> {
 
   private deliver(id: string, event: string, data: string): boolean {
     if (!id || this.seen.has(id)) return false;
-    let parsed: T;
-    try { parsed = JSON.parse(data) as T; }
+    let parsed: unknown;
+    try { parsed = JSON.parse(data); }
     catch { /* Invalid JSON is ignored. */ return false; }
     const prefix = this.config.eventPrefix;
     const name = prefix ? event.slice(prefix.length) : event;

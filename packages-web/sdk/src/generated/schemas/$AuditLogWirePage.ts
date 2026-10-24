@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export const $AuditLogPage = {
+export const $AuditLogWirePage = {
   properties: {
     items: {
       type: 'array',
       contains: {
-        type: 'AuditLogItem',
+        type: 'AuditLogWireItem',
       },
       isRequired: true,
     },

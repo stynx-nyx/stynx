@@ -2,7 +2,7 @@ export type FlowNodeKind = 'human' | 'auto' | 'system' | 'start' | 'end' | 'gate
 export type FlowDecisionPolicy = 'all' | 'any' | 'quorum';
 export type FlowGraphStatus = 'draft' | 'published';
 export type FlowRunStatus = 'active' | 'completed' | 'canceled';
-export type FlowTaskStatus = 'open' | 'completed' | 'canceled';
+export type FlowTaskStatus = 'open' | 'completed' | 'canceled' | 'expired';
 export type FlowFieldType =
   | 'boolean'
   | 'string'
@@ -45,8 +45,8 @@ export interface FlowGraph {
   publishedAt?: string;
   publishedBy?: string | null;
   isActive: boolean;
-  name?: string;
-  description?: string;
+  name?: string | null;
+  description?: string | null;
   meta?: Record<string, unknown>;
 }
 
@@ -72,13 +72,13 @@ export interface FlowNode {
   id: string;
   graphId: string;
   code: string;
-  name?: string;
+  name?: string | null;
   kind: FlowNodeKind;
   decisionPolicy?: FlowDecisionPolicy;
-  quorumRatio?: string;
+  quorumRatio?: string | null;
   allowedActions?: string[];
-  entryRule?: string;
-  exitRule?: string;
+  entryRule?: string | null;
+  exitRule?: string | null;
   sortOrder?: number;
   meta?: Record<string, unknown>;
 }
@@ -90,8 +90,8 @@ export interface FlowEdge {
   toNodeId: string;
   fromNodeCode?: string;
   toNodeCode?: string;
-  action?: string;
-  rule?: string;
+  action?: string | null;
+  rule?: string | null;
   spawn?: boolean;
   sortOrder?: number;
   meta?: Record<string, unknown>;
@@ -101,9 +101,9 @@ export interface FlowAgentRule {
   id: string;
   nodeId: string;
   ruleType: 'permission' | 'user' | 'resolver_fn';
-  permissionKey?: string;
-  userId?: string;
-  resolverKey?: string;
+  permissionKey?: string | null;
+  userId?: string | null;
+  resolverKey?: string | null;
   params?: Record<string, unknown>;
   sortOrder?: number;
 }
@@ -111,8 +111,8 @@ export interface FlowAgentRule {
 export interface FlowTransitionEffect {
   id: string;
   graphId: string;
-  nodeCode?: string;
-  action?: string;
+  nodeCode?: string | null;
+  action?: string | null;
   effectKey: string;
   payload?: Record<string, unknown>;
   sortOrder?: number;
@@ -124,7 +124,7 @@ export interface FlowNodeFormRule {
   formId: string;
   required: boolean;
   gatingMode: 'all_required' | 'any' | 'threshold' | 'any_answered' | 'score_threshold';
-  threshold?: string;
+  threshold?: string | null;
   applicability?: Record<string, unknown>;
   weight?: string;
   meta?: Record<string, unknown>;
@@ -145,7 +145,7 @@ export interface FlowNodeRun {
   runId: string;
   nodeId: string;
   nodeCode?: string;
-  nodeName?: string;
+  nodeName?: string | null;
   kind?: FlowNodeKind;
   status: 'pending' | 'in_progress' | 'completed' | 'skipped' | 'canceled';
 }
@@ -156,15 +156,15 @@ export interface FlowTask {
   nodeRunId: string;
   nodeId: string;
   nodeCode?: string;
-  nodeName?: string;
+  nodeName?: string | null;
   assigneeType: string;
-  assigneeId?: string;
-  assigneeUserId?: string;
+  assigneeId?: string | null;
+  assigneeUserId?: string | null;
   status: FlowTaskStatus;
   allowedActions: string[];
-  decidedAction?: string;
-  note?: string;
-  dueAt?: string;
+  decidedAction?: string | null;
+  note?: string | null;
+  dueAt?: string | null;
 }
 
 export interface FlowForm {
@@ -173,7 +173,7 @@ export interface FlowForm {
   code: string;
   version: string;
   title: string;
-  description?: string;
+  description?: string | null;
   isActive: boolean;
   meta?: Record<string, unknown>;
 }
@@ -210,9 +210,9 @@ export interface FlowFill {
   id: string;
   formId: string;
   scopeId: string;
-  runId?: string;
-  nodeRunId?: string;
-  taskId?: string;
+  runId?: string | null;
+  nodeRunId?: string | null;
+  taskId?: string | null;
   targetType: string;
   targetId: string;
   status: 'draft' | 'submitted' | 'void';
@@ -232,10 +232,10 @@ export interface FlowWaiver {
   targetType: string;
   targetId: string;
   formId: string;
-  questionId?: string;
+  questionId?: string | null;
   reason: string;
-  waivedBy?: string;
-  expiresAt?: string;
+  waivedBy?: string | null;
+  expiresAt?: string | null;
 }
 
 export interface FlowOpenTask extends FlowTask {
@@ -248,8 +248,8 @@ export interface FlowRunSummary {
   graphId: string;
   status: FlowRunStatus;
   runCount: number;
-  firstCreatedAt?: string;
-  lastUpdatedAt?: string;
+  firstCreatedAt?: string | null;
+  lastUpdatedAt?: string | null;
 }
 
 export interface FlowDashboardAnalytics {
@@ -268,14 +268,14 @@ export interface FlowDashboardAnalytics {
 export interface FlowEvent {
   id: string;
   runId: string;
-  nodeId?: string;
-  taskId?: string;
+  nodeId?: string | null;
+  taskId?: string | null;
   kind: string;
-  actorId?: string;
-  note?: string;
-  facts?: Record<string, unknown>;
+  actorId?: string | null;
+  note?: string | null;
+  facts?: Record<string, unknown> | null;
   payload?: Record<string, unknown>;
-  createdAt?: string;
+  createdAt?: string | null;
 }
 
 export type FlowRunActivityEvent = FlowEvent;
@@ -292,8 +292,8 @@ export interface FlowTaskCandidate {
 export interface FlowTaskUser {
   id: string;
   email?: string;
-  externalSubject?: string;
-  locale?: string;
+  externalSubject?: string | null;
+  locale?: string | null;
 }
 
 export interface FlowPolicySet {
@@ -301,21 +301,21 @@ export interface FlowPolicySet {
   scopeId: string;
   version: string;
   isActive: boolean;
-  name?: string;
-  description?: string;
+  name?: string | null;
+  description?: string | null;
   meta?: Record<string, unknown>;
 }
 
 export interface FlowPolicyRule {
   id: string;
   policySetId: string;
-  nodeCode?: string;
-  statusCode?: string;
-  action?: string;
-  capability?: string;
+  nodeCode?: string | null;
+  statusCode?: string | null;
+  action?: string | null;
+  capability?: string | null;
   effect: 'allow' | 'deny';
   priority?: number;
-  reasonCode?: string;
+  reasonCode?: string | null;
   conditions?: Record<string, unknown>;
   meta?: Record<string, unknown>;
 }
@@ -346,3 +346,65 @@ export interface FlowGraphExport {
   policySets: Record<string, unknown>[];
   policyRules: Record<string, unknown>[];
 }
+
+/** Write inputs retain the original optional, non-null field domains. */
+export type FlowGraphInput = Partial<Omit<FlowGraph, 'name' | 'description'> & {
+  name?: string;
+  description?: string;
+}>;
+
+export type FlowNodeInput = Partial<Omit<FlowNode, 'name' | 'quorumRatio' | 'entryRule' | 'exitRule'> & {
+  name?: string;
+  quorumRatio?: string;
+  entryRule?: string;
+  exitRule?: string;
+}>;
+
+export type FlowEdgeInput = Partial<Omit<FlowEdge, 'action' | 'rule'> & {
+  action?: string;
+  rule?: string;
+}>;
+
+export type FlowAgentRuleInput = Partial<Omit<FlowAgentRule, 'permissionKey' | 'userId' | 'resolverKey'> & {
+  permissionKey?: string;
+  userId?: string;
+  resolverKey?: string;
+}>;
+
+export type FlowTransitionEffectInput = Partial<Omit<FlowTransitionEffect, 'nodeCode' | 'action'> & {
+  nodeCode?: string;
+  action?: string;
+}>;
+
+export type FlowNodeFormRuleInput = Partial<Omit<FlowNodeFormRule, 'threshold'> & {
+  threshold?: string;
+}>;
+
+export type FlowFormInput = Partial<Omit<FlowForm, 'description'> & {
+  description?: string;
+}>;
+
+export type FlowFillInput = Partial<Omit<FlowFill, 'runId' | 'nodeRunId' | 'taskId'> & {
+  runId?: string;
+  nodeRunId?: string;
+  taskId?: string;
+}>;
+
+export type FlowWaiverInput = Partial<Omit<FlowWaiver, 'questionId' | 'waivedBy' | 'expiresAt'> & {
+  questionId?: string;
+  waivedBy?: string;
+  expiresAt?: string;
+}>;
+
+export type FlowPolicySetInput = Partial<Omit<FlowPolicySet, 'name' | 'description'> & {
+  name?: string;
+  description?: string;
+}>;
+
+export type FlowPolicyRuleInput = Partial<Omit<FlowPolicyRule, 'nodeCode' | 'statusCode' | 'action' | 'capability' | 'reasonCode'> & {
+  nodeCode?: string;
+  statusCode?: string;
+  action?: string;
+  capability?: string;
+  reasonCode?: string;
+}>;

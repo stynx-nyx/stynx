@@ -1,3 +1,4 @@
+import * as response from './response-validation';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { from, tap } from 'rxjs';
 import type { Signal } from '@angular/core';
@@ -74,10 +75,10 @@ export class IamApiService {
 
   listUsers(params: IamListUsersParams = {}): Observable<PagedResult<StynxUser>> {
     return from(
-      this.client.get<PagedResult<StynxUser>>(
+      this.client.get(
         '/admin/users',
         requestOptions(query({ q: params.q, page: params.page, pageSize: params.pageSize }), params.tenantId),
-      ),
+      ).then(response.decode(response.isPagedResult(response.isStynxUser), 'PagedResult<StynxUser>')),
     ).pipe(
       tap((page) => {
         this.usersState.set(page.items);
@@ -90,11 +91,11 @@ export class IamApiService {
   }
 
   getUser(id: string): Observable<StynxUserDetail> {
-    return from(this.client.get<StynxUserDetail>(`/admin/users/${id}`));
+    return from(this.client.get(`/admin/users/${id}`).then(response.decode(response.isStynxUserDetail, 'StynxUserDetail')));
   }
 
   createUser(body: StynxCreateUserRequest): Observable<StynxUser> {
-    return from(this.client.post<StynxUser>('/admin/users', body)).pipe(
+    return from(this.client.post('/admin/users', body).then(response.decode(response.isStynxUser, 'StynxUser'))).pipe(
       tap((user) => {
         this.usersState.update((users) => replaceById(users, user));
       }),
@@ -102,51 +103,51 @@ export class IamApiService {
   }
 
   patchUser(id: string, diff: StynxPatchUserRequest): Observable<StynxUser> {
-    return from(this.client.patch<StynxUser>(`/admin/users/${id}`, diff)).pipe(
+    return from(this.client.patch(`/admin/users/${id}`, diff).then(response.decode(response.isStynxUser, 'StynxUser'))).pipe(
       tap((user) => {
         this.usersState.update((users) => replaceById(users, user));
       }),
     );
   }
 
-  disableUser(id: string): Observable<void> {
-    return from(this.client.post<void>(`/admin/users/${id}/disable`, {}));
+  disableUser(id: string): Observable<unknown> {
+    return from(this.client.post(`/admin/users/${id}/disable`, {}));
   }
 
-  reactivateUser(id: string): Observable<void> {
-    return from(this.client.post<void>(`/admin/users/${id}/reactivate`, {}));
+  reactivateUser(id: string): Observable<unknown> {
+    return from(this.client.post(`/admin/users/${id}/reactivate`, {}));
   }
 
-  inviteUser(id: string): Observable<void> {
-    return from(this.client.post<void>(`/admin/users/${id}/invite`, {}));
+  inviteUser(id: string): Observable<unknown> {
+    return from(this.client.post(`/admin/users/${id}/invite`, {}));
   }
 
-  forceLogoutUser(id: string): Observable<void> {
-    return from(this.client.post<void>(`/admin/users/${id}/force-logout`, {}));
+  forceLogoutUser(id: string): Observable<unknown> {
+    return from(this.client.post(`/admin/users/${id}/force-logout`, {}));
   }
 
   listUserRoles(id: string): Observable<StynxRole[]> {
-    return from(this.client.get<StynxRole[]>(`/admin/users/${id}/roles`));
+    return from(this.client.get(`/admin/users/${id}/roles`).then(response.decode(response.array(response.isStynxRole), 'StynxRole[]')));
   }
 
-  setUserRoles(id: string, roleIds: string[]): Observable<void> {
-    return from(this.client.put<void>(`/admin/users/${id}/roles`, { roleIds }));
+  setUserRoles(id: string, roleIds: string[]): Observable<unknown> {
+    return from(this.client.put(`/admin/users/${id}/roles`, { roleIds }));
   }
 
   listUserGroups(id: string): Observable<StynxGroup[]> {
-    return from(this.client.get<StynxGroup[]>(`/admin/users/${id}/groups`));
+    return from(this.client.get(`/admin/users/${id}/groups`).then(response.decode(response.array(response.isStynxGroup), 'StynxGroup[]')));
   }
 
-  setUserGroups(id: string, groupIds: string[]): Observable<void> {
-    return from(this.client.put<void>(`/admin/users/${id}/groups`, { groupIds }));
+  setUserGroups(id: string, groupIds: string[]): Observable<unknown> {
+    return from(this.client.put(`/admin/users/${id}/groups`, { groupIds }));
   }
 
   getEffectivePermissions(id: string): Observable<StynxEffectivePermissions> {
-    return from(this.client.get<StynxEffectivePermissions>(`/admin/users/${id}/effective-permissions`));
+    return from(this.client.get(`/admin/users/${id}/effective-permissions`).then(response.decode(response.isStynxEffectivePermissions, 'StynxEffectivePermissions')));
   }
 
   listRoles(): Observable<StynxRole[]> {
-    return from(this.client.get<StynxRole[]>('/admin/roles')).pipe(
+    return from(this.client.get('/admin/roles').then(response.decode(response.array(response.isStynxRole), 'StynxRole[]'))).pipe(
       tap((roles) => {
         this.rolesState.set(roles);
       }),
@@ -158,7 +159,7 @@ export class IamApiService {
   }
 
   createRole(body: StynxCreateRoleRequest): Observable<StynxRole> {
-    return from(this.client.post<StynxRole>('/admin/roles', body)).pipe(
+    return from(this.client.post('/admin/roles', body).then(response.decode(response.isStynxRole, 'StynxRole'))).pipe(
       tap((role) => {
         this.rolesState.update((roles) => replaceById(roles, role));
       }),
@@ -166,15 +167,15 @@ export class IamApiService {
   }
 
   patchRole(id: string, diff: StynxPatchRoleRequest): Observable<StynxRole> {
-    return from(this.client.patch<StynxRole>(`/admin/roles/${id}`, diff)).pipe(
+    return from(this.client.patch(`/admin/roles/${id}`, diff).then(response.decode(response.isStynxRole, 'StynxRole'))).pipe(
       tap((role) => {
         this.rolesState.update((roles) => replaceById(roles, role));
       }),
     );
   }
 
-  deleteRole(id: string): Observable<void> {
-    return from(this.client.delete<void>(`/admin/roles/${id}`)).pipe(
+  deleteRole(id: string): Observable<unknown> {
+    return from(this.client.delete(`/admin/roles/${id}`)).pipe(
       tap(() => {
         this.rolesState.update((roles) => removeById(roles, id));
       }),
@@ -182,7 +183,7 @@ export class IamApiService {
   }
 
   cloneRole(id: string, body: StynxCloneRoleRequest): Observable<StynxRole> {
-    return from(this.client.post<StynxRole>(`/admin/roles/${id}/clone`, body)).pipe(
+    return from(this.client.post(`/admin/roles/${id}/clone`, body).then(response.decode(response.isStynxRole, 'StynxRole'))).pipe(
       tap((role) => {
         this.rolesState.update((roles) => replaceById(roles, role));
       }),
@@ -190,15 +191,15 @@ export class IamApiService {
   }
 
   listRolePermissions(id: string): Observable<StynxPermission[]> {
-    return from(this.client.get<StynxPermission[]>(`/admin/roles/${id}/permissions`));
+    return from(this.client.get(`/admin/roles/${id}/permissions`).then(response.decode(response.array(response.isStynxPermission), 'StynxPermission[]')));
   }
 
-  setRolePermissions(id: string, permissionKeys: string[]): Observable<void> {
-    return from(this.client.put<void>(`/admin/roles/${id}/permissions`, { permissionKeys }));
+  setRolePermissions(id: string, permissionKeys: string[]): Observable<unknown> {
+    return from(this.client.put(`/admin/roles/${id}/permissions`, { permissionKeys }));
   }
 
   listGroups(): Observable<StynxGroup[]> {
-    return from(this.client.get<StynxGroup[]>('/admin/groups')).pipe(
+    return from(this.client.get('/admin/groups').then(response.decode(response.array(response.isStynxGroup), 'StynxGroup[]'))).pipe(
       tap((groups) => {
         this.groupsState.set(groups);
       }),
@@ -210,7 +211,7 @@ export class IamApiService {
   }
 
   createGroup(body: StynxCreateGroupRequest): Observable<StynxGroup> {
-    return from(this.client.post<StynxGroup>('/admin/groups', body)).pipe(
+    return from(this.client.post('/admin/groups', body).then(response.decode(response.isStynxGroup, 'StynxGroup'))).pipe(
       tap((group) => {
         this.groupsState.update((groups) => replaceById(groups, group));
       }),
@@ -218,15 +219,15 @@ export class IamApiService {
   }
 
   patchGroup(id: string, diff: StynxPatchGroupRequest): Observable<StynxGroup> {
-    return from(this.client.patch<StynxGroup>(`/admin/groups/${id}`, diff)).pipe(
+    return from(this.client.patch(`/admin/groups/${id}`, diff).then(response.decode(response.isStynxGroup, 'StynxGroup'))).pipe(
       tap((group) => {
         this.groupsState.update((groups) => replaceById(groups, group));
       }),
     );
   }
 
-  deleteGroup(id: string): Observable<void> {
-    return from(this.client.delete<void>(`/admin/groups/${id}`)).pipe(
+  deleteGroup(id: string): Observable<unknown> {
+    return from(this.client.delete(`/admin/groups/${id}`)).pipe(
       tap(() => {
         this.groupsState.update((groups) => removeById(groups, id));
       }),
@@ -234,18 +235,18 @@ export class IamApiService {
   }
 
   listGroupRoles(id: string): Observable<StynxRole[]> {
-    return from(this.client.get<StynxRole[]>(`/admin/groups/${id}/roles`));
+    return from(this.client.get(`/admin/groups/${id}/roles`).then(response.decode(response.array(response.isStynxRole), 'StynxRole[]')));
   }
 
-  setGroupRoles(id: string, roleIds: string[]): Observable<void> {
-    return from(this.client.put<void>(`/admin/groups/${id}/roles`, { roleIds }));
+  setGroupRoles(id: string, roleIds: string[]): Observable<unknown> {
+    return from(this.client.put(`/admin/groups/${id}/roles`, { roleIds }));
   }
 
   listGroupMembers(id: string): Observable<StynxUser[]> {
-    return from(this.client.get<StynxUser[]>(`/admin/groups/${id}/members`));
+    return from(this.client.get(`/admin/groups/${id}/members`).then(response.decode(response.array(response.isStynxUser), 'StynxUser[]')));
   }
 
-  setGroupMembers(id: string, userIds: string[]): Observable<void> {
-    return from(this.client.put<void>(`/admin/groups/${id}/members`, { userIds }));
+  setGroupMembers(id: string, userIds: string[]): Observable<unknown> {
+    return from(this.client.put(`/admin/groups/${id}/members`, { userIds }));
   }
 }

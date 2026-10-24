@@ -121,7 +121,11 @@ export class StynxDocumentUploadComponent implements OnDestroy {
   }
 
   async onFileSelected(event: Event): Promise<void> {
-    const file = (event.target as HTMLInputElement | null)?.files?.item(0);
+    const target = event.target;
+    if (!target || typeof HTMLInputElement === 'undefined' || !(target instanceof HTMLInputElement)) {
+      return;
+    }
+    const file = target.files?.item(0);
     if (!file) {
       return;
     }

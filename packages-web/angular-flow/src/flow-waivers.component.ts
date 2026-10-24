@@ -1,3 +1,4 @@
+import type { FlowWaiverInput } from './types';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import type { OnChanges } from '@angular/core';
 import { StynxHasPermissionDirective } from '@stynx-nyx/angular-auth';
@@ -97,7 +98,7 @@ export class StynxFlowWaiversComponent implements OnChanges {
 })
 export class StynxFlowWaiverDialogComponent {
   @Input() open = false;
-  @Input() waiver: Partial<FlowWaiver> | undefined;
-  @Output() readonly save = new EventEmitter<Partial<FlowWaiver>>();
+  @Input() waiver: FlowWaiverInput | undefined;
+  @Output() readonly save = new EventEmitter<FlowWaiverInput>();
   @Output() readonly dismissed = new EventEmitter<void>();
 }

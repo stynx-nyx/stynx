@@ -1,3 +1,4 @@
+import * as response from './response-validation';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { from, tap } from 'rxjs';
 import type { Signal } from '@angular/core';
@@ -58,7 +59,7 @@ export class AuditApiService {
       cursor,
     });
 
-    return from(this.client.get<AuditPage>('/audit/events', requestOptions(params))).pipe(
+    return from(this.client.get('/audit/events', requestOptions(params)).then(response.decode(response.isAuditPage, 'AuditPage'))).pipe(
       tap((page) => {
         this.eventsState.set(page.items);
       }),
@@ -66,7 +67,7 @@ export class AuditApiService {
   }
 
   getEvent(eventId: string): Observable<AuditEventDetail> {
-    return from(this.client.get<AuditEventDetail>(`/audit/events/${segment(eventId)}`));
+    return from(this.client.get(`/audit/events/${segment(eventId)}`).then(response.decode(response.isAuditEventDetail, 'AuditEventDetail')));
   }
 
   listEntityHistory(
@@ -77,10 +78,10 @@ export class AuditApiService {
   ): Observable<AuditPage> {
     const params = query({ tenantId: filter.tenantId, limit: filter.limit, cursor });
     return from(
-      this.client.get<AuditPage>(
+      this.client.get(
         `/audit/entities/${segment(resource)}/${segment(id)}/history`,
         requestOptions(params),
-      ),
+      ).then(response.decode(response.isAuditPage, 'AuditPage')),
     ).pipe(
       tap((page) => {
         this.entityHistoryState.set(page.items);
@@ -89,6 +90,6 @@ export class AuditApiService {
   }
 
   verifyHashIntegrity(eventId: string): Observable<AuditIntegrityReport> {
-    return from(this.client.get<AuditIntegrityReport>(`/audit/events/${segment(eventId)}/integrity`));
+    return from(this.client.get(`/audit/events/${segment(eventId)}/integrity`).then(response.decode(response.isAuditIntegrityReport, 'AuditIntegrityReport')));
   }
 }

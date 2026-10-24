@@ -1,3 +1,4 @@
+import type { FlowFormInput } from './types';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import type { OnChanges } from '@angular/core';
 import { StynxHasPermissionDirective } from '@stynx-nyx/angular-auth';
@@ -132,9 +133,9 @@ export class StynxFlowFormsComponent implements OnChanges {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StynxFlowFormEditorComponent {
-  @Input() form: Partial<FlowForm> | undefined;
+  @Input() form: FlowFormInput | undefined;
   @Input() questions: FlowQuestion[] = [];
-  @Output() readonly save = new EventEmitter<Partial<FlowForm>>();
+  @Output() readonly save = new EventEmitter<FlowFormInput>();
   @Output() readonly questionSelected = new EventEmitter<FlowQuestion>();
 }
 

@@ -1,8 +1,9 @@
+import { decode, isStynxProfile, isStynxPreferences } from './response-validation';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { STYNX_ANGULAR_OPTIONS } from '@stynx-nyx/angular';
 import { DocumentService, STYNX_UPLOAD_EXECUTOR } from '@stynx-nyx/angular-storage';
-import { from, tap } from 'rxjs';
+import { from, map, tap } from 'rxjs';
 import type { Observable } from 'rxjs';
 import { STYNX_PROFILE_CLIENT } from './tokens';
 import type {
@@ -30,10 +31,11 @@ export class ProfileService {
 
   reload(): Observable<StynxProfile> {
     const source = this.client
-      ? from(this.client.get<StynxProfile>('/profile'))
-      : this.requireHttp().get<StynxProfile>(`${this.apiBaseUrl}/profile`);
+      ? from(this.client.get('/profile'))
+      : this.requireHttp().get<unknown>(`${this.apiBaseUrl}/profile`);
 
     return source.pipe(
+      map(decode(isStynxProfile, 'profile')),
       tap((profile) => {
         this.profile.set(profile);
         if (profile.preferences) {
@@ -47,15 +49,16 @@ export class ProfileService {
     const revision = this.profile()?.revision ?? 0;
     const source = this.client
       ? from(
-          this.client.patch<StynxProfile>('/profile', diff, {
+          this.client.patch('/profile', diff, {
             headers: { 'If-Match': `"${revision}"` },
           }),
         )
-      : this.requireHttp().patch<StynxProfile>(`${this.apiBaseUrl}/profile`, diff, {
+      : this.requireHttp().patch<unknown>(`${this.apiBaseUrl}/profile`, diff, {
           headers: { 'If-Match': `"${revision}"` },
         });
 
     return source.pipe(
+      map(decode(isStynxProfile, 'profile')),
       tap((profile) => {
         this.profile.set(profile);
         if (profile.preferences) {
@@ -69,17 +72,18 @@ export class ProfileService {
     const revision = this.preferences()?.revision ?? 0;
     const source = this.client
       ? from(
-          this.client.put<StynxPreferences>('/profile/preferences', preferences, {
+          this.client.put('/profile/preferences', preferences, {
             headers: { 'If-Match': `"${revision}"` },
           }),
         )
-      : this.requireHttp().put<StynxPreferences>(
+      : this.requireHttp().put<unknown>(
           `${this.apiBaseUrl}/profile/preferences`,
           preferences,
           { headers: { 'If-Match': `"${revision}"` } },
         );
 
     return source.pipe(
+      map(decode(isStynxPreferences, 'preferences')),
       tap((nextPreferences) => {
         this.preferences.set(nextPreferences);
         this.profile.update((current) =>

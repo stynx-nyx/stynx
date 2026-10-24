@@ -1,13 +1,7 @@
+import type { FlowGraphInput, FlowNodeInput, FlowEdgeInput, FlowAgentRuleInput, FlowNodeFormRuleInput, FlowTransitionEffectInput } from './types';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { StynxTranslatePipe } from '@stynx-nyx/angular-i18n';
-import type {
-  FlowAgentRule,
-  FlowEdge,
-  FlowGraph,
-  FlowNode,
-  FlowNodeFormRule,
-  FlowTransitionEffect,
-} from './types';
+
 
 @Component({
   selector: 'stynx-flow-graph-dialog',
@@ -45,8 +39,8 @@ import type {
 })
 export class StynxFlowGraphDialogComponent {
   @Input() open = false;
-  @Input() graph: Partial<FlowGraph> | undefined;
-  @Output() readonly save = new EventEmitter<Partial<FlowGraph>>();
+  @Input() graph: FlowGraphInput | undefined;
+  @Output() readonly save = new EventEmitter<FlowGraphInput>();
   @Output() readonly dismissed = new EventEmitter<void>();
 }
 
@@ -71,8 +65,8 @@ export class StynxFlowGraphDialogComponent {
 })
 export class StynxFlowNodeDialogComponent {
   @Input() open = false;
-  @Input() node: Partial<FlowNode> | undefined;
-  @Output() readonly save = new EventEmitter<Partial<FlowNode>>();
+  @Input() node: FlowNodeInput | undefined;
+  @Output() readonly save = new EventEmitter<FlowNodeInput>();
   @Output() readonly dismissed = new EventEmitter<void>();
 }
 
@@ -97,8 +91,8 @@ export class StynxFlowNodeDialogComponent {
 })
 export class StynxFlowEdgeDialogComponent {
   @Input() open = false;
-  @Input() edge: Partial<FlowEdge> | undefined;
-  @Output() readonly save = new EventEmitter<Partial<FlowEdge>>();
+  @Input() edge: FlowEdgeInput | undefined;
+  @Output() readonly save = new EventEmitter<FlowEdgeInput>();
   @Output() readonly dismissed = new EventEmitter<void>();
 }
 
@@ -123,8 +117,8 @@ export class StynxFlowEdgeDialogComponent {
 })
 export class StynxFlowAgentRuleDialogComponent {
   @Input() open = false;
-  @Input() rule: Partial<FlowAgentRule> | undefined;
-  @Output() readonly save = new EventEmitter<Partial<FlowAgentRule>>();
+  @Input() rule: FlowAgentRuleInput | undefined;
+  @Output() readonly save = new EventEmitter<FlowAgentRuleInput>();
   @Output() readonly dismissed = new EventEmitter<void>();
 }
 
@@ -149,8 +143,8 @@ export class StynxFlowAgentRuleDialogComponent {
 })
 export class StynxFlowNodeFormRuleDialogComponent {
   @Input() open = false;
-  @Input() rule: Partial<FlowNodeFormRule> | undefined;
-  @Output() readonly save = new EventEmitter<Partial<FlowNodeFormRule>>();
+  @Input() rule: FlowNodeFormRuleInput | undefined;
+  @Output() readonly save = new EventEmitter<FlowNodeFormRuleInput>();
   @Output() readonly dismissed = new EventEmitter<void>();
 }
 
@@ -175,7 +169,7 @@ export class StynxFlowNodeFormRuleDialogComponent {
 })
 export class StynxFlowTransitionEffectDialogComponent {
   @Input() open = false;
-  @Input() effect: Partial<FlowTransitionEffect> | undefined;
-  @Output() readonly save = new EventEmitter<Partial<FlowTransitionEffect>>();
+  @Input() effect: FlowTransitionEffectInput | undefined;
+  @Output() readonly save = new EventEmitter<FlowTransitionEffectInput>();
   @Output() readonly dismissed = new EventEmitter<void>();
 }

@@ -3,10 +3,10 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { JsonValue } from './JsonValue';
-export type AuditLogItem = {
+export type AuditLogWireItem = {
   actorId?: string | null;
   id: number;
-  occurredAt: string;
+  occurredAt: string | null;
   operation: string;
   payload: Record<string, JsonValue>;
   requestId?: string | null;

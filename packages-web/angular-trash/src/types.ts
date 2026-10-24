@@ -37,11 +37,11 @@ export interface StynxTrashColumn {
 
 export interface StynxTrashAdapter {
   list(resource: string, query: StynxTrashQuery): Promise<StynxTrashPage>;
-  restore(resource: string, id: string): Promise<void>;
-  restoreWithCascade?(resource: string, id: string): Promise<void>;
-  hardDelete?(resource: string, id: string): Promise<void>;
-  bulkRestore?(resource: string, ids: string[]): Promise<void>;
-  bulkHardDelete?(resource: string, ids: string[]): Promise<void>;
+  restore(resource: string, id: string): Promise<unknown>;
+  restoreWithCascade?(resource: string, id: string): Promise<unknown>;
+  hardDelete?(resource: string, id: string): Promise<unknown>;
+  bulkRestore?(resource: string, ids: string[]): Promise<unknown>;
+  bulkHardDelete?(resource: string, ids: string[]): Promise<unknown>;
 }
 
 export interface StynxTrashOptions {

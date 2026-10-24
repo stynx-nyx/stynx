@@ -12,7 +12,13 @@ type QueryValue = string | number | boolean | null | undefined;
 type QueryRecord = Record<string, QueryValue>;
 
 function asRecord(value: unknown): Record<string, unknown> {
-  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
+  return isRecord(value) ? value : {};
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  // Arrays retain their original treatment here: callers inspect named fields
+  // and use their existing fallbacks for missing values.
+  return typeof value === 'object' && value !== null;
 }
 
 function stringValue(value: unknown): string | undefined {
@@ -46,7 +52,7 @@ export class SdkTrashAdapter implements StynxTrashAdapter {
   async list(resource: string, query: StynxTrashQuery): Promise<StynxTrashPage> {
     const kinds = this.resolveKinds(resource);
     const pages = await Promise.all(
-      kinds.map((kind) => this.client.get<unknown>('/trash', { query: queryFor(kind, query) })),
+      kinds.map((kind) => this.client.get('/trash', { query: queryFor(kind, query) })),
     );
 
     const items: StynxTrashItem[] = [];
@@ -72,24 +78,24 @@ export class SdkTrashAdapter implements StynxTrashAdapter {
     };
   }
 
-  restore(resource: string, id: string): Promise<void> {
-    return this.client.post<void>('/trash/restore', { kind: resource, id });
+  restore(resource: string, id: string): Promise<unknown> {
+    return this.client.post('/trash/restore', { kind: resource, id });
   }
 
-  restoreWithCascade(resource: string, id: string): Promise<void> {
-    return this.client.post<void>('/trash/restore', { kind: resource, id, cascade: true });
+  restoreWithCascade(resource: string, id: string): Promise<unknown> {
+    return this.client.post('/trash/restore', { kind: resource, id, cascade: true });
   }
 
-  hardDelete(resource: string, id: string): Promise<void> {
-    return this.client.post<void>('/trash/hard-delete', { kind: resource, id });
+  hardDelete(resource: string, id: string): Promise<unknown> {
+    return this.client.post('/trash/hard-delete', { kind: resource, id });
   }
 
-  bulkRestore(resource: string, ids: string[]): Promise<void> {
-    return this.client.post<void>('/trash/bulk-restore', { kind: resource, ids });
+  bulkRestore(resource: string, ids: string[]): Promise<unknown> {
+    return this.client.post('/trash/bulk-restore', { kind: resource, ids });
   }
 
-  bulkHardDelete(resource: string, ids: string[]): Promise<void> {
-    return this.client.post<void>('/trash/bulk-hard-delete', { kind: resource, ids });
+  bulkHardDelete(resource: string, ids: string[]): Promise<unknown> {
+    return this.client.post('/trash/bulk-hard-delete', { kind: resource, ids });
   }
 
   private resolveKinds(resource: string): StynxTrashKind[] {
@@ -121,7 +127,7 @@ export class SdkTrashAdapter implements StynxTrashAdapter {
       booleanValue(record.canHardDelete) ?? booleanValue(record.can_hard_delete);
     const item: StynxTrashItem = {
       id,
-      kind: (stringValue(record.kind) ?? fallbackKind) as StynxTrashKind,
+      kind: stringValue(record.kind) ?? fallbackKind,
       label:
         stringValue(record.label) ?? stringValue(record.title) ?? stringValue(record.name) ?? id,
       deletedAt: stringValue(record.deletedAt) ?? stringValue(record.deleted_at) ?? '',

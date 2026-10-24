@@ -1,3 +1,4 @@
+import type { ResponseDecoder } from './response-decoder';
 import type { AuthProvider } from './auth-provider';
 import { createStynxSdkError } from './errors';
 import type { ApiRequestOptions, FetchLike, HttpRequestInitLike, HttpResponseLike } from './http';
@@ -61,7 +62,8 @@ function parseBody(response: HttpResponseLike, body: string): unknown {
     return body;
   }
   try {
-    return JSON.parse(body) as unknown;
+    const parsed: unknown = JSON.parse(body);
+    return parsed;
   } catch {
     return body;
   }
@@ -88,14 +90,21 @@ export class StynxHttpTransport {
     this.baseUrl = trimEdgeSlash(options.baseUrl);
   }
 
-  async request<T>(request: StynxTransportRequestOptions): Promise<T> {
-    return this.execute<T>(request, true);
+  async request(request: StynxTransportRequestOptions): Promise<unknown> {
+    return this.execute(request, true);
   }
 
-  private async execute<T>(
+  async requestChecked<T>(
+    request: StynxTransportRequestOptions,
+    decode: ResponseDecoder<T>,
+  ): Promise<T> {
+    return decode(await this.request(request));
+  }
+
+  private async execute(
     request: StynxTransportRequestOptions,
     allowRefresh: boolean,
-  ): Promise<T> {
+  ): Promise<unknown> {
     const query = buildQuery(request.query);
     const url = `${this.baseUrl}/${trimStartSlash(request.path)}${query}`;
     const headers: Record<string, string> = {
@@ -133,7 +142,7 @@ export class StynxHttpTransport {
     if (response.status === 401 && allowRefresh && this.options.authProvider) {
       const refreshed = await this.options.authProvider.refresh();
       if (refreshed) {
-        return this.execute<T>(request, false);
+        return this.execute(request, false);
       }
       const error = createStynxSdkError(response.status, parsedBody);
       await this.options.authProvider.onAuthFailure?.(error);
@@ -145,6 +154,6 @@ export class StynxHttpTransport {
       throw error;
     }
 
-    return parsedBody as T;
+    return parsedBody;
   }
 }

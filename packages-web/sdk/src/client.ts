@@ -8,16 +8,16 @@ export class StynxSdkClient {
     this.transport = new StynxHttpTransport(options);
   }
 
-  get<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-    return this.transport.request<T>({
+  get(path: string, options: ApiRequestOptions = {}): Promise<unknown> {
+    return this.transport.request({
       method: 'GET',
       path,
       ...options,
     });
   }
 
-  post<T>(path: string, body: unknown, options: ApiRequestOptions = {}): Promise<T> {
-    return this.transport.request<T>({
+  post(path: string, body: unknown, options: ApiRequestOptions = {}): Promise<unknown> {
+    return this.transport.request({
       method: 'POST',
       path,
       body,
@@ -25,8 +25,8 @@ export class StynxSdkClient {
     });
   }
 
-  put<T>(path: string, body: unknown, options: ApiRequestOptions = {}): Promise<T> {
-    return this.transport.request<T>({
+  put(path: string, body: unknown, options: ApiRequestOptions = {}): Promise<unknown> {
+    return this.transport.request({
       method: 'PUT',
       path,
       body,
@@ -34,8 +34,8 @@ export class StynxSdkClient {
     });
   }
 
-  patch<T>(path: string, body: unknown, options: ApiRequestOptions = {}): Promise<T> {
-    return this.transport.request<T>({
+  patch(path: string, body: unknown, options: ApiRequestOptions = {}): Promise<unknown> {
+    return this.transport.request({
       method: 'PATCH',
       path,
       body,
@@ -43,8 +43,8 @@ export class StynxSdkClient {
     });
   }
 
-  delete<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-    return this.transport.request<T>({
+  delete(path: string, options: ApiRequestOptions = {}): Promise<unknown> {
+    return this.transport.request({
       method: 'DELETE',
       path,
       ...options,

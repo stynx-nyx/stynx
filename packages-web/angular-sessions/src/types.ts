@@ -23,7 +23,7 @@ export interface StynxActiveSession {
   deviceLabel?: string;
   client?: string;
   capabilities?: StynxSessionControlCapabilities;
-  guarantee?: StynxSessionGuarantee;
+  guarantee?: StynxActiveSessionGuarantee;
 }
 
 export interface StynxSessionControlCapabilities {
@@ -44,6 +44,11 @@ export interface StynxSessionGuarantee {
   propagationBoundSeconds: number | null;
   accessTokenExpiresAt: string | null;
 }
+/** List responses omit the access-token deadline; legacy complete objects remain valid. */
+export type StynxActiveSessionGuarantee = Omit<StynxSessionGuarantee, 'accessTokenExpiresAt'> & {
+  accessTokenExpiresAt?: string | null;
+};
+
 export interface StynxSessionMutationResult {
   operationId: string;
   action:
@@ -69,15 +74,15 @@ export interface StynxSessionMutationResult {
 export type StynxSessionsAdapterResult<T> = Observable<T> | Promise<T>;
 
 export interface StynxSessionsSdkClient {
-  get<T>(path: string): Promise<T>;
-  post<T>(path: string, body: unknown, options?: { headers?: Record<string, string> }): Promise<T>;
-  delete<T>(path: string, options?: { headers?: Record<string, string> }): Promise<T>;
+  get(path: string): Promise<unknown>;
+  post(path: string, body: unknown, options?: { headers?: Record<string, string> }): Promise<unknown>;
+  delete(path: string, options?: { headers?: Record<string, string> }): Promise<unknown>;
 }
 
 export interface StynxSessionsAdapter {
   list(): StynxSessionsAdapterResult<StynxActiveSession[]>;
-  revoke(sid: string): StynxSessionsAdapterResult<void>;
-  revokeOthers(): StynxSessionsAdapterResult<void>;
+  revoke(sid: string): StynxSessionsAdapterResult<unknown>;
+  revokeOthers(): StynxSessionsAdapterResult<unknown>;
   revokeWithStatus?(
     sid: string,
     operationId?: string,

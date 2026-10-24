@@ -267,10 +267,9 @@ export class StynxPreferencesFormComponent implements OnDestroy, StynxUnsavedCha
           },
         };
     this.profile.setPreferences(wireValue).subscribe({
-      next: (preferences) => {
-        const legacy = preferences as unknown as StynxPreferencesValue;
+      next: (preferences: StynxPreferences | StynxPreferencesValue) => {
         this.applyLocaleChange(
-          'values' in preferences ? preferences.values.locale.locale : legacy.locale,
+          'values' in preferences ? preferences.values.locale.locale : preferences.locale,
         );
         this.markSaved(preferences);
       },

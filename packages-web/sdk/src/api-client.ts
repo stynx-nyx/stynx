@@ -1,3 +1,4 @@
+import type { ResponseDecoder } from './response-decoder';
 import type { ApiRequestOptions, FetchLike, HttpRequestInitLike, HttpResponseLike } from './http';
 import { FrontendSessionManager } from './session-manager';
 
@@ -53,24 +54,34 @@ export class StynxApiClient {
     this.baseUrl = trimEdgeSlash(options.baseUrl);
   }
 
-  get<T>(path: string, requestOptions?: ApiRequestOptions): Promise<T> {
-    return this.request<T>('GET', path, undefined, requestOptions);
+  get(path: string, requestOptions?: ApiRequestOptions): Promise<unknown> {
+    return this.request('GET', path, undefined, requestOptions);
   }
 
-  post<T>(path: string, body: unknown, requestOptions?: ApiRequestOptions): Promise<T> {
-    return this.request<T>('POST', path, body, requestOptions);
+  post(path: string, body: unknown, requestOptions?: ApiRequestOptions): Promise<unknown> {
+    return this.request('POST', path, body, requestOptions);
   }
 
-  delete<T>(path: string, requestOptions?: ApiRequestOptions): Promise<T> {
-    return this.request<T>('DELETE', path, undefined, requestOptions);
+  delete(path: string, requestOptions?: ApiRequestOptions): Promise<unknown> {
+    return this.request('DELETE', path, undefined, requestOptions);
   }
 
-  async request<T>(
+  async requestChecked<T>(
+    method: string,
+    path: string,
+    decode: ResponseDecoder<T>,
+    body?: unknown,
+    requestOptions: ApiRequestOptions = {},
+  ): Promise<T> {
+    return decode(await this.request(method, path, body, requestOptions));
+  }
+
+  async request(
     method: string,
     path: string,
     body?: unknown,
     requestOptions: ApiRequestOptions = {},
-  ): Promise<T> {
+  ): Promise<unknown> {
     const query = buildQuery(requestOptions.query);
     const url = `${this.baseUrl}/${trimStartSlash(path)}${query}`;
 
@@ -105,9 +116,10 @@ export class StynxApiClient {
     }
 
     if (responseText.length === 0) {
-      return undefined as T;
+      return undefined;
     }
 
-    return (isJsonResponse(response) ? JSON.parse(responseText) : responseText) as T;
+    const result: unknown = isJsonResponse(response) ? JSON.parse(responseText) : responseText;
+    return result;
   }
 }

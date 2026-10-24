@@ -206,9 +206,7 @@ export class StynxShellThemeService {
     if (!isPlatformBrowser(this.platformId)) return 'system';
     try {
       const stored = this.document.defaultView?.localStorage.getItem(this.storageKey);
-      return stored && VALID_PREFERENCES.has(stored as StynxShellThemePreference)
-        ? stored as StynxShellThemePreference
-        : 'system';
+      return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
     } catch {
       return 'system';
     }

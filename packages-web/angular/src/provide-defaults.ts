@@ -60,7 +60,13 @@ function featureProviders(
     return [];
   }
 
-  return Array.isArray(config) ? [...config] : [config as Provider | EnvironmentProviders];
+  return isProviderList(config) ? [...config] : [config];
+}
+
+function isProviderList(
+  config: StynxDefaultFeatureProviders,
+): config is ReadonlyArray<Provider | EnvironmentProviders> {
+  return Array.isArray(config);
 }
 
 export function provideStynxAngular(
