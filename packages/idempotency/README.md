@@ -152,6 +152,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/data`: `workspace:*`
 - `redis`: `^6.0.0`
 - `rxjs`: `^7.8.2`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 

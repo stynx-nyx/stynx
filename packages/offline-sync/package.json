@@ -38,7 +38,8 @@
     "@stynx-nyx/backend": "workspace:*",
     "@stynx-nyx/core": "workspace:*",
     "@stynx-nyx/data": "workspace:*",
-    "@stynx-nyx/idempotency": "workspace:*"
+    "@stynx-nyx/idempotency": "workspace:*",
+    "zod": "^4.6.6"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.19",

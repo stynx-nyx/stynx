@@ -1149,6 +1149,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      zod:
+        specifier: ^4.6.6
+        version: 4.6.7
     devDependencies:
       '@nestjs/testing':
         specifier: ^11.1.26
@@ -1159,6 +1162,9 @@ importers:
 
   packages/cli:
     dependencies:
+      '@stynx-nyx/data':
+        specifier: workspace:*
+        version: link:../data
       '@stynx-nyx/privacy':
         specifier: workspace:*
         version: link:../privacy
@@ -1174,6 +1180,9 @@ importers:
       yaml:
         specifier: ^2.8.3
         version: 2.9.0
+      zod:
+        specifier: ^4.6.6
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: 24.13.4
@@ -1480,6 +1489,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      zod:
+        specifier: ^4.6.6
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: 24.13.4
@@ -1523,6 +1535,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      zod:
+        specifier: ^4.6.6
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: 24.13.4
@@ -1682,6 +1697,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      zod:
+        specifier: ^4.6.6
+        version: 4.6.7
     devDependencies:
       '@nestjs/testing':
         specifier: ^11.1.26
@@ -1722,6 +1740,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      zod:
+        specifier: ^4.6.6
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: 24.13.4
@@ -1943,6 +1964,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      zod:
+        specifier: ^4.6.6
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: 24.13.4
@@ -2230,6 +2254,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      zod:
+        specifier: ^4.6.6
+        version: 4.6.7
     devDependencies:
       '@types/node':
         specifier: 24.13.4
@@ -2364,6 +2391,9 @@ importers:
       rxjs:
         specifier: ^7.8.2
         version: 7.8.2
+      zod:
+        specifier: ^4.6.6
+        version: 4.6.7
     devDependencies:
       '@aws-sdk/client-s3':
         specifier: ^3.1068.0

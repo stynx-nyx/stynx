@@ -154,6 +154,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/contracts`: `workspace:*`
 - `@stynx-nyx/data`: `workspace:*`
 - `redis`: `^6.0.0`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 

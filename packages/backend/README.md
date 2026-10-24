@@ -306,6 +306,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/idempotency`: `workspace:*`
 - `@stynx-nyx/integration-adapter`: `workspace:*`
 - `@stynx-nyx/ratelimit`: `workspace:*`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 

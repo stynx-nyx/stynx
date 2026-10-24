@@ -308,6 +308,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/core`: `workspace:*`
 - `@stynx-nyx/data`: `workspace:*`
 - `@stynx-nyx/idempotency`: `workspace:*`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 

@@ -335,6 +335,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/core`: `workspace:*`
 - `@stynx-nyx/data`: `workspace:*`
 - `rxjs`: `^7.8.2`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 

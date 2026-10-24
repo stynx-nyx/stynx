@@ -168,11 +168,13 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 
 ### Runtime dependencies
 
+- `@stynx-nyx/data`: `workspace:*`
 - `@stynx-nyx/privacy`: `workspace:*`
 - `commander`: `^15.0.0`
 - `pg`: `^8.22.0`
 - `typescript`: `~6.0.3`
 - `yaml`: `^2.8.3`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 
