@@ -42,7 +42,14 @@ This is the repository-local engineering contract for all contributors.
    `privacy.module.spec.ts` and `privacy-object-store.provider.spec.ts`. These
    populations are disjoint and their union is all six executable test files.
    Coverage executes all six through its dedicated configuration without
-   changing thresholds, timeouts, or unrelated task concurrency. The prospective
+   changing thresholds or timeouts. The preserved unrelated-concurrency restriction
+   is prospectively amended only for ordinary `test` commands by
+   [ADR0035](../../law/adr/2026-10-24-ordinary-unit-execution-budget-proposal.md),
+   approved by the Owner on 2026-10-24: two root Turbo package slots and one
+   Vitest/Node test-file worker per ordinary package command, including direct
+   package invocation. Integration, E2E, coverage, mutation and standalone build
+   scheduling retain their existing contracts; populations, assertions and all
+   other rule 9 requirements remain unchanged. The prospective
    STYNX 1.6.0 privacy-tier amendment in ADR-0019 extends the historical D13
    population additively; every original behavioral case and assertion remains
    required. Local provider evidence does not qualify production cloud effects.
