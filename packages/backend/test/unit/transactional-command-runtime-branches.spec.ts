@@ -89,6 +89,23 @@ function runtime(options: {
 }
 
 describe('transactional command direct execution branches', () => {
+  it.each([undefined, null, false, 17, 'text', ['array'], { opaque: true }].map((body) => ({ body })))(
+      'retains native HttpException response for unselected body $body', async ({ body }) => {
+      const state = runtime({ handler: () => throwError(() => new CommittedCommandError(422, body)), persistStatus: () => false });
+      const reference: unknown = Reflect.construct(HttpException, [body, 422]);
+      if (!(reference instanceof HttpException)) throw new Error('native exception required');
+      let thrown: unknown;
+      try { await firstValueFrom(state.interceptor.intercept(state.context, state.next)); }
+      catch (error) { thrown = error; }
+      expect(thrown).toBeInstanceOf(HttpException);
+      if (!(thrown instanceof HttpException)) throw new Error('native exception not propagated');
+      expect(thrown.getStatus()).toBe(reference.getStatus());
+      expect(thrown.getResponse()).toBe(body);
+      expect(thrown.message).toBe(reference.message);
+      expect(state.store.complete).not.toHaveBeenCalled();
+      expect(state.auditSink.writeInTransaction).not.toHaveBeenCalled();
+    });
+
   it('commits the default successful result with only allowed response headers', async () => {
     const state = runtime({ responseHeaders: { location: '/records/1', 'set-cookie': 'secret' } });
     await expect(firstValueFrom(state.interceptor.intercept(state.context, state.next))).rejects.toMatchObject({

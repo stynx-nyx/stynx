@@ -211,3 +211,60 @@ describe('ResponseEventRequestDbClientLifecycle', () => {
     expect(delegate.release).toHaveBeenCalledTimes(1);
   });
 });
+
+
+describe('request lifecycle opaque receiver preservation', () => {
+  it('reads once lazily per registration and invokes each callable with the original receiver', async () => {
+    const order: string[] = []; const receivers: unknown[] = [];
+    const listeners: Array<() => void> = [];
+    const response = {
+      get once() { order.push('get:once'); return function (this: unknown, event: string, listener: () => void) { receivers.push(this); order.push(event); listeners.push(listener); }; },
+      get finished() { order.push('finished'); return false; },
+      get writableEnded() { order.push('writableEnded'); return false; },
+    };
+    const delegate = { acquire: vi.fn(), release: vi.fn(async () => undefined) };
+    const lifecycle = new ResponseEventRequestDbClientLifecycle(delegate);
+    const context = { request: { headers: {}, response }, tenantId: 't', client: {} };
+    await lifecycle.release(context);
+    expect(order).toEqual(['get:once', 'finished', 'writableEnded', 'get:once', 'finish', 'get:once', 'close']);
+    expect(receivers).toEqual([response, response]);
+    expect(delegate.release).not.toHaveBeenCalled();
+    listeners[0]?.(); listeners[1]?.();
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(delegate.release).toHaveBeenCalledExactlyOnceWith(context);
+  });
+  it('short circuits writableEnded and registration for a truthy finished flag', async () => {
+    const once = vi.fn(); const writable = vi.fn(() => { throw new Error('must not read'); });
+    const response = { once, finished: 'yes', get writableEnded() { return writable(); } };
+    const delegate = { acquire: vi.fn(), release: vi.fn(async () => undefined) };
+    await new ResponseEventRequestDbClientLifecycle(delegate).release({ request: { headers: {}, response }, tenantId: 't', client: {} });
+    expect(writable).not.toHaveBeenCalled(); expect(once).not.toHaveBeenCalled();
+    expect(delegate.release).toHaveBeenCalledTimes(1);
+  });
+  it('does not capture a once callable that changes before registration', async () => {
+    let reads = 0; const first = vi.fn();
+    const response = { get once() { reads += 1; return reads === 1 ? first : null; } };
+    const delegate = { acquire: vi.fn(), release: vi.fn() };
+    await expect(new ResponseEventRequestDbClientLifecycle(delegate).release({ request: { headers: {}, response }, tenantId: 't', client: {} })).rejects.toBeInstanceOf(TypeError);
+    expect(reads).toBe(2); expect(first).not.toHaveBeenCalled(); expect(delegate.release).not.toHaveBeenCalled();
+  });
+  it('preserves response getter errors without releasing or fallback', async () => {
+    const error = new Error('getter'); const nested = vi.fn();
+    const request = { headers: {}, response: { get once() { throw error; } }, get res() { return nested(); } };
+    const delegate = { acquire: vi.fn(), release: vi.fn() };
+    await expect(new ResponseEventRequestDbClientLifecycle(delegate).release({ request, tenantId: 't', client: {} })).rejects.toBe(error);
+    expect(nested).not.toHaveBeenCalled(); expect(delegate.release).not.toHaveBeenCalled();
+  });
+  it('keeps strict marker assignment failure for frozen request state before release', async () => {
+    const delegate = { acquire: vi.fn(), release: vi.fn() };
+    await expect(new ResponseEventRequestDbClientLifecycle(delegate).release({ request: Object.freeze({ headers: {} }), tenantId: 't', client: {} })).rejects.toBeInstanceOf(TypeError);
+    expect(delegate.release).not.toHaveBeenCalled();
+  });
+  it('awaits the client release thenable and preserves receiver and rejection identity', async () => {
+    const error = new Error('release'); const receivers: unknown[] = [];
+    const client = { release() { receivers.push(this); return Promise.reject(error); } };
+    const lifecycle = new PgTenantDbClientLifecycle({ connectWithTenant: vi.fn() });
+    await expect(lifecycle.release({ request: { headers: {} }, tenantId: 't', client })).rejects.toBe(error);
+    expect(receivers).toEqual([client]);
+  });
+});
