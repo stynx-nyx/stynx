@@ -228,7 +228,7 @@ describe('RedisPermissionCacheBackend', () => {
 
   it('get parses JSON value when present', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
-    const record = { sid: 'sid-1', userId: 'u', tenantId: 't', permissions: [], expiresAt: 0 };
+    const record = { sid: 'sid-1', userId: 'u', tenantId: 't', permissions: [], membershipId: 'm', hash: 'h', generation: '1', computedAt: 0, expiresAt: 0 };
     attachClient(backend, makeClient({ get: vi.fn(async () => JSON.stringify(record)) }));
     await expect(backend.get('sid-1')).resolves.toEqual(record);
   });
@@ -239,11 +239,52 @@ describe('RedisPermissionCacheBackend', () => {
     await expect(backend.get('sid-1')).resolves.toBe(null);
   });
 
+  it.each([null, '', 'null'])('get retains missing/empty/JSON-null result %s', async (raw) => {
+    const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
+    const client = attachClient(backend, makeClient({ get: vi.fn(async () => raw) }));
+    await expect(backend.get('sid-1')).resolves.toBeNull();
+    expect(client.multi).not.toHaveBeenCalled();
+  });
+
+  it('get retains JSON syntax failure and read-only behavior', async () => {
+    const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
+    const client = attachClient(backend, makeClient({ get: vi.fn(async () => '{secret') }));
+    await expect(backend.get('sid-1')).rejects.toBeInstanceOf(SyntaxError);
+    expect(client.multi).not.toHaveBeenCalled();
+  });
+
+  it.each(['sid', 'userId', 'tenantId', 'membershipId', 'hash', 'generation', 'computedAt', 'permissions'])(
+      'get refuses missing or malformed %s with redacted error and no writes', async (field) => {
+      const valid: Record<string, unknown> = { sid: 's', userId: 'u', tenantId: 't', membershipId: 'm', hash: 'h', generation: '1', computedAt: 0, permissions: ['read'] };
+      const missing = { ...valid }; delete missing[field];
+      for (const value of [missing, { ...valid, [field]: { secret: 'do-not-expose' } }]) {
+        const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
+        const client = attachClient(backend, makeClient({ get: vi.fn(async () => JSON.stringify(value)) }));
+        await expect(backend.get('s')).rejects.toEqual(new TypeError('Invalid permission cache record'));
+        expect(client.multi).not.toHaveBeenCalled();
+      }
+    });
+
+  it.each([[], ['read', 1], ['read', null], new Array(1)].map((permissions) => ({ permissions })))('get validates permission population $permissions', async ({ permissions }) => {
+    const record = { sid: 's', userId: 'u', tenantId: 't', membershipId: 'm', hash: 'h', generation: 1, computedAt: 0, permissions };
+    const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
+    attachClient(backend, makeClient({ get: vi.fn(async () => JSON.stringify(record)) }));
+    if (permissions.length === 0) await expect(backend.get('s')).resolves.toEqual(record);
+    else await expect(backend.get('s')).rejects.toEqual(new TypeError('Invalid permission cache record'));
+  });
+
+  it.each(['9007199254740993', 9007199254740992, ''])('retains allowed generation %s and opaque extension values', async (generation) => {
+    const record = { sid: '', userId: '', tenantId: '', membershipId: '', hash: '', generation, computedAt: -0.5, permissions: ['', 'read'], extension: { nested: [null, 1] } };
+    const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
+    attachClient(backend, makeClient({ get: vi.fn(async () => JSON.stringify(record)) }));
+    await expect(backend.get('s')).resolves.toEqual(record);
+  });
+
   it('set is a no-op when no client is configured', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions());
     await expect(
       backend.set(
-        { sid: 's', userId: 'u', tenantId: 't', permissions: [], expiresAt: 0 } as never,
+        { sid: 's', userId: 'u', tenantId: 't', permissions: [], membershipId: 'm', hash: 'h', generation: '1', computedAt: 0, expiresAt: 0 } as never,
         60,
       ),
     ).resolves.toBe(undefined);
@@ -254,7 +295,7 @@ describe('RedisPermissionCacheBackend', () => {
     const { multi, ops } = makeMulti();
     attachClient(backend, makeClient({ multi: vi.fn(() => multi) }));
     await backend.set(
-      { sid: 'sid-1', userId: 'u-1', tenantId: 't-1', permissions: [], expiresAt: 0 } as never,
+      { sid: 'sid-1', userId: 'u-1', tenantId: 't-1', permissions: [], membershipId: 'm', hash: 'h', generation: '1', computedAt: 0, expiresAt: 0 } as never,
       60,
     );
     const opNames = ops.map((o) => o.op);
@@ -270,7 +311,7 @@ describe('RedisPermissionCacheBackend', () => {
   it('delete removes record and (when known) sids from user/tenant indexes', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
     const { multi, ops } = makeMulti();
-    const record = { sid: 'sid-1', userId: 'u', tenantId: 't', permissions: [], expiresAt: 0 };
+    const record = { sid: 'sid-1', userId: 'u', tenantId: 't', permissions: [], membershipId: 'm', hash: 'h', generation: '1', computedAt: 0, expiresAt: 0 };
     attachClient(
       backend,
       makeClient({
@@ -309,7 +350,7 @@ describe('RedisPermissionCacheBackend', () => {
 
   it('invalidateScope handles per-user scope by listing user sids', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
-    const record = { sid: 'sid-1', userId: 'u-1', tenantId: 't-1', permissions: [], expiresAt: 0 };
+    const record = { sid: 'sid-1', userId: 'u-1', tenantId: 't-1', permissions: [], membershipId: 'm', hash: 'h', generation: '1', computedAt: 0, expiresAt: 0 };
     const { multi } = makeMulti();
     attachClient(
       backend,
@@ -335,6 +376,7 @@ describe('RedisPermissionCacheBackend', () => {
           userId: 'u-1',
           tenantId: 'other-tenant',
           permissions: [],
+          membershipId: 'm', hash: 'h', generation: '1', computedAt: 0,
           expiresAt: 0,
         })),
         multi: vi.fn(() => multi),
@@ -346,7 +388,7 @@ describe('RedisPermissionCacheBackend', () => {
 
   it('invalidateScope handles tenant-wide scope (userId=*)', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
-    const record = { sid: 'sid-1', userId: 'u-1', tenantId: 't-1', permissions: [], expiresAt: 0 };
+    const record = { sid: 'sid-1', userId: 'u-1', tenantId: 't-1', permissions: [], membershipId: 'm', hash: 'h', generation: '1', computedAt: 0, expiresAt: 0 };
     const { multi } = makeMulti();
     attachClient(
       backend,
@@ -362,7 +404,7 @@ describe('RedisPermissionCacheBackend', () => {
 
   it('invalidateScope handles global scope (*:*) by scanning keys', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
-    const record = { sid: 'sid-1', userId: 'u-1', tenantId: 't-1', permissions: [], expiresAt: 0 };
+    const record = { sid: 'sid-1', userId: 'u-1', tenantId: 't-1', permissions: [], membershipId: 'm', hash: 'h', generation: '1', computedAt: 0, expiresAt: 0 };
     const { multi } = makeMulti();
 
     async function* scanGen() {
@@ -383,7 +425,7 @@ describe('RedisPermissionCacheBackend', () => {
 
   it('invalidateScope accepts scanIterator string keys as well as key arrays', async () => {
     const backend = new RedisPermissionCacheBackend(makeOptions(redisOpts));
-    const record = { sid: 'sid-2', userId: 'u-2', tenantId: 't-2', permissions: [], expiresAt: 0 };
+    const record = { sid: 'sid-2', userId: 'u-2', tenantId: 't-2', permissions: [], membershipId: 'm', hash: 'h', generation: '1', computedAt: 0, expiresAt: 0 };
     const { multi } = makeMulti();
 
     async function* scanGen() {

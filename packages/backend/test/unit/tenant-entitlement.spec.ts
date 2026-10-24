@@ -156,13 +156,13 @@ describe('SqlTenantEntitlementFallback', () => {
     const fb = new SqlTenantEntitlementFallback({ executor });
     await expect(fb.isEntitled(mkContext({}))).resolves.toBe(true);
     expect(executor.query).toHaveBeenCalledWith(
-      expect.stringContaining('from auth.users'),
+      expect.stringContaining('from "auth"."users"'),
       ['t-1', 'p-1', 'a@b.test'],
     );
-    expect(executor.query.mock.calls[0]?.[0]).toContain('where tenant_id = $1');
-    expect(executor.query.mock.calls[0]?.[0]).toContain('and is_active = true');
-    expect(executor.query.mock.calls[0]?.[0]).toContain('(oidc_sub is not distinct from $2)');
-    expect(executor.query.mock.calls[0]?.[0]).toContain('or (email is not distinct from $3)');
+    expect(executor.query.mock.calls[0]?.[0]).toContain('where "tenant_id" = $1');
+    expect(executor.query.mock.calls[0]?.[0]).toContain('and "is_active" = true');
+    expect(executor.query.mock.calls[0]?.[0]).toContain('("oidc_sub" is not distinct from $2)');
+    expect(executor.query.mock.calls[0]?.[0]).toContain('or ("email" is not distinct from $3)');
   });
 
   it('returns false when no rows match', async () => {
@@ -188,7 +188,7 @@ describe('SqlTenantEntitlementFallback', () => {
     await fb.isEntitled(mkContext({}));
     const sql = executor.query.mock.calls[0]?.[0] as string;
     expect(sql).not.toContain('is_active');
-    expect(executor.query).toHaveBeenCalledWith(expect.stringContaining('from auth.users'), [
+    expect(executor.query).toHaveBeenCalledWith(expect.stringContaining('from "auth"."users"'), [
       't-1',
       'p-1',
       'a@b.test',
@@ -233,11 +233,11 @@ describe('SqlTenantEntitlementFallback', () => {
     await expect(fb.isEntitled(context)).resolves.toBe(false);
 
     const sql = executor.query.mock.calls[0]?.[0] as string;
-    expect(sql).toContain('from security.memberships');
-    expect(sql).toContain('where tenant_uuid = $1');
-    expect(sql).toContain('and enabled = true');
-    expect(sql).toContain('(subject_ref is not distinct from $2)');
-    expect(sql).toContain('or (email_ref is not distinct from $3)');
+    expect(sql).toContain('from "security"."memberships"');
+    expect(sql).toContain('where "tenant_uuid" = $1');
+    expect(sql).toContain('and "enabled" = true');
+    expect(sql).toContain('("subject_ref" is not distinct from $2)');
+    expect(sql).toContain('or ("email_ref" is not distinct from $3)');
     expect(executor.query).toHaveBeenCalledWith(expect.any(String), [
       'tenant-custom',
       'principal-id',

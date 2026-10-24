@@ -1700,7 +1700,9 @@ describe('backend audit and db context branch closure', () => {
   });
 
   it('describes branch: session applier drops blank list/scalar values', async () => {
-    const client = { query: vi.fn(async () => undefined) };
+    const client = { query: vi.fn(async (sql: string, params?: readonly unknown[]) => ({
+      rows: sql === 'select set_config($1, $2, false)' ? [{ set_config: params?.[1] }] : [],
+    })) };
     await new PgSessionDbContextApplier({
       settings: {
         roles: ['app.roles'],

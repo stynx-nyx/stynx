@@ -1,3 +1,4 @@
+import { STYNX_PUBLIC_TENANT_ROUTE } from '@stynx-nyx/contracts';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import type { ModuleRef } from '@nestjs/core';
@@ -78,6 +79,83 @@ describe('TenantContextInterceptor', () => {
 
     return { interceptor, txQuery, database, membershipCache, requestContext, requestContextMutator };
   }
+
+  function invokeMarker(marker: unknown, request: Record<string, unknown>) {
+    class Controller {}
+    const handler = () => undefined;
+    // Last metadata fallback deliberately preserves null rather than converting it to absent.
+    Reflect.defineMetadata(STYNX_PUBLIC_TENANT_ROUTE, marker, Controller);
+    const context = createExecutionContext(request);
+    Object.defineProperties(context, {
+      getHandler: { value: () => handler }, getClass: { value: () => Controller },
+    });
+    const { interceptor } = createInterceptor();
+    const next: CallHandler = { handle: vi.fn() };
+    const result = interceptor.intercept(context, next);
+    expect(next.handle).not.toHaveBeenCalled();
+    return result;
+  }
+
+  it('sets public route before null metadata throws and leaves optional auth untouched', () => {
+    const request = { headers: {}, publicTenantRoute: false, publicTenantOptionalAuth: 'sentinel' };
+    expect(() => invokeMarker(null, request)).toThrow(new TypeError("Cannot read properties of null (reading 'optionalAuth')"));
+    expect(request.publicTenantRoute).toBe(true);
+    expect(request.publicTenantOptionalAuth).toBe('sentinel');
+  });
+
+  it('reads inherited optionalAuth using the original marker receiver after setting the flag', () => {
+    const request: Record<string, unknown> = { headers: {} };
+    const receivers: unknown[] = [];
+    const prototype = Object.defineProperty({}, 'optionalAuth', { get() {
+      receivers.push(this);
+      expect(request.publicTenantRoute).toBe(true);
+      return 'truthy';
+    } });
+    const marker = Object.create(prototype);
+    invokeMarker(marker, request);
+    expect(receivers).toEqual([marker]);
+    expect(request.publicTenantOptionalAuth).toBe(true);
+  });
+
+  it('preserves primitive receiver and the true shortcut without invoking prototype getters', () => {
+    const oldString = Object.getOwnPropertyDescriptor(String.prototype, 'optionalAuth');
+    const oldBoolean = Object.getOwnPropertyDescriptor(Boolean.prototype, 'optionalAuth');
+    const receivers: unknown[] = [];
+    const booleanRead = vi.fn(() => { throw new Error('true must skip'); });
+    try {
+      Object.defineProperty(String.prototype, 'optionalAuth', { configurable: true, get() { receivers.push(this); return 1; } });
+      Object.defineProperty(Boolean.prototype, 'optionalAuth', { configurable: true, get: booleanRead });
+      const primitive: Record<string, unknown> = { headers: {} };
+      invokeMarker('marker', primitive);
+      expect(receivers).toEqual(['marker']);
+      expect(primitive.publicTenantOptionalAuth).toBe(true);
+      const shortcut: Record<string, unknown> = { headers: {} };
+      invokeMarker(true, shortcut);
+      expect(shortcut.publicTenantOptionalAuth).toBe(false);
+      expect(booleanRead).not.toHaveBeenCalled();
+    } finally {
+      if (oldString) Object.defineProperty(String.prototype, 'optionalAuth', oldString);
+      else Reflect.deleteProperty(String.prototype, 'optionalAuth');
+      if (oldBoolean) Object.defineProperty(Boolean.prototype, 'optionalAuth', oldBoolean);
+      else Reflect.deleteProperty(Boolean.prototype, 'optionalAuth');
+    }
+  });
+
+  it('propagates optionalAuth getter error by identity after route flag write', () => {
+    const error = new Error('metadata getter');
+    const request: Record<string, unknown> = { headers: {} };
+    const marker = { get optionalAuth() { expect(request.publicTenantRoute).toBe(true); throw error; } };
+    expect(() => invokeMarker(marker, request)).toThrow(error);
+    expect(request.publicTenantRoute).toBe(true);
+    expect(Object.hasOwn(request, 'publicTenantOptionalAuth')).toBe(false);
+  });
+
+  it.each([false, undefined])('retains absent/false metadata flags %s', (marker) => {
+    const request: Record<string, unknown> = { headers: {} };
+    invokeMarker(marker, request);
+    expect(Object.hasOwn(request, 'publicTenantRoute')).toBe(false);
+    expect(Object.hasOwn(request, 'publicTenantOptionalAuth')).toBe(false);
+  });
 
   it('runs an id-less probe without creating a request context (D-072)', async () => {
     const { interceptor, requestContext, requestContextMutator } = createInterceptor({ cached: true });
