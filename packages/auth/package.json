@@ -41,7 +41,7 @@
     "@stynx-nyx/sessions": "workspace:*",
     "jose": "^6.2.2",
     "redis": "^6.0.0",
-    "zod": "^4.3.6"
+    "zod": "^4.6.6"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.19",

@@ -172,7 +172,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@stynx-nyx/storage`: `workspace:*`
 - `jszip`: `^3.10.1`
 - `yaml`: `^2.8.3`
-- `zod`: `^4.3.6`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 

@@ -166,7 +166,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `drizzle-orm`: `^0.45.2`
 - `nestjs-cls`: `^6.2.1`
 - `pg`: `^8.22.0`
-- `zod`: `^4.3.6`
+- `zod`: `^4.6.6`
 
 ### Optional dependencies
 
