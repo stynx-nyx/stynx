@@ -37,6 +37,11 @@ const additions = [
     pattern: `${root}/*/vitest.config.*`,
   })),
 ];
+const migrationInputs = [
+  ['lint:families', { kind: 'prefix', pattern: 'database/migrations/' }],
+  ['test:unit', { kind: 'prefix', pattern: 'database/' }],
+  ['db:rls', { kind: 'prefix', pattern: 'database/' }],
+];
 const capped = (command) =>
   command
     .replaceAll('vitest run', 'vitest run --maxWorkers=1')
@@ -49,6 +54,8 @@ function expected() {
   value.taskDescriptor.tasks
     .find((task) => task.nodeId === 'test:unit')
     .inputSelectors.push(...additions);
+  for (const [nodeId, selector] of migrationInputs)
+    value.taskDescriptor.tasks.find((task) => task.nodeId === nodeId).inputSelectors.push(selector);
   return value;
 }
 function actual() {
@@ -100,12 +107,13 @@ function assertBudget(value) {
   assert.deepEqual(
     value.taskDescriptor,
     reference.taskDescriptor,
-    'only reviewed additive unit inputs; all tasks/dependencies/profile population retained',
+    'only reviewed additive unit and migration inputs; all tasks/dependencies/profile population retained',
   );
 }
 
 test('contract: ordinary-unit complete roster has exactly the reviewed bounded commands', () => {
   assert.equal(Object.keys(baseline.manifests).length, 50);
+  assert.equal(Object.keys(baseline.unchangedFiles).length, 96);
   assert.equal(
     Object.values(baseline.manifests).filter((value) => value.scripts.test.includes('vitest run'))
       .length,
@@ -119,6 +127,17 @@ test('contract: ordinary-unit complete roster has exactly the reviewed bounded c
   assertBudget(actual());
 });
 for (const [name, mutate] of [
+  ...migrationInputs.map(([nodeId, selector]) => [
+    `missing ${nodeId} migration input`,
+    (value) => {
+      const task = value.taskDescriptor.tasks.find((entry) => entry.nodeId === nodeId);
+      const index = task.inputSelectors.findIndex(
+        (entry) => entry.kind === selector.kind && entry.pattern === selector.pattern,
+      );
+      assert.ok(index >= 0, 'omission mutation must target the reviewed selector');
+      task.inputSelectors.splice(index, 1);
+    },
+  ]),
   [
     'missing package cap',
     (v) => {
@@ -207,7 +226,13 @@ for (const [name, mutate] of [
   [
     'missing manifest input',
     (v) => {
-      v.taskDescriptor.tasks.find((task) => task.nodeId === 'test:unit').inputSelectors.pop();
+      const task = v.taskDescriptor.tasks.find((entry) => entry.nodeId === 'test:unit');
+      const selector = additions.at(-1);
+      const index = task.inputSelectors.findIndex(
+        (entry) => entry.kind === selector.kind && entry.pattern === selector.pattern,
+      );
+      assert.ok(index >= 0, 'original unit-input mutation must retain its target');
+      task.inputSelectors.splice(index, 1);
     },
   ],
   [
