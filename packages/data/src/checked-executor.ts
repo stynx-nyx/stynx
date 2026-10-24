@@ -119,7 +119,8 @@ export function executeTypedQueryResult<Q extends TypedQuery>(
   params: z.input<Q['params']>,
 ): Promise<{ value: ResultOf<Q>; rowCount: number | null }>;
 export async function executeTypedQueryResult(client: CheckedQueryClient, query: TypedQuery, params: unknown) {
-  const { rows, rowCount } = await executeCheckedQuery(client, query, params);
+  const { rows, readRowCount } = await executeCheckedQuery(client, query, params);
+  const rowCount = readRowCount();
   return { value: queryValue(query, rows), rowCount: checkedRowCount(query.name, rowCount) };
 }
 
@@ -139,7 +140,8 @@ export async function executeTypedCommand<Q extends TypedQuery<z.ZodTuple, z.Zod
   params: z.input<Q['params']>,
 ): Promise<number | null> {
   if (query.expects !== 'none') throw new TypeError('executeTypedCommand requires none cardinality');
-  const { rowCount } = await executeCheckedQuery(client, query, params);
+  const { readRowCount } = await executeCheckedQuery(client, query, params);
+  const rowCount = readRowCount();
   return checkedRowCount(query.name, rowCount);
 }
 
@@ -166,7 +168,7 @@ async function executeCheckedQuery(client: CheckedQueryClient, query: TypedQuery
     if (!parsed.success) throw new QueryRowValidationError(query.name, rowIndex, toIssues(parsed.error));
     return parsed.data;
   });
-  return { rows, rawRows: result.rows, rowCount: result.rowCount };
+  return { rows, rawRows: result.rows, readRowCount: () => result.rowCount };
 }
 
 /** @internal Historical Transaction.query result contract, not typed-row evidence. */
