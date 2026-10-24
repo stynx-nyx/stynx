@@ -106,7 +106,20 @@
         { "kind": "glob", "pattern": "packages-web/*/test/**" },
         { "kind": "glob", "pattern": "tools/*/src/**" },
         { "kind": "glob", "pattern": "tools/*/test/**" },
-        { "kind": "prefix", "pattern": "test/" }
+        { "kind": "prefix", "pattern": "test/" },
+        { "kind": "exact", "pattern": "package.json" },
+        { "kind": "exact", "pattern": "pnpm-workspace.yaml" },
+        { "kind": "exact", "pattern": "turbo.json" },
+        { "kind": "exact", "pattern": "test-tasks.json" },
+        { "kind": "exact", "pattern": "tools/repo-config/vitest.base.mjs" },
+        { "kind": "glob", "pattern": "packages/*/package.json" },
+        { "kind": "glob", "pattern": "packages-web/*/package.json" },
+        { "kind": "glob", "pattern": "tools/*/package.json" },
+        { "kind": "glob", "pattern": "test/*/package.json" },
+        { "kind": "glob", "pattern": "packages/*/vitest.config.*" },
+        { "kind": "glob", "pattern": "packages-web/*/vitest.config.*" },
+        { "kind": "glob", "pattern": "tools/*/vitest.config.*" },
+        { "kind": "glob", "pattern": "test/*/vitest.config.*" }
       ],
       "toolchainKeys": ["node", "pnpm", "vitest"],
       "allowlistedEnv": [

@@ -32,7 +32,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint --config ../../tools/eslint-config/lib.mjs \"src/**/*.ts\"",
     "lint:repo": "pnpm run build && node scripts/lint-repo.mjs",
-    "test": "pnpm run build && node --test dist/test/migration-linter.spec.js dist/test/context-rules.spec.js"
+    "test": "pnpm run build && node --test --test-concurrency=1 dist/test/migration-linter.spec.js dist/test/context-rules.spec.js"
   },
   "dependencies": {
     "pg-query-emscripten": "^5.1.0"
