@@ -3,7 +3,19 @@
 Architecture Decision Records capture durable stynx engineering decisions that
 shape package boundaries, generated diagnostics, or adoption policy.
 
+## Proposed Decisions
+
+- [ADR-DEVAI-ADOPTION-0040 — Exact root tooling lifecycle SQL admissions](2026-10-24-s10-root-lifecycle-admission-proposal.md) — proposed; eleven existing fixed-script/database lifecycle sites, no approval yet.
+
+- [ADR-DEVAI-ADOPTION-0039 — Honest audit opaque read results and JSON wire projection](2026-10-24-s10-audit-opaque-result-proposal.md) — proposed; observed scalar/array result compatibility and official wire propagation, no approval yet.
+
 ## Accepted Decisions
+
+- [ADR-DEVAI-ADOPTION-0034 — Audit wire results and outbox receipt/metadata corrections](2026-10-23-s10-audit-outbox-result-proposal.md) — accepted on 2026-10-24: “Approve the three bounded result corrections”; implementation and final verification remain required.
+
+- [ADR-DEVAI-ADOPTION-0033 — Exact two-site fake Transaction exception and honest browser API migration](2026-10-23-s10-generic-boundary-disposition-proposal.md) — F2 and B1 accepted on 2026-10-24; F1 and B2 not selected.
+
+- [ADR-DEVAI-ADOPTION-0032 — Honest public PostgreSQL result representations](2026-10-23-s10-public-representation-proposal.md) — accepted on 2026-10-24; release disposition remains separate.
 
 - [ADR-DEVAI-ADOPTION-0031 — Generated partial writes and adoption SQL disposition](2026-10-23-s10-generated-sql-disposition-proposal.md)
 
