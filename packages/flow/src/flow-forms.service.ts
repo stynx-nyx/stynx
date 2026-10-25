@@ -1,3 +1,7 @@
+import { executeFormsCreate, executeFormsUpdate } from './forms-mutations.repository.js';
+import { executeQuestionsCreate, executeQuestionsUpdate } from './questions-mutations.repository.js';
+import { executeWaiversCreate, executeWaiversUpdate } from './waivers-mutations.repository.js';
+import { executeFillsCreate, executeFillsUpdate, executeAnswersUpdate } from './forms-small-mutations.repository.js';
 import { executeFormsList, type FormsListKey } from './forms-list.repository.js';
 import { executeFormsFixedRead, executeFormsExists, type FormsFixedRead } from './forms-read.repository.js';
 import { putQuestionScoreQuery, upsertAnswerQuery, isFormsWriteRow } from './forms-write.repository.js';
@@ -5,7 +9,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { RequestContext } from '@stynx-nyx/core';
 import { Database, Transaction } from '@stynx-nyx/data';
 import { FORM_TABLES, formEntries, type FormTableKey } from './internal/forms/form-tables.js';
-import { camelizeRow, requireObject, type FlowRow } from './row-utils.js';
+import { camelizeRow, requireObject } from './row-utils.js';
 import {
   answerWriteSchema,
   bulkAnswerWriteSchema,
@@ -21,6 +25,29 @@ import {
   updateQuestionSchema,
   updateWaiverSchema,
 } from './validation.js';
+
+function remainingFormsMutationMask(
+  key: 'forms' | 'questions' | 'waivers',
+  entries: ReadonlyArray<ReadonlyArray<unknown>>,
+): number {
+  const columns: readonly string[] = Object.values(FORM_TABLES[key].columns);
+  let mask = 0;
+  for (const [column] of entries) {
+    const index = columns.findIndex((candidate) => candidate === column);
+    if (index >= 0) mask |= 1 << index;
+  }
+  return mask;
+}
+
+function formMutationMask(key: 'fills' | 'answers', entries: ReadonlyArray<ReadonlyArray<unknown>>): number {
+  const columns: readonly string[] = Object.values(FORM_TABLES[key].columns);
+  let mask = 0;
+  for (const [column] of entries) {
+    const index = columns.findIndex((candidate) => candidate === column);
+    if (index >= 0) mask |= 1 << index;
+  }
+  return mask;
+}
 
 @Injectable()
 export class FlowFormsService {
@@ -289,7 +316,7 @@ export class FlowFormsService {
     return normalized;
   }
 
-  private async createRow(key: FormTableKey, input: Record<string, unknown>): Promise<Record<string, unknown>> {
+  private async createRow(key: 'forms' | 'questions' | 'fills' | 'waivers', input: Record<string, unknown>): Promise<Record<string, unknown>> {
     const config = FORM_TABLES[key];
     return this.db.tx(async (trx) => {
       const tenantId = this.requireTenantId();
@@ -302,15 +329,19 @@ export class FlowFormsService {
         rowEntries.push(['created_by', actorId]);
         rowEntries.push(['updated_by', actorId]);
       }
-      const result = await trx.query<FlowRow>(
-        `insert into ${config.sqlName} (${rowEntries.map(([column]) => column).join(', ')}) values (${rowEntries.map((_entry, index) => `$${index + 1}`).join(', ')}) returning *`,
-        rowEntries.map(([, value]) => value),
-      );
-      return camelizeRow(result.rows[0] ?? {});
+      const values = rowEntries.map(([, value]) => value);
+      const rows = key === 'forms'
+        ? await executeFormsCreate(trx, remainingFormsMutationMask(key, rowEntries), values)
+        : key === 'questions'
+        ? await executeQuestionsCreate(trx, remainingFormsMutationMask(key, rowEntries), values)
+        : key === 'waivers'
+        ? await executeWaiversCreate(trx, remainingFormsMutationMask(key, rowEntries), values)
+        : await executeFillsCreate(trx, formMutationMask(key, rowEntries), values);
+      return camelizeRow(rows[0] ?? {});
     });
   }
 
-  private async updateRow(key: FormTableKey, id: string, input: Record<string, unknown>): Promise<Record<string, unknown>> {
+  private async updateRow(key: 'forms' | 'questions' | 'fills' | 'answers' | 'waivers', id: string, input: Record<string, unknown>): Promise<Record<string, unknown>> {
     return this.db.tx(async (trx) => {
       return this.updateRowInTx(trx, key, id, input);
     });
@@ -318,7 +349,7 @@ export class FlowFormsService {
 
   private async updateRowInTx(
     trx: Transaction,
-    key: FormTableKey,
+    key: 'forms' | 'questions' | 'fills' | 'answers' | 'waivers',
     id: string,
     input: Record<string, unknown>,
   ): Promise<Record<string, unknown>> {
@@ -331,11 +362,17 @@ export class FlowFormsService {
       rowEntries.push(['updated_by', this.requestContext.actorId ?? null]);
     }
     rowEntries.push(['updated_at', new Date()]);
-    const result = await trx.query<FlowRow>(
-      `update ${config.sqlName} set ${rowEntries.map(([column], index) => `${column} = $${index + 2}`).join(', ')} where id = $1::uuid returning *`,
-      [id, ...rowEntries.map(([, value]) => value)],
-    );
-    const row = result.rows[0];
+    const values = [id, ...rowEntries.map(([, value]) => value)];
+    const rows = key === 'forms'
+      ? await executeFormsUpdate(trx, remainingFormsMutationMask(key, rowEntries), values)
+      : key === 'questions'
+      ? await executeQuestionsUpdate(trx, remainingFormsMutationMask(key, rowEntries), values)
+      : key === 'waivers'
+      ? await executeWaiversUpdate(trx, remainingFormsMutationMask(key, rowEntries), values)
+      : key === 'fills'
+      ? await executeFillsUpdate(trx, formMutationMask(key, rowEntries), values)
+      : await executeAnswersUpdate(trx, formMutationMask(key, rowEntries), values);
+    const row = rows[0];
     if (!row) {
       throw new NotFoundException('Flow row not found');
     }

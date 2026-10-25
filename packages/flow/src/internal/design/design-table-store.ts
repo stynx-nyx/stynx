@@ -1,3 +1,6 @@
+import { executeGraphsCreate, executeGraphsUpdate, executeTransitionEffectsCreate, executeTransitionEffectsUpdate, executePolicySetsCreate, executePolicySetsUpdate } from './small-mutations.repository.js';
+import { executeEdgesCreate, executeEdgesUpdate, executeAgentRulesCreate, executeAgentRulesUpdate, executeNodeFormRulesCreate, executeNodeFormRulesUpdate } from './linked-mutations.repository.js';
+import { executePolicyRulesCreate, executePolicyRulesUpdate } from './policy-mutations.repository.js';
 import { executeScopeCreate, executeScopeUpdate } from './scope-mutations.repository.js';
 import { executeDesignList, executeDesignGet } from './design-read.repository.js';
 import { selectNodeInsertQuery } from './generated/nodes-insert.repository.js';
@@ -205,6 +208,19 @@ function nodeMutationMask(
   return mask;
 }
 
+function remainingDesignMutationMask(
+  key: Exclude<DesignTableKey, 'nodes' | 'scopes'>,
+  entries: ReadonlyArray<readonly [string, unknown]>,
+): number {
+  const columns: readonly string[] = Object.values(TABLES[key].columns);
+  let mask = 0;
+  for (const [column] of entries) {
+    const index = columns.indexOf(column);
+    if (index >= 0) mask |= 1 << index;
+  }
+  return mask;
+}
+
 function scopeMutationMask(entries: ReadonlyArray<readonly [string, unknown]>): number {
   const columns: readonly string[] = Object.values(TABLES.scopes.columns);
   let mask = 0;
@@ -264,16 +280,24 @@ export class FlowDesignTableStore {
         entries.push(['updated_at', new Date()]);
       }
 
-      const assignments = entries.map(([column], index) => `${column} = $${index + 2}`);
       const values = [id, ...entries.map(([, value]) => value)];
       const rows = key === 'scopes'
         ? await executeScopeUpdate(trx, scopeMutationMask(entries), values)
         : key === 'nodes'
         ? await trx.runGuarded(selectNodeUpdateQuery(nodeMutationMask(entries)), values, isOpaqueNodeRow)
-        : (await trx.query<DesignFlowRow>(
-          `update ${config.sqlName} set ${assignments.join(', ')} where id = $1::uuid returning *`,
-          values,
-        )).rows;
+        : key === 'graphs'
+        ? await executeGraphsUpdate(trx, remainingDesignMutationMask(key, entries), values)
+        : key === 'transitionEffects'
+        ? await executeTransitionEffectsUpdate(trx, remainingDesignMutationMask(key, entries), values)
+        : key === 'policySets'
+        ? await executePolicySetsUpdate(trx, remainingDesignMutationMask(key, entries), values)
+        : key === 'edges'
+        ? await executeEdgesUpdate(trx, remainingDesignMutationMask(key, entries), values)
+        : key === 'agentRules'
+        ? await executeAgentRulesUpdate(trx, remainingDesignMutationMask(key, entries), values)
+        : key === 'nodeFormRules'
+        ? await executeNodeFormRulesUpdate(trx, remainingDesignMutationMask(key, entries), values)
+        : await executePolicyRulesUpdate(trx, remainingDesignMutationMask(key, entries), values);
       const row = rows[0];
       if (!row) {
         throw new NotFoundException('Flow row not found');
@@ -303,17 +327,24 @@ export class FlowDesignTableStore {
       entries.push(['updated_by', actorId]);
     }
 
-    const columns = entries.map(([column]) => column);
-    const placeholders = entries.map((_entry, index) => `$${index + 1}`);
     const values = entries.map(([, value]) => value);
     const rows = key === 'scopes'
       ? await executeScopeCreate(trx, scopeMutationMask(entries), values)
       : key === 'nodes'
       ? await trx.runGuarded(selectNodeInsertQuery(nodeMutationMask(entries)), values, isOpaqueNodeRow)
-      : (await trx.query<DesignFlowRow>(
-        `insert into ${config.sqlName} (${columns.join(', ')}) values (${placeholders.join(', ')}) returning *`,
-        values,
-      )).rows;
+      : key === 'graphs'
+      ? await executeGraphsCreate(trx, remainingDesignMutationMask(key, entries), values)
+      : key === 'transitionEffects'
+      ? await executeTransitionEffectsCreate(trx, remainingDesignMutationMask(key, entries), values)
+      : key === 'policySets'
+      ? await executePolicySetsCreate(trx, remainingDesignMutationMask(key, entries), values)
+      : key === 'edges'
+      ? await executeEdgesCreate(trx, remainingDesignMutationMask(key, entries), values)
+      : key === 'agentRules'
+      ? await executeAgentRulesCreate(trx, remainingDesignMutationMask(key, entries), values)
+      : key === 'nodeFormRules'
+      ? await executeNodeFormRulesCreate(trx, remainingDesignMutationMask(key, entries), values)
+      : await executePolicyRulesCreate(trx, remainingDesignMutationMask(key, entries), values);
     const row = rows[0];
     if (!row) {
       throw new BadRequestException('Flow insert did not return a row');
