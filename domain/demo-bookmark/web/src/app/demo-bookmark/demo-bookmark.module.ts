@@ -12,7 +12,8 @@
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { RouterModule } from '@angular/router';
+import type { Routes } from '@angular/router';
 import { BookmarkListComponent } from './bookmark-list.component';
 import { BookmarkDetailComponent } from './bookmark-detail.component';
 import { BookmarkService } from './bookmark.service';

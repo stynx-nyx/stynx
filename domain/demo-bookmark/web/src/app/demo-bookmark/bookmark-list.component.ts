@@ -1,7 +1,9 @@
 // Generated from BP-DEMO-BOOKMARK-001 v0.1.0 sha256:a5553692
 /* Generated for demo/Bookmark — spec: 0.1.0 sha: a5553692 */
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { Bookmark, BookmarkService } from './bookmark.service';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import type { OnInit } from '@angular/core';
+import { BookmarkService } from './bookmark.service';
+import type { Bookmark } from './bookmark.service';
 
 @Component({
   selector: 'bookmark-bookmark-list',
