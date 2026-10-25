@@ -289,13 +289,13 @@ function isDestinationFilter(value: unknown): value is OutboxDestinationFilter {
 }
 
 /** Claim predicate for a dispatch filter; `first` is the index of its first SQL parameter. */
-function transportEvidenceState(evidence?: OutboxTransportEvidence): string {
+function transportEvidenceState(evidence: unknown): string {
   return JSON.stringify({
-    requestBytes: evidence?.requestBytes ? 'captured' : 'unavailable',
-    responseBytes: evidence?.responseBytes ? 'captured' : 'unavailable',
-    requestHeaders: evidence?.requestHeaders ? 'redacted-or-digested' : 'unavailable',
-    responseStatus: evidence?.responseStatus !== undefined ? 'captured' : 'unavailable',
-    requestTransmission: evidence?.requestTransmission ?? 'unavailable',
+    requestBytes: optionalProperty(evidence, 'requestBytes') ? 'captured' : 'unavailable',
+    responseBytes: optionalProperty(evidence, 'responseBytes') ? 'captured' : 'unavailable',
+    requestHeaders: optionalProperty(evidence, 'requestHeaders') ? 'redacted-or-digested' : 'unavailable',
+    responseStatus: optionalProperty(evidence, 'responseStatus') !== undefined ? 'captured' : 'unavailable',
+    requestTransmission: optionalProperty(evidence, 'requestTransmission') ?? 'unavailable',
   });
 }
 
@@ -319,6 +319,19 @@ function readProperty(value: unknown, key: string): unknown {
 
 function optionalProperty(value: unknown, key: string): unknown {
   return value === null || value === undefined ? undefined : readProperty(value, key);
+}
+
+// Native hashing accepts an opaque value only at this fixed transport evidence boundary.
+function hashTransportEvidenceBytes(
+  evidence: unknown,
+  key: 'requestBytes' | 'responseBytes',
+): string {
+  const hash = createHash('sha256');
+  const update = hash.update;
+  // Preserve the original second field Get AFTER creating the hash and reading update.
+  const updated: unknown = Reflect.apply(update, hash, [readProperty(evidence, key)]);
+  if (updated !== hash) throw new TypeError('Native hash update returned a different instance');
+  return hash.digest('hex');
 }
 
 function copyStatusValues(values: readonly unknown[]): unknown[] {
@@ -872,12 +885,12 @@ export class OutboxService implements OnModuleInit {
         outcomes.push({ row, dispatched: true });
       } else {
         const message = errorMessage(transportError);
-        const failedEvidence = (transportError as { evidence?: OutboxTransportEvidence })?.evidence;
-        const requestHash = failedEvidence?.requestBytes
-          ? createHash('sha256').update(failedEvidence.requestBytes).digest('hex')
+        const failedEvidence = optionalProperty(transportError, 'evidence');
+        const requestHash = optionalProperty(failedEvidence, 'requestBytes')
+          ? hashTransportEvidenceBytes(failedEvidence, 'requestBytes')
           : null;
-        const responseHash = failedEvidence?.responseBytes
-          ? createHash('sha256').update(failedEvidence.responseBytes).digest('hex')
+        const responseHash = optionalProperty(failedEvidence, 'responseBytes')
+          ? hashTransportEvidenceBytes(failedEvidence, 'responseBytes')
           : null;
         const next = this.backoffPolicy.nextAttemptAt(claim.attempts, new Date());
         try {
@@ -892,16 +905,16 @@ export class OutboxService implements OnModuleInit {
                   claim.event_id,
                   claim.attempts,
                   message,
-                  failedEvidence?.provider ?? null,
-                  failedEvidence?.protocol ?? null,
-                  failedEvidence?.requestBytes ?? null,
+                  optionalProperty(failedEvidence, 'provider') ?? null,
+                  optionalProperty(failedEvidence, 'protocol') ?? null,
+                  optionalProperty(failedEvidence, 'requestBytes') ?? null,
                   requestHash,
-                  failedEvidence?.responseBytes ?? null,
+                  optionalProperty(failedEvidence, 'responseBytes') ?? null,
                   responseHash,
-                  failedEvidence?.requestHeaders
-                    ? JSON.stringify(failedEvidence.requestHeaders)
+                  optionalProperty(failedEvidence, 'requestHeaders')
+                    ? JSON.stringify(readProperty(failedEvidence, 'requestHeaders'))
                     : null,
-                  failedEvidence?.responseStatus ?? null,
+                  optionalProperty(failedEvidence, 'responseStatus') ?? null,
                   transportEvidenceState(failedEvidence),
                 ],
               );
@@ -1372,12 +1385,12 @@ export class OutboxService implements OnModuleInit {
       } else {
         const error = transportError;
         const message = errorMessage(error);
-        const evidence = (error as { evidence?: OutboxTransportEvidence })?.evidence;
-        const requestHash = evidence?.requestBytes
-          ? createHash('sha256').update(evidence.requestBytes).digest('hex')
+        const evidence = optionalProperty(error, 'evidence');
+        const requestHash = optionalProperty(evidence, 'requestBytes')
+          ? hashTransportEvidenceBytes(evidence, 'requestBytes')
           : null;
-        const responseHash = evidence?.responseBytes
-          ? createHash('sha256').update(evidence.responseBytes).digest('hex')
+        const responseHash = optionalProperty(evidence, 'responseBytes')
+          ? hashTransportEvidenceBytes(evidence, 'responseBytes')
           : null;
         const next = this.backoffPolicy.nextAttemptAt(claim.attempts, new Date());
         let projectionChanged: boolean;
@@ -1392,14 +1405,14 @@ export class OutboxService implements OnModuleInit {
                 claim.event_id,
                 claim.attempts,
                 message,
-                evidence?.provider ?? null,
-                evidence?.protocol ?? null,
-                evidence?.requestBytes ?? null,
+                optionalProperty(evidence, 'provider') ?? null,
+                optionalProperty(evidence, 'protocol') ?? null,
+                optionalProperty(evidence, 'requestBytes') ?? null,
                 requestHash,
-                evidence?.responseBytes ?? null,
+                optionalProperty(evidence, 'responseBytes') ?? null,
                 responseHash,
-                evidence?.requestHeaders ? JSON.stringify(evidence.requestHeaders) : null,
-                evidence?.responseStatus ?? null,
+                optionalProperty(evidence, 'requestHeaders') ? JSON.stringify(readProperty(evidence, 'requestHeaders')) : null,
+                optionalProperty(evidence, 'responseStatus') ?? null,
                 transportEvidenceState(evidence),
               ],
             );

@@ -72,7 +72,7 @@ export const persistFailedAttempt=defineQuery({name:'outbox.persistFailedAttempt
                    provider=$5,protocol=$6,request_bytes=$7,request_sha256=$8,
                    response_bytes=$9,response_sha256=$10,request_headers=$11::jsonb,
                    response_status=$12,evidence_state=$13::jsonb
-                 where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3`,params:z.tuple([uuid,uuid,number,text,text.nullable(),text.nullable(),z.instanceof(Buffer).nullable(),text.nullable(),z.instanceof(Buffer).nullable(),text.nullable(),text.nullable(),number.nullable(),text]),row:z.object({}),expects:'none'});
+                 where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3`,params:z.tuple([uuid,uuid,number,text,z.unknown().pipe(text.nullable()),z.unknown().pipe(text.nullable()),z.unknown().pipe(z.instanceof(Buffer).nullable()),text.nullable(),z.unknown().pipe(z.instanceof(Buffer).nullable()),text.nullable(),text.nullable(),z.unknown().pipe(number.nullable()),text]),row:z.object({}),expects:'none'});
 
 export const markEventRetired=defineQuery({name:'outbox.markEventRetired',text:sql`update outbox.event_delivery
            set status='RETIRED',lease_until=null,next_attempt_at=null,updated_at=clock_timestamp()
@@ -104,7 +104,7 @@ export const persistOwnerFailedAttempt=defineQuery({name:'outbox.persistOwnerFai
                   provider=$5,protocol=$6,request_bytes=$7,request_sha256=$8,
                   response_bytes=$9,response_sha256=$10,
                   request_headers=$11::jsonb,response_status=$12,evidence_state=$13::jsonb
-                where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3`,params:z.tuple([uuid,uuid,number,text,text.nullable(),text.nullable(),z.instanceof(Buffer).nullable(),text.nullable(),z.instanceof(Buffer).nullable(),text.nullable(),text.nullable(),number.nullable(),text]),row:z.object({}),expects:'none'});
+                where tenant_id=$1::uuid and event_id=$2::uuid and attempt_ordinal=$3`,params:z.tuple([uuid,uuid,number,text,z.unknown().pipe(text.nullable()),z.unknown().pipe(text.nullable()),z.unknown().pipe(z.instanceof(Buffer).nullable()),text.nullable(),z.unknown().pipe(z.instanceof(Buffer).nullable()),text.nullable(),text.nullable(),z.unknown().pipe(number.nullable()),text]),row:z.object({}),expects:'none'});
 
 export const recordLegacyFailedAttempt=defineQuery({name:'outbox.recordLegacyFailedAttempt',text:sql`insert into outbox.event_attempts
                    (tenant_id,event_id,attempt_ordinal,legacy_message_id,result,error,completed_at)
