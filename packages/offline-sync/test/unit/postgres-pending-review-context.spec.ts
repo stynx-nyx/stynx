@@ -1,6 +1,6 @@
 import { canonicalOfflineSyncPayloadHash } from '../../src/payload-integrity.js';
 import { describe, expect, it, vi } from 'vitest';
-import type { Database } from '@stynx-nyx/data';
+import { executeTypedQuery, type Transaction, type Database } from '@stynx-nyx/data';
 import { OfflineSyncError, OfflineSyncUpgradeRequiredError } from '../../src/errors.js';
 import { encodeCursor } from '../../src/listing.js';
 import { pgSubmit } from '../../src/postgres-durable.js';
@@ -64,6 +64,15 @@ const row = {
 };
 
 type Statement = { sql: string; values: unknown[] };
+function checkedTransaction(query: (sql: string, values?: unknown[]) => Promise<{ rows?: unknown[]; rowCount?: number }>) {
+  const client = { query: async (sql: string, values?: unknown[]) => {
+    const result = await query(sql, values);
+    return { ...result, rows: result.rows ?? [] };
+  } };
+  const run: Transaction['run'] = (statement, values) => executeTypedQuery(client, statement, values);
+  return { query, run };
+}
+
 function storeWith(
   route: (
     sql: string,
@@ -78,7 +87,7 @@ function storeWith(
     return { rows: result?.rows ?? [], rowCount: result?.rowCount ?? 0 };
   });
   const database = {
-    tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn({ query })),
+    tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn(checkedTransaction(query))),
   } as unknown as Database;
   return {
     store: new PostgresOfflineSyncStore({ get: () => database } as never),
@@ -542,11 +551,11 @@ describe('PostgreSQL conflict resolution boundary (D1, D2)', () => {
 
 describe('PostgreSQL listing boundary (D2 history, D3 platform object)', () => {
   it('binds tenant, conflict, keyset cursor and limit+1 for the action history and maps optional columns', async () => {
-    const cursor = encodeCursor(['2026-09-28T12:00:00.000000Z', 'a-2']);
+    const cursor = encodeCursor(['2026-09-28T12:00:00.000000Z', '00000000-0000-4000-8000-000000000002']);
     const query = vi.fn(async () => ({
       rows: [
         {
-          id: 'a-3',
+          id: '00000000-0000-4000-8000-000000000003',
           tenant_id: scope.tenantId,
           conflict_id: conflictId,
           action: 'reject',
@@ -558,7 +567,7 @@ describe('PostgreSQL listing boundary (D2 history, D3 platform object)', () => {
           sort_at: '2026-09-28T12:00:00.000000Z',
         },
         {
-          id: 'a-1',
+          id: '00000000-0000-4000-8000-000000000001',
           tenant_id: scope.tenantId,
           conflict_id: conflictId,
           action: 'manual_review',
@@ -572,20 +581,20 @@ describe('PostgreSQL listing boundary (D2 history, D3 platform object)', () => {
       ],
     }));
     const database = {
-      tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn({ query })),
+      tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn(checkedTransaction(query))),
     } as unknown as Database;
     const page = await pgListConflictActions(database, scope, { conflictId, cursor, limit: 1 });
     expect(query.mock.calls[0]![1]).toEqual([
       scope.tenantId,
       conflictId,
       '2026-09-28T12:00:00.000000Z',
-      'a-2',
+      '00000000-0000-4000-8000-000000000002',
       2,
     ]);
     expect(page).toEqual({
       items: [
         {
-          actionId: 'a-3',
+          actionId: '00000000-0000-4000-8000-000000000003',
           tenantId: scope.tenantId,
           conflictId,
           action: 'reject',
@@ -596,12 +605,12 @@ describe('PostgreSQL listing boundary (D2 history, D3 platform object)', () => {
           createdAt: now,
         },
       ],
-      nextCursor: encodeCursor(['2026-09-28T12:00:00.000000Z', 'a-3']),
+      nextCursor: encodeCursor(['2026-09-28T12:00:00.000000Z', '00000000-0000-4000-8000-000000000003']),
     });
     query.mockImplementationOnce(async () => ({
       rows: [
         {
-          id: 'a-1',
+          id: '00000000-0000-4000-8000-000000000001',
           tenant_id: scope.tenantId,
           conflict_id: conflictId,
           action: 'manual_review',
@@ -618,7 +627,7 @@ describe('PostgreSQL listing boundary (D2 history, D3 platform object)', () => {
     expect(last).toEqual({
       items: [
         {
-          actionId: 'a-1',
+          actionId: '00000000-0000-4000-8000-000000000001',
           tenantId: scope.tenantId,
           conflictId,
           action: 'manual_review',
@@ -709,7 +718,7 @@ describe('PostgreSQL listing boundary (D2 history, D3 platform object)', () => {
     ];
     const query = vi.fn(async () => ({ rows: rows.shift()! }));
     const database = {
-      tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn({ query })),
+      tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn(checkedTransaction(query))),
     } as unknown as Database;
     const queued = await pgListQueueItems(database, scope, {});
     expect(queued.items.map((item) => item.stynx ?? null)).toEqual([
@@ -771,7 +780,7 @@ describe('PostgreSQL durable submission boundary (D1, D3)', () => {
     status: 'open',
     context_hash: batchContextFingerprint(syncBatch, scope.actorId),
     declared_keys: ['key-1'],
-    lease_token: 'lease-1',
+    lease_token: '00000000-0000-4000-8000-000000000004',
     lease_generation: '1',
     lease_expires_at: null,
     lease_valid: false,
@@ -815,7 +824,7 @@ describe('PostgreSQL durable submission boundary (D1, D3)', () => {
         };
       if (sql.includes('set lease_expires_at=')) {
         leaseRenewals += 1;
-        return { rowCount: 1 };
+        return { rows: [], rowCount: 1 };
       }
       if (sql.includes('select id,payload_hash,identity_mode,device_id'))
         return {
@@ -833,15 +842,15 @@ describe('PostgreSQL durable submission boundary (D1, D3)', () => {
             },
           ],
         };
-      if (sql.includes('do nothing returning idempotency_key')) return { rowCount: 0 };
+      if (sql.includes('do nothing returning idempotency_key')) return { rows: [], rowCount: 0 };
       if (sql.includes('select * from offline.sync_item_receipts')) return { rows: [receipt] };
       return { rows: [], rowCount: 1 };
     });
     const database = {
       hasHeldConnection: () => false,
-      tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn({ query })),
+      tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn(checkedTransaction(query))),
       txIndependent: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) =>
-        fn({ query }),
+        fn(checkedTransaction(query)),
       ),
     } as unknown as Database;
     return { database, statements, renewals: () => leaseRenewals };
