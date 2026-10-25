@@ -44,6 +44,7 @@
     },
     "stynx-script-tests#test": {
       "dependsOn": [
+        "stynx-database-tooling#build",
         "@stynx-nyx/angular#build",
         "@stynx-nyx/angular-audit#build",
         "@stynx-nyx/angular-auth#build",

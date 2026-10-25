@@ -28,38 +28,35 @@
  */
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, existsSync } from 'node:fs';
-import { createRequire } from 'node:module';
 import { userInfo } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-
-// Resolve `pg` through @stynx-nyx/data's dependency tree (no root dep needed).
-const requireFromData = createRequire(
-  new URL('../../packages/data/package.json', import.meta.url),
-);
-const { Client } = requireFromData('pg');
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const CLI_MAIN = resolve(repoRoot, 'packages/cli/dist/cli/src/main.js');
 const DEFAULT_TEMPLATE = 'stynx_int_tpl';
 
+/** @param {string[]} argv */
 function parseArgs(argv) {
-  const args = { template: DEFAULT_TEMPLATE, githubEnv: undefined };
+  /** @type {string | undefined} */
+  let template = DEFAULT_TEMPLATE;
+  /** @type {string | undefined} */
+  let githubEnv;
   for (let i = 0; i < argv.length; i += 1) {
     if (argv[i] === '--template') {
-      args.template = argv[i + 1];
+      template = argv[i + 1];
       i += 1;
     } else if (argv[i] === '--github-env') {
-      args.githubEnv = argv[i + 1];
+      githubEnv = argv[i + 1];
       i += 1;
     } else {
       throw new Error(`Unknown argument: ${argv[i]}`);
     }
   }
-  if (!/^[a-z_][a-z0-9_]*$/.test(args.template)) {
-    throw new Error(`Invalid template database name: ${args.template}`);
+  if (!/^[a-z_][a-z0-9_]*$/.test(String(template))) {
+    throw new Error(`Invalid template database name: ${template}`);
   }
-  return args;
+  return { template, githubEnv };
 }
 
 function connectionSettings() {
@@ -82,6 +79,7 @@ function connectionSettings() {
   };
 }
 
+/** @param {ReturnType<typeof connectionSettings>} settings @param {string} database */
 function adminClientConfig(settings, database) {
   if (settings.host) {
     return {
@@ -95,6 +93,7 @@ function adminClientConfig(settings, database) {
   return { host: settings.socket, user: settings.user, database };
 }
 
+/** @param {ReturnType<typeof connectionSettings>} settings @param {string | undefined} database */
 function databaseUrl(settings, database) {
   if (settings.host) {
     const url = new URL(
@@ -103,7 +102,7 @@ function databaseUrl(settings, database) {
     if (settings.password) url.password = settings.password;
     return url.toString();
   }
-  return `postgresql://${encodeURIComponent(settings.user)}@/${encodeURIComponent(database)}?host=${encodeURIComponent(settings.socket)}`;
+  return `postgresql://${encodeURIComponent(settings.user)}@/${encodeURIComponent(String(database))}?host=${encodeURIComponent(String(settings.socket))}`;
 }
 
 function ensureCliBuilt() {
@@ -118,22 +117,31 @@ function ensureCliBuilt() {
   }
 }
 
+function ensureDatabaseToolingBuilt() {
+  const result = spawnSync('pnpm', [
+    'exec', 'turbo', 'run', 'build', '--filter=stynx-database-tooling...', '--concurrency=1',
+  ], { cwd: repoRoot, stdio: 'inherit' });
+  if (result.status !== 0) {
+    throw new Error('Failed to build database tooling for template migration');
+  }
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const settings = connectionSettings();
 
   ensureCliBuilt();
+  ensureDatabaseToolingBuilt();
+  const { createStynxPgClient, executeTypedQuery } = await import('../../packages/data/dist/data/src/index.js');
+  const { executeRootDatabaseOperation } = await import('../../packages/data/dist/data/src/checked-executor.js');
+  const { terminateTemplateConnections } = await import('../../tools/database-tooling/dist/catalog-control.repository.js');
 
-  const admin = new Client(adminClientConfig(settings, 'postgres'));
+  const admin = createStynxPgClient(adminClientConfig(settings, 'postgres'));
   await admin.connect();
   try {
-    await admin.query(
-      `select pg_terminate_backend(pid) from pg_stat_activity
-        where datname = $1 and pid <> pg_backend_pid()`,
-      [args.template],
-    );
-    await admin.query(`drop database if exists "${args.template}"`);
-    await admin.query(`create database "${args.template}"`);
+    await executeTypedQuery(admin, terminateTemplateConnections, [args.template]);
+    await executeRootDatabaseOperation(admin, 'integration-template-drop', String(args.template));
+    await executeRootDatabaseOperation(admin, 'integration-template-create', String(args.template));
   } finally {
     await admin.end();
   }

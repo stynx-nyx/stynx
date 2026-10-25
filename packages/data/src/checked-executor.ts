@@ -114,6 +114,36 @@ export async function executeGuardedQueryRows<
   return Object.freeze(rows);
 }
 
+/**
+ * @internal Root-tooling report evidence retains the actual captured driver
+ * array. Only the separately guarded dense snapshot promises typed rows;
+ * mutable/accessor-backed evidence never receives a stronger type assertion.
+ * This helper is not exported by the data package barrel or an exports subpath.
+ */
+export async function executeRootToolingQueryRows<
+  P extends z.ZodTuple,
+  S extends z.ZodObject,
+  Row,
+>(
+  client: CheckedQueryClient,
+  query: TypedQuery<P, S, 'many'>,
+  params: z.input<P>,
+  isRow: (value: unknown) => value is Row,
+): Promise<{ rows: readonly Row[]; originalRows: unknown[] }> {
+  if (query.expects !== 'many') throw new TypeError('executeRootToolingQueryRows requires many cardinality');
+  const { rawRows, driverRows } = await executeCheckedQuery(client, query, params);
+  const rows: Row[] = [];
+  const count = rawRows.length;
+  for (let rowIndex = 0; rowIndex < count; rowIndex += 1) {
+    const row = rawRows[rowIndex];
+    if (!isRow(row)) {
+      throw new QueryRowValidationError(query.name, rowIndex, [{ path: [], code: 'invalid_type' }]);
+    }
+    rows.push(row);
+  }
+  return { rows: Object.freeze(rows), originalRows: driverRows };
+}
+
 /** Keep validated query values and driver metadata separate, without rewriting SQL. */
 export function executeTypedQueryResult<Q extends TypedQuery>(
   client: CheckedQueryClient,
@@ -175,7 +205,7 @@ async function executeCheckedQuery(client: CheckedQueryClient, query: TypedQuery
     rows.push(parsed.data);
     rawRows.push(row);
   }
-  return { rows, rawRows, readRowCount: () => result.rowCount };
+  return { rows, rawRows, driverRows, readRowCount: () => result.rowCount };
 }
 
 /** @internal Historical Transaction.query result contract, not typed-row evidence. */
@@ -203,6 +233,48 @@ export async function executeRawScript(
 ): Promise<void> {
   if (values === undefined) await client.query(text);
   else await client.query(text, values);
+}
+
+type RootDatabaseOperation =
+  | 'offline-catalog-create' | 'offline-catalog-drop-force'
+  | 'outbox-catalog-create' | 'outbox-catalog-drop-force'
+  | 'integration-template-drop' | 'integration-template-create';
+
+/** @internal ADR0040's six exact root-tooling lifecycle operations. */
+export async function executeRootDatabaseOperation(
+  client: CheckedQueryClient,
+  operation: RootDatabaseOperation,
+  database: string,
+): Promise<void> {
+  switch (operation) {
+    case 'offline-catalog-create':
+    case 'outbox-catalog-create':
+    case 'offline-catalog-drop-force':
+    case 'outbox-catalog-drop-force': {
+      if (typeof database !== 'string' || !/^stynx_storage_generation_[0-9a-f]{32}$/u.test(database)) {
+        throw new TypeError('Invalid disposable storage catalog database name');
+      }
+      if (operation === 'offline-catalog-create' || operation === 'outbox-catalog-create') {
+        await client.query(`create database "${database}"`);
+      } else {
+        await client.query(`drop database if exists "${database}" with (force)`);
+      }
+      return;
+    }
+    case 'integration-template-drop':
+    case 'integration-template-create': {
+      if (typeof database !== 'string' || !/^[a-z_][a-z0-9_]*$/u.test(database)) {
+        throw new TypeError('Invalid integration template database name');
+      }
+      if (operation === 'integration-template-drop') {
+        await client.query(`drop database if exists "${database}"`);
+      } else {
+        await client.query(`create database "${database}"`);
+      }
+      return;
+    }
+    default: throw new TypeError('Unknown root database lifecycle operation');
+  }
 }
 
 type TransactionControl =

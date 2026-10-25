@@ -1,3 +1,4 @@
+import { rootDatabaseToolingConfig } from './tools/eslint-config/root-database-tooling.mjs';
 import js from '@eslint/js';
 import angularPlugin from '@angular-eslint/eslint-plugin';
 import angularTemplatePlugin from '@angular-eslint/eslint-plugin-template';
@@ -118,4 +119,5 @@ export default [
       '@angular-eslint/template/click-events-have-key-events': 'warn',
     },
   },
+  ...rootDatabaseToolingConfig,
 ];

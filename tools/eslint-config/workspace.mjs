@@ -75,6 +75,7 @@ const allowedDependencies = {
   sdk: [],
   // tools/*
   'migration-linter': [],
+  'database-tooling': ['data'],
   // domain/*/api
   'domain-demo-bookmark-api': ['auth', 'core', 'data', 'idempotency'],
   // reference/*
@@ -116,6 +117,7 @@ const allowedDependencies = {
 
 const elementDirectory = (type) => {
   if (type === 'migration-linter') return 'tools/migration-linter';
+  if (type === 'database-tooling') return 'tools/database-tooling';
   if (type === 'domain-demo-bookmark-api') return 'domain/demo-bookmark/api';
   if (type.startsWith('reference-')) return `reference/${type.slice('reference-'.length)}`;
   if (type === 'sdk' || type === 'angular' || type.startsWith('angular-')) {

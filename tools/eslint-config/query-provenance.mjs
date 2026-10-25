@@ -44,7 +44,44 @@ export function createStaticQueryProof(semantics, isDataModule) {
     ) ?? false;
   };
 
+  // The cold integration-template executable builds before importing. Admit
+  // only that exact native import binding; a TypedQuery-looking namespace or
+  // another module/argument cannot provide source-definition provenance.
+  const dynamicToolingBinding = (declaration) => {
+    if (filename !== 'scripts/ci-local/prepare-int-template.mjs' ||
+        !ts.isBindingElement(declaration) || !ts.isObjectBindingPattern(declaration.parent) ||
+        declaration.dotDotDotToken || declaration.initializer) return undefined;
+    const variable = declaration.parent.parent;
+    if (!ts.isVariableDeclaration(variable) || !isConst(variable) ||
+        !variable.initializer || !ts.isAwaitExpression(variable.initializer)) return undefined;
+    const imported = variable.initializer.expression;
+    if (!ts.isCallExpression(imported) || imported.expression.kind !== ts.SyntaxKind.ImportKeyword ||
+        imported.arguments.length !== 1 || !ts.isStringLiteral(imported.arguments[0]) ||
+        !['../../tools/database-tooling/dist/catalog-control.repository.js',
+          '../../packages/data/dist/data/src/index.js'].includes(imported.arguments[0].text)) return undefined;
+    let fn = variable.parent;
+    while (fn && !ts.isFunctionLike(fn)) fn = fn.parent;
+    if (!fn || !ts.isFunctionDeclaration(fn) || fn.name?.text !== 'main' ||
+        !ts.isSourceFile(fn.parent)) return undefined;
+    const key = declaration.propertyName ?? declaration.name;
+    if (!ts.isIdentifier(key) && !ts.isStringLiteral(key)) return undefined;
+    const member = checker.getTypeAtLocation(variable.initializer).getProperty(key.text);
+    const resolved = member && member.flags & ts.SymbolFlags.Alias
+      ? checker.getAliasedSymbol(member) : member;
+    const declarations = resolved?.declarations;
+    const definitionModule = imported.arguments[0].text === '../../tools/database-tooling/dist/catalog-control.repository.js';
+    const expectedPath = definitionModule
+      ? 'tools/database-tooling/dist/catalog-control.repository.d.ts'
+      : 'packages/data/dist/data/src/checked-executor.d.ts';
+    if (!definitionModule && key.text !== 'executeTypedQuery') return undefined;
+    return declarations?.length === 1 &&
+      pathOf(declarations[0].getSourceFile().fileName) === expectedPath
+      ? declarations : undefined;
+  };
+
   const namespaceBinding = (declaration) => {
+    const dynamic = dynamicToolingBinding(declaration);
+    if (dynamic) return dynamic;
     if (!ts.isBindingElement(declaration) || !ts.isObjectBindingPattern(declaration.parent) ||
         declaration.dotDotDotToken || declaration.initializer) return undefined;
     const variable = declaration.parent.parent;
@@ -393,10 +430,44 @@ export function createStaticQueryProof(semantics, isDataModule) {
     return result;
   };
 
+  // The private native tooling route imports emitted JS. Its adjacent d.ts
+  // alone is never evidence: locate the exact source module in this same
+  // Program and prove its exported const initializer by the ordinary rules.
+  const toolingSourceDeclaration = (declaration) => {
+    if (!declaration.getSourceFile().isDeclarationFile ||
+        !ts.isVariableDeclaration(declaration) || !isConst(declaration) ||
+        !ts.isIdentifier(declaration.name)) return undefined;
+    const emitted = pathOf(declaration.getSourceFile().fileName);
+    const sourcePath = new Map([
+      ['tools/database-tooling/dist/demo-bookmark.repository.d.ts',
+        'tools/database-tooling/src/demo-bookmark.repository.ts'],
+      ['tools/database-tooling/dist/catalog-control.repository.d.ts',
+        'tools/database-tooling/src/catalog-control.repository.ts'],
+    ]).get(emitted);
+    if (!sourcePath) return undefined;
+    const source = program.getSourceFiles().find((candidate) =>
+      !candidate.isDeclarationFile && pathOf(candidate.fileName) === sourcePath);
+    if (!source) return undefined;
+    const moduleSymbol = checker.getSymbolAtLocation(source);
+    if (!moduleSymbol) return undefined;
+    const exported = checker.getExportsOfModule(moduleSymbol)
+      .find((symbol) => symbol.name === declaration.name.text);
+    if (!exported || exported.flags & ts.SymbolFlags.Alias || exported.declarations?.length !== 1) return undefined;
+    const original = exported.declarations[0];
+    if (!ts.isVariableDeclaration(original) || !isConst(original) ||
+        !original.initializer || original.getSourceFile() !== source ||
+        !ts.isIdentifier(original.name) || original.name.text !== declaration.name.text ||
+        !ts.isVariableStatement(original.parent.parent) ||
+        !original.parent.parent.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) return undefined;
+    return original;
+  };
+
   const declarationProof = (declaration, depth) => {
     if (ts.isVariableDeclaration(declaration)) {
       if (!isConst(declaration)) return fail('mutable query binding');
       if (!declaration.initializer) {
+        const original = toolingSourceDeclaration(declaration);
+        if (original) return declarationProof(original, depth + 1);
         return ts.isForOfStatement(declaration.parent.parent)
           ? proveAll(iteration(declaration, depth + 1), depth + 1)
           : fail('query source initializer unavailable');

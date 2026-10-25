@@ -1,0 +1,18 @@
+{
+  "extends": "../tsconfig/node24.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "allowImportingTsExtensions": true
+  },
+  "files": [
+    "../../scripts/lib/demo-bookmark-storage.mjs",
+    "../../scripts/offline-storage-catalog-generate.mjs",
+    "../../scripts/outbox-storage-catalog-generate.mjs",
+    "../../scripts/ci-local/prepare-int-template.mjs"
+  ],
+  "include": ["src/**/*.ts"]
+}

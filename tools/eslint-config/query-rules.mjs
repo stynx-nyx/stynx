@@ -1,3 +1,4 @@
+import { createRootToolingProof, rootToolingScriptFiles } from './query-root-tooling-provenance.mjs';
 import { relative, resolve } from 'node:path';
 import ts from 'typescript';
 import { createStaticQueryProof } from './query-provenance.mjs';
@@ -219,6 +220,7 @@ const rawQueryPorts = [
   ['outbox', 'event-stream-source', 'trx/onPrimary/OutboxEventStreamSource'],
 ];
 const rawReferencePorts = [
+  ['scripts/lib/demo-bookmark-storage.d.mts', 'DemoBookmarkQueryable'],
   ['reference/api/src/sample/reference-dev-auth.service.ts', 'QueryLike'],
   ['reference/api/src/app.module.ts', 'owner/bootstrapLegacyReferenceMigrationState'],
   ['reference/api/src/app.module.ts', 'connect/pools/runReferenceApiMigrations'],
@@ -620,6 +622,7 @@ export const noRawQuery = {
     const { origins, filename } = semantics;
     if (filename === executor) return {};
     const staticQuery = createStaticQueryProof(semantics, isDataModule);
+    const rootTooling = createRootToolingProof(semantics);
     return {
       CallExpression(node) {
         const reflected = reflectedCallTargets(semantics.tsNode(node), semantics)
@@ -631,13 +634,30 @@ export const noRawQuery = {
         }
         const typedEntry = declarations.find((origin) =>
           (isDataModule(origin, 'checked-executor') &&
-            ['executeTypedQuery', 'executeTypedQueryResult', 'executeTypedCommand', 'executeGuardedQueryRows'].includes(origin.name)) ||
+            ['executeTypedQuery', 'executeTypedQueryResult', 'executeTypedCommand', 'executeGuardedQueryRows', 'executeRootToolingQueryRows'].includes(origin.name)) ||
           (isDataModule(origin, 'transaction') && origin.scope === 'Transaction' &&
             ['run', 'runGuarded'].includes(origin.name)),
         );
         if (typedEntry) {
+          if (typedEntry.name === 'executeRootToolingQueryRows' &&
+              (filename !== 'scripts/lib/demo-bookmark-storage.mjs' ||
+                !['verifyDemoBookmarkStorage', 'installDemoBookmarkStorage'].some((scope) => withinReferenceInstaller(node, [scope])))) {
+            context.report({ node, messageId: 'entry', data: { name: typedEntry.name } });
+            return;
+          }
           const result = staticQuery(semantics.tsNode(node), typedEntry);
           if (!result.ok) context.report({ node, messageId: 'definition', data: { reason: result.reason } });
+          return;
+        }
+        const rootEntry = declarations.find((origin) =>
+          isDataModule(origin, 'checked-executor') &&
+          (origin.name === 'executeRootDatabaseOperation' ||
+            (origin.name === 'executeRawScript' && rootToolingScriptFiles.has(filename))),
+        );
+        if (rootEntry) {
+          if (!rootTooling(semantics.tsNode(node), rootEntry.name)) {
+            context.report({ node, messageId: 'operation' });
+          }
           return;
         }
         const denied = declarations.find(

@@ -1,3 +1,48 @@
+import { executeRootToolingQueryRows, executeRawScript } from '../../packages/data/dist/data/src/checked-executor.js';
+import {
+  demoBookmarkServerVersion,
+  isDemoBookmarkServerVersionRow,
+  demoBookmarkFixedRoles,
+  isDemoBookmarkRoleRow,
+  demoBookmarkMemberships,
+  isDemoBookmarkMembershipsRow,
+  demoBookmarkSchemaGrants,
+  isDemoBookmarkSchemaGrantsRow,
+  demoBookmarkSetRoleSchema,
+  isDemoBookmarkSetRoleSchemaRow,
+  demoBookmarkRelations,
+  isDemoBookmarkRelationsRow,
+  demoBookmarkRoutines,
+  isDemoBookmarkRoutinesRow,
+  demoBookmarkInheritance,
+  isDemoBookmarkInheritanceRow,
+  demoBookmarkPiiRegistration,
+  isDemoBookmarkPiiRegistrationRow,
+  demoBookmarkRelationExistence,
+  isDemoBookmarkRelationExistenceRow,
+  demoBookmarkAttributes,
+  isDemoBookmarkAttributesRow,
+  demoBookmarkConstraints,
+  isDemoBookmarkConstraintsRow,
+  demoBookmarkIndexes,
+  isDemoBookmarkIndexesRow,
+  demoBookmarkPolicies,
+  isDemoBookmarkPoliciesRow,
+  demoBookmarkGrants,
+  isDemoBookmarkGrantsRow,
+  demoBookmarkColumnGrants,
+  isDemoBookmarkColumnGrantsRow,
+  demoBookmarkSetRoleTableGrants,
+  isDemoBookmarkSetRoleTableGrantsRow,
+  demoBookmarkSetRoleColumnGrants,
+  isDemoBookmarkSetRoleColumnGrantsRow,
+  demoBookmarkTriggers,
+  isDemoBookmarkTriggersRow,
+  demoBookmarkRules,
+  isDemoBookmarkRulesRow,
+  demoBookmarkInstallerAdmission,
+  isDemoBookmarkInstallerAdmissionRow,
+} from '../../tools/database-tooling/dist/demo-bookmark.repository.js';
 import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -14,12 +59,13 @@ const sources = Object.freeze([
     sha256: '4d9f356d3d406c14a89b2935535da6a300c794533a9ad68726f4d6f176afaf34',
   }),
 ]);
+/** @param {string | Uint8Array} bytes */
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
+/** @param {unknown} row @returns {row is Record<string, unknown>} */
+function isObjectRow(row) {
+  return typeof row === 'object' && row !== null && !Array.isArray(row);
+}
 const tables = ['demo__bookmark_bookmark', 'demo__bookmark_bookmark_tag'];
-const setRoleTargetsSql = `select actor.rolname::text as actor, target.rolname::text as target
-  from pg_catalog.pg_roles actor cross join pg_catalog.pg_roles target
-  where actor.rolname in ('stynx_app','stynx_reader') and actor.oid<>target.oid
-    and pg_catalog.pg_has_role(actor.oid,target.oid,'SET')`;
 const historicalModelDifferences = Object.freeze([
   'Drizzle tenant/user foreign keys are absent from historical SQL and the blueprint.',
   'The blueprint URL uniqueness description omits the installed deleted_at IS NULL predicate.',
@@ -42,7 +88,7 @@ export function renderDemoBookmarkStorage() {
   });
   // Only the exact hash-bound outer framing is removed. A nested COMMIT would
   // otherwise escape the caller's atomic installation + verification boundary.
-  if (!bodies[1].includes('\nBEGIN;\n') || !bodies[1].endsWith('\nCOMMIT;\n')) {
+  if (bodies[1] === undefined || !bodies[1].includes('\nBEGIN;\n') || !bodies[1].endsWith('\nCOMMIT;\n')) {
     throw new Error('Demo bookmark forward migration transaction framing differs');
   }
   const forward = bodies[1].replace('\nBEGIN;\n', '\n').slice(0, -'COMMIT;\n'.length);
@@ -58,6 +104,7 @@ export function renderDemoBookmarkStorage() {
 
 // Only PostgreSQL's formatting and implicit text casts are normalized. No
 // identifiers, operands, operators, predicates or executable tokens disappear.
+/** @param {unknown} value */
 const expression = (value) =>
   typeof value === 'string'
     ? value
@@ -123,28 +170,31 @@ const tagPredicate = `EXISTS (SELECT 1 FROM demo.demo__bookmark_bookmark parent
 /** Read-only catalog verification. Direct-login tenant negatives remain a
  * separate required observation; a catalog report cannot replace them.
  */
+/** @param {import('../../packages/data/dist/data/src/checked-executor.js').CheckedQueryClient} queryable */
 export async function verifyDemoBookmarkStorage(queryable) {
   if (!queryable || typeof queryable.query !== 'function')
     throw new Error('Demo storage verifier requires a queryable');
+  /** @type {{id: string, status: 'pass' | 'fail', actual: unknown}[]} */
   const checks = [];
+  /** @param {string} id @param {boolean} pass @param {unknown} actual */
   const check = (id, pass, actual) => checks.push({ id, status: pass ? 'pass' : 'fail', actual });
-  const version = await queryable.query(
-    "select current_setting('server_version_num')::integer as version",
+  const version = await executeRootToolingQueryRows(
+    queryable, demoBookmarkServerVersion,
+    [], isDemoBookmarkServerVersionRow,
   );
   const serverVersion = version.rows[0]?.version;
   check(
     'supported-postgresql',
     version.rows.length === 1 &&
+      typeof serverVersion === 'number' &&
       Number.isInteger(serverVersion) &&
       serverVersion >= 160000 &&
       serverVersion < 190000,
     serverVersion,
   );
-  const roleResult = await queryable.query(
-    `select rolname, rolcanlogin, rolsuper, rolbypassrls,
-    rolcreaterole, rolcreatedb, rolreplication from pg_catalog.pg_roles
-    where rolname = any($1::text[]) order by rolname`,
-    [['stynx_app', 'stynx_owner', 'stynx_reader']],
+  const roleResult = await executeRootToolingQueryRows(
+    queryable, demoBookmarkFixedRoles,
+    [['stynx_app', 'stynx_owner', 'stynx_reader']], isDemoBookmarkRoleRow,
   );
   const restricted = roleResult.rows.filter((row) => row.rolname !== 'stynx_owner');
   check(
@@ -160,26 +210,19 @@ export async function verifyDemoBookmarkStorage(queryable) {
           !row.rolcreatedb &&
           !row.rolreplication,
       ),
-    roleResult.rows,
+    roleResult.originalRows,
   );
   if (roleResult.rows.length !== 3)
     return { contractVersion, supported: false, checks, historicalModelDifferences };
-  const memberships = await queryable.query(`select actor.rolname as actor, target.rolname as target
-    from pg_catalog.pg_roles actor cross join pg_catalog.pg_roles target
-    where actor.rolname in ('stynx_app','stynx_reader') and actor.oid <> target.oid
-      and pg_catalog.pg_has_role(actor.oid, target.oid, 'MEMBER')
-      and (target.rolname='stynx_owner' or target.rolsuper or target.rolbypassrls
-        or target.rolcreaterole or target.rolcreatedb or target.rolreplication
-        or (actor.rolname='stynx_reader' and target.rolname='stynx_app'))
-    order by actor.rolname,target.rolname`);
-  check('restricted-role-membership', memberships.rows.length === 0, memberships.rows);
-  const schema = await queryable.query(`select pg_catalog.pg_get_userbyid(nspowner) as owner,
-    has_schema_privilege('stynx_app',oid,'USAGE') as app_usage,
-    has_schema_privilege('stynx_app',oid,'CREATE') as app_create,
-    has_schema_privilege('stynx_reader',oid,'USAGE') as reader_usage,
-    has_schema_privilege('stynx_reader',oid,'CREATE') as reader_create,
-    has_schema_privilege('public',oid,'USAGE,CREATE') as public_access
-    from pg_catalog.pg_namespace where nspname='demo'`);
+  const memberships = await executeRootToolingQueryRows(
+    queryable, demoBookmarkMemberships,
+    [], isDemoBookmarkMembershipsRow,
+  );
+  check('restricted-role-membership', memberships.rows.length === 0, memberships.originalRows);
+  const schema = await executeRootToolingQueryRows(
+    queryable, demoBookmarkSchemaGrants,
+    [], isDemoBookmarkSchemaGrantsRow,
+  );
   check(
     'schema-owner-and-grants',
     isDeepStrictEqual(schema.rows, [
@@ -192,22 +235,21 @@ export async function verifyDemoBookmarkStorage(queryable) {
         public_access: false,
       },
     ]),
-    schema.rows,
+    schema.originalRows,
   );
-  const setRoleSchema = await queryable.query(`with targets as (${setRoleTargetsSql})
-    select actor,target,pg_catalog.has_schema_privilege(target,'demo','CREATE') as can_create,
-      pg_catalog.has_schema_privilege(target,'demo','USAGE WITH GRANT OPTION,CREATE WITH GRANT OPTION') as grantable
-    from targets order by actor,target`);
+  const setRoleSchema = await executeRootToolingQueryRows(
+    queryable, demoBookmarkSetRoleSchema,
+    [], isDemoBookmarkSetRoleSchemaRow,
+  );
   check(
     'set-role-schema-grants',
     setRoleSchema.rows.every((row) => !row.can_create && !row.grantable),
-    setRoleSchema.rows,
+    setRoleSchema.originalRows,
   );
-  const relations =
-    await queryable.query(`select c.relname,c.relkind,pg_catalog.pg_get_userbyid(c.relowner) as owner,
-    c.relrowsecurity,c.relforcerowsecurity,c.relispartition,c.relpersistence
-    from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace
-    where n.nspname='demo' and c.relkind not in ('i','I') order by c.relname`);
+  const relations = await executeRootToolingQueryRows(
+    queryable, demoBookmarkRelations,
+    [], isDemoBookmarkRelationsRow,
+  );
   check(
     'closed-relation-population',
     isDeepStrictEqual(
@@ -222,26 +264,21 @@ export async function verifyDemoBookmarkStorage(queryable) {
         relpersistence: 'p',
       })),
     ),
-    relations.rows,
+    relations.originalRows,
   );
-  const routines = await queryable.query(`select p.oid::regprocedure::text as routine,
-    p.prokind,p.prosecdef,pg_catalog.pg_get_userbyid(p.proowner) as owner
-    from pg_catalog.pg_proc p join pg_catalog.pg_namespace n on n.oid=p.pronamespace
-    where n.nspname='demo' order by p.oid`);
-  check('closed-routine-population', routines.rows.length === 0, routines.rows);
-  const inheritance = await queryable.query(
-    `select inhrelid::regclass::text as child,
-    inhparent::regclass::text as parent from pg_catalog.pg_inherits
-    where inhrelid in (select c.oid from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='demo' and c.relname=any($1::text[]))
-       or inhparent in (select c.oid from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid=c.relnamespace where n.nspname='demo' and c.relname=any($1::text[]))`,
-    [tables],
+  const routines = await executeRootToolingQueryRows(
+    queryable, demoBookmarkRoutines,
+    [], isDemoBookmarkRoutinesRow,
   );
-  check('no-table-inheritance', inheritance.rows.length === 0, inheritance.rows);
-  const pii = await queryable.query(
-    `select table_schema,table_name,column_name,category,strategy,
-    legal_basis,retention,notes from core.pii_map where table_schema='demo'
-    and table_name=any($1::text[]) order by table_name,column_name`,
-    [tables],
+  check('closed-routine-population', routines.rows.length === 0, routines.originalRows);
+  const inheritance = await executeRootToolingQueryRows(
+    queryable, demoBookmarkInheritance,
+    [tables], isDemoBookmarkInheritanceRow,
+  );
+  check('no-table-inheritance', inheritance.rows.length === 0, inheritance.originalRows);
+  const pii = await executeRootToolingQueryRows(
+    queryable, demoBookmarkPiiRegistration,
+    [tables], isDemoBookmarkPiiRegistrationRow,
   );
   check(
     'canonical-pii-registration',
@@ -257,24 +294,24 @@ export async function verifyDemoBookmarkStorage(queryable) {
         notes: 'User-authored bookmark notes; may incidentally contain PII.',
       },
     ]),
-    pii.rows,
+    pii.originalRows,
   );
   for (const [index, table] of tables.entries()) {
     const relation = `demo.${table}`;
-    const existence = await queryable.query('select to_regclass($1)::text as name', [relation]);
+    const expectedColumns = columns[index];
+    if (expectedColumns === undefined) throw new Error('Demo bookmark expected column population differs');
+    const existence = await executeRootToolingQueryRows(
+    queryable, demoBookmarkRelationExistence,
+    [relation], isDemoBookmarkRelationExistenceRow,
+  );
     if (!existence.rows[0]?.name) {
-      check(`${table}:exists`, false, existence.rows);
+      check(`${table}:exists`, false, existence.originalRows);
       continue;
     }
-    const attributes = await queryable.query(
-      `select a.attname,pg_catalog.format_type(a.atttypid,a.atttypmod) as type,
-      a.attnotnull,pg_catalog.pg_get_expr(d.adbin,d.adrelid) as expression,
-      a.attidentity,a.attgenerated,(a.attcollation=t.typcollation) as default_collation
-      from pg_catalog.pg_attribute a join pg_catalog.pg_type t on t.oid=a.atttypid
-      left join pg_catalog.pg_attrdef d on d.adrelid=a.attrelid and d.adnum=a.attnum
-      where a.attrelid=$1::regclass and a.attnum>0 and not a.attisdropped order by a.attnum`,
-      [relation],
-    );
+    const attributes = await executeRootToolingQueryRows(
+    queryable, demoBookmarkAttributes,
+    [relation], isDemoBookmarkAttributesRow,
+  );
     check(
       `${table}:columns`,
       isDeepStrictEqual(
@@ -284,7 +321,7 @@ export async function verifyDemoBookmarkStorage(queryable) {
           row.attnotnull,
           expression(row.expression),
         ]),
-        columns[index].map(([name, type, notNull, defaultValue]) => [
+        expectedColumns.map(([name, type, notNull, defaultValue]) => [
           name,
           type,
           notNull,
@@ -294,17 +331,16 @@ export async function verifyDemoBookmarkStorage(queryable) {
         attributes.rows.every(
           (row) => row.attidentity === '' && row.attgenerated === '' && row.default_collation,
         ),
-      attributes.rows,
+      attributes.originalRows,
     );
-    const constraints = await queryable.query(
-      `select contype,pg_catalog.pg_get_constraintdef(oid,true) as definition,
-      convalidated,condeferrable,condeferred,connoinherit from pg_catalog.pg_constraint where conrelid=$1::regclass`,
-      [relation],
-    );
+    const constraints = await executeRootToolingQueryRows(
+    queryable, demoBookmarkConstraints,
+    [relation], isDemoBookmarkConstraintsRow,
+  );
     const expectedTableConstraints = [
       ...(index === 0 ? expectedConstraints : expectedTagConstraints),
-      ...(serverVersion >= 180000
-        ? columns[index]
+      ...(typeof serverVersion === 'number' && serverVersion >= 180000
+        ? expectedColumns
             .filter(([, , notNull]) => notNull)
             .map(([name]) => ['n', expression(`NOT NULL ${name}`)])
         : []),
@@ -322,25 +358,12 @@ export async function verifyDemoBookmarkStorage(queryable) {
             !row.condeferred &&
             row.connoinherit === (row.contype === 'p' || row.contype === 'f'),
         ),
-      constraints.rows,
+      constraints.originalRows,
     );
-    const indexes = await queryable.query(
-      `select c.relname,i.indisunique,i.indisprimary,i.indisvalid,i.indisready,
-      i.indnkeyatts,i.indnatts,am.amname,i.indnullsnotdistinct,
-      i.indexprs is null as no_expressions,
-      array(select option from unnest(i.indoption) option) as options,
-      array(select op.opcdefault from unnest(i.indclass) with ordinality key(oid,position)
-        join pg_catalog.pg_opclass op on op.oid=key.oid order by key.position) as default_opclasses,
-      array(select key_collation.oid=a.attcollation from unnest(i.indcollation) with ordinality key_collation(oid,position)
-        join pg_catalog.pg_attribute a on a.attrelid=i.indrelid and a.attnum=i.indkey[key_collation.position::integer-1]
-        order by key_collation.position) as key_collations_match,
-      pg_catalog.pg_get_expr(i.indpred,i.indrelid) as predicate,
-      array(select a.attname::text from unnest(i.indkey) with ordinality key(attnum,position)
-        join pg_catalog.pg_attribute a on a.attrelid=i.indrelid and a.attnum=key.attnum order by key.position) as columns
-      from pg_catalog.pg_index i join pg_catalog.pg_class c on c.oid=i.indexrelid
-      join pg_catalog.pg_am am on am.oid=c.relam where i.indrelid=$1::regclass order by c.relname`,
-      [relation],
-    );
+    const indexes = await executeRootToolingQueryRows(
+    queryable, demoBookmarkIndexes,
+    [relation], isDemoBookmarkIndexesRow,
+  );
     check(
       `${table}:indexes`,
       isDeepStrictEqual(
@@ -368,16 +391,12 @@ export async function verifyDemoBookmarkStorage(queryable) {
             row.amname === 'btree' &&
             row.indnkeyatts === row.indnatts,
         ),
-      indexes.rows,
+      indexes.originalRows,
     );
-    const policies = await queryable.query(
-      `select polname,polcmd,polpermissive,cardinality(polroles) as role_count,
-      array(select r.rolname::text from unnest(p.polroles) role(oid) join pg_catalog.pg_roles r on r.oid=role.oid order by r.rolname) as roles,
-      pg_catalog.pg_get_expr(polqual,polrelid) as using_expression,
-      pg_catalog.pg_get_expr(polwithcheck,polrelid) as check_expression
-      from pg_catalog.pg_policy p where polrelid=$1::regclass order by polname`,
-      [relation],
-    );
+    const policies = await executeRootToolingQueryRows(
+    queryable, demoBookmarkPolicies,
+    [relation], isDemoBookmarkPoliciesRow,
+  );
     const expectedPredicate = expression(index === 0 ? tenantPredicate : tagPredicate);
     check(
       `${table}:tenant-policy`,
@@ -392,7 +411,7 @@ export async function verifyDemoBookmarkStorage(queryable) {
             expression(row.using_expression) === expectedPredicate &&
             expression(row.check_expression) === expectedPredicate,
         ),
-      policies.rows,
+      policies.originalRows,
     );
     const privileges = [
       'SELECT',
@@ -402,15 +421,12 @@ export async function verifyDemoBookmarkStorage(queryable) {
       'TRUNCATE',
       'REFERENCES',
       'TRIGGER',
-      ...(serverVersion >= 170000 ? ['MAINTAIN'] : []),
+      ...(typeof serverVersion === 'number' && serverVersion >= 170000 ? ['MAINTAIN'] : []),
     ];
-    const grants = await queryable.query(
-      `select role,privilege,
-      pg_catalog.has_table_privilege(role,$1,privilege) as allowed,
-      pg_catalog.has_table_privilege(role,$1,privilege || ' WITH GRANT OPTION') as grantable
-      from unnest($2::text[]) role cross join unnest($3::text[]) privilege order by role,privilege`,
-      [relation, ['stynx_app', 'stynx_reader', 'public'], privileges],
-    );
+    const grants = await executeRootToolingQueryRows(
+    queryable, demoBookmarkGrants,
+    [relation, ['stynx_app', 'stynx_reader', 'public'], privileges], isDemoBookmarkGrantsRow,
+  );
     check(
       `${table}:effective-table-grants`,
       grants.rows.length === privileges.length * 3 &&
@@ -421,23 +437,19 @@ export async function verifyDemoBookmarkStorage(queryable) {
                 ? ['SELECT', 'INSERT', 'UPDATE', 'DELETE'].includes(row.privilege)
                 : row.role === 'stynx_reader' && row.privilege === 'SELECT') && !row.grantable,
         ),
-      grants.rows,
+      grants.originalRows,
     );
-    const columnGrants = await queryable.query(
-      `select role,a.attname,privilege,
-      pg_catalog.has_column_privilege(role,a.attrelid,a.attnum,privilege) as allowed,
-      pg_catalog.has_column_privilege(role,a.attrelid,a.attnum,privilege || ' WITH GRANT OPTION') as grantable
-      from pg_catalog.pg_attribute a cross join unnest($2::text[]) role cross join unnest($3::text[]) privilege
-      where a.attrelid=$1::regclass and a.attnum>0 and not a.attisdropped order by role,a.attnum,privilege`,
-      [
+    const columnGrants = await executeRootToolingQueryRows(
+    queryable, demoBookmarkColumnGrants,
+    [
         relation,
         ['stynx_app', 'stynx_reader', 'public'],
         ['SELECT', 'INSERT', 'UPDATE', 'REFERENCES'],
-      ],
-    );
+      ], isDemoBookmarkColumnGrantsRow,
+  );
     check(
       `${table}:effective-column-grants`,
-      columnGrants.rows.length === columns[index].length * 12 &&
+      columnGrants.rows.length === expectedColumns.length * 12 &&
         columnGrants.rows.every(
           (row) =>
             row.allowed ===
@@ -445,16 +457,12 @@ export async function verifyDemoBookmarkStorage(queryable) {
                 ? ['SELECT', 'INSERT', 'UPDATE'].includes(row.privilege)
                 : row.role === 'stynx_reader' && row.privilege === 'SELECT') && !row.grantable,
         ),
-      columnGrants.rows,
+      columnGrants.originalRows,
     );
-    const setRoleTableGrants = await queryable.query(
-      `with targets as (${setRoleTargetsSql})
-      select actor,target,privilege,
-        pg_catalog.has_table_privilege(target,$1,privilege) as allowed,
-        pg_catalog.has_table_privilege(target,$1,privilege || ' WITH GRANT OPTION') as grantable
-      from targets cross join unnest($2::text[]) privilege order by actor,target,privilege`,
-      [relation, privileges],
-    );
+    const setRoleTableGrants = await executeRootToolingQueryRows(
+    queryable, demoBookmarkSetRoleTableGrants,
+    [relation, privileges], isDemoBookmarkSetRoleTableGrantsRow,
+  );
     check(
       `${table}:set-role-table-grants`,
       setRoleTableGrants.rows.every(
@@ -465,18 +473,12 @@ export async function verifyDemoBookmarkStorage(queryable) {
               ? ['SELECT', 'INSERT', 'UPDATE', 'DELETE'].includes(row.privilege)
               : row.privilege === 'SELECT')),
       ),
-      setRoleTableGrants.rows,
+      setRoleTableGrants.originalRows,
     );
-    const setRoleColumnGrants = await queryable.query(
-      `with targets as (${setRoleTargetsSql})
-      select actor,target,a.attname,privilege,
-        pg_catalog.has_column_privilege(target,a.attrelid,a.attnum,privilege) as allowed,
-        pg_catalog.has_column_privilege(target,a.attrelid,a.attnum,privilege || ' WITH GRANT OPTION') as grantable
-      from targets cross join pg_catalog.pg_attribute a cross join unnest($2::text[]) privilege
-      where a.attrelid=$1::regclass and a.attnum>0 and not a.attisdropped
-      order by actor,target,a.attnum,privilege`,
-      [relation, ['SELECT', 'INSERT', 'UPDATE', 'REFERENCES']],
-    );
+    const setRoleColumnGrants = await executeRootToolingQueryRows(
+    queryable, demoBookmarkSetRoleColumnGrants,
+    [relation, ['SELECT', 'INSERT', 'UPDATE', 'REFERENCES']], isDemoBookmarkSetRoleColumnGrantsRow,
+  );
     check(
       `${table}:set-role-column-grants`,
       setRoleColumnGrants.rows.every(
@@ -487,20 +489,20 @@ export async function verifyDemoBookmarkStorage(queryable) {
               ? ['SELECT', 'INSERT', 'UPDATE'].includes(row.privilege)
               : row.privilege === 'SELECT')),
       ),
-      setRoleColumnGrants.rows,
+      setRoleColumnGrants.originalRows,
     );
-    const triggers = await queryable.query(
-      'select tgname from pg_catalog.pg_trigger where tgrelid=$1::regclass and not tgisinternal',
-      [relation],
-    );
-    const rules = await queryable.query(
-      'select rulename from pg_catalog.pg_rewrite where ev_class=$1::regclass',
-      [relation],
-    );
+    const triggers = await executeRootToolingQueryRows(
+    queryable, demoBookmarkTriggers,
+    [relation], isDemoBookmarkTriggersRow,
+  );
+    const rules = await executeRootToolingQueryRows(
+    queryable, demoBookmarkRules,
+    [relation], isDemoBookmarkRulesRow,
+  );
     check(
       `${table}:no-unrecognized-execution-hooks`,
       triggers.rows.length === 0 && rules.rows.length === 0,
-      { triggers: triggers.rows, rules: rules.rows },
+      { triggers: triggers.originalRows, rules: rules.originalRows },
     );
   }
   return {
@@ -515,15 +517,20 @@ export async function verifyDemoBookmarkStorage(queryable) {
  * COMMIT, connection creation or role switching is performed here. A refusal
  * must propagate to the transaction owner so all installation effects roll back.
  */
+/** @param {import('../../packages/data/dist/data/src/checked-executor.js').CheckedQueryClient} queryable */
 export async function installDemoBookmarkStorage(queryable) {
   const plan = renderDemoBookmarkStorage();
-  const admission = await queryable.query(`select current_user::text as actor,
-    to_regnamespace('demo') is not null as schema_exists`);
-  if (admission.rows.length !== 1 || admission.rows[0].actor !== 'stynx_owner') {
+  const admission = await executeRootToolingQueryRows(
+    queryable, demoBookmarkInstallerAdmission,
+    [], isDemoBookmarkInstallerAdmissionRow,
+  );
+  const admissionRow = admission.rows[0];
+  if (admission.rows.length !== 1 || admissionRow === undefined || admissionRow.actor !== 'stynx_owner') {
     throw new Error('Demo bookmark installation requires the actual fixed owner');
   }
+  /** @type {'absent' | 'historical' | 'installed'} */
   let previousState = 'absent';
-  if (admission.rows[0].schema_exists) {
+  if (admissionRow.schema_exists) {
     const before = await verifyDemoBookmarkStorage(queryable);
     if (before.supported) previousState = 'installed';
     else {
@@ -592,21 +599,21 @@ export async function installDemoBookmarkStorage(queryable) {
           policies.length === 0 &&
           Array.isArray(grants) &&
           grants.length > 0 &&
-          grants.every((row) => !row.allowed && !row.grantable) &&
+          grants.every((/** @type {unknown} */ row) => isObjectRow(row) && !row.allowed && !row.grantable) &&
           Array.isArray(columnGrants) &&
           columnGrants.length > 0 &&
-          columnGrants.every((row) => !row.allowed && !row.grantable);
+          columnGrants.every((/** @type {unknown} */ row) => isObjectRow(row) && !row.allowed && !row.grantable);
       }
       if (!legacy)
         throw new Error('Demo bookmark installation refuses an unrecognized existing shape');
       previousState = 'historical';
     }
   }
-  await queryable.query(plan.sql);
+  await executeRawScript(queryable, plan.sql);
   const verification = await verifyDemoBookmarkStorage(queryable);
   if (!verification.supported) {
     const error = new Error('Demo bookmark storage verification refused installation');
-    error.verification = verification;
+    Object.assign(error, { verification });
     throw error;
   }
   return {

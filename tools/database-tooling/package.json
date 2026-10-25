@@ -1,0 +1,22 @@
+{
+  "name": "stynx-database-tooling",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.build.json --noEmit && tsc -p tsconfig.root-scripts.json",
+    "lint": "cd ../.. && eslint --config tools/database-tooling/eslint.config.mjs \"tools/database-tooling/src/**/*.ts\" scripts/lib/demo-bookmark-storage.mjs scripts/offline-storage-catalog-generate.mjs scripts/outbox-storage-catalog-generate.mjs scripts/ci-local/prepare-int-template.mjs",
+    "catalog:offline:write": "cd ../.. && pnpm exec turbo run build --filter=stynx-database-tooling... --concurrency=1 && node scripts/offline-storage-catalog-generate.mjs --write",
+    "catalog:offline:check": "cd ../.. && pnpm exec turbo run build --filter=stynx-database-tooling... --concurrency=1 && node scripts/offline-storage-catalog-generate.mjs --check",
+    "catalog:outbox:write": "cd ../.. && pnpm exec turbo run build --filter=stynx-database-tooling... --concurrency=1 && node scripts/outbox-storage-catalog-generate.mjs --write",
+    "catalog:outbox:check": "cd ../.. && pnpm exec turbo run build --filter=stynx-database-tooling... --concurrency=1 && node scripts/outbox-storage-catalog-generate.mjs --check"
+  },
+  "dependencies": {
+    "@stynx-nyx/data": "workspace:*",
+    "zod": "^4.6.6"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.4",
+    "typescript": "^6.0.3"
+  }
+}

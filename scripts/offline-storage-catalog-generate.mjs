@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 // Explicit generation from the complete canonical platform chain in a disposable DB.
+import { catalogSetOwner, catalogBegin, catalogCommit, catalogRollback } from '../tools/database-tooling/dist/catalog-control.repository.js';
 import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs';
 import { userInfo } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createStynxPgClient } from '../packages/data/src/client.ts';
-import { collectStorageCatalog } from '../packages/data/src/storage-catalog.ts';
+import { createStynxPgClient, executeTypedQuery, executeRawScript } from '../packages/data/dist/data/src/index.js';
+import { executeRootDatabaseOperation } from '../packages/data/dist/data/src/checked-executor.js';
+import { collectStorageCatalog } from '../packages/data/dist/data/src/storage-catalog.js';
 import { format } from 'prettier';
 import { OFFLINE_STORAGE_TEMPLATE } from '../packages/offline-sync/src/storage-template.generated.ts';
 
-if (process.argv.length !== 3 || !['--write', '--check'].includes(process.argv[2]))
+const mode = process.argv[2];
+if (process.argv.length !== 3 || mode === undefined || !['--write', '--check'].includes(mode))
   throw new Error('Use exactly --write or --check');
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dir = resolve(root, 'packages/data/migrations/platform');
@@ -23,9 +26,10 @@ const config = {
 const database = `stynx_storage_generation_${randomUUID().replaceAll('-', '')}`;
 const admin = createStynxPgClient({ ...config, database: 'postgres' });
 await admin.connect();
+/** @type {import('../packages/data/dist/data/src/client.js').StynxPgClient | undefined} */
 let client;
 try {
-  await admin.query(`create database "${database}"`);
+  await executeRootDatabaseOperation(admin, 'offline-catalog-create', database);
   client = createStynxPgClient({ ...config, database });
   await client.connect();
   const sources = [];
@@ -37,16 +41,16 @@ try {
       path: `packages/data/migrations/platform/${file}`,
       sha256: createHash('sha256').update(sql).digest('hex'),
     });
-    await client.query(sql);
-    if (file === '0002_extensions.sql') await client.query('set role stynx_owner');
+    await executeRawScript(client, sql);
+    if (file === '0002_extensions.sql') await executeTypedQuery(client, catalogSetOwner, []);
   }
-  await client.query('begin');
+  await executeTypedQuery(client, catalogBegin, []);
   try {
-    for (const sql of OFFLINE_STORAGE_TEMPLATE.objects) await client.query(sql);
-    for (const sql of OFFLINE_STORAGE_TEMPLATE.bindings) await client.query(sql);
-    await client.query('commit');
+    for (const sql of OFFLINE_STORAGE_TEMPLATE.objects) await executeRawScript(client, sql);
+    for (const sql of OFFLINE_STORAGE_TEMPLATE.bindings) await executeRawScript(client, sql);
+    await executeTypedQuery(client, catalogCommit, []);
   } catch (error) {
-    await client.query('rollback');
+    await executeTypedQuery(client, catalogRollback, []);
     throw error;
   }
   sources.push(...OFFLINE_STORAGE_TEMPLATE.sources);
@@ -77,6 +81,6 @@ try {
   }
 } finally {
   if (client) await client.end();
-  await admin.query(`drop database if exists "${database}" with (force)`);
+  await executeRootDatabaseOperation(admin, 'offline-catalog-drop-force', database);
   await admin.end();
 }
