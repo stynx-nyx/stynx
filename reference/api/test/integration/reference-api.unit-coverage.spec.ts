@@ -802,3 +802,72 @@ describe('five closed reference archive selections', () => {
     expect(trx.hardDeleteFromArchive).not.toHaveBeenCalled();
   });
 });
+
+describe('@stynx-nyx/reference-api native response serializer preservation', () => {
+  function serializer() {
+    const service = new ReferenceSampleService({} as never, {} as RequestContext, {} as never);
+    return (value: unknown): unknown => (service as unknown as {
+      serializeForResponse(input: unknown): unknown;
+    }).serializeForResponse(value);
+  }
+
+  it('preserves sparse arrays and the original custom map receiver, callback and return value', () => {
+    const serialize = serializer();
+    const sparse: unknown[] = Array.from({ length: 3 });
+    delete sparse[0];
+    delete sparse[2];
+    sparse[1] = 12n;
+    const result = serialize(sparse);
+    expect(Array.isArray(result)).toBe(true);
+    expect(result).toHaveLength(3);
+    expect((result as unknown[])[1]).toBe('12');
+    expect(Object.keys(result as object)).toEqual(['1']);
+
+    const original: unknown[] = [1n];
+    const sentinel = { opaque: Symbol('mapped-result') };
+    const calls: unknown[] = [];
+    Object.defineProperty(original, 'map', {
+      get() {
+        calls.push(this === original);
+        return function (this: unknown, callback: (entry: unknown) => unknown) {
+          calls.push(this === original, callback({ nested: 4n }));
+          return sentinel;
+        };
+      },
+    });
+    expect(serialize(original) === sentinel).toBe(true);
+    expect(calls).toEqual([true, true, { nested: '4' }]);
+    const failure = new Error('map-getter');
+    const throwing: unknown[] = [];
+    Object.defineProperty(throwing, 'map', { get() { throw failure; } });
+    expect(() => serialize(throwing)).toThrow(failure);
+  });
+
+  it('preserves native own-entry ordering, opaque scalar identity and getter failures', () => {
+    const serialize = serializer();
+    const events: string[] = [];
+    const marker = Symbol('ignored');
+    const callable = () => undefined;
+    const original = Object.create({ inherited: 2n }) as Record<PropertyKey, unknown>;
+    Object.defineProperties(original, {
+      z: { enumerable: true, get() { events.push('z'); return 3n; } },
+      '2': { enumerable: true, get() { events.push('2'); return callable; } },
+      hidden: { enumerable: false, get() { throw new Error('hidden getter must remain untouched'); } },
+    });
+    Object.defineProperty(original, '__proto__', { enumerable: true, value: 5n });
+    original[marker] = 6n;
+    const result = serialize(original) as Record<string, unknown>;
+    expect(events).toEqual(['2', 'z']);
+    expect(Object.keys(result)).toEqual(['2', 'z', '__proto__']);
+    expect(Object.getOwnPropertyDescriptor(result, '__proto__')?.value).toBe('5');
+    expect(result['2'] === callable).toBe(true);
+    expect(result.z).toBe('3');
+    expect(serialize(marker) === marker).toBe(true);
+    expect(serialize(undefined)).toBeUndefined();
+    expect(serialize(new Date('2026-01-01T00:00:00Z'))).toEqual({});
+    const failure = new Error('own getter');
+    const throwing = { get first() { throw failure; }, get later() { events.push('later'); return 1; } };
+    expect(() => serialize(throwing)).toThrow(failure);
+    expect(events).toEqual(['2', 'z']);
+  });
+});
