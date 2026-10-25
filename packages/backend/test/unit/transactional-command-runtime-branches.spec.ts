@@ -415,7 +415,7 @@ function bootstrapper(options: {
   const interceptor = new TransactionalCommandInterceptor(reflector as never, {} as never, {} as never,
     {} as never, modules as never, { get: vi.fn(() => ({ get: vi.fn() })) } as never,
     { auditSink: options.auditSink ?? { writeInTransaction: vi.fn(async () => undefined) } } as never);
-  return { interceptor };
+  return { interceptor, method, Controller, BuiltInGuard };
 }
 
 describe('transactional command bootstrap validation', () => {
@@ -468,3 +468,41 @@ function requestFingerprint(method: string, path: string, body: string): string 
   }
   return hash.digest('hex');
 }
+
+
+describe('transactional independent reflection preservation', () => {
+  it.each(['scalar', 'array', 'sparse', 'instance'] as const)('retains native one-level guard metadata flattening: %s', (shape) => {
+    const fixture = bootstrapper();
+    const value = shape === 'scalar' ? fixture.BuiltInGuard : shape === 'instance' ? new fixture.BuiltInGuard()
+      : shape === 'sparse' ? Object.assign(Array(2), { 1: fixture.BuiltInGuard }) : [fixture.BuiltInGuard];
+    Reflect.defineMetadata(GUARDS_METADATA, value, fixture.method);
+    expect(() => fixture.interceptor.onApplicationBootstrap()).not.toThrow();
+  });
+  it.each([null, undefined, false, 3, 'guard', [], [[class Unbranded {}]]])('retains missing built-in guard refusal for scalar or nested metadata: %s', (value) => {
+    const fixture = bootstrapper(); Reflect.defineMetadata(GUARDS_METADATA, value, fixture.method);
+    expect(() => fixture.interceptor.onApplicationBootstrap()).toThrow('requires a built-in STYNX auth guard');
+  });
+  it('keeps own brand required rather than accepting inherited static brand', () => {
+    const fixture = bootstrapper(); class Inherited extends fixture.BuiltInGuard {}
+    Reflect.defineMetadata(GUARDS_METADATA, Inherited, fixture.method);
+    expect(() => fixture.interceptor.onApplicationBootstrap()).toThrow('requires a built-in STYNX auth guard');
+  });
+  it('retains actual constructor getter receiver and failure identity', () => {
+    const fixture = bootstrapper(); const failure = new Error('constructor'); let reads = 0;
+    const value = { get constructor() { expect(this).toBe(value); reads++; throw failure; } };
+    Reflect.defineMetadata(GUARDS_METADATA, value, fixture.method);
+    expect(() => fixture.interceptor.onApplicationBootstrap()).toThrow(failure); expect(reads).toBe(1);
+  });
+  it('retains own brand check before exact brand getter', () => {
+    const fixture = bootstrapper(); const order: string[] = []; function Guard() {}
+    Object.defineProperty(Guard, STYNX_BUILTIN_AUTH_GUARD, { get() { order.push('brand'); return true; }, configurable: true });
+    const proxy = new Proxy(Guard, { getOwnPropertyDescriptor(target, key) { if (key === STYNX_BUILTIN_AUTH_GUARD) order.push('own'); return Reflect.getOwnPropertyDescriptor(target, key); } });
+    Reflect.defineMetadata(GUARDS_METADATA, proxy, fixture.method);
+    expect(() => fixture.interceptor.onApplicationBootstrap()).not.toThrow(); expect(order).toEqual(['own', 'brand']);
+  });
+  it('retains inherited optionalAuth receiver and getter error for transactional route', () => {
+    const failure = new Error('optional metadata'); const prototype = { get optionalAuth() { expect(this).toBe(marker); throw failure; } }; const marker = Object.create(prototype);
+    const fixture = bootstrapper({ publicTenant: marker, tenancy: true });
+    expect(() => fixture.interceptor.onApplicationBootstrap()).toThrow(failure);
+  });
+});
