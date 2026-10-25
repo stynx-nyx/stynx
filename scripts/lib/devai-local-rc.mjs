@@ -1,7 +1,15 @@
+/**
+ * @param {unknown} value
+ * @returns {value is Record<string, unknown>}
+ */
 function isRecord(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+/**
+ * @param {unknown} output
+ * @returns {unknown}
+ */
 export function unwrapDevaiCheckReport(output) {
   if (!isRecord(output)) return output;
   const result = output.result;

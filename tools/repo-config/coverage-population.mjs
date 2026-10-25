@@ -2,6 +2,10 @@ import { lstatSync, readFileSync } from 'node:fs';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 import ts from 'typescript';
 
+/**
+ * @param {unknown} candidate
+ * @returns {candidate is string}
+ */
 function portableCandidate(candidate) {
   return (
     typeof candidate === 'string' &&
@@ -12,6 +16,7 @@ function portableCandidate(candidate) {
   );
 }
 
+/** @param {import('typescript').Statement} statement */
 function isErasedStatement(statement) {
   if (ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement)) return true;
   if (ts.isImportDeclaration(statement)) return statement.importClause?.isTypeOnly === true;
@@ -19,6 +24,7 @@ function isErasedStatement(statement) {
   return false;
 }
 
+/** @param {string} path */
 function isTypeOnlyModule(path) {
   try {
     const metadata = lstatSync(path);
@@ -30,8 +36,11 @@ function isTypeOnlyModule(path) {
       false,
       ts.ScriptKind.TS,
     );
+    /** @type {unknown} */
+    const parseDiagnostics = Reflect.get(source, 'parseDiagnostics');
     return (
-      source.parseDiagnostics.length === 0 &&
+      Array.isArray(parseDiagnostics) &&
+      parseDiagnostics.length === 0 &&
       source.statements.length > 0 &&
       source.statements.every(isErasedStatement)
     );
@@ -40,6 +49,7 @@ function isTypeOnlyModule(path) {
   }
 }
 
+/** @param {{ packageDir: unknown, candidates: unknown }} options */
 export function typeOnlyCoverageExclusions({ packageDir, candidates }) {
   if (typeof packageDir !== 'string' || !Array.isArray(candidates)) {
     throw new TypeError('type-only coverage classification requires a package and candidates');
