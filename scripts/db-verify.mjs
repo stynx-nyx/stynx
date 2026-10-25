@@ -7,8 +7,11 @@ if (!databaseUrl) {
   throw new Error('DATABASE_URL or STYNX_DATABASE_URL is required');
 }
 
+const verifiedDatabaseUrl = databaseUrl;
+
+/** @param {string} sql */
 function psql(sql) {
-  const result = spawnSync('psql', [databaseUrl, '-v', 'ON_ERROR_STOP=1', '-Atqc', sql], {
+  const result = spawnSync('psql', [verifiedDatabaseUrl, '-v', 'ON_ERROR_STOP=1', '-Atqc', sql], {
     encoding: 'utf8',
   });
   if (result.status !== 0) {
@@ -17,11 +20,17 @@ function psql(sql) {
   return result.stdout.trim();
 }
 
+/** @param {string} sql */
 function rows(sql) {
   const output = psql(sql);
   return output ? output.split('\n') : [];
 }
 
+/**
+ * @param {string} label
+ * @param {string} sql
+ * @param {string[]} failures
+ */
 function assertEmpty(label, sql, failures) {
   const missing = rows(sql);
   if (missing.length > 0) {
@@ -29,6 +38,7 @@ function assertEmpty(label, sql, failures) {
   }
 }
 
+/** @type {string[]} */
 const failures = [];
 
 assertEmpty(
