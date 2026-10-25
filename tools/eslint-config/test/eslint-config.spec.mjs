@@ -430,3 +430,71 @@ test('root typed source redeclarations preserve overloads and reject duplicate v
   assert.equal(invalid.messages.filter(message => message.ruleId === 'no-redeclare').length, 0);
   assert.deepEqual(observed, [true, true, true]);
 });
+
+
+const toolingProgramObservations = new Map();
+function observeToolingProgram(mode) {
+  if (!toolingProgramObservations.has(mode)) {
+    const root = resolve(import.meta.dirname, '../../..');
+    const child = spawnSync(process.execPath, [resolve(import.meta.dirname, 'support/tooling-program-probe.mjs'), root, mode], { cwd: root, encoding: 'utf8', timeout: 120_000, maxBuffer: 16 * 1024 * 1024 });
+    assert.equal(child.status, 0, child.stdout + child.stderr);
+    toolingProgramObservations.set(mode, JSON.parse(child.stdout));
+  }
+  return toolingProgramObservations.get(mode);
+}
+
+test('D3 actual ESLint implementation and generator bodies belong to real checkJs Programs', () => {
+  const root = resolve(import.meta.dirname, '../../..');
+  const actual = observeToolingProgram('root');
+  assert.equal(actual.visited.length, actual.files.length);
+  assert.ok(actual.files.includes('tools/eslint-config/index.mjs'));
+  assert.ok(actual.files.includes('packages-web/sdk/scripts/codegen.mjs'));
+  for (const file of actual.files) {
+    const seen = actual.visited.find(item => item.file === resolve(root, file));
+    assert.ok(seen?.hasProgram, file);
+    assert.equal(seen.belongs, true, file);
+    assert.equal(seen.allowJs, true, file);
+    assert.equal(seen.checkJs, true, file);
+  }
+  assert.deepEqual(actual.results.flatMap(item => item.fatal), []);
+});
+
+test('D3 actual tooling profiles enable every unsafe rule and reject native JS unsafe access', () => {
+  const actual = observeToolingProgram('root');
+  const names = ['@typescript-eslint/no-explicit-any', ...Object.keys(tsPlugin.rules).filter(name => name.startsWith('no-unsafe-')).map(name => `@typescript-eslint/${name}`)];
+  for (const file of actual.files) for (const name of names) assert.equal(actual.rules[file][name], 2, `${file}: ${name}`);
+  assert.ok(actual.witness.some(item => item.ruleId === '@typescript-eslint/no-unsafe-assignment'));
+  assert.ok(actual.witness.some(item => item.ruleId === '@typescript-eslint/no-unsafe-call'));
+  assert.ok(actual.witness.some(item => item.ruleId === '@typescript-eslint/no-unsafe-member-access'));
+});
+
+test('D3 explicit generator Program roots equal the complete actual executable directory population', () => {
+  const root = resolve(import.meta.dirname, '../../..');
+  const directory = resolve(root, 'tools/eslint-config');
+  const configuration = JSON.parse(readFileSync(resolve(directory, 'tsconfig.workspace-generators.json'), 'utf8'));
+  const expected = ['packages-web/sdk/codegen', 'packages-web/sdk/scripts', 'packages/cli/engines'].flatMap(path => readdirSync(resolve(root, path)).filter(name => name.endsWith('.mjs')).map(name => resolve(root, path, name))).sort();
+  assert.deepEqual(configuration.files.map(file => resolve(directory, file)).sort(), expected);
+  assert.deepEqual(configuration.include, []);
+  assert.equal(configuration.compilerOptions.allowJs, true);
+  assert.equal(configuration.compilerOptions.checkJs, true);
+  const implementation = JSON.parse(readFileSync(resolve(directory, 'tsconfig.workspace-eslint.json'), 'utf8'));
+  assert.deepEqual(implementation.include, ['./*.mjs']);
+  assert.equal(implementation.compilerOptions.allowJs, true);
+  assert.equal(implementation.compilerOptions.checkJs, true);
+});
+
+test('D3 normal tooling lint command uses the same real Program and unsafe policy as root', () => {
+  const root = resolve(import.meta.dirname, '../../..');
+  const manifest = JSON.parse(readFileSync(resolve(root, 'tools/eslint-config/package.json'), 'utf8'));
+  assert.equal(typeof manifest.scripts.lint, 'string');
+  assert.match(manifest.scripts.lint, /^cd \.\.\/\.\. && eslint --config tools\/eslint-config\/workspace-tooling\.mjs --max-warnings=0 /u);
+  for (const glob of ['tools/eslint-config/*.mjs', 'packages-web/sdk/codegen/*.mjs', 'packages-web/sdk/scripts/*.mjs', 'packages/cli/engines/*.mjs']) assert.ok(manifest.scripts.lint.includes(`"${glob}"`));
+  const direct = observeToolingProgram('root');
+  const normal = observeToolingProgram('normal');
+  assert.deepEqual(normal.files, direct.files);
+  assert.deepEqual(normal.rules, direct.rules);
+  assert.ok(normal.visited.every(item => item.hasProgram && item.belongs && item.allowJs && item.checkJs));
+  assert.equal(normal.visited.length, normal.files.length);
+  assert.deepEqual(normal.results.flatMap(item => item.fatal), []);
+  assert.ok(normal.witness.some(item => item.ruleId === '@typescript-eslint/no-unsafe-assignment'));
+});
