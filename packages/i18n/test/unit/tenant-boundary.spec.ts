@@ -1,14 +1,18 @@
 import { ModuleRef } from '@nestjs/core';
 import { RequestContext, SystemContext } from '@stynx-nyx/core';
-import { Database } from '@stynx-nyx/data';
+import { Database, type Transaction, type StynxDataRole } from '@stynx-nyx/data';
+import { createFakeTransaction } from '@stynx-nyx/testing';
 import { I18nAdminService } from '../../src/i18n-admin.service.js';
 import { CatalogService } from '../../src/catalog.service.js';
 import { LocaleService } from '../../src/locale.service.js';
 
+const TENANT_A = '00000000-0000-4000-8000-000000000001';
+const TENANT_B = '00000000-0000-4000-8000-000000000002';
+
 function fixture() {
   const context = {
     active: true,
-    tenantId: 'tenant-a' as string | undefined,
+    tenantId: TENANT_A as string | undefined,
     actorId: 'actor-a' as string | undefined,
     locale: undefined,
     hasActiveContext() {
@@ -16,13 +20,26 @@ function fixture() {
     },
   };
   let system = false;
-  const query = vi.fn(async () => ({
-    rows: [{ settings: { 'i18n.override.pt-BR.title': 'Tenant A' } }],
-  }));
-  const database = {
-    withSystemContext: vi.fn(),
-    txIndependent: vi.fn(async (fn: (trx: { query: typeof query }) => unknown) => fn({ query })),
+  const transactions: ReturnType<typeof createFakeTransaction>[] = [];
+  const run = async (
+    fn: (trx: Transaction) => Promise<unknown>,
+    options: { role: StynxDataRole },
+  ) => {
+    const fake = createFakeTransaction(
+      [
+        { rows: [{ settings: { 'i18n.override.pt-BR.title': 'Tenant A' } }], rowCount: 1 },
+        { rows: [], rowCount: 0 },
+      ],
+      options,
+    );
+    transactions.push(fake);
+    try {
+      return await fn(fake.transaction);
+    } finally {
+      fake.transaction.close();
+    }
   };
+  const database = { withSystemContext: vi.fn(), txIndependent: vi.fn(run) };
   const providers = new Map<unknown, unknown>([
     [RequestContext, context],
     [
@@ -41,7 +58,10 @@ function fixture() {
   const admin = new I18nAdminService(moduleRef, catalog);
   return {
     context,
-    query,
+    get query() {
+      return transactions.flatMap((fake) => fake.queries);
+    },
+    run,
     database,
     catalog,
     admin,
@@ -56,7 +76,7 @@ describe('i18n tenant capability boundaries', () => {
   it('uses restricted reader/app without elevating, including when a system capability exists', async () => {
     const f = fixture();
     f.system();
-    await expect(f.admin.listTenantOverrides('tenant-a')).resolves.toEqual({
+    await expect(f.admin.listTenantOverrides(TENANT_A)).resolves.toEqual({
       'i18n.override.pt-BR.title': 'Tenant A',
     });
     expect(f.database.txIndependent).toHaveBeenLastCalledWith(expect.any(Function), {
@@ -64,7 +84,7 @@ describe('i18n tenant capability boundaries', () => {
       readonly: true,
       replica: false,
     });
-    await f.admin.updateTenantOverrides('tenant-a', {
+    await f.admin.updateTenantOverrides(TENANT_A, {
       locale: 'pt-BR',
       catalog: { title: 'Updated' },
     });
@@ -73,15 +93,15 @@ describe('i18n tenant capability boundaries', () => {
       readonly: false,
       replica: false,
     });
-    expect(f.catalog.translate('title', 'pt-BR', {}, 'tenant-a')).toBe('Updated');
+    expect(f.catalog.translate('title', 'pt-BR', {}, TENANT_A)).toBe('Updated');
     expect(f.database.withSystemContext).not.toHaveBeenCalled();
   });
 
   it('refuses legacy administration without an already active system capability', async () => {
     const f = fixture();
-    await expect(f.admin.listOverrides('tenant-a')).rejects.toThrow('system capability absent');
+    await expect(f.admin.listOverrides(TENANT_A)).rejects.toThrow('system capability absent');
     await expect(
-      f.admin.updateOverrides('tenant-a', { locale: 'pt-BR', catalog: {} }),
+      f.admin.updateOverrides(TENANT_A, { locale: 'pt-BR', catalog: {} }),
     ).rejects.toThrow('system capability absent');
     expect(f.database.txIndependent).not.toHaveBeenCalled();
     expect(f.database.withSystemContext).not.toHaveBeenCalled();
@@ -96,16 +116,16 @@ describe('i18n tenant capability boundaries', () => {
   ] as const) {
     it(`refuses ${admission} before normal administration or warm cache access`, async () => {
       const f = fixture();
-      f.catalog.setTenantOverrides('tenant-a', { 'i18n.override.pt-BR.title': 'Warm' });
+      f.catalog.setTenantOverrides(TENANT_A, { 'i18n.override.pt-BR.title': 'Warm' });
       f.system();
       if (admission === 'inactive') f.context.active = false;
       if (admission === 'missing tenant') f.context.tenantId = undefined;
       if (admission === 'missing actor') f.context.actorId = undefined;
       if (admission === 'blank actor') f.context.actorId = ' \t ';
-      if (admission === 'wrong tenant') f.context.tenantId = 'tenant-b';
-      await expect(f.admin.listTenantOverrides('tenant-a')).rejects.toThrow();
+      if (admission === 'wrong tenant') f.context.tenantId = TENANT_B;
+      await expect(f.admin.listTenantOverrides(TENANT_A)).rejects.toThrow();
       await expect(
-        f.admin.updateTenantOverrides('tenant-a', {
+        f.admin.updateTenantOverrides(TENANT_A, {
           locale: 'pt-BR',
           catalog: { title: 'Poison' },
         }),
@@ -113,9 +133,9 @@ describe('i18n tenant capability boundaries', () => {
       // A caller with no tenant frame may use its explicit internal capability. A
       // present tenant frame, however, cannot borrow that capability for a cache hit.
       if (admission !== 'inactive' && admission !== 'missing tenant') {
-        expect(() => f.catalog.translate('title', 'pt-BR', {}, 'tenant-a')).toThrow();
-        await expect(f.catalog.primeTenantOverrides('tenant-a')).rejects.toThrow();
-        expect(() => f.catalog.setTenantOverrides('tenant-a', {})).toThrow();
+        expect(() => f.catalog.translate('title', 'pt-BR', {}, TENANT_A)).toThrow();
+        await expect(f.catalog.primeTenantOverrides(TENANT_A)).rejects.toThrow();
+        expect(() => f.catalog.setTenantOverrides(TENANT_A, {})).toThrow();
       }
       expect(f.database.txIndependent).not.toHaveBeenCalled();
       expect(f.database.withSystemContext).not.toHaveBeenCalled();
@@ -124,46 +144,46 @@ describe('i18n tenant capability boundaries', () => {
 
   it('keeps the prior cache when a transaction callback succeeds but COMMIT fails', async () => {
     const f = fixture();
-    f.catalog.setTenantOverrides('tenant-a', { 'i18n.override.pt-BR.title': 'Before' });
+    f.catalog.setTenantOverrides(TENANT_A, { 'i18n.override.pt-BR.title': 'Before' });
     f.database.txIndependent.mockImplementationOnce(async (fn) => {
-      await fn({ query: f.query });
+      await f.run(fn, { role: 'app' });
       throw new Error('COMMIT refused');
     });
     await expect(
-      f.admin.updateTenantOverrides('tenant-a', {
+      f.admin.updateTenantOverrides(TENANT_A, {
         locale: 'pt-BR',
         catalog: { title: 'Uncommitted' },
       }),
     ).rejects.toThrow('COMMIT refused');
-    expect(f.catalog.translate('title', 'pt-BR', {}, 'tenant-a')).toBe('Before');
+    expect(f.catalog.translate('title', 'pt-BR', {}, TENANT_A)).toBe('Before');
   });
 
   it('publishes new cache only after the transaction promise resolves', async () => {
     const f = fixture();
-    f.catalog.setTenantOverrides('tenant-a', { 'i18n.override.pt-BR.title': 'Before' });
+    f.catalog.setTenantOverrides(TENANT_A, { 'i18n.override.pt-BR.title': 'Before' });
     let commit!: () => void;
     const committed = new Promise<void>((resolve) => {
       commit = resolve;
     });
     f.database.txIndependent.mockImplementationOnce(async (fn) => {
-      const result = await fn({ query: f.query });
+      const result = await f.run(fn, { role: 'app' });
       await committed;
       return result;
     });
-    const update = f.admin.updateTenantOverrides('tenant-a', {
+    const update = f.admin.updateTenantOverrides(TENANT_A, {
       locale: 'pt-BR',
       catalog: { title: 'After' },
     });
     await Promise.resolve();
-    expect(f.catalog.translate('title', 'pt-BR', {}, 'tenant-a')).toBe('Before');
+    expect(f.catalog.translate('title', 'pt-BR', {}, TENANT_A)).toBe('Before');
     commit();
     await update;
-    expect(f.catalog.translate('title', 'pt-BR', {}, 'tenant-a')).toBe('After');
+    expect(f.catalog.translate('title', 'pt-BR', {}, TENANT_A)).toBe('After');
   });
 
   it('does not touch tenant SQL or cached translations on public pre-authentication resolution', async () => {
     const f = fixture();
-    f.catalog.setTenantOverrides('tenant-a', { 'i18n.override.pt-BR.title': 'Secret' });
+    f.catalog.setTenantOverrides(TENANT_A, { 'i18n.override.pt-BR.title': 'Secret' });
     f.context.actorId = undefined;
     const mutator = { patch: vi.fn() };
     const providers = {
@@ -176,7 +196,7 @@ describe('i18n tenant capability boundaries', () => {
     await expect(locale.resolve('unsupported')).resolves.toBe('en-US');
     expect(locale.t('title')).toBe('title');
     await expect(locale.resolve('en-US')).resolves.toBe('en-US');
-    expect(f.query).not.toHaveBeenCalled();
+    expect(f.query).toHaveLength(0);
     expect(f.database.txIndependent).not.toHaveBeenCalled();
   });
   it('revalidates the tenant after asynchronous priming before publishing cache', async () => {
@@ -187,32 +207,32 @@ describe('i18n tenant capability boundaries', () => {
     });
     f.database.txIndependent.mockImplementationOnce(async (fn) => {
       await pending;
-      return fn({ query: f.query });
+      return f.run(fn, { role: 'reader' });
     });
-    const prime = f.catalog.primeTenantOverrides('tenant-a');
-    f.context.tenantId = 'tenant-b';
+    const prime = f.catalog.primeTenantOverrides(TENANT_A);
+    f.context.tenantId = TENANT_B;
     release();
     await expect(prime).rejects.toThrow('I18n tenant differs');
-    f.context.tenantId = 'tenant-a';
-    expect(f.catalog.translate('title', 'pt-BR', {}, 'tenant-a')).toBe('title');
+    f.context.tenantId = TENANT_A;
+    expect(f.catalog.translate('title', 'pt-BR', {}, TENANT_A)).toBe('title');
   });
 
   it('refuses tenant cache APIs without either caller capability', async () => {
     const f = fixture();
     f.context.active = false;
-    expect(() => f.catalog.setTenantOverrides('tenant-a', {})).toThrow('system capability absent');
-    expect(() => f.catalog.translate('title', 'pt-BR', {}, 'tenant-a')).toThrow(
+    expect(() => f.catalog.setTenantOverrides(TENANT_A, {})).toThrow('system capability absent');
+    expect(() => f.catalog.translate('title', 'pt-BR', {}, TENANT_A)).toThrow(
       'system capability absent',
     );
-    await expect(f.catalog.primeTenantOverrides('tenant-a')).rejects.toThrow(
+    await expect(f.catalog.primeTenantOverrides(TENANT_A)).rejects.toThrow(
       'system capability absent',
     );
-    expect(f.query).not.toHaveBeenCalled();
+    expect(f.query).toHaveLength(0);
   });
   it('admits a matching internal system tenant frame and refuses mismatched or incomplete frames before SQL', async () => {
     const f = fixture();
     f.system();
-    await expect(f.admin.listOverrides('tenant-a')).resolves.toEqual({
+    await expect(f.admin.listOverrides(TENANT_A)).resolves.toEqual({
       'i18n.override.pt-BR.title': 'Tenant A',
     });
     expect(f.database.txIndependent).toHaveBeenLastCalledWith(expect.any(Function), {
@@ -221,16 +241,16 @@ describe('i18n tenant capability boundaries', () => {
       replica: false,
     });
     f.database.txIndependent.mockClear();
-    f.context.tenantId = 'tenant-b';
-    await expect(f.admin.listOverrides('tenant-a')).rejects.toThrow();
+    f.context.tenantId = TENANT_B;
+    await expect(f.admin.listOverrides(TENANT_A)).rejects.toThrow();
     await expect(
-      f.admin.updateOverrides('tenant-a', { locale: 'pt-BR', catalog: { title: 'Poison' } }),
+      f.admin.updateOverrides(TENANT_A, { locale: 'pt-BR', catalog: { title: 'Poison' } }),
     ).rejects.toThrow();
-    f.context.tenantId = 'tenant-a';
+    f.context.tenantId = TENANT_A;
     f.context.actorId = undefined;
-    await expect(f.admin.listOverrides('tenant-a')).rejects.toThrow();
+    await expect(f.admin.listOverrides(TENANT_A)).rejects.toThrow();
     await expect(
-      f.admin.updateOverrides('tenant-a', { locale: 'pt-BR', catalog: { title: 'Poison' } }),
+      f.admin.updateOverrides(TENANT_A, { locale: 'pt-BR', catalog: { title: 'Poison' } }),
     ).rejects.toThrow();
     expect(f.database.txIndependent).not.toHaveBeenCalled();
   });

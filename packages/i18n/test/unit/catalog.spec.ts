@@ -1,9 +1,13 @@
+import { createFakeTransaction } from '@stynx-nyx/testing';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import type { ModuleRef } from '@nestjs/core';
 import { systemModuleRef } from '../support/module-ref.js';
 import { CatalogService } from '../../src/catalog.service.js';
+
+const TENANT_A = '00000000-0000-4000-8000-000000000001';
+const TENANT_NULL = '00000000-0000-4000-8000-000000000003';
 
 function makeWorkspace(): string {
   const root = mkdtempSync(join(tmpdir(), 'stynx-i18n-cat-'));
@@ -74,10 +78,10 @@ describe('CatalogService.translate', () => {
   });
 
   it('merges tenant overrides over the base catalog', () => {
-    service.setTenantOverrides('tenant-a', {
+    service.setTenantOverrides(TENANT_A, {
       'i18n.override.pt-BR.greeting.hello': 'Bem-vindo, {name}!',
     });
-    expect(service.translate('greeting.hello', 'pt-BR', { name: 'Ana' }, 'tenant-a')).toBe(
+    expect(service.translate('greeting.hello', 'pt-BR', { name: 'Ana' }, TENANT_A)).toBe(
       'Bem-vindo, Ana!',
     );
     // Other tenant unaffected
@@ -87,16 +91,16 @@ describe('CatalogService.translate', () => {
   });
 
   it('ignores override entries that do not match the i18n.override.<locale>.<key> shape', () => {
-    service.setTenantOverrides('tenant-a', {
+    service.setTenantOverrides(TENANT_A, {
       'i18n.override.': 'malformed',
       'unrelated.key': 'noise',
       'i18n.override.pt-BR.greeting.hello': 'Welcome, {name}!',
       'i18n.override.es-ES.greeting.hello': 'Hola, {name}!',
     });
-    expect(service.translate('greeting.hello', 'pt-BR', { name: 'Ana' }, 'tenant-a')).toBe(
+    expect(service.translate('greeting.hello', 'pt-BR', { name: 'Ana' }, TENANT_A)).toBe(
       'Welcome, Ana!',
     );
-    expect(service.translate('greeting.hello', 'es-ES', { name: 'Ana' }, 'tenant-a')).toBe(
+    expect(service.translate('greeting.hello', 'es-ES', { name: 'Ana' }, TENANT_A)).toBe(
       'Hola, Ana!',
     );
   });
@@ -151,22 +155,28 @@ describe('CatalogService.supportedLocales', () => {
   });
 
   it('loads tenant overrides once and reuses the cache', async () => {
-    const query = vi.fn(async () => ({
-      rows: [
+    const fake = createFakeTransaction(
+      [
         {
-          settings: {
-            'i18n.override.pt-BR.greeting.hello': 'Oi, {name}!',
-            unrelated: 'ignored',
-          },
+          rows: [
+            {
+              settings: {
+                'i18n.override.pt-BR.greeting.hello': 'Oi, {name}!',
+                unrelated: 'ignored',
+              },
+            },
+          ],
+          rowCount: 1,
         },
       ],
-    }));
+      { role: 'owner' },
+    );
     const moduleRef = systemModuleRef({
       withSystemContext: vi.fn(async (_label: string, callback: () => Promise<unknown>) =>
         callback(),
       ),
-      txIndependent: vi.fn(async (callback: (trx: { query: typeof query }) => Promise<unknown>) =>
-        callback({ query }),
+      txIndependent: vi.fn(async (callback: (trx: typeof fake.transaction) => Promise<unknown>) =>
+        callback(fake.transaction),
       ),
     });
     const svc = new CatalogService(moduleRef, {
@@ -174,11 +184,11 @@ describe('CatalogService.supportedLocales', () => {
       defaultLocale: 'pt-BR',
     });
 
-    await svc.primeTenantOverrides('tenant-a');
-    await svc.primeTenantOverrides('tenant-a');
+    await svc.primeTenantOverrides(TENANT_A);
+    await svc.primeTenantOverrides(TENANT_A);
 
-    expect(query).toHaveBeenCalledTimes(1);
-    expect(svc.translate('greeting.hello', 'pt-BR', { name: 'Ana' }, 'tenant-a')).toBe('Oi, Ana!');
+    expect(fake.queries).toHaveLength(1);
+    expect(svc.translate('greeting.hello', 'pt-BR', { name: 'Ana' }, TENANT_A)).toBe('Oi, Ana!');
   });
 
   it('reads packages-web catalogs and handles null tenant settings', async () => {
@@ -193,13 +203,15 @@ describe('CatalogService.supportedLocales', () => {
         }),
       );
       writeFileSync(join(webRoot, 'packages-web', 'sample-web', 'i18n', 'README.md'), 'ignored');
-      const query = vi.fn(async () => ({ rows: [{ settings: null }] }));
+      const fake = createFakeTransaction([{ rows: [{ settings: null }], rowCount: 1 }], {
+        role: 'owner',
+      });
       const moduleRef = systemModuleRef({
         withSystemContext: vi.fn(async (_label: string, callback: () => Promise<unknown>) =>
           callback(),
         ),
-        txIndependent: vi.fn(async (callback: (trx: { query: typeof query }) => Promise<unknown>) =>
-          callback({ query }),
+        txIndependent: vi.fn(async (callback: (trx: typeof fake.transaction) => Promise<unknown>) =>
+          callback(fake.transaction),
         ),
       });
       const svc = new CatalogService(moduleRef, {
@@ -207,10 +219,10 @@ describe('CatalogService.supportedLocales', () => {
         defaultLocale: 'pt-BR',
       });
 
-      await svc.primeTenantOverrides('tenant-null');
+      await svc.primeTenantOverrides(TENANT_NULL);
 
       expect(svc.translate('web.title', 'en-US')).toBe('Web title');
-      expect(query).toHaveBeenCalledTimes(1);
+      expect(fake.queries).toHaveLength(1);
     } finally {
       rmSync(webRoot, { recursive: true, force: true });
     }
@@ -231,14 +243,14 @@ describe('CatalogService.supportedLocales', () => {
   });
 
   it('accepts only fully anchored tenant override keys', () => {
-    service.setTenantOverrides('tenant-a', {
+    service.setTenantOverrides(TENANT_A, {
       'prefix.i18n.override.pt-BR.greeting.hello': 'prefix accepted',
       'i18n.override.pt-BR.greeting.hello.suffix': 'suffix key',
     });
 
-    expect(service.translate('greeting.hello', 'pt-BR', { name: 'Ana' }, 'tenant-a')).toBe(
+    expect(service.translate('greeting.hello', 'pt-BR', { name: 'Ana' }, TENANT_A)).toBe(
       'Olá, Ana!',
     );
-    expect(service.translate('greeting.hello.suffix', 'pt-BR', {}, 'tenant-a')).toBe('suffix key');
+    expect(service.translate('greeting.hello.suffix', 'pt-BR', {}, TENANT_A)).toBe('suffix key');
   });
 });
