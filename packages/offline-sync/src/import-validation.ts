@@ -97,6 +97,24 @@ function isObjectRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
+function readProperty(value: unknown, key: string): unknown {
+  if (value === null || value === undefined)
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  const target: unknown = Object(value);
+  if ((typeof target === 'object' && target !== null) || typeof target === 'function')
+    return Reflect.get(target, key, value);
+  throw new TypeError('Property receiver is unavailable');
+}
+
+function optionalProperty(value: unknown, key: string): unknown {
+  return value === null || value === undefined ? undefined : readProperty(value, key);
+}
+
+function checkedReceiptInstant(value: unknown): bigint {
+  if (typeof value !== 'string') importRefuse('instant');
+  return importInstantMicroseconds(value);
+}
+
 function isSchemaTypeArray(value: Schema['type']): value is readonly string[] {
   return Array.isArray(value);
 }
@@ -238,14 +256,14 @@ function validateRow(record: OfflineImportRecord): void {
     }
   }
   if (record.kind === 'receipts' || record.kind === 'attempts') {
-    const platform = (row.context_json as Record<string, unknown> | null)?.stynx;
+    const platform = optionalProperty(row.context_json, 'stynx');
     if (platform && typeof platform === 'object' && Object.hasOwn(platform, 'terminalReceived')) {
-      const facts = platform as Record<string, unknown>;
+      const facts = platform;
       if (
-        facts.terminalReceived !== true ||
-        facts.version !== 1 ||
+        readProperty(facts, 'terminalReceived') !== true ||
+        readProperty(facts, 'version') !== 1 ||
         row.status !== 'received' ||
-        facts.retryable !== false
+        readProperty(facts, 'retryable') !== false
       )
         importRefuse(`${record.kind}.terminalReceived`);
     }
@@ -498,10 +516,10 @@ export function validRangeCreationEvidence(
       Array.isArray(row.creation_receipt)
     )
       return false;
-    const receipt = row.creation_receipt as Record<string, unknown>;
+    const receipt: unknown = row.creation_receipt;
     if (
-      typeof receipt.createdAt !== 'string' ||
-      importInstantMicroseconds(receipt.createdAt) !== createdMicroseconds
+      typeof readProperty(receipt, 'createdAt') !== 'string' ||
+      checkedReceiptInstant(readProperty(receipt, 'createdAt')) !== createdMicroseconds
     )
       return false;
     const request = {
@@ -518,7 +536,7 @@ export function validRangeCreationEvidence(
       ...request,
       nextNumber: request.startNumber,
       status: 'active',
-      createdAt: receipt.createdAt,
+      createdAt: readProperty(receipt, 'createdAt'),
       createdBy: row.created_by,
     };
     return (

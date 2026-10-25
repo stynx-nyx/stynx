@@ -39,15 +39,30 @@ export function executionStynxContext(
   });
 }
 
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function readProperty(value: unknown, key: string): unknown {
+  if (value === null || value === undefined)
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  const target: unknown = Object(value);
+  if ((typeof target === 'object' && target !== null) || typeof target === 'function')
+    return Reflect.get(target, key, value);
+  throw new TypeError('Property receiver is unavailable');
+}
+
+function optionalProperty(value: unknown, key: string): unknown {
+  return value === null || value === undefined ? undefined : readProperty(value, key);
+}
+
 /** Returns the attributes unchanged, or throws 400 when they are not a JSON object within the byte bound. */
 export function boundedConsumerAttributes(
   value: unknown,
 ): OfflineSyncConsumerAttributes | undefined {
   if (value === undefined) return undefined;
   if (
-    value === null ||
-    typeof value !== 'object' ||
-    Array.isArray(value) ||
+    !isObjectRecord(value) ||
     Buffer.byteLength(JSON.stringify(value)) > OFFLINE_SYNC_CONSUMER_ATTRIBUTES_MAX_BYTES
   )
     throw new OfflineSyncError(
@@ -55,7 +70,7 @@ export function boundedConsumerAttributes(
       400,
       `consumerAttributes must be a JSON object of at most ${OFFLINE_SYNC_CONSUMER_ATTRIBUTES_MAX_BYTES} bytes.`,
     );
-  return value as OfflineSyncConsumerAttributes;
+  return value;
 }
 
 /** Splits a stored `context_json`/`evidence` object into the host-visible context and the platform object (D3.5). */
@@ -75,7 +90,7 @@ export function splitStynxContext(stored: Record<string, unknown> | null | undef
 
 /** Attempt count already recorded under the platform object of a stored `context_json`. */
 export function recordedAttempts(stored: Record<string, unknown> | null | undefined): number {
-  const attempts = (stored?.[stynxKey] as { attempts?: unknown } | undefined)?.attempts;
+  const attempts = optionalProperty(stored?.[stynxKey], 'attempts');
   return typeof attempts === 'number' && Number.isSafeInteger(attempts) && attempts > 0
     ? attempts
     : 0;

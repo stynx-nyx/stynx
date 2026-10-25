@@ -129,6 +129,15 @@ interface MemoryProjectionClaim {
   key: unknown;
 }
 
+function readAllowedActionsIncludes(value: unknown): unknown {
+  if (value === null || value === undefined)
+    throw new TypeError(`Cannot read properties of ${value} (reading 'includes')`);
+  const target: unknown = Object(value);
+  if ((typeof target === 'object' && target !== null) || typeof target === 'function')
+    return Reflect.get(target, 'includes', value);
+  throw new TypeError('Property receiver is unavailable');
+}
+
 /** Deterministic process-local store for tests and sandbox wiring. */
 export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
   readonly supportsDomainOutcomeClassifier = true as const;
@@ -1044,15 +1053,20 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
       now,
     };
 
-    const allowed = (await port.allowedActions?.(trx, id, context)) ??
+    const allowed: unknown = (await port.allowedActions?.(trx, id, context)) ??
       this.readProjection(this.conflictAllowedActions, key) ??
-      (receipt?.context?.allowedActions as readonly string[] | undefined) ?? [
+      receipt?.context?.allowedActions ?? [
         'device-wins',
         'server-wins',
         'manual-review',
       ];
     this.assertMutationOwner(scope);
-    if (!allowed.includes(input.resolution))
+    const includes = readAllowedActionsIncludes(allowed);
+    const selectedResolution = input.resolution;
+    // A method call evaluates its arguments before rejecting a non-callable property.
+    if (typeof includes !== 'function') throw new TypeError('allowed.includes is not a function');
+    const permitted: unknown = Reflect.apply(includes, allowed, [selectedResolution]);
+    if (!permitted)
       throw new OfflineSyncError(
         'OFFLINE_SYNC_CONFLICT_RESOLUTION',
         409,
