@@ -12,15 +12,17 @@ import {
 } from '../src/testing.js';
 import type {
   CreateMobileDraftInput,
-  MobileConflictResolution,
   MobileEntityDraft,
-  MobileEvidenceDraft,
   MobileNormativePackageSnapshot,
   MobileNumberingReservation,
-  MobilePrintReceipt,
   MobileSessionContext,
-  MobileSyncQueueItem,
 } from '../src/types.js';
+
+function storedStatus(value: unknown): unknown {
+  expect(value).toBeTypeOf('object');
+  if (value === null || typeof value !== 'object') throw new TypeError('Expected stored record');
+  return Reflect.get(value, 'status');
+}
 
 interface Harness {
   readonly runtime: OfflineFirstMobileRuntime;
@@ -74,7 +76,7 @@ function createHarness(
       clock,
       ids,
       options.withPrinter === false ? undefined : new SimulatedMobilePrinterPort(clock, ids),
-      { requiredRoles: ['field-agent'] },
+      { requiredRoles: ['field-agent'], entityTypes: ['ait', 'crash-record'] },
     ),
   };
 }
@@ -235,9 +237,7 @@ describe('Offline-first mobile runtime edge cases', () => {
     await expect(
       runtime.resolveSimpleConflict(queueItem.queueItemId, 'manual-review'),
     ).rejects.toThrow(/expected conflict/);
-    expect(
-      (await store.get<MobileSyncQueueItem>('sync-queue', queueItem.queueItemId))?.status,
-    ).toBe('received');
+    expect(storedStatus(await store.get('sync-queue', queueItem.queueItemId))).toBe('received');
   });
 
   it('does not consume a reservation belonging to another entity type', async () => {
@@ -272,9 +272,9 @@ describe('Offline-first mobile runtime edge cases', () => {
     };
 
     await expect(harness.runtime.submitPendingQueue()).rejects.toThrow(/offline/);
-    expect(
-      (await harness.store.get<MobileSyncQueueItem>('sync-queue', queueItem.queueItemId))?.status,
-    ).toBe('pending');
+    expect(storedStatus(await harness.store.get('sync-queue', queueItem.queueItemId))).toBe(
+      'pending',
+    );
 
     harness.backend.submitSyncBatch = originalSubmit;
     await expect(harness.runtime.submitPendingQueue()).resolves.toMatchObject({ acceptedItems: 1 });
@@ -306,7 +306,7 @@ describe('Offline-first mobile runtime edge cases', () => {
       new FixedMobileClock(),
       new SequentialMobileIdPort(),
       undefined,
-      { requiredRoles: ['field-agent', 'field-supervisor'] },
+      { requiredRoles: ['field-agent', 'field-supervisor'], entityTypes: ['ait', 'crash-record'] },
     );
     await expect(bootstrap(runtime, { ...baseSession, roles: [] })).rejects.toThrow(
       'Official mobile runtime requires role(s) field-agent, field-supervisor for entity creation',
@@ -395,9 +395,10 @@ describe('Offline-first mobile runtime edge cases', () => {
     await expect(harness.runtime.attachEvidence(draft.localId, evidence)).resolves.toMatchObject({
       evidence: [{ ...evidence, linkedLocalEntityId: draft.localId }],
     });
-    expect(
-      await harness.store.get<MobileEvidenceDraft>('evidence', evidence.localEvidenceId),
-    ).toEqual({ ...evidence, linkedLocalEntityId: draft.localId });
+    expect(await harness.store.get('evidence', evidence.localEvidenceId)).toEqual({
+      ...evidence,
+      linkedLocalEntityId: draft.localId,
+    });
     expect((await harness.runtime.snapshot()).evidenceCount).toBe(1);
   });
 
@@ -458,12 +459,14 @@ describe('Offline-first mobile runtime edge cases', () => {
         },
       ],
     });
-    expect(
-      await harness.store.get<MobileSyncQueueItem>('sync-queue', pending.queueItemId),
-    ).toMatchObject({ status: 'received', attempts: 1 });
-    expect(
-      await harness.store.get<MobileSyncQueueItem>('sync-queue', alreadyReceived.queueItemId),
-    ).toMatchObject({ status: 'received', attempts: 0 });
+    expect(await harness.store.get('sync-queue', pending.queueItemId)).toMatchObject({
+      status: 'received',
+      attempts: 1,
+    });
+    expect(await harness.store.get('sync-queue', alreadyReceived.queueItemId)).toMatchObject({
+      status: 'received',
+      attempts: 0,
+    });
   });
 
   it('persists conflict resolution, queue state, draft state and receipt records', async () => {
@@ -488,23 +491,16 @@ describe('Offline-first mobile runtime edge cases', () => {
       'server-wins',
     );
 
-    expect(
-      await harness.store.get<MobileConflictResolution>(
-        'sync-conflict-resolution',
-        resolution.conflictId,
-      ),
-    ).toEqual(resolution);
-    expect(
-      await harness.store.get<MobileSyncQueueItem>('sync-queue', queueItem.queueItemId),
-    ).toMatchObject({ status: 'applied' });
-    expect(await harness.store.get<MobileEntityDraft>('entity-draft', draft.localId)).toMatchObject(
-      {
-        status: 'synced',
-      },
+    expect(await harness.store.get('sync-conflict-resolution', resolution.conflictId)).toEqual(
+      resolution,
     );
-    expect(await harness.store.get<MobilePrintReceipt>('print-receipt', receipt.receiptId)).toEqual(
-      receipt,
-    );
+    expect(await harness.store.get('sync-queue', queueItem.queueItemId)).toMatchObject({
+      status: 'applied',
+    });
+    expect(await harness.store.get('entity-draft', draft.localId)).toMatchObject({
+      status: 'synced',
+    });
+    expect(await harness.store.get('print-receipt', receipt.receiptId)).toEqual(receipt);
     expect(await harness.runtime.snapshot()).toMatchObject({
       queuedCount: 0,
       printReceiptCount: 1,
@@ -535,16 +531,13 @@ describe('Offline-first mobile runtime edge cases', () => {
       'server-wins',
     );
 
-    expect(
-      await harness.store.get<MobileConflictResolution>(
-        'sync-conflict-resolution',
-        resolution.conflictId,
-      ),
-    ).toEqual(resolution);
-    expect(
-      await harness.store.get<MobileSyncQueueItem>('sync-queue', queueItem.queueItemId),
-    ).toMatchObject({ status: 'applied' });
-    expect(await harness.store.list<MobileEntityDraft>('entity-draft')).toEqual([]);
+    expect(await harness.store.get('sync-conflict-resolution', resolution.conflictId)).toEqual(
+      resolution,
+    );
+    expect(await harness.store.get('sync-queue', queueItem.queueItemId)).toMatchObject({
+      status: 'applied',
+    });
+    expect(await harness.store.list('entity-draft')).toEqual([]);
     expect(await harness.runtime.snapshot()).toMatchObject({
       draftCount: 0,
       queuedCount: 0,
@@ -669,17 +662,11 @@ describe('Offline-first mobile runtime edge cases', () => {
     await harness.runtime.reserveNumbering({ entityType: 'ait', requestedSize: 2 });
     await harness.runtime.createDraft(draftInput(harness.clock, 1000));
     expect(
-      await harness.store.get<MobileNumberingReservation>(
-        'numbering-reservation',
-        'reservation-device-001',
-      ),
+      await harness.store.get('numbering-reservation', 'reservation-device-001'),
     ).toMatchObject({ nextNumber: 1001, status: 'reserved' });
     await harness.runtime.createDraft(draftInput(harness.clock, 1001));
     expect(
-      await harness.store.get<MobileNumberingReservation>(
-        'numbering-reservation',
-        'reservation-device-001',
-      ),
+      await harness.store.get('numbering-reservation', 'reservation-device-001'),
     ).toMatchObject({ nextNumber: 1002, status: 'consumed' });
   });
 
@@ -699,8 +686,11 @@ describe('Offline-first mobile runtime edge cases', () => {
     const contextFields = ['deviceId', 'agentId', 'location', 'normativePackageId'] as const;
     for (const field of contextFields) {
       await harness.store.put('entity-draft', draft.localId, { ...draft, [field]: undefined });
-      await expect(harness.runtime.finalizeOffline(draft.localId)).rejects.toThrow(
-        'Offline entity draft lacks device, agent, location or normative package context',
+      const refused = harness.runtime.finalizeOffline(draft.localId);
+      await expect(refused).rejects.toBeInstanceOf(TypeError);
+      await expect(refused).rejects.toHaveProperty(
+        'message',
+        'Invalid stored mobile record: entity-draft',
       );
     }
   });
@@ -721,8 +711,8 @@ describe('Offline-first mobile runtime edge cases', () => {
     expect(stableJson(() => undefined)).toBe('null');
 
     const backend = new SandboxMobileBackendClient();
-    await expect(
-      backend.submitSyncBatch({
+    const rawSubmission: unknown = Reflect.apply(backend.submitSyncBatch, backend, [
+      {
         tenantId: baseSession.tenantId,
         orgUnitId: baseSession.orgUnitId,
         agentId: baseSession.agentId,
@@ -742,7 +732,63 @@ describe('Offline-first mobile runtime edge cases', () => {
             updatedAt: clock.now(),
           },
         ],
-      }),
-    ).resolves.toMatchObject({ conflicts: [] });
+      },
+    ]);
+    await expect(rawSubmission).resolves.toMatchObject({ conflicts: [] });
   });
+});
+
+it('stableJson preserves sorted public Proxy Gets, getter receiver and thrown identity', () => {
+  const trace: string[] = [];
+  const sentinel = new Error('stable JSON getter sentinel');
+  let fail = false;
+  const target = {
+    get z() {
+      expect(this).toBe(value);
+      trace.push('getter:z');
+      if (fail) throw sentinel;
+      return 2;
+    },
+    get a() {
+      expect(this).toBe(value);
+      trace.push('getter:a');
+      return 1;
+    },
+  };
+  const value = new Proxy(target, {
+    ownKeys(object) {
+      trace.push('keys');
+      return Reflect.ownKeys(object);
+    },
+    getOwnPropertyDescriptor(object, key) {
+      trace.push(`descriptor:${String(key)}`);
+      return Reflect.getOwnPropertyDescriptor(object, key);
+    },
+    get(object, key, receiver) {
+      expect(receiver).toBe(value);
+      trace.push(`get:${String(key)}`);
+      return Reflect.get(object, key, receiver);
+    },
+  });
+  expect(stableJson(value)).toBe('{"a":1,"z":2}');
+  const expected = [
+    'keys',
+    'descriptor:z',
+    'descriptor:a',
+    'get:a',
+    'getter:a',
+    'get:z',
+    'getter:z',
+  ];
+  expect(trace).toEqual(expected);
+  trace.length = 0;
+  fail = true;
+  let thrown: unknown;
+  try {
+    stableJson(value);
+  } catch (error) {
+    thrown = error;
+  }
+  expect(thrown).toBe(sentinel);
+  expect(trace).toEqual(expected);
 });

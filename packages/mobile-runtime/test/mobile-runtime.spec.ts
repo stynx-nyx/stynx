@@ -9,9 +9,15 @@ import {
   SequentialMobileIdPort,
   SimulatedMobilePrinterPort,
 } from '../src/testing.js';
-import type { MobileEvidenceDraft, MobileEntityDraft, MobileSyncQueueItem } from '../src/types.js';
+import type { MobileEvidenceDraft } from '../src/types.js';
 
 type TeatEntityType = 'ait' | 'crash-record';
+
+function storedStatus(value: unknown): unknown {
+  expect(value).toBeTypeOf('object');
+  if (value === null || typeof value !== 'object') throw new TypeError('Expected stored record');
+  return Reflect.get(value, 'status');
+}
 
 const posture = {
   homologated: true,
@@ -55,6 +61,8 @@ describe('Offline-first mobile runtime (promoted from TEAT)', () => {
           new NodeMobileCryptoPort(),
           new FixedMobileClock(),
           new SequentialMobileIdPort(),
+          undefined,
+          { entityTypes: ['ait', 'crash-record'] },
         ),
     ).toThrow(/encrypted local store/);
   });
@@ -71,7 +79,7 @@ describe('Offline-first mobile runtime (promoted from TEAT)', () => {
       clock,
       ids,
       new SimulatedMobilePrinterPort(clock, ids),
-      { requiredRoles: ['field-agent'] },
+      { requiredRoles: ['field-agent'], entityTypes: ['ait', 'crash-record'] },
     );
 
     await runtime.bootstrapFromStynxSession(new SandboxStynxMobileSessionPort(), posture);
@@ -110,15 +118,11 @@ describe('Offline-first mobile runtime (promoted from TEAT)', () => {
 
     const submitted = await runtime.submitPendingQueue();
     expect(submitted.conflicts).toEqual([queueItem.queueItemId]);
-    expect(
-      (await store.get<MobileSyncQueueItem>('sync-queue', queueItem.queueItemId))?.status,
-    ).toBe('conflict');
+    expect(storedStatus(await store.get('sync-queue', queueItem.queueItemId))).toBe('conflict');
 
     const resolution = await runtime.resolveSimpleConflict(queueItem.queueItemId, 'device-wins');
     expect(resolution.status).toBe('resolved');
-    expect((await store.get<MobileEntityDraft>('entity-draft', draft.localId))?.status).toBe(
-      'synced',
-    );
+    expect(storedStatus(await store.get('entity-draft', draft.localId))).toBe('synced');
 
     const wipeReceipt = await runtime.applyRemoteWipe('supervisor-revoked-device');
     expect(wipeReceipt.deviceId).toBe('device-001');
@@ -138,6 +142,8 @@ describe('Offline-first mobile runtime (promoted from TEAT)', () => {
       new NodeMobileCryptoPort(),
       clock,
       new SequentialMobileIdPort(),
+      undefined,
+      { entityTypes: ['ait', 'crash-record'] },
     );
 
     await expect(runtime.reserveNumbering({ entityType: 'ait', requestedSize: 1 })).rejects.toThrow(
@@ -162,7 +168,11 @@ describe('Offline-first mobile runtime (promoted from TEAT)', () => {
       clock,
       ids,
       undefined,
-      { requireEvidenceToFinalize: false, draftIdPrefix: 'crash-local' },
+      {
+        requireEvidenceToFinalize: false,
+        draftIdPrefix: 'crash-local',
+        entityTypes: ['crash-record'],
+      },
     );
 
     await runtime.bootstrapFromStynxSession(new SandboxStynxMobileSessionPort(), posture);
