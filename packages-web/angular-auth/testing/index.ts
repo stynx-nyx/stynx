@@ -8,7 +8,8 @@ import {
   type StynxSessionState,
 } from '@stynx-nyx/angular-auth';
 
-type SessionMethods = Pick<StynxSessionService,
+type SessionMethods = Pick<
+  StynxSessionService,
   | 'login'
   | 'loginRedirect'
   | 'completeLogin'
@@ -66,29 +67,32 @@ function createSpy<Args extends unknown[], Result>(
   implementation: (...args: Args) => Result,
 ): Spy<Args, Result> {
   const calls: Args[] = [];
-  const spy = ((...args: Args) => {
+  const spy = (...args: Args): Result => {
     calls.push(args);
     return implementation(...args);
-  }) as Spy<Args, Result>;
+  };
+  const metadata: { _isMockFunction: true; mock: { calls: Args[] } } = {
+    _isMockFunction: true,
+    mock: { calls },
+  };
+  const complete = Object.assign(spy, metadata);
   Object.defineProperties(spy, {
-    _isMockFunction: { value: true },
-    mock: { value: { calls }, enumerable: true },
+    _isMockFunction: { value: true, writable: false, enumerable: false, configurable: false },
+    mock: { value: complete.mock, writable: false, enumerable: true, configurable: false },
   });
   spy.getMockName = () => name;
-  spy.mockClear = () => {
+  spy.mockClear = (): Spy<Args, Result> => {
     calls.splice(0, calls.length);
-    return spy;
+    return complete;
   };
-  spy.mockImplementation = (next) => {
+  spy.mockImplementation = (next: (...args: Args) => Result): Spy<Args, Result> => {
     implementation = next;
-    return spy;
+    return complete;
   };
-  return spy;
+  return complete;
 }
 
-export function createStynxSessionStub(
-  initial: Partial<StynxSessionState> = {},
-): StynxSessionStub {
+export function createStynxSessionStub(initial: Partial<StynxSessionState> = {}): StynxSessionStub {
   const stateSignal = signal<StynxSessionState>({
     ...inactiveState(),
     ...initial,
@@ -125,16 +129,21 @@ export function createStynxSessionStub(
     refresh: calls.refresh,
     onAuthFailure: calls.onAuthFailure,
     switchTenant: calls.switchTenant,
-    hasAllPermissions: (required) => required.every((permission) =>
-      stateSignal().permissions.some((granted) => permissionMatches(granted, permission))),
-    hasAnyPermissions: (required) => required.some((permission) =>
-      stateSignal().permissions.some((granted) => permissionMatches(granted, permission))),
+    hasAllPermissions: (required) =>
+      required.every((permission) =>
+        stateSignal().permissions.some((granted) => permissionMatches(granted, permission)),
+      ),
+    hasAnyPermissions: (required) =>
+      required.some((permission) =>
+        stateSignal().permissions.some((granted) => permissionMatches(granted, permission)),
+      ),
     snapshot: readState,
     setSession: (session) => updateState({ ...session, permissions: [...session.permissions] }),
-    setPermissions: (permissions) => updateState({
-      ...stateSignal(),
-      permissions: [...permissions],
-    }),
+    setPermissions: (permissions) =>
+      updateState({
+        ...stateSignal(),
+        permissions: [...permissions],
+      }),
     deactivate: () => updateState(inactiveState()),
   };
   return stub;
