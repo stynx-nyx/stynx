@@ -5,6 +5,26 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR-DEVAI-ADOPTION-0052 — Honest generated SDK results with caller-owned decoding](2026-10-25-s10-generated-sdk-unknown-results.md) — accepted 2026-10-25: “Approve the bounded generated SDK unknown-result correction”; bounded implementation and independent verification remain required.
+
+- [ADR-DEVAI-ADOPTION-0051 — Mobile checked storage migration](2026-10-25-s10-mobile-checked-storage-migration.md) — accepted 2026-10-25: “Approve mobile checked migration A (Recommended)”; bounded implementation and independent verification remain required.
+
+- [ADR-DEVAI-ADOPTION-0050 — Honest i18n override results and cache propagation](2026-10-25-s10-i18n-override-results.md) — accepted 2026-10-25: “Approve the bounded i18n override correction”; bounded implementation and independent verification remain required.
+
+- [ADR-DEVAI-ADOPTION-0049 — Honest Preferences reset category input](2026-10-25-s10-preferences-reset-input.md) — accepted 2026-10-25: “Approve the bounded Preferences reset input correction”; bounded implementation and independent verification remain required.
+
+- [ADR-DEVAI-ADOPTION-0048 — Exact Offline replay and seeded-snapshot result corrections](2026-10-25-s10-offline-replay-and-seeded-results.md) — accepted 2026-10-25: “Approve the bounded Offline result corrections”; bounded implementation and independent verification remain required.
+
+- [ADR-DEVAI-ADOPTION-0047 — Honest opaque FeatureFlags evaluation values](2026-10-25-s10-featureflags-evaluation-result.md) — accepted 2026-10-25: “Approve the bounded FeatureFlags result correction”; bounded implementation and independent verification remain required.
+
+- [ADR-DEVAI-ADOPTION-0046 — Honest Cognito admin environment strategy](2026-10-25-s10-cognito-admin-strategy-result.md) — accepted 2026-10-25: “Approve the bounded strategy correction”; bounded implementation and independent verification remain required.
+
+- [ADR-DEVAI-ADOPTION-0045 — Raw Authorization inputs and verified token representation](2026-10-25-s10-authorization-input-and-token-results.md) — accepted 2026-10-25: “Preserve verified byte tokens (Recommended)”; bounded implementation and independent verification remain required.
+
+- [ADR-DEVAI-ADOPTION-0044 — Input-correlated Worklist row mapper results](2026-10-25-s10-worklist-correlated-mapper-results.md) — accepted 2026-10-25: “Approve the bounded mapper result corrections”; bounded implementation and independent verification remain required.
+
+- [ADR-DEVAI-ADOPTION-0043 — Bounded Signature result boundaries](2026-10-25-s10-signature-result-boundaries.md) — accepted 2026-10-25: “Approve the bounded corrections and listed refusals”; bounded implementation and independent verification remain required.
+
 - [ADR-DEVAI-ADOPTION-0042 — Honest native i18n results and exact notification propagation](2026-10-24-s10-native-i18n-results-proposal.md) — accepted 2026-10-24: “Approve the bounded native i18n correction”; exact result/adapter propagation and two private native boundaries, implementation and verification pending.
 
 - [ADR-DEVAI-ADOPTION-0041 — Honest Offline hook contexts](2026-10-24-s10-offline-hook-context-proposal.md) — accepted 2026-10-24: “Approve the bounded Offline hook-context correction”; exact five interfaces/seven methods/four production carriers, implementation and verification pending; no production unsafe-rule exception.
