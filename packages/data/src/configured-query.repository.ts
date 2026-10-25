@@ -181,6 +181,32 @@ const auditPormParams4 = z.tuple([text.optional(), text.optional(), text.optiona
 const auditPormParams5 = z.tuple([text.optional(), text.optional(), text.optional(), text.optional(), text.optional(), auditPormLimit, auditPormOffset]);
 // END GENERATED audit-porm32 schemas
 
+// BEGIN GENERATED audit-remaining512 schemas
+const auditLogReadRow = z.object({
+  occurred_at: auditPormTimestamp,
+  tenant_id: text.nullish(), actor_id: text.nullish(), operation: text.nullish(),
+  table_schema: text.nullish(), table_name: text.nullish(), row_id: text.nullish(),
+  request_id: text.nullish(), tags: auditPormPayload.nullish(), payload: auditPormPayload.nullish(),
+  total: auditPormTotal.nullish(),
+});
+const auditEventsReadRow = z.object({
+  occurred_at: auditPormTimestamp,
+  tenancy_id: text.nullish(), actor_id: text.nullish(), actor_role: text.nullish(),
+  operation: text.nullish(), entity: text.nullish(), entity_id: text.nullish(),
+  pk: auditPormPayload.nullish(), request_id: text.nullish(), ip_address: text.nullish(),
+  metadata: auditPormPayload.nullish(), old_data: auditPormPayload.nullish(), new_data: auditPormPayload.nullish(),
+  previous_hash: text.nullish(), row_hash: text.nullish(), total: auditPormTotal.nullish(),
+});
+const auditReaderParams0 = z.tuple([auditPormLimit, auditPormOffset]);
+const auditReaderParams1 = z.tuple([text.optional(), auditPormLimit, auditPormOffset]);
+const auditReaderParams2 = z.tuple([text.optional(), text.optional(), auditPormLimit, auditPormOffset]);
+const auditReaderParams3 = z.tuple([text.optional(), text.optional(), text.optional(), auditPormLimit, auditPormOffset]);
+const auditReaderParams4 = z.tuple([text.optional(), text.optional(), text.optional(), text.optional(), auditPormLimit, auditPormOffset]);
+const auditReaderParams5 = z.tuple([text.optional(), text.optional(), text.optional(), text.optional(), text.optional(), auditPormLimit, auditPormOffset]);
+const auditReaderParams6 = z.tuple([text.optional(), text.optional(), text.optional(), text.optional(), text.optional(), text.optional(), auditPormLimit, auditPormOffset]);
+const auditReaderParams7 = z.tuple([text.optional(), text.optional(), text.optional(), text.optional(), text.optional(), text.optional(), text.optional(), auditPormLimit, auditPormOffset]);
+// END GENERATED audit-remaining512 schemas
+
 // Closed ADR0029 definitions: callers supply identifier slots and bound values,
 // never SQL text, fragments, registration functions or a row type assertion.
 export const configuredOperations = {
@@ -1121,6 +1147,6796 @@ export const configuredOperations = {
     },
   },
 // END GENERATED audit-porm32 operations
+
+// BEGIN GENERATED audit-remaining512 log-operations
+  'audit.read-log.mask.0': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams0,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $1
+      OFFSET $2`;
+    },
+  },
+  'audit.read-log.mask.1': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-log.mask.2': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-log.mask.3': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.4': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-log.mask.5': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.6': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.7': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.8': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-log.mask.9': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND actor_id::text = $2
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.10': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND actor_id::text = $2
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.11': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND actor_id::text = $3
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.12': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.13': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND actor_id::text = $3
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.14': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND actor_id::text = $3
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.15': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND actor_id::text = $4
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.16': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-log.mask.17': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND request_id = $2
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.18': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND request_id = $2
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.19': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND request_id = $3
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.20': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND request_id = $2
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.21': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND request_id = $3
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.22': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND request_id = $3
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.23': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND request_id = $4
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.24': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND request_id = $2
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.25': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND actor_id::text = $2 AND request_id = $3
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.26': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND actor_id::text = $2 AND request_id = $3
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.27': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND actor_id::text = $3 AND request_id = $4
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.28': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND request_id = $3
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.29': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.30': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.31': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND actor_id::text = $4 AND request_id = $5
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.32': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE occurred_at >= $1::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-log.mask.33': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.34': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.35': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.36': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.37': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.38': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.39': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.40': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.41': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.42': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.43': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.44': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.45': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.46': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.47': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND actor_id::text = $4 AND occurred_at >= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.48': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.49': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.50': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.51': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.52': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.53': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.54': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.55': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.56': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.57': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.58': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.59': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.60': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.61': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.62': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.63': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND actor_id::text = $4 AND request_id = $5 AND occurred_at >= $6::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-log.mask.64': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE occurred_at <= $1::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-log.mask.65': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.66': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.67': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.68': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.69': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.70': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.71': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.72': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.73': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND actor_id::text = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.74': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND actor_id::text = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.75': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND actor_id::text = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.76': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.77': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.78': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.79': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND actor_id::text = $4 AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.80': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.81': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND request_id = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.82': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND request_id = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.83': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.84': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND request_id = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.85': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.86': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.87': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND request_id = $4 AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.88': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND request_id = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.89': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.90': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.91': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.92': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.93': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.94': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.95': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND actor_id::text = $4 AND request_id = $5 AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-log.mask.96': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE occurred_at >= $1::timestamptz AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-log.mask.97': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.98': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.99': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.100': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.101': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.102': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.103': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.104': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.105': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.106': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.107': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.108': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.109': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.110': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.111': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND actor_id::text = $4 AND occurred_at >= $5::timestamptz AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-log.mask.112': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-log.mask.113': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.114': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.115': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.116': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.117': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.118': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.119': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-log.mask.120': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-log.mask.121': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.122': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.123': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-log.mask.124': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-log.mask.125': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-log.mask.126': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE (table_schema || '.' || table_name) = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-log.mask.127': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams7,
+    row: auditLogReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenant_id,
+        actor_id,
+        operation,
+        table_schema,
+        table_name,
+        row_id,
+        request_id,
+        tags,
+        payload,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenant_id::text = $1 AND (table_schema || '.' || table_name) = $2 AND operation = $3 AND actor_id::text = $4 AND request_id = $5 AND occurred_at >= $6::timestamptz AND occurred_at <= $7::timestamptz
+      ORDER BY occurred_at DESC, id DESC
+      LIMIT $8
+      OFFSET $9`;
+    },
+  },
+// END GENERATED audit-remaining512 log-operations
+
+// BEGIN GENERATED audit-remaining512 events-operations
+  'audit.read-events.mask.0': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams0,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      
+      ORDER BY occurred_at DESC
+      LIMIT $1
+      OFFSET $2`;
+    },
+  },
+  'audit.read-events.mask.1': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-events.mask.2': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-events.mask.3': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.4': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-events.mask.5': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.6': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.7': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.8': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-events.mask.9': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND actor_id::text = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.10': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND actor_id::text = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.11': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND actor_id::text = $3
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.12': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.13': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND actor_id::text = $3
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.14': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND actor_id::text = $3
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.15': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND actor_id::text = $4
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.16': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-events.mask.17': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND request_id = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.18': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND request_id = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.19': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND request_id = $3
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.20': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND request_id = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.21': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND request_id = $3
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.22': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND request_id = $3
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.23': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND request_id = $4
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.24': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND request_id = $2
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.25': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND actor_id::text = $2 AND request_id = $3
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.26': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND actor_id::text = $2 AND request_id = $3
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.27': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND actor_id::text = $3 AND request_id = $4
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.28': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND request_id = $3
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.29': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.30': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.31': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND actor_id::text = $4 AND request_id = $5
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.32': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE occurred_at >= $1::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-events.mask.33': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.34': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.35': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.36': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.37': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.38': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.39': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.40': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.41': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.42': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.43': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.44': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.45': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.46': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.47': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND actor_id::text = $4 AND occurred_at >= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.48': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1 AND occurred_at >= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.49': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.50': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.51': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.52': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.53': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.54': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.55': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.56': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.57': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.58': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.59': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.60': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.61': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.62': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.63': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND actor_id::text = $4 AND request_id = $5 AND occurred_at >= $6::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-events.mask.64': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams1,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE occurred_at <= $1::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $2
+      OFFSET $3`;
+    },
+  },
+  'audit.read-events.mask.65': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.66': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.67': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.68': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.69': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.70': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.71': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.72': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.73': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND actor_id::text = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.74': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND actor_id::text = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.75': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND actor_id::text = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.76': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.77': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.78': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.79': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND actor_id::text = $4 AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.80': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1 AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.81': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND request_id = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.82': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND request_id = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.83': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.84': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND request_id = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.85': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.86': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.87': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND request_id = $4 AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.88': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND request_id = $2 AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.89': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.90': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.91': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.92': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.93': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.94': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.95': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND actor_id::text = $4 AND request_id = $5 AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-events.mask.96': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams2,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE occurred_at >= $1::timestamptz AND occurred_at <= $2::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $3
+      OFFSET $4`;
+    },
+  },
+  'audit.read-events.mask.97': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.98': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.99': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.100': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.101': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.102': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.103': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.104': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.105': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.106': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.107': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.108': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.109': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.110': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND actor_id::text = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.111': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND actor_id::text = $4 AND occurred_at >= $5::timestamptz AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-events.mask.112': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams3,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE request_id = $1 AND occurred_at >= $2::timestamptz AND occurred_at <= $3::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $4
+      OFFSET $5`;
+    },
+  },
+  'audit.read-events.mask.113': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.114': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.115': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.116': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.117': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.118': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.119': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-events.mask.120': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams4,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE actor_id::text = $1 AND request_id = $2 AND occurred_at >= $3::timestamptz AND occurred_at <= $4::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $5
+      OFFSET $6`;
+    },
+  },
+  'audit.read-events.mask.121': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.122': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.123': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-events.mask.124': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams5,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE operation = $1 AND actor_id::text = $2 AND request_id = $3 AND occurred_at >= $4::timestamptz AND occurred_at <= $5::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $6
+      OFFSET $7`;
+    },
+  },
+  'audit.read-events.mask.125': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-events.mask.126': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams6,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE entity = $1 AND operation = $2 AND actor_id::text = $3 AND request_id = $4 AND occurred_at >= $5::timestamptz AND occurred_at <= $6::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $7
+      OFFSET $8`;
+    },
+  },
+  'audit.read-events.mask.127': {
+    identifiers: auditTableIdentifiers, params: auditReaderParams7,
+    row: auditEventsReadRow, expects: 'many', legacyAuditReadResult: true,
+    render: (input: unknown): string => {
+      const i = auditTableIdentifiers.parse(input);
+      return `SELECT
+        occurred_at,
+        tenancy_id,
+        actor_id,
+        actor_role,
+        operation,
+        entity,
+        entity_id,
+        pk,
+        request_id,
+        ip_address,
+        metadata,
+        old_data,
+        new_data,
+        previous_hash,
+        row_hash,
+        COUNT(*) OVER() AS total
+      FROM ${quoteIdentifierPath(i.schema)}.${quoteIdentifierPath(i.table)}
+      WHERE tenancy_id::text = $1 AND entity = $2 AND operation = $3 AND actor_id::text = $4 AND request_id = $5 AND occurred_at >= $6::timestamptz AND occurred_at <= $7::timestamptz
+      ORDER BY occurred_at DESC
+      LIMIT $8
+      OFFSET $9`;
+    },
+  },
+// END GENERATED audit-remaining512 events-operations
 
   'audit.write-table': {
     identifiers: auditTableIdentifiers,

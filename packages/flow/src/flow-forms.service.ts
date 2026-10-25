@@ -1,3 +1,4 @@
+import { executeFormsFixedRead, executeFormsExists, type FormsFixedRead } from './forms-read.repository.js';
 import { putQuestionScoreQuery, upsertAnswerQuery, isFormsWriteRow } from './forms-write.repository.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { RequestContext } from '@stynx-nyx/core';
@@ -68,17 +69,13 @@ export class FlowFormsService {
   }
 
   getQuestionScore(questionId: string): Promise<Record<string, unknown>> {
-    return this.getOne(
-      'select * from flow.scores where question_id = $1::uuid limit 1',
-      [questionId],
-      'Question score not found',
-    );
+    return this.getOne('scores', questionId, 'Question score not found');
   }
 
   putQuestionScore(questionId: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(putScoreSchema, input);
     return this.db.tx(async (trx) => {
-      await this.assertExists(trx, 'flow.questions', questionId, 'Question not found');
+      await this.assertExists(trx, 'questions', questionId, 'Question not found');
       const tenantId = this.requireTenantId();
       const actorId = this.requestContext.actorId ?? null;
       const result = await trx.runGuarded(putQuestionScoreQuery,
@@ -128,11 +125,7 @@ export class FlowFormsService {
   }
 
   getFormFill(formId: string, fillId: string): Promise<Record<string, unknown>> {
-    return this.getOne(
-      'select * from flow.fills where form_id = $1::uuid and id = $2::uuid limit 1',
-      [formId, fillId],
-      'Fill not found',
-    );
+    return this.getOne('formFill', formId, 'Fill not found', fillId);
   }
 
   createFill(formId: string, input: unknown): Promise<Record<string, unknown>> {
@@ -165,8 +158,8 @@ export class FlowFormsService {
   upsertAnswer(fillId: string, input: unknown): Promise<Record<string, unknown>> {
     const dto = parseDto(answerWriteSchema, this.normalizeAnswerInput(input));
     return this.db.tx(async (trx) => {
-      await this.assertExists(trx, 'flow.fills', fillId, 'Fill not found');
-      await this.assertExists(trx, 'flow.questions', dto.questionId!, 'Question not found');
+      await this.assertExists(trx, 'fills', fillId, 'Fill not found');
+      await this.assertExists(trx, 'questions', dto.questionId!, 'Question not found');
       const tenantId = this.requireTenantId();
       const actorId = this.requestContext.actorId ?? null;
       return this.upsertAnswerInTx(trx, tenantId, actorId, fillId, dto);
@@ -177,13 +170,13 @@ export class FlowFormsService {
     const parsed = parseDto(bulkAnswerWriteSchema, input);
     const answers = Array.isArray(parsed) ? parsed : parsed.answers;
     return this.db.tx(async (trx) => {
-      await this.assertExists(trx, 'flow.fills', fillId, 'Fill not found');
+      await this.assertExists(trx, 'fills', fillId, 'Fill not found');
       const tenantId = this.requireTenantId();
       const actorId = this.requestContext.actorId ?? null;
       const rows: Record<string, unknown>[] = [];
       for (const answer of answers) {
         const dto = parseDto(answerWriteSchema, this.normalizeAnswerInput(answer));
-        await this.assertExists(trx, 'flow.questions', dto.questionId!, 'Question not found');
+        await this.assertExists(trx, 'questions', dto.questionId!, 'Question not found');
         rows.push(await this.upsertAnswerInTx(trx, tenantId, actorId, fillId, dto));
       }
       return rows;
@@ -194,7 +187,7 @@ export class FlowFormsService {
     const dto = parseDto(updateAnswerSchema, this.normalizeAnswerInput(input));
     return this.db.tx(async (trx) => {
       if (dto.questionId) {
-        await this.assertExists(trx, 'flow.questions', dto.questionId, 'Question not found');
+        await this.assertExists(trx, 'questions', dto.questionId, 'Question not found');
       }
       return this.updateRowInTx(trx, 'answers', id, dto);
     });
@@ -351,7 +344,7 @@ export class FlowFormsService {
   private async softDeleteRow(key: FormTableKey, id: string): Promise<Record<string, unknown>> {
     const config = FORM_TABLES[key];
     return this.db.tx(async (trx) => {
-      await this.assertExists(trx, config.sqlName, id, 'Flow row not found');
+      await this.assertExists(trx, key, id, 'Flow row not found');
       await trx.softDelete(config.softDeleteTable, id);
       return { id, deleted: true };
     });
@@ -388,14 +381,14 @@ export class FlowFormsService {
     });
   }
 
-  private getRow(key: FormTableKey, id: string): Promise<Record<string, unknown>> {
-    return this.getOne(`select * from ${FORM_TABLES[key].sqlName} where id = $1::uuid limit 1`, [id], 'Flow row not found');
+  private getRow(key: 'forms' | 'questions' | 'fills', id: string): Promise<Record<string, unknown>> {
+    return this.getOne(key, id, 'Flow row not found');
   }
 
-  private async getOne(sql: string, values: unknown[], message: string): Promise<Record<string, unknown>> {
+  private async getOne(key: FormsFixedRead, id: string, message: string, secondId?: string): Promise<Record<string, unknown>> {
     return this.db.tx(async (trx) => {
-      const result = await trx.query<FlowRow>(sql, values);
-      const row = result.rows[0];
+      const rows = await executeFormsFixedRead(trx, key, id, secondId);
+      const row = rows[0];
       if (!row) {
         throw new NotFoundException(message);
       }
@@ -406,12 +399,9 @@ export class FlowFormsService {
     });
   }
 
-  private async assertExists(trx: Transaction, table: string, id: string, message: string): Promise<void> {
-    const result = await trx.query<{ exists: boolean }>(
-      `select exists(select 1 from ${table} where id = $1::uuid) as exists`,
-      [id],
-    );
-    if (!result.rows[0]?.exists) {
+  private async assertExists(trx: Transaction, key: FormTableKey, id: string, message: string): Promise<void> {
+    const rows = await executeFormsExists(trx, key, id);
+    if (!rows[0]?.exists) {
       throw new NotFoundException(message);
     }
   }
