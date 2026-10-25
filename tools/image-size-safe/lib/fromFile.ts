@@ -11,7 +11,7 @@ const MaxInputSize = 512 * 1024;
 type Job = {
   filePath: string;
   resolve: (value: ISizeCalculationResult) => void;
-  reject: (error: Error) => void;
+  reject: (error: unknown) => void;
 };
 
 // This queue is for async `fs` operations, to avoid reaching file-descriptor limits
@@ -29,7 +29,7 @@ const processQueue = async () => {
     try {
       handle = await fs.promises.open(path.resolve(filePath), 'r');
     } catch (err) {
-      return reject(err as Error);
+      return reject(err);
     }
     try {
       const { size } = await handle.stat();
@@ -41,7 +41,7 @@ const processQueue = async () => {
       await handle.read(input, 0, inputSize, 0);
       resolve(imageSize(input));
     } catch (err) {
-      reject(err as Error);
+      reject(err);
     } finally {
       await handle.close();
     }
