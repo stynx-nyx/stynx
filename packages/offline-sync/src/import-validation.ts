@@ -90,16 +90,25 @@ interface Schema {
   pattern?: string;
   format?: string;
 }
-const schema = OFFLINE_IMPORT_SCHEMA as unknown as Schema & {
-  $defs: Record<string, Schema>;
-};
+const schema: Schema & {
+  readonly $defs: Readonly<Record<string, Schema>>;
+} = OFFLINE_IMPORT_SCHEMA;
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isSchemaTypeArray(value: Schema['type']): value is readonly string[] {
+  return Array.isArray(value);
+}
+
 function conforms(value: unknown, rule: Schema): boolean {
   if (rule.$ref) return conforms(value, schema.$defs[rule.$ref.split('/').at(-1)!]!);
   if (rule.oneOf) return rule.oneOf.filter((item) => conforms(value, item)).length === 1;
   if (rule.anyOf) return rule.anyOf.some((item) => conforms(value, item));
   if ('const' in rule && value !== rule.const) return false;
   if (rule.enum && !rule.enum.includes(value)) return false;
-  if (Array.isArray(rule.type)) return rule.type.some((type) => conforms(value, { ...rule, type }));
+  if (isSchemaTypeArray(rule.type))
+    return rule.type.some((type) => conforms(value, { ...rule, type }));
   if (rule.type === 'null') return value === null;
   if (rule.type === 'boolean') return typeof value === 'boolean';
   if (rule.type === 'number' || rule.type === 'integer')
@@ -132,11 +141,14 @@ function conforms(value: unknown, rule: Schema): boolean {
     }
     return true;
   }
-  if (rule.type === 'array')
-    return Array.isArray(value) && value.every((item) => conforms(item, rule.items!));
+  if (rule.type === 'array') {
+    if (!Array.isArray(value)) return false;
+    const items: readonly unknown[] = value;
+    return items.every((item) => conforms(item, rule.items!));
+  }
   if (rule.type === 'object') {
-    if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
-    const object = value as Record<string, unknown>;
+    if (!isObjectRecord(value)) return false;
+    const object = value;
     if (rule.required?.some((key) => !Object.hasOwn(object, key))) return false;
     return Object.entries(object).every(([key, item]) =>
       rule.properties && Object.hasOwn(rule.properties, key)
@@ -149,7 +161,7 @@ function conforms(value: unknown, rule: Schema): boolean {
   return true;
 }
 export function importRecordKey(record: OfflineImportRecord): Record<string, unknown> {
-  const row = record.row as unknown as Record<string, unknown>;
+  const row: Readonly<Record<string, unknown>> = record.row;
   return Object.fromEntries(IMPORT_KEYS[record.kind].map((key) => [key, row[key]]));
 }
 export function importRecordIdentity(record: OfflineImportRecord): string {
@@ -159,7 +171,7 @@ function mappingIdentity(mapping: OfflineImportMapping): string {
   return `${mapping.kind}:${canonicalImportJson(mapping.targetKey)}`;
 }
 function validateRow(record: OfflineImportRecord): void {
-  const row = record.row as unknown as Record<string, unknown>;
+  const row: Readonly<Record<string, unknown>> = record.row;
   const scopeBounds: Record<string, readonly [number, number]> = {
     org_unit_id: [1, 255],
     entity_type: [1, 100],
@@ -301,7 +313,10 @@ export function validateOfflineImportManifest(input: unknown): OfflineImportMani
   } catch {
     importRefuse('legal-json');
   }
-  if (!conforms(snapshot, schema)) importRefuse('envelope');
+  // Only this fresh native JSON snapshot is admitted by the concrete generated schema.
+  const isManifestSnapshot = (value: unknown): value is OfflineImportManifest =>
+    conforms(value, schema);
+  if (!isManifestSnapshot(snapshot)) importRefuse('envelope');
   const checkText = (value: unknown): void => {
     if (typeof value === 'string' && value.includes('\0')) importRefuse('postgres-text');
     if (value !== null && typeof value === 'object')
@@ -311,7 +326,7 @@ export function validateOfflineImportManifest(input: unknown): OfflineImportMani
       }
   };
   checkText(snapshot);
-  const manifest = snapshot as OfflineImportManifest;
+  const manifest = snapshot;
   boundedImportText(manifest.source.system, 'source.system', 255);
   boundedImportText(manifest.source.snapshotId, 'source.snapshotId', 4096);
   const { manifestSha256, ...body } = manifest;
@@ -373,6 +388,12 @@ export function validateOfflineImportManifest(input: unknown): OfflineImportMani
   return manifest;
 }
 
+function parserObject(): Record<string, unknown> {
+  const result: unknown = Object.create(null);
+  if (!isObjectRecord(result)) return importRefuse('json-object');
+  return result;
+}
+
 /** Strict JSON parser retains decoded-name uniqueness before object materialization. */
 export function parseImportJson(text: string): unknown {
   if (typeof text !== 'string') importRefuse('json-text');
@@ -384,7 +405,11 @@ export function parseImportJson(text: string): unknown {
     const start = at++;
     while (at < text.length) {
       const char = text[at++];
-      if (char === '"') return JSON.parse(text.slice(start, at)) as string;
+      if (char === '"') {
+        const parsed: unknown = JSON.parse(text.slice(start, at));
+        if (typeof parsed !== 'string') return importRefuse('json-string');
+        return parsed;
+      }
       if (char === '\\') at++;
     }
     return importRefuse('json-string');
@@ -398,29 +423,30 @@ export function parseImportJson(text: string): unknown {
         close = object ? '}' : ']';
       at++;
       whitespace();
-      const result: Record<string, unknown> | unknown[] = object
-        ? (Object.create(null) as Record<string, unknown>)
-        : [];
+      const result: { object: true; value: Record<string, unknown> } |
+        { object: false; value: unknown[] } = object
+          ? { object: true, value: parserObject() }
+          : { object: false, value: [] };
       const keys = new Set<string>();
       if (text[at] === close) {
         at++;
-        return result;
+        return result.value;
       }
       for (;;) {
         whitespace();
-        if (object) {
+        if (result.object) {
           if (text[at] !== '"') importRefuse('json-property');
           const key = string();
           if (keys.has(key)) importRefuse('duplicate-json-property');
           keys.add(key);
           whitespace();
           if (text[at++] !== ':') importRefuse('json-colon');
-          (result as Record<string, unknown>)[key] = value();
-        } else (result as unknown[]).push(value());
+          result.value[key] = value();
+        } else result.value.push(value());
         whitespace();
         if (text[at] === close) {
           at++;
-          return result;
+          return result.value;
         }
         if (text[at++] !== ',') importRefuse('json-separator');
       }
@@ -526,6 +552,81 @@ export interface ReconciliationReservationBounds {
   readonly end_number: string;
 }
 
+// This concrete proof supplements the original schema traversal on the ORIGINAL value.
+// It never trusts a source array's every/map/iterator methods as evidence.
+function isReconciliationClaims(value: unknown): value is readonly string[] {
+  if (!Array.isArray(value)) return false;
+  const items: readonly unknown[] = value;
+  const length = items.length;
+  for (let index = 0; index < length; index += 1) {
+    if (!Object.hasOwn(items, index)) return false;
+    const item = items[index];
+    if (typeof item !== 'string' || !conforms(item, schema.$defs.bigint!)) return false;
+  }
+  return true;
+}
+
+function isReconciliationNumbers(value: unknown): value is readonly number[] {
+  if (!Array.isArray(value)) return false;
+  const items: readonly unknown[] = value;
+  const length = items.length;
+  for (let index = 0; index < length; index += 1) {
+    if (!Object.hasOwn(items, index)) return false;
+    const item = items[index];
+    if (typeof item !== 'number' || !Number.isSafeInteger(item)) return false;
+  }
+  return true;
+}
+
+type ReconciliationResult = OfflineImportReconciliationsRow['result_json'];
+type ReconciliationConsumption = ReconciliationResult['consumption'][number];
+
+function isReconciliationConsumption(value: unknown): value is readonly ReconciliationConsumption[] {
+  if (!Array.isArray(value)) return false;
+  const items: readonly unknown[] = value;
+  const length = items.length;
+  for (let index = 0; index < length; index += 1) {
+    if (!Object.hasOwn(items, index)) return false;
+    const item = items[index];
+    if (
+      !isObjectRecord(item) ||
+      typeof item.number !== 'number' ||
+      !Number.isSafeInteger(item.number) ||
+      (item.status !== 'available' && item.status !== 'claimed-locally' &&
+        item.status !== 'applied' && item.status !== 'blocked' && item.status !== 'expired') ||
+      (item.serverEntityId !== null && typeof item.serverEntityId !== 'string') ||
+      (item.finalizedAt !== null && typeof item.finalizedAt !== 'string') ||
+      !conforms(item, OFFLINE_IMPORT_SCHEMA.$defs.reconciliationsRow.properties.result_json.properties.consumption.items)
+    ) return false;
+  }
+  return true;
+}
+
+function isReconciliationResult(value: unknown): value is ReconciliationResult {
+  return isObjectRecord(value) &&
+    typeof value.reservationId === 'string' &&
+    (value.status === 'reserved' || value.status === 'consumed' ||
+      value.status === 'expired' || value.status === 'cancelled' || value.status === 'blocked') &&
+    isReconciliationConsumption(value.consumption) &&
+    isReconciliationNumbers(value.missingOnServer) &&
+    isReconciliationNumbers(value.unexpectedOnServer) &&
+    typeof value.reconciliationId === 'string';
+}
+
+function isReconciliationRow(value: unknown): value is OfflineImportReconciliationsRow {
+  return isObjectRecord(value) &&
+    typeof value.id === 'string' &&
+    typeof value.tenant_id === 'string' &&
+    typeof value.reservation_id === 'string' &&
+    typeof value.actor_id === 'string' &&
+    typeof value.created_at === 'string' &&
+    isReconciliationClaims(value.claimed_numbers) &&
+    (value.user_ref === null || typeof value.user_ref === 'string') &&
+    (value.idempotency_key === null || typeof value.idempotency_key === 'string') &&
+    (value.request_fingerprint === null || typeof value.request_fingerprint === 'string') &&
+    isReconciliationResult(value.result_json);
+}
+
 /** Verify an immutable operation snapshot, never a reconstruction from current consumption. */
 export function validReconciliationEvidence(
   value: unknown,
@@ -535,7 +636,8 @@ export function validReconciliationEvidence(
     // The same closed published schema applies to imported and live persisted JSON.
     canonicalImportJson(value);
     if (!conforms(value, schema.$defs.reconciliationsRow!)) return false;
-    const row = value as OfflineImportReconciliationsRow;
+    if (!isReconciliationRow(value)) return false;
+    const row = value;
     boundedImportText(row.actor_id, 'reconciliations.actor_id', 255);
     if (row.user_ref !== null) boundedImportText(row.user_ref, 'reconciliations.user_ref', 255, 0);
     if (row.idempotency_key !== null)
