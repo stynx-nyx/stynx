@@ -10,7 +10,9 @@ import { checkSdk, formatSdk, renderSdk, toPortable, writeSdk } from './generate
 
 const usage = 'usage: stynx-sdk-codegen [--check] --input <openapi.json> --output <dir>';
 
+/** @param {string[]} argv @returns {{check: boolean, input: string, output: string}} */
 function parseArgs(argv) {
+  /** @type {{check: boolean, input: string | null, output: string | null}} */
   const options = { check: false, input: null, output: null };
   for (let index = 0; index < argv.length; index += 1) {
     const value = argv[index];
@@ -18,7 +20,7 @@ function parseArgs(argv) {
     else if (value === '--input' || value === '--output') {
       const next = argv[index + 1];
       if (!next || next.startsWith('--')) throw new UsageError(`missing value for ${value}`);
-      options[value.slice(2)] = next;
+      options[value === '--input' ? 'input' : 'output'] = next;
       index += 1;
     } else if (value === '--help' || value === '-h') {
       process.stdout.write(`${usage}\n`);
@@ -26,17 +28,28 @@ function parseArgs(argv) {
     } else throw new UsageError(`unknown option ${value}`);
   }
   if (!options.input || !options.output) throw new UsageError('--input and --output are required');
-  return options;
+  return { check: options.check, input: options.input, output: options.output };
 }
 
 class UsageError extends Error {}
+
+/** @param {unknown} error @returns {unknown} */
+function failureMessage(error) {
+  if (error === null || error === undefined)
+    throw new TypeError(`Cannot read properties of ${error} (reading 'message')`);
+  /** @type {unknown} */
+  const boxed = Object(error);
+  if ((typeof boxed !== 'object' || boxed === null) && typeof boxed !== 'function')
+    throw new TypeError('Native Object boxing returned a non-object');
+  return Reflect.get(boxed, 'message', error);
+}
 
 async function main() {
   let options;
   try {
     options = parseArgs(process.argv.slice(2));
   } catch (error) {
-    process.stderr.write(`stynx-sdk-codegen: ${error.message}\n${usage}\n`);
+    process.stderr.write(`stynx-sdk-codegen: ${failureMessage(error)}\n${usage}\n`);
     return 2;
   }
   if (!existsSync(options.input) || !statSync(options.input).isFile()) {
@@ -47,7 +60,7 @@ async function main() {
   try {
     files = await formatSdk(renderSdk({ input: options.input }), options.output);
   } catch (error) {
-    process.stderr.write(`stynx-sdk-codegen: ${error.message}\n`);
+    process.stderr.write(`stynx-sdk-codegen: ${failureMessage(error)}\n`);
     return 2;
   }
   if (!options.check) {

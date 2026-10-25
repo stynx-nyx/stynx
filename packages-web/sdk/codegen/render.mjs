@@ -4,6 +4,14 @@
 import { readFileSync } from 'node:fs';
 import { camelCase } from './parse.mjs';
 
+/**
+ * @typedef {import('./parse.mjs').Model} Model
+ * @typedef {import('./parse.mjs').Parameter} Parameter
+ * @typedef {import('./parse.mjs').Operation} Operation
+ * @typedef {import('./parse.mjs').Service} Service
+ * @typedef {import('./parse.mjs').ClientModel} ClientModel
+ */
+
 export const header =
   '/* generated using stynx-sdk-codegen (@stynx-nyx/sdk) -- do not edit */\n/* istanbul ignore file */\n/* tslint:disable */\n/* eslint-disable */';
 
@@ -18,19 +26,33 @@ const coreFiles = [
   'request.ts',
 ];
 
+/** @param {unknown} value @returns {string} */
+function renderedText(value) {
+  if (typeof value !== 'string') throw new TypeError('Rendered description requires a string');
+  return value;
+}
+
+/** @template T @param {T} value @param {number} index @param {T[]} array */
 const unique = (value, index, array) => array.indexOf(value) === index;
+/** @param {{name: string}} left @param {{name: string}} right */
 const byLowerName = (left, right) =>
   left.name.toLowerCase().localeCompare(right.name.toLowerCase(), 'en');
 
+/** @param {unknown} value @returns {string} */
 const escapeComment = (value) =>
-  value
+  renderedText(value)
     .replace(/\*\//g, '*')
     .replace(/\/\*/g, '*')
-    .replace(/\r?\n(.*)/g, (_, line) => `\n * ${line.trim()}`);
+    .replace(
+      /\r?\n(.*)/g,
+      (/** @type {string} */ _, /** @type {string} */ line) => `\n * ${line.trim()}`,
+    );
+/** @param {unknown} value @returns {string} */
 const escapeDescription = (value) =>
-  value.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\${/g, '\\${');
+  renderedText(value).replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\${/g, '\\${');
 
 /** One line per statement, no blank lines: the reference generator's pre-format pass. */
+/** @param {string} text @returns {string} */
 const compact = (text) =>
   `${text
     .split(/[\r\n]+/)
@@ -40,6 +62,7 @@ const compact = (text) =>
     })
     .join('\n')}\n`;
 
+/** @param {Model} item */
 function docComment(item) {
   if (!item.description && !item.deprecated) return '';
   return `/**\n${item.description ? ` * ${escapeComment(item.description)}\n` : ''}${
@@ -47,8 +70,11 @@ function docComment(item) {
   } */\n`;
 }
 
+/** @param {Model} item */
 const nullable = (item) => (item.isNullable ? ' | null' : '');
+/** @param {Model} item */
 const readOnly = (item) => (item.isReadOnly ? 'readonly ' : '');
+/** @param {Model} item @param {boolean} [useOptions] */
 const optional = (item, useOptions) =>
   useOptions
     ? !item.isRequired || item.default
@@ -57,8 +83,10 @@ const optional = (item, useOptions) =>
     : !item.isRequired && !item.default
       ? '?'
       : '';
+/** @param {Model} item */
 const base = (item) => (item.base === 'binary' ? 'Blob' : item.base);
 
+/** @param {Model} item @returns {string} */
 function renderType(item) {
   switch (item.export) {
     case 'interface':
@@ -93,6 +121,7 @@ function renderType(item) {
   }
 }
 
+/** @param {Model} model @returns {string} */
 function renderModel(model) {
   const imports = model.imports.length
     ? `${model.imports.map((name) => `import type { ${name} } from './${name}';\n`).join('')}\n`
@@ -111,15 +140,18 @@ function renderModel(model) {
   return compact(`${header}\n${imports}${body}`);
 }
 
+/** @param {Model} item */
 function schemaFlags(item) {
   return `${item.isReadOnly ? `isReadOnly: ${item.isReadOnly},\n` : ''}${
     item.isRequired ? `isRequired: ${item.isRequired},\n` : ''
   }${item.isNullable ? `isNullable: ${item.isNullable},\n` : ''}`;
 }
 
+/** @param {Model} item */
 const descriptionField = (item) =>
   item.description ? `description: \`${escapeDescription(item.description)}\`,\n` : '';
 
+/** @param {Model} item @returns {string} */
 function renderSchema(item) {
   switch (item.export) {
     case 'interface':
@@ -140,7 +172,9 @@ function renderSchema(item) {
         .map(renderSchema)
         .join(', ')}],\n${schemaFlags(item)}}`;
     default: {
+      /** @param {'format' | 'pattern'} key */
       const quoted = (key) => (item[key] ? `${key}: '${item[key]}',\n` : '');
+      /** @param {'maximum' | 'exclusiveMaximum' | 'minimum' | 'exclusiveMinimum' | 'multipleOf' | 'maxLength' | 'minLength' | 'maxItems' | 'minItems' | 'uniqueItems' | 'maxProperties' | 'minProperties'} key */
       const plain = (key) => (item[key] ? `${key}: ${item[key]},\n` : '');
       return `{\n${item.type ? `type: '${item.type}',\n` : ''}${descriptionField(item)}${schemaFlags(
         item,
@@ -155,10 +189,12 @@ function renderSchema(item) {
   }
 }
 
+/** @param {Model} model */
 function renderSchemaFile(model) {
   return compact(`${header}\nexport const $${model.name} = ${renderSchema(model)} as const;`);
 }
 
+/** @param {Parameter[]} parameters */
 function renderParameters(parameters) {
   if (!parameters.length) return '';
   return `{\n${parameters
@@ -171,7 +207,9 @@ function renderParameters(parameters) {
     .join('')}}`;
 }
 
+/** @param {Operation} operation */
 function renderOperation(operation) {
+  /** @param {string} key @param {Parameter[]} items */
   const group = (key, items) =>
     items.length
       ? `${key}: {\n${items.map((item) => `'${item.prop}': ${item.name},\n`).join('')}},\n`
@@ -209,6 +247,7 @@ function renderOperation(operation) {
   }});\n}\n`;
 }
 
+/** @param {Service} service */
 function renderService(service) {
   return compact(
     `${header}\n${service.imports
@@ -221,6 +260,7 @@ function renderService(service) {
   );
 }
 
+/** @param {ClientModel} client @param {string} clientName @param {Service[]} services */
 function renderClient(client, clientName, services) {
   return compact(
     `${header}\nimport type { BaseHttpRequest } from './core/BaseHttpRequest';\nimport type { OpenAPIConfig } from './core/OpenAPI';\nimport { FetchHttpRequest } from './core/FetchHttpRequest';\n${services
@@ -243,6 +283,7 @@ function renderClient(client, clientName, services) {
   );
 }
 
+/** @param {string} clientName @param {Model[]} models @param {Service[]} services */
 function renderIndex(clientName, models, services) {
   return `${header}\nexport { ${clientName} } from './${clientName}';\n\nexport { ApiError } from './core/ApiError';\nexport { BaseHttpRequest } from './core/BaseHttpRequest';\nexport { CancelablePromise, CancelError } from './core/CancelablePromise';\nexport { OpenAPI } from './core/OpenAPI';\nexport type { OpenAPIConfig } from './core/OpenAPI';\n${
     models.length
@@ -264,6 +305,7 @@ function renderIndex(clientName, models, services) {
   }`;
 }
 
+/** @param {string} name @param {ClientModel} client */
 function renderCore(name, client) {
   const template = readFileSync(new URL(`./core/${name}.template`, import.meta.url), 'utf8');
   return `${header}\n${template
@@ -272,7 +314,9 @@ function renderCore(name, client) {
 }
 
 /** Every generated file of one client, keyed by its path relative to the output directory. */
+/** @param {ClientModel} client @param {string} clientName @returns {Map<string, string>} */
 export function renderClientFiles(client, clientName) {
+  /** @type {Map<string, string>} */
   const files = new Map();
   const models = [...client.models].sort(byLowerName);
   const services = [...client.services].sort(byLowerName);
