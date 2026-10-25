@@ -624,3 +624,63 @@ test('Node155 native CLI preserves termination of its owned waiting process grou
     await exited;
   }
 });
+
+
+for (const packageName of ['angular', 'angular-auth', 'angular-i18n']) {
+  const directory = `packages-web/${packageName}`;
+  test(`published Angular testing entry has typed enforcement in both routes: ${packageName}`, () => {
+    const root = probeWorkspaceProfile(directory, 'testing/index.ts', 'angular', 'root', false, 'angular-testing');
+    const own = probeWorkspaceProfile(directory, 'testing/index.ts', 'angular', 'package', false, 'angular-testing');
+    for (const observation of [root, own]) {
+      assert.equal(observation.typedProject, true, `${observation.mode}: published implementation needs a typed route`);
+      assert.deepEqual(observation.visited.map(({ hasProgram, belongs }) => ({ hasProgram, belongs })), [{ hasProgram: true, belongs: true }]);
+      assert.deepEqual(observation.results.flatMap(result => result.fatal), []);
+      for (const rule of ['no-explicit-any', ...Object.keys(tsPlugin.rules).filter(name => name.startsWith('no-unsafe-'))])
+        assert.equal(observation.rules[`@typescript-eslint/${rule}`]?.[0], 2, rule);
+      for (const rule of ['no-explicit-any', 'no-unsafe-assignment', 'no-unsafe-call', 'no-unsafe-member-access'])
+        assert.ok(observation.witness.some(message => message.ruleId === `@typescript-eslint/${rule}` && message.severity === 2), rule);
+      assert.deepEqual(observation.results.flatMap(result => result.boundaries), [], 'owning primary imports must stay inside the same package');
+      assert.ok(observation.forbiddenBoundary.some(message => message.ruleId === 'boundaries/dependencies' && message.severity === 2), 'adding the secondary entry must not admit a forbidden core dependency');
+    }
+    assert.deepEqual(root.rules, own.rules);
+    assert.deepEqual(root.processor, own.processor);
+    assert.deepEqual(root.ignored, own.ignored);
+  });
+
+  test(`normal Angular lint includes and executes its published testing entry: ${packageName}`, () => {
+    const root = resolve(import.meta.dirname, '../../..');
+    const cwd = join(root, directory);
+    const manifest = JSON.parse(readFileSync(join(cwd, 'package.json'), 'utf8'));
+    const args = [...manifest.scripts.lint.matchAll(/"([^"]+)"|(\S+)/gu)].map(match => match[1] ?? match[2]);
+    assert.equal(args.shift(), 'eslint');
+    assert.deepEqual(args.slice(0, 2), ['--config', '../../tools/eslint-config/angular.mjs']);
+    assert.ok(args.includes('src/**/*.ts'), 'keep the complete original primary population');
+    assert.ok(args.includes('testing/index.ts'), 'ordinary package lint must select the secondary implementation');
+    const child = spawnSync(process.execPath, [join(root, 'node_modules/eslint/bin/eslint.js'), ...args, '--format', 'json', '--max-warnings=0'], {
+      cwd, encoding: 'utf8', timeout: 90000, maxBuffer: 8 * 1024 * 1024,
+      env: { ...process.env, npm_package_name: manifest.name },
+    });
+    assert.equal(child.error, undefined);
+    assert.ok(child.status === 0 || child.status === 1, child.stderr || child.stdout);
+    const results = JSON.parse(child.stdout);
+    assert.ok(results.some(result => result.filePath.startsWith(join(cwd, 'src') + '/')));
+    const secondary = results.find(result => result.filePath === join(cwd, 'testing/index.ts'));
+    assert.ok(secondary, 'actual installed CLI must enumerate the secondary entry');
+    assert.deepEqual(secondary.messages.filter(message => message.fatal || message.ruleId === null), []);
+    // Existing implementation findings remain ordinary lint debt. This sensor
+    // establishes route execution and does not suppress or reclassify them.
+  });
+
+  test(`Angular primary policy and generated ignores remain aligned: ${packageName}`, () => {
+    const root = probeWorkspaceProfile(directory, 'src/index.ts', 'angular', 'root', true);
+    const own = probeWorkspaceProfile(directory, 'src/index.ts', 'angular', 'package', true);
+    assert.equal(root.typedProject, true);
+    assert.equal(own.typedProject, true);
+    assert.deepEqual(root.rules, own.rules);
+    assert.deepEqual(root.processor, own.processor);
+    assert.deepEqual(root.ignored, own.ignored);
+    assert.ok(Object.values(root.ignored).every(value => value === true));
+    for (const rule of ['no-explicit-any', ...Object.keys(tsPlugin.rules).filter(name => name.startsWith('no-unsafe-'))])
+      assert.equal(root.rules[`@typescript-eslint/${rule}`]?.[0], 2, rule);
+  });
+}
