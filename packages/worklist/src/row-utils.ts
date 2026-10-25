@@ -134,7 +134,16 @@ export function mapWorkerStateRow(row: WorklistRow): WorklistWorkerStateRecord {
   };
 }
 
-export function mapItemRow(row: WorklistRow): WorklistItemRecord {
+function readRowField<R extends WorklistRow, K extends keyof R>(row: R, key: K): R[K] {
+  return row[key];
+}
+
+export function mapItemRow<R extends WorklistRow>(
+  row: R,
+): Omit<WorklistItemRecord, 'status' | 'deadlineKind'> & {
+  status: R['status'];
+  deadlineKind: R['deadlineKind'];
+} {
   return {
     id: String(row.id),
     tenantId: String(row.tenantId),
@@ -142,10 +151,10 @@ export function mapItemRow(row: WorklistRow): WorklistItemRecord {
     entityType: String(row.entityType),
     entityId: String(row.entityId),
     priority: Number(row.priority),
-    status: row.status as WorklistItemRecord['status'],
+    status: readRowField(row, 'status'),
     assigneeId: nullableString(row.assigneeId),
     claimedAt: nullableDate(row.claimedAt),
-    deadlineKind: row.deadlineKind as WorklistItemRecord['deadlineKind'],
+    deadlineKind: readRowField(row, 'deadlineKind'),
     deadlineBusinessDays: nullableNumber(row.deadlineBusinessDays),
     deadlineCalendarKey: nullableString(row.deadlineCalendarKey),
     dueAt: nullableDate(row.dueAt),
@@ -162,12 +171,14 @@ export function mapItemRow(row: WorklistRow): WorklistItemRecord {
   };
 }
 
-export function mapEventRow(row: WorklistRow): WorklistEvent {
+export function mapEventRow<R extends WorklistRow>(
+  row: R,
+): Omit<WorklistEvent, 'kind'> & { kind: R['kind'] } {
   return {
     id: String(row.id ?? row.eventId),
     tenantId: String(row.tenantId),
     itemId: String(row.itemId),
-    kind: row.kind as WorklistEvent['kind'],
+    kind: readRowField(row, 'kind'),
     actorId: nullableString(row.actorId),
     fromAssignee: nullableString(row.fromAssignee),
     toAssignee: nullableString(row.toAssignee),
