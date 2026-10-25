@@ -1,3 +1,4 @@
+/** @param {unknown} value */
 export function pascalCase(value) {
   const normalized = normalizeLeadingAcronymDigit(value);
   if (normalized.toLowerCase() === 'i18n') return 'I18N';
@@ -10,6 +11,7 @@ export function pascalCase(value) {
     .join('');
 }
 
+/** @param {unknown} operationId */
 export function operationMethodName(operationId) {
   const normalized = normalizeLeadingAcronymDigit(operationId).replace(/i18n/giu, 'i18N');
   const parts = normalized.split(/[^A-Za-z0-9]+/u).filter(Boolean);
@@ -22,9 +24,17 @@ export function operationMethodName(operationId) {
     .join('');
 }
 
+/** @param {unknown} value */
 function normalizeLeadingAcronymDigit(value) {
   return String(value).replace(
     /^([A-Z])([A-Z]+)(\d)/u,
+    /**
+     * Captures of the fixed mandatory string groups in the expression above.
+     * @param {string} _
+     * @param {string} first
+     * @param {string} rest
+     * @param {string} digit
+     */
     (_, first, rest, digit) => `${first}${rest.toLowerCase()}${digit}`,
   );
 }

@@ -57,24 +57,24 @@ async function bootstrap(): Promise<void> {
         'GET /_reference/demo-tenants',
       ] as const;
       const httpAdapter: unknown = app.getHttpAdapter();
-      const getInstance =
+      const getInstance: unknown =
         typeof httpAdapter === 'object' && httpAdapter !== null
           ? Reflect.get(httpAdapter, 'getInstance')
           : undefined;
       const adapterInstance: unknown =
         typeof getInstance === 'function' ? Reflect.apply(getInstance, httpAdapter, []) : undefined;
-      const router =
+      const router: unknown =
         typeof adapterInstance === 'function' ||
         (typeof adapterInstance === 'object' && adapterInstance !== null)
           ? Reflect.get(adapterInstance, 'router')
           : undefined;
-      const stack =
+      const stack: unknown =
         typeof router === 'function' || (typeof router === 'object' && router !== null)
           ? Reflect.get(router, 'stack')
           : undefined;
 
       if (Array.isArray(stack)) {
-        const routeCounts = new Map(governedRuntimeRoutes.map((route) => [route, 0]));
+        const routeCounts = new Map<string, number>(governedRuntimeRoutes.map((route) => [route, 0]));
         let safelyEnumerated = true;
         for (const layer of stack) {
           if (typeof layer !== 'object' || layer === null || Array.isArray(layer)) {
@@ -117,7 +117,7 @@ async function bootstrap(): Promise<void> {
           }
           if (getRegistration === true) {
             for (const path of routePaths) {
-              const routeKey = `GET ${path}` as (typeof governedRuntimeRoutes)[number];
+              const routeKey = `GET ${path}`;
               const count = routeCounts.get(routeKey);
               if (count !== undefined) {
                 routeCounts.set(routeKey, count + 1);

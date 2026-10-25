@@ -15,6 +15,10 @@ const inputPath = resolve(workspaceRoot, 'docs/framework/contracts/openapi.json'
 const outputPath = resolve(packageRoot, 'src/generated');
 const lockPath = resolve(packageRoot, '.codegen.lock');
 
+/**
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
 function wait(ms) {
   return new Promise((resolveWait) => {
     setTimeout(resolveWait, ms);

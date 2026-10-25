@@ -14,6 +14,9 @@ const storageMetadata = Object.freeze([
 const packageVersion =
   /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u;
 
+/**
+ * @param {{ packageName: string, declarationPath: string, packageVersion: string, source: string }} input
+ */
 export function normalizePublicApiDeclaration({
   packageName,
   declarationPath,
@@ -27,19 +30,21 @@ export function normalizePublicApiDeclaration({
   if (!metadata) return normalized;
 
   const rows = [...normalized.matchAll(/^ {4}readonly packageVersion: "([^"\r\n]+)";$/gmu)];
+  const match = rows[0];
   if (
     !normalized.startsWith(`export declare const ${metadata.exportName}: {\n`) ||
     rows.length !== 1 ||
+    !match ||
     (normalized.match(/\breadonly packageVersion:/gu) ?? []).length !== 1 ||
     !packageVersion.test(version) ||
-    rows[0][1] !== version
+    match[1] !== version
   ) {
     throw new Error(
       `${packageName}: invalid or stale storage version declaration ${declarationPath}`,
     );
   }
   return normalized.replace(
-    rows[0][0],
+    match[0],
     '    readonly packageVersion: "__STYNX_PACKAGE_VERSION_METADATA__";',
   );
 }
