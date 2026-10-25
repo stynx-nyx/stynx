@@ -32,21 +32,27 @@ export const preferenceValuesSchema = z.strictObject({
   accessibility: accessibilityPreferencesSchema,
   notificationDelivery: notificationDeliveryPreferencesSchema,
 });
-const nullablePartial = <T extends z.ZodRawShape>(shape: T) =>
-  z.strictObject(
-    Object.fromEntries(
-      Object.entries(shape).map(([key, value]) => [
-        key,
-        (value as z.ZodType).nullable().optional(),
-      ]),
-    ) as unknown as { [K in keyof T]: z.ZodOptional<z.ZodNullable<T[K]>> },
-  );
 export const preferencePatchSchema = z
   .strictObject({
-    locale: nullablePartial(localePreferencesSchema.shape).nullable().optional(),
-    theme: nullablePartial(themePreferencesSchema.shape).nullable().optional(),
-    accessibility: nullablePartial(accessibilityPreferencesSchema.shape).nullable().optional(),
-    notificationDelivery: nullablePartial(notificationDeliveryPreferencesSchema.shape)
+    locale: z.strictObject({
+      locale: localePreferencesSchema.shape.locale.nullable().optional(),
+      timezone: localePreferencesSchema.shape.timezone.nullable().optional(),
+    }).nullable().optional(),
+    theme: z.strictObject({
+      colorScheme: themePreferencesSchema.shape.colorScheme.nullable().optional(),
+      contrast: themePreferencesSchema.shape.contrast.nullable().optional(),
+      density: themePreferencesSchema.shape.density.nullable().optional(),
+    }).nullable().optional(),
+    accessibility: z.strictObject({
+      reduceMotion: accessibilityPreferencesSchema.shape.reduceMotion.nullable().optional(),
+      largeText: accessibilityPreferencesSchema.shape.largeText.nullable().optional(),
+      screenReaderOptimized: accessibilityPreferencesSchema.shape.screenReaderOptimized.nullable().optional(),
+    }).nullable().optional(),
+    notificationDelivery: z.strictObject({
+      email: notificationDeliveryPreferencesSchema.shape.email.nullable().optional(),
+      push: notificationDeliveryPreferencesSchema.shape.push.nullable().optional(),
+      inApp: notificationDeliveryPreferencesSchema.shape.inApp.nullable().optional(),
+    })
       .nullable()
       .optional(),
   })

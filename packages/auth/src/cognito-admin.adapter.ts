@@ -68,30 +68,49 @@ function userAttributesToRecord(attributes: AttributeType[] | undefined): Record
 }
 
 export function mapCognitoError(error: unknown): IdentityAdminError {
-  const e = error as { name?: string; message?: string; $metadata?: { httpStatusCode?: number } };
-  const name = e?.name ?? 'UnknownError';
-  const message = e?.message ?? 'Identity provider operation failed';
+  const name = optionalErrorProperty(error, 'name') ?? 'UnknownError';
+  const message = optionalErrorProperty(error, 'message') ?? 'Identity provider operation failed';
 
   if (name === 'UserNotFoundException' || name === 'ResourceNotFoundException') {
-    return new IdentityAdminError('IDENTITY_NOT_FOUND', message, { providerErrorName: name });
+    return identityAdminError('IDENTITY_NOT_FOUND', message, { providerErrorName: name });
   }
   if (name === 'NotAuthorizedException' || name === 'AccessDeniedException') {
-    return new IdentityAdminError('IDENTITY_FORBIDDEN', message, { providerErrorName: name });
+    return identityAdminError('IDENTITY_FORBIDDEN', message, { providerErrorName: name });
   }
   if (name === 'UsernameExistsException' || name === 'AliasExistsException') {
-    return new IdentityAdminError('IDENTITY_CONFLICT', message, { providerErrorName: name });
+    return identityAdminError('IDENTITY_CONFLICT', message, { providerErrorName: name });
   }
   if (name === 'TooManyRequestsException') {
-    return new IdentityAdminError('IDENTITY_RATE_LIMITED', message, { providerErrorName: name });
+    return identityAdminError('IDENTITY_RATE_LIMITED', message, { providerErrorName: name });
   }
   if (name === 'InvalidParameterException' || name === 'InvalidPasswordException') {
-    return new IdentityAdminError('IDENTITY_VALIDATION_ERROR', message, { providerErrorName: name });
+    return identityAdminError('IDENTITY_VALIDATION_ERROR', message, { providerErrorName: name });
   }
 
-  return new IdentityAdminError('IDENTITY_PROVIDER_ERROR', message, {
+  return identityAdminError('IDENTITY_PROVIDER_ERROR', message, {
     providerErrorName: name,
-    httpStatusCode: e?.$metadata?.httpStatusCode,
+    httpStatusCode: optionalErrorProperty(optionalErrorProperty(error, '$metadata'), 'httpStatusCode'),
   });
+}
+
+function optionalErrorProperty(
+  value: unknown,
+  key: 'name' | 'message' | '$metadata' | 'httpStatusCode',
+): unknown {
+  if (value === null || value === undefined) return undefined;
+  const target: unknown = Object(value);
+  if ((typeof target === 'object' && target !== null) || typeof target === 'function') {
+    return Reflect.get(target, key, value);
+  }
+  throw new TypeError('Unable to read identity provider error');
+}
+
+function identityAdminError(
+  code: ConstructorParameters<typeof IdentityAdminError>[0],
+  message: unknown,
+  details: Record<string, unknown>,
+): IdentityAdminError {
+  return new IdentityAdminError(code, `${message}`, details);
 }
 
 export class CognitoIdentityAdminAdapter implements IdentityAdminAdapter {

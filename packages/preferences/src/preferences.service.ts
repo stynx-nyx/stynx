@@ -19,7 +19,6 @@ import type {
   PlatformProfile,
   PreferenceCategory,
   PreferenceOverrides,
-  PreferencePatch,
   PreferencesAuditSink,
   PreferencesAvatarResolver,
   PreferencesDocument,
@@ -29,6 +28,8 @@ import type {
   StynxPreferencesModuleOptions,
   TrustedPreferenceScope,
 } from './types.js';
+
+type ParsedPreferencePatch = ReturnType<typeof preferencePatchSchema.parse>;
 
 const categories: PreferenceCategory[] = [
   'locale',
@@ -110,14 +111,14 @@ export class PreferencesService {
       );
     const current = await this.store.read(scope);
     const overrides = structuredClone(current?.overrides ?? {});
-    this.applyPatch(overrides, parsed.data as PreferencePatch);
+    this.applyPatch(overrides, parsed.data);
     const effective = this.resolve(overrides);
     this.assertSupported(effective);
     return this.mutate(
       overrides,
       expectedRevision,
       'preferences.updated',
-      this.patchPaths(parsed.data as PreferencePatch),
+      this.patchPaths(parsed.data),
       scope,
     );
   }
@@ -219,14 +220,14 @@ export class PreferencesService {
       const diff = Object.fromEntries(
         Object.entries(values[category]).filter(
           ([key, value]) =>
-            value !== (this.defaults[category] as unknown as Record<string, unknown>)[key],
+            value !== Reflect.get(this.defaults[category], key),
         ),
       );
       if (Object.keys(diff).length) (output as Record<string, unknown>)[category] = diff;
     }
     return output;
   }
-  private applyPatch(target: PreferenceOverrides, patch: PreferencePatch): void {
+  private applyPatch(target: PreferenceOverrides, patch: ParsedPreferencePatch): void {
     for (const category of categories) {
       const value = patch[category];
       if (value === undefined) continue;
@@ -316,7 +317,7 @@ export class PreferencesService {
       Object.keys(overrides[category] ?? {}).map((key) => `${category}.${key}`),
     );
   }
-  private patchPaths(patch: PreferencePatch): string[] {
+  private patchPaths(patch: ParsedPreferencePatch): string[] {
     return Object.entries(patch).flatMap(([category, value]) =>
       value === null ? [category] : Object.keys(value ?? {}).map((key) => `${category}.${key}`),
     );
