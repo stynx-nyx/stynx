@@ -229,8 +229,17 @@ describe('OutboxService tenant event reads (UPS-OBX-04)', () => {
   });
 
   it('reads the attempt ledger by ordinal and selects raw bytes only on explicit request', async () => {
-    const attempt = { id: otherId, eventId, attemptOrdinal: 1, result: 'SENT' };
-    const { calls, options, database } = harness(() => [attempt]);
+    const attempt = {
+      id: otherId, eventId, attemptOrdinal: 1, result: 'SENT',
+      provider: null, protocol: null, requestSha256: null, responseSha256: null,
+      responseStatus: null, requestHeaders: null, evidenceState: {}, error: null,
+      leasedAt: null, completedAt: null, legacyMessageId: null,
+    };
+    const { calls, options, database } = harness((sql) => [
+      sql.includes('request_bytes as')
+        ? { ...attempt, requestBytes: null, responseBytes: null }
+        : attempt,
+    ]);
     const service = new OutboxService(database as never, {});
     await expect(service.listEventAttempts(eventId)).resolves.toEqual([attempt]);
     expect(calls[0]!.sql).not.toContain('request_bytes');
