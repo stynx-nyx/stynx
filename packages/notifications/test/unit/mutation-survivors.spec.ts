@@ -1,4 +1,4 @@
-import { Database } from '@stynx-nyx/data';
+import { Database, executeTypedQuery, type Transaction } from '@stynx-nyx/data';
 import { CatalogService } from '@stynx-nyx/i18n';
 import { PreferencesService } from '@stynx-nyx/preferences';
 
@@ -57,9 +57,9 @@ const template = {
 };
 
 const sendInput = {
-  deliveryId: 'delivery-1',
-  notificationId: 'notification-1',
-  tenantId: 'tenant-1',
+  deliveryId: '00000000-0000-4000-8000-000000000004',
+  notificationId: '00000000-0000-4000-8000-000000000003',
+  tenantId: '00000000-0000-4000-8000-000000000001',
   recipient: {
     subjectId: 'subject-1',
     email: 'ada@example.test',
@@ -74,7 +74,9 @@ const sendInput = {
 function databaseWith(
   query: (sql: string, values?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>,
 ) {
-  const trx = { query: vi.fn(query) };
+  const driver = { query: vi.fn(query) };
+  const run: Transaction['run'] = (statement, params) => executeTypedQuery(driver, statement, params);
+  const trx = { ...driver, run };
   const database = {
     tx: vi.fn(async (callback: (value: typeof trx) => unknown, _options?: unknown) => callback(trx)),
   };
@@ -111,8 +113,8 @@ describe('canonical notification mutation survivors', () => {
     emailIntegration.execute = vi.fn(async () => ({ status: 'SENT' }));
     await expect(email.send(sendInput)).resolves.toEqual({ status: 'SENT' });
     expect(emailIntegration.execute).toHaveBeenCalledWith(sendInput, {
-      tenantId: 'tenant-1',
-      correlationId: 'delivery-1',
+      tenantId: '00000000-0000-4000-8000-000000000001',
+      correlationId: '00000000-0000-4000-8000-000000000004',
     });
 
     const emailClient = (email as unknown as { client: { send: ReturnType<typeof vi.fn> } }).client;
@@ -141,8 +143,8 @@ describe('canonical notification mutation survivors', () => {
     smsIntegration.execute = vi.fn(async () => ({ status: 'SENT' }));
     await sms.send(sendInput);
     expect(smsIntegration.execute).toHaveBeenCalledWith(sendInput, {
-      tenantId: 'tenant-1',
-      correlationId: 'delivery-1',
+      tenantId: '00000000-0000-4000-8000-000000000001',
+      correlationId: '00000000-0000-4000-8000-000000000004',
     });
     const smsClient = (sms as unknown as { client: { send: ReturnType<typeof vi.fn> } }).client;
     smsClient.send = vi.fn(async () => ({ MessageId: 'sns-message' }));
@@ -181,10 +183,10 @@ describe('canonical notification mutation survivors', () => {
     expect(sql).toContain('on conflict (delivery_id) do nothing');
     expect(values).toEqual([
       expect.any(String),
-      'tenant-1',
+      '00000000-0000-4000-8000-000000000001',
       'subject-1',
-      'notification-1',
-      'delivery-1',
+      '00000000-0000-4000-8000-000000000003',
+      '00000000-0000-4000-8000-000000000004',
       'Subject',
       'Body',
       'pt-BR',
@@ -192,12 +194,12 @@ describe('canonical notification mutation survivors', () => {
   });
 
   it('queries and updates the inbox with exact tenant bounds and transaction modes', async () => {
-    const item = { id: 'inbox-1' };
+    const item = { id: '00000000-0000-4000-8000-000000000005', notificationId: '00000000-0000-4000-8000-000000000003', deliveryId: '00000000-0000-4000-8000-000000000004', title: 'Subject', body: 'Body', locale: 'pt-BR', readAt: null, dismissedAt: null, createdAt: '2026-10-24T12:00:00.000Z' };
     const { database, trx } = databaseWith(async (sql) => ({
       rows: sql.startsWith('select') ? [item] : [],
     }));
     const get = vi.fn(() => database);
-    const inbox = new NotificationInboxService({ get } as never, { tenantId: 'tenant-1' } as never);
+    const inbox = new NotificationInboxService({ get } as never, { tenantId: '00000000-0000-4000-8000-000000000001' } as never);
     await expect(inbox.list({ subjectId: 'subject-1', unreadOnly: true, limit: 999 })).resolves.toEqual([
       item,
     ]);
@@ -205,13 +207,13 @@ describe('canonical notification mutation survivors', () => {
     expect(trx.query).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining('order by created_at desc limit $4'),
-      ['tenant-1', 'subject-1', true, 200],
+      ['00000000-0000-4000-8000-000000000001', 'subject-1', true, 200],
     );
-    await inbox.markRead('inbox-1');
+    await inbox.markRead('00000000-0000-4000-8000-000000000005');
     expect(trx.query).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining('read_at = coalesce(read_at, clock_timestamp())'),
-      ['inbox-1', 'tenant-1'],
+      ['00000000-0000-4000-8000-000000000005', '00000000-0000-4000-8000-000000000001'],
     );
     expect(get).toHaveBeenCalledWith(Database, { strict: false });
   });
@@ -223,7 +225,7 @@ describe('canonical notification mutation survivors', () => {
     const read = vi.fn(async () => ({ email: false, push: true, inApp: false }));
     const service = new NotificationsService(
       { get: vi.fn(() => database) } as never,
-      { tenantId: 'tenant-1', actorId: 'actor-1' } as never,
+      { tenantId: '00000000-0000-4000-8000-000000000001', actorId: '00000000-0000-4000-8000-000000000002' } as never,
       registry,
       { read },
     );
@@ -242,7 +244,7 @@ describe('canonical notification mutation survivors', () => {
       channels: ['email', 'sms', 'push', 'inapp'],
       correlationId: 'correlation-1',
     });
-    expect(read).toHaveBeenCalledWith('tenant-1', 'subject-1');
+    expect(read).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000001', 'subject-1');
     expect(result.deliveries.map(({ channel, status }) => ({ channel, status }))).toEqual([
       { channel: 'email', status: 'SUPPRESSED' },
       { channel: 'sms', status: 'QUEUED' },
@@ -252,7 +254,7 @@ describe('canonical notification mutation survivors', () => {
     const notificationValues = trx.query.mock.calls[1][1] as unknown[];
     expect(notificationValues).toEqual([
       result.notificationId,
-      'tenant-1',
+      '00000000-0000-4000-8000-000000000001',
       'subject-1',
       'ada@example.test',
       '+5511999999999',
@@ -264,26 +266,26 @@ describe('canonical notification mutation survivors', () => {
       JSON.stringify({ name: 'Ada' }),
       ['email', 'sms', 'push', 'inapp'],
       'correlation-1',
-      'actor-1',
+      '00000000-0000-4000-8000-000000000002',
     ]);
     const deliveryValues = trx.query.mock.calls.slice(2).map((call) => call[1] as unknown[]);
     expect(deliveryValues.map((values) => values.slice(1))).toEqual([
-      ['tenant-1', result.notificationId, 'email', 'SUPPRESSED', 'preference_opted_out'],
-      ['tenant-1', result.notificationId, 'sms', 'QUEUED', null],
-      ['tenant-1', result.notificationId, 'push', 'QUEUED', null],
-      ['tenant-1', result.notificationId, 'inapp', 'SUPPRESSED', 'preference_opted_out'],
+      ['00000000-0000-4000-8000-000000000001', result.notificationId, 'email', 'SUPPRESSED', 'preference_opted_out'],
+      ['00000000-0000-4000-8000-000000000001', result.notificationId, 'sms', 'QUEUED', null],
+      ['00000000-0000-4000-8000-000000000001', result.notificationId, 'push', 'QUEUED', null],
+      ['00000000-0000-4000-8000-000000000001', result.notificationId, 'inapp', 'SUPPRESSED', 'preference_opted_out'],
     ]);
   });
 
   it('returns exact correlation records through a read-only transaction', async () => {
     const { database, trx } = databaseWith(async (sql) =>
       sql.includes('select id from notifications.notifications')
-        ? { rows: [{ id: 'notification-existing' }] }
-        : { rows: [{ id: 'delivery-existing', channel: 'email', status: 'DELIVERED' }] },
+        ? { rows: [{ id: '00000000-0000-4000-8000-000000000006' }] }
+        : { rows: [{ id: '00000000-0000-4000-8000-000000000007', channel: 'email', status: 'DELIVERED' }] },
     );
     const service = new NotificationsService(
       { get: () => database } as never,
-      { tenantId: 'tenant-1' } as never,
+      { tenantId: '00000000-0000-4000-8000-000000000001' } as never,
       { resolve: () => template } as never,
       { read: vi.fn() },
     );
@@ -296,29 +298,29 @@ describe('canonical notification mutation survivors', () => {
         correlationId: 'correlation-1',
       }),
     ).resolves.toEqual({
-      notificationId: 'notification-existing',
+      notificationId: '00000000-0000-4000-8000-000000000006',
       deliveries: [
-        { channel: 'email', deliveryId: 'delivery-existing', status: 'DELIVERED' },
+        { channel: 'email', deliveryId: '00000000-0000-4000-8000-000000000007', status: 'DELIVERED' },
       ],
     });
     expect(database.tx).toHaveBeenCalledWith(expect.any(Function), { readonly: true });
     expect(trx.query).toHaveBeenNthCalledWith(
       1,
       expect.stringContaining('correlation_id = $2'),
-      ['tenant-1', 'correlation-1'],
+      ['00000000-0000-4000-8000-000000000001', 'correlation-1'],
     );
     expect(trx.query).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining('order by channel'),
-      ['tenant-1', 'notification-existing'],
+      ['00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000006'],
     );
   });
 
   it('dispatches exact content, retry persistence, claim bounds, and PII-safe logs', async () => {
     const delivery = {
-      id: 'delivery-1',
-      tenant_id: 'tenant-1',
-      notification_id: 'notification-1',
+      id: '00000000-0000-4000-8000-000000000004',
+      tenant_id: '00000000-0000-4000-8000-000000000001',
+      notification_id: '00000000-0000-4000-8000-000000000003',
       channel: 'inapp',
       attempt_count: 1,
       max_attempts: 5,
@@ -356,7 +358,7 @@ describe('canonical notification mutation survivors', () => {
       service.dispatchDue({ batchSize: 999, now: new Date('2026-08-26T12:00:00.000Z') }),
     ).resolves.toEqual({
       claimed: 1,
-      outcomes: [{ deliveryId: 'delivery-1', channel: 'inapp', status: 'QUEUED' }],
+      outcomes: [{ deliveryId: '00000000-0000-4000-8000-000000000004', channel: 'inapp', status: 'QUEUED' }],
     });
     expect(trx.query).toHaveBeenNthCalledWith(
       1,
@@ -366,13 +368,13 @@ describe('canonical notification mutation survivors', () => {
     expect(trx.query).toHaveBeenNthCalledWith(
       2,
       expect.stringContaining("set status = 'SENT'"),
-      ['delivery-1', 'tenant-1'],
+      ['00000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-000000000001'],
     );
-    expect(renderer.render).toHaveBeenCalledWith(template, 'pt-BR', { name: 'Ada' }, 'tenant-1');
+    expect(renderer.render).toHaveBeenCalledWith(template, 'pt-BR', { name: 'Ada' }, '00000000-0000-4000-8000-000000000001');
     expect(send).toHaveBeenCalledWith({
-      deliveryId: 'delivery-1',
-      notificationId: 'notification-1',
-      tenantId: 'tenant-1',
+      deliveryId: '00000000-0000-4000-8000-000000000004',
+      notificationId: '00000000-0000-4000-8000-000000000003',
+      tenantId: '00000000-0000-4000-8000-000000000001',
       recipient: {
         subjectId: 'subject-1',
         email: 'ada@example.test',
@@ -386,11 +388,11 @@ describe('canonical notification mutation survivors', () => {
     expect(trx.query).toHaveBeenNthCalledWith(
       3,
       expect.stringContaining("next_attempt_at = case when $3 = 'QUEUED'"),
-      ['delivery-1', 'tenant-1', 'QUEUED', null, 'TEMPORARY', null, null, 200],
+      ['00000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-000000000001', 'QUEUED', null, 'TEMPORARY', null, null, 200],
     );
     expect(logger.log).toHaveBeenCalledWith('notification delivery state changed', {
       context:
-        'notificationId=notification-1 deliveryId=delivery-1 channel=inapp status=QUEUED errorCode=TEMPORARY',
+        'notificationId=00000000-0000-4000-8000-000000000003 deliveryId=00000000-0000-4000-8000-000000000004 channel=inapp status=QUEUED errorCode=TEMPORARY',
     });
   });
 
@@ -422,15 +424,15 @@ describe('canonical notification mutation survivors', () => {
         : undefined,
     );
     const renderer = new NotificationTemplateRenderer({ get: getCatalog } as never);
-    expect(renderer.render(template, 'pt-BR', { name: 'Ada' }, 'tenant-1')).toEqual({
+    expect(renderer.render(template, 'pt-BR', { name: 'Ada' }, '00000000-0000-4000-8000-000000000001')).toEqual({
       subject: 'translated:subject',
       body: 'Body',
       inAppTitle: 'translated:title',
     });
     expect(translate.mock.calls).toEqual([
-      ['subject', 'pt-BR', { name: 'Ada' }, 'tenant-1'],
-      ['body', 'pt-BR', { name: 'Ada' }, 'tenant-1'],
-      ['title', 'pt-BR', { name: 'Ada' }, 'tenant-1'],
+      ['subject', 'pt-BR', { name: 'Ada' }, '00000000-0000-4000-8000-000000000001'],
+      ['body', 'pt-BR', { name: 'Ada' }, '00000000-0000-4000-8000-000000000001'],
+      ['title', 'pt-BR', { name: 'Ada' }, '00000000-0000-4000-8000-000000000001'],
     ]);
     expect(getCatalog).toHaveBeenCalledWith(CatalogService, { strict: false });
 
@@ -444,13 +446,13 @@ describe('canonical notification mutation survivors', () => {
         : undefined,
     );
     const port = new PreferencesServicePreferencesPort({ get } as never);
-    await expect(port.read('tenant-1', 'subject-1')).resolves.toEqual({
+    await expect(port.read('00000000-0000-4000-8000-000000000001', 'subject-1')).resolves.toEqual({
       email: false,
       push: false,
       inApp: true,
     });
     expect(get).toHaveBeenCalledWith(PreferencesService, { strict: false });
-    expect(getPreferences).toHaveBeenCalledWith({ tenantId: 'tenant-1', subjectId: 'subject-1' });
+    expect(getPreferences).toHaveBeenCalledWith({ tenantId: '00000000-0000-4000-8000-000000000001', subjectId: 'subject-1' });
   });
 
   it('preserves exact validation messages, contexts, and registry selection branches', async () => {
@@ -491,7 +493,7 @@ describe('canonical notification mutation survivors', () => {
 
     const service = new NotificationsService(
       { get: () => undefined } as never,
-      { tenantId: 'tenant-1' } as never,
+      { tenantId: '00000000-0000-4000-8000-000000000001' } as never,
       registry,
       { read: vi.fn() },
     );
@@ -540,11 +542,11 @@ describe('canonical notification mutation survivors', () => {
     const { database, trx } = databaseWith(async () => ({ rows: [] }));
     const inbox = new NotificationInboxService(
       { get: () => database } as never,
-      { tenantId: 'tenant-1' } as never,
+      { tenantId: '00000000-0000-4000-8000-000000000001' } as never,
     );
     await inbox.list({ subjectId: 'subject-1' });
     expect(trx.query).toHaveBeenCalledWith(expect.any(String), [
-      'tenant-1',
+      '00000000-0000-4000-8000-000000000001',
       'subject-1',
       false,
       50,
@@ -577,9 +579,9 @@ describe('canonical notification mutation survivors', () => {
   it('distinguishes missing adapters and channel-specific subject projection', async () => {
     const rows = [
       {
-        id: 'delivery-email',
-        tenant_id: 'tenant-1',
-        notification_id: 'notification-1',
+        id: '00000000-0000-4000-8000-000000000008',
+        tenant_id: '00000000-0000-4000-8000-000000000001',
+        notification_id: '00000000-0000-4000-8000-000000000003',
         channel: 'email',
         attempt_count: 0,
         max_attempts: 5,
@@ -593,9 +595,9 @@ describe('canonical notification mutation survivors', () => {
         variables: { name: 'Ada' },
       },
       {
-        id: 'delivery-sms',
-        tenant_id: 'tenant-1',
-        notification_id: 'notification-1',
+        id: '00000000-0000-4000-8000-000000000009',
+        tenant_id: '00000000-0000-4000-8000-000000000001',
+        notification_id: '00000000-0000-4000-8000-000000000003',
         channel: 'sms',
         attempt_count: 0,
         max_attempts: 5,
@@ -630,14 +632,14 @@ describe('canonical notification mutation survivors', () => {
     await expect(service.dispatchDue()).resolves.toEqual({
       claimed: 2,
       outcomes: [
-        { deliveryId: 'delivery-email', channel: 'email', status: 'SENT' },
-        { deliveryId: 'delivery-sms', channel: 'sms', status: 'FAILED' },
+        { deliveryId: '00000000-0000-4000-8000-000000000008', channel: 'email', status: 'SENT' },
+        { deliveryId: '00000000-0000-4000-8000-000000000009', channel: 'sms', status: 'FAILED' },
       ],
     });
     expect(emailSend).toHaveBeenCalledWith(expect.objectContaining({ subject: 'Subject' }));
     expect(logger.log).toHaveBeenLastCalledWith('notification delivery state changed', {
       context:
-        'notificationId=notification-1 deliveryId=delivery-sms channel=sms status=FAILED errorCode=CHANNEL_ADAPTER_UNAVAILABLE',
+        'notificationId=00000000-0000-4000-8000-000000000003 deliveryId=00000000-0000-4000-8000-000000000009 channel=sms status=FAILED errorCode=CHANNEL_ADAPTER_UNAVAILABLE',
     });
   });
 });
