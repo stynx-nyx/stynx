@@ -11,7 +11,7 @@ import { PreferencesServicePreferencesPort } from './preferences/preferences.por
 import { NotificationTemplateRegistry } from './templates/registry.js';
 import { NotificationTemplateRenderer } from './templates/render.js';
 import { STYNX_NOTIFICATIONS_CHANNEL_ADAPTERS, STYNX_NOTIFICATIONS_OPTIONS, STYNX_NOTIFICATIONS_PREFERENCES_PORT, STYNX_NOTIFICATIONS_TEMPLATE_REGISTRY } from './tokens.js';
-import type { NotificationChannel, StynxNotificationsModuleOptions } from './types.js';
+import type { StynxNotificationsModuleOptions } from './types.js';
 
 @Module({})
 export class StynxNotificationsModule {
@@ -34,11 +34,11 @@ export class StynxNotificationsModule {
           provide: STYNX_NOTIFICATIONS_CHANNEL_ADAPTERS,
           inject: [EmailSesChannelAdapter, SmsSnsChannelAdapter, PushStubChannelAdapter, InAppPostgresChannelAdapter],
           useFactory: (email: EmailSesChannelAdapter, sms: SmsSnsChannelAdapter, push: PushStubChannelAdapter, inapp: InAppPostgresChannelAdapter) => {
-            const adapters = new Map<NotificationChannel, import('./adapters/channel-adapter.js').ChannelAdapter>();
+            const adapters = new Map<string, import('./adapters/channel-adapter.js').ChannelAdapter>();
             if (options.ses) adapters.set('email', email);
             if (options.sns) adapters.set('sms', sms);
             adapters.set('push', push); adapters.set('inapp', inapp);
-            for (const [channel, adapter] of Object.entries(options.channelAdapters ?? {})) adapters.set(channel as NotificationChannel, adapter!);
+            for (const [channel, adapter] of Object.entries(options.channelAdapters ?? {})) adapters.set(channel, adapter!);
             return adapters;
           },
         },

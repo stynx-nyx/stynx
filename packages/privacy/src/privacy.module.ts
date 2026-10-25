@@ -43,7 +43,7 @@ export class StynxPrivacyModule implements NestModule {
       imports: [
         StynxCoreModule.forRoot({
           appName: 'privacy',
-          schema: z.object({}) as never,
+          schema: z.object({}),
         }),
       ],
       controllers: [PrivacyController],

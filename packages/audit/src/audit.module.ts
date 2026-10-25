@@ -60,7 +60,7 @@ export class StynxAuditModule {
       imports: [
         StynxCoreModule.forRoot({
           appName: 'audit',
-          schema: z.object({}) as never,
+          schema: z.object({}),
         }),
       ],
       controllers: [StynxAuditController],

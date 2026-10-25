@@ -8,7 +8,7 @@ import type { JobExecutionResult, JobRecord, TimerHandle, TimerPort, WorkerOptio
 
 const nativeTimer: TimerPort = {
   setInterval: (callback, ms) => setInterval(callback, ms),
-  clearInterval: (handle) => clearInterval(handle as NodeJS.Timeout),
+  clearInterval: (handle) => { Reflect.apply(clearInterval, undefined, [handle]); },
 };
 
 @Injectable()

@@ -33,7 +33,10 @@ function parseField(raw: string, range: FieldRange, expression: string): Set<num
     if (segments.length > 2 || segments.some((segment) => segment.length === 0)) {
       throw new InvalidCronExpressionError(expression);
     }
-    const [basePart, stepPart] = segments as [string, string | undefined];
+    const [basePart, stepPart] = segments;
+    if (basePart === undefined) {
+      throw new InvalidCronExpressionError(expression);
+    }
 
     let step = 1;
     if (stepPart !== undefined) {
@@ -53,10 +56,10 @@ function parseField(raw: string, range: FieldRange, expression: string): Set<num
       end = range.max;
     } else {
       const rangeMatch = /^(\d+)(?:-(\d+))?$/u.exec(basePart);
-      if (!rangeMatch) {
+      if (!rangeMatch || rangeMatch[1] === undefined) {
         throw new InvalidCronExpressionError(expression);
       }
-      start = Number.parseInt(rangeMatch[1] as string, 10);
+      start = Number.parseInt(rangeMatch[1], 10);
       end = rangeMatch[2] !== undefined
         ? Number.parseInt(rangeMatch[2], 10)
         : stepPart !== undefined
@@ -90,7 +93,11 @@ export function parseCronExpression(expression: string): ParsedCron {
   if (fields.length !== 5) {
     throw new InvalidCronExpressionError(expression);
   }
-  const [minuteRaw, hourRaw, domRaw, monthRaw, dowRaw] = fields as [string, string, string, string, string];
+  const [minuteRaw, hourRaw, domRaw, monthRaw, dowRaw] = fields;
+  if (minuteRaw === undefined || hourRaw === undefined || domRaw === undefined ||
+      monthRaw === undefined || dowRaw === undefined) {
+    throw new InvalidCronExpressionError(expression);
+  }
   return {
     minute: parseField(minuteRaw, FIELD_RANGES[0], expression),
     hour: parseField(hourRaw, FIELD_RANGES[1], expression),
