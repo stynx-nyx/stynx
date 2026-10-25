@@ -80,6 +80,16 @@ export interface SignatureCertificateRef {
   pem?: string | undefined;
 }
 
+/** Untrusted verification description; not an input certificate or trust proof. */
+export interface SignatureCertificateResult {
+  subject?: string | undefined;
+  issuer?: string | undefined;
+  serialNumber?: string | undefined;
+  pem?: string | undefined;
+  notBefore?: Date | string | undefined;
+  notAfter?: Date | string | undefined;
+}
+
 export interface SignatureCredentialRef {
   certificateId?: string | undefined;
   keyId?: string | undefined;
@@ -158,7 +168,7 @@ export interface VerifyResult {
   status: 'valid' | 'invalid' | 'unknown';
   documentSha256: string;
   checkedAt: Date;
-  signerCertificate?: SignatureCertificateRef | undefined;
+  signerCertificate?: SignatureCertificateResult | undefined;
   revocationSource: RevocationSource;
   revocationCheckedAt?: Date | undefined;
   certificateChainPem?: string[] | undefined;

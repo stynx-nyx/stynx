@@ -13,6 +13,7 @@ import type {
   ProviderVerifyRequest,
   RevocationSource,
   SignatureCertificateRef,
+  SignatureCertificateResult,
   VerifyResult,
 } from './types.js';
 
@@ -25,37 +26,6 @@ interface HttpRequest {
   headers?: Record<string, string> | undefined;
   idempotencyKey?: string | undefined;
   circuitBreakerKey: string;
-}
-
-interface ValidationWireResponse {
-  good: boolean;
-  source: UpperRevocationSource;
-  checkedAt?: string;
-  certificateChainPem?: string[];
-  reason?: string;
-  providerEvidenceUri?: string;
-}
-
-interface SignWireResponse {
-  signedPdfBase64: string;
-  cmsSignatureBase64?: string;
-  signatureId?: string;
-  signedAt?: string;
-  tsaTime?: string;
-  certificateChainPem?: string[];
-  revocationSource?: UpperRevocationSource;
-  revocationCheckedAt?: string;
-  providerEvidenceUri?: string;
-}
-
-interface VerifyWireResponse {
-  status: 'valid' | 'invalid' | 'unknown';
-  checkedAt?: string;
-  signerCertificate?: SignatureCertificateRef;
-  revocationSource?: UpperRevocationSource;
-  revocationCheckedAt?: string;
-  certificateChainPem?: string[];
-  reasons?: string[];
 }
 
 export class HttpSignatureProviderClient {
@@ -81,7 +51,7 @@ export class HttpSignatureProviderClient {
   async validateCertificate(
     request: CertificateValidationRequest,
   ): Promise<CertificateValidationResult> {
-    const raw = await this.execute<ValidationWireResponse>({
+    const raw = await this.execute({
       endpoint: this.options.baseUrl,
       path: this.path('/tsa/ocsp/validate'),
       circuitBreakerKey: 'certificate-validation',
@@ -95,20 +65,36 @@ export class HttpSignatureProviderClient {
         metadata: request.metadata,
       },
     });
-    assertBoolean(raw.good, 'good');
-    assertRevocationSource(raw.source, 'source');
+    assertBoolean(responseField(raw, 'good'), 'good');
+    assertRevocationSource(responseField(raw, 'source'), 'source');
     return {
-      good: raw.good,
-      source: toRevocationSource(raw.source),
-      checkedAt: parseDate(raw.checkedAt, 'checkedAt'),
-      ...(raw.certificateChainPem ? { certificateChainPem: raw.certificateChainPem } : {}),
-      ...(raw.reason ? { reason: raw.reason } : {}),
-      ...(raw.providerEvidenceUri ? { providerEvidenceUri: raw.providerEvidenceUri } : {}),
+      good: booleanResult(responseField(raw, 'good'), 'good'),
+      source: toRevocationSource(responseField(raw, 'source')),
+      checkedAt: parseDate(responseField(raw, 'checkedAt'), 'checkedAt'),
+      ...(responseField(raw, 'certificateChainPem')
+        ? {
+            certificateChainPem: optionalStringArrayResult(
+              responseField(raw, 'certificateChainPem'),
+              'certificateChainPem',
+            ),
+          }
+        : {}),
+      ...(responseField(raw, 'reason')
+        ? { reason: stringResult(responseField(raw, 'reason'), 'reason') }
+        : {}),
+      ...(responseField(raw, 'providerEvidenceUri')
+        ? {
+            providerEvidenceUri: stringResult(
+              responseField(raw, 'providerEvidenceUri'),
+              'providerEvidenceUri',
+            ),
+          }
+        : {}),
     };
   }
 
   async signPades(request: ProviderSignRequest): Promise<ProviderSignResult> {
-    const raw = await this.execute<SignWireResponse>({
+    const raw = await this.execute({
       endpoint: request.tsa.endpoint || this.options.baseUrl,
       path: this.path('/tsa/sign'),
       idempotencyKey: request.idempotencyKey,
@@ -131,26 +117,53 @@ export class HttpSignatureProviderClient {
         metadata: request.metadata,
       },
     });
-    assertString(raw.signedPdfBase64, 'signedPdfBase64');
+    assertString(responseField(raw, 'signedPdfBase64'), 'signedPdfBase64');
     return {
-      signedDocument: Buffer.from(raw.signedPdfBase64, 'base64'),
-      ...(raw.cmsSignatureBase64
-        ? { cmsSignature: Buffer.from(raw.cmsSignatureBase64, 'base64') }
+      signedDocument: nativeBase64Buffer(responseField(raw, 'signedPdfBase64')),
+      ...(responseField(raw, 'cmsSignatureBase64')
+        ? { cmsSignature: nativeBase64Buffer(responseField(raw, 'cmsSignatureBase64')) }
         : {}),
-      ...(raw.signatureId ? { signatureId: raw.signatureId } : {}),
-      ...(raw.signedAt ? { signedAt: parseDate(raw.signedAt, 'signedAt') } : {}),
-      ...(raw.tsaTime ? { tsaTime: parseDate(raw.tsaTime, 'tsaTime') } : {}),
-      ...(raw.certificateChainPem ? { certificateChainPem: raw.certificateChainPem } : {}),
-      revocationSource: raw.revocationSource ? toRevocationSource(raw.revocationSource) : 'none',
-      ...(raw.revocationCheckedAt
-        ? { revocationCheckedAt: parseDate(raw.revocationCheckedAt, 'revocationCheckedAt') }
+      ...(responseField(raw, 'signatureId')
+        ? { signatureId: stringResult(responseField(raw, 'signatureId'), 'signatureId') }
         : {}),
-      ...(raw.providerEvidenceUri ? { providerEvidenceUri: raw.providerEvidenceUri } : {}),
+      ...(responseField(raw, 'signedAt')
+        ? { signedAt: parseDate(responseField(raw, 'signedAt'), 'signedAt') }
+        : {}),
+      ...(responseField(raw, 'tsaTime')
+        ? { tsaTime: parseDate(responseField(raw, 'tsaTime'), 'tsaTime') }
+        : {}),
+      ...(responseField(raw, 'certificateChainPem')
+        ? {
+            certificateChainPem: optionalStringArrayResult(
+              responseField(raw, 'certificateChainPem'),
+              'certificateChainPem',
+            ),
+          }
+        : {}),
+      revocationSource: responseField(raw, 'revocationSource')
+        ? toRevocationSource(responseField(raw, 'revocationSource'))
+        : 'none',
+      ...(responseField(raw, 'revocationCheckedAt')
+        ? {
+            revocationCheckedAt: parseDate(
+              responseField(raw, 'revocationCheckedAt'),
+              'revocationCheckedAt',
+            ),
+          }
+        : {}),
+      ...(responseField(raw, 'providerEvidenceUri')
+        ? {
+            providerEvidenceUri: stringResult(
+              responseField(raw, 'providerEvidenceUri'),
+              'providerEvidenceUri',
+            ),
+          }
+        : {}),
     };
   }
 
   async verifyPades(request: ProviderVerifyRequest): Promise<VerifyResult> {
-    const raw = await this.execute<VerifyWireResponse>({
+    const raw = await this.execute({
       endpoint: this.options.baseUrl,
       path: this.path('/pades/verify'),
       circuitBreakerKey: 'pades-verify',
@@ -168,26 +181,46 @@ export class HttpSignatureProviderClient {
         metadata: request.metadata,
       },
     });
-    if (raw.status !== 'valid' && raw.status !== 'invalid' && raw.status !== 'unknown') {
+    if (
+      responseField(raw, 'status') !== 'valid' &&
+      responseField(raw, 'status') !== 'invalid' &&
+      responseField(raw, 'status') !== 'unknown'
+    ) {
       throw new SignatureProviderResponseError('status must be valid, invalid, or unknown');
     }
     return {
-      status: raw.status,
+      status: statusResult(responseField(raw, 'status')),
       documentSha256: request.documentSha256,
-      checkedAt: parseDate(raw.checkedAt, 'checkedAt'),
-      ...(raw.signerCertificate ? { signerCertificate: raw.signerCertificate } : {}),
-      revocationSource: raw.revocationSource ? toRevocationSource(raw.revocationSource) : 'none',
-      ...(raw.revocationCheckedAt
-        ? { revocationCheckedAt: parseDate(raw.revocationCheckedAt, 'revocationCheckedAt') }
+      checkedAt: parseDate(responseField(raw, 'checkedAt'), 'checkedAt'),
+      ...(responseField(raw, 'signerCertificate')
+        ? { signerCertificate: certificateResult(responseField(raw, 'signerCertificate')) }
         : {}),
-      ...(raw.certificateChainPem ? { certificateChainPem: raw.certificateChainPem } : {}),
-      reasons: raw.reasons ?? [],
+      revocationSource: responseField(raw, 'revocationSource')
+        ? toRevocationSource(responseField(raw, 'revocationSource'))
+        : 'none',
+      ...(responseField(raw, 'revocationCheckedAt')
+        ? {
+            revocationCheckedAt: parseDate(
+              responseField(raw, 'revocationCheckedAt'),
+              'revocationCheckedAt',
+            ),
+          }
+        : {}),
+      ...(responseField(raw, 'certificateChainPem')
+        ? {
+            certificateChainPem: optionalStringArrayResult(
+              responseField(raw, 'certificateChainPem'),
+              'certificateChainPem',
+            ),
+          }
+        : {}),
+      reasons: stringArrayResult(responseField(raw, 'reasons') ?? [], 'reasons'),
     };
   }
 
-  private async execute<T>(input: HttpRequest): Promise<T> {
+  private async execute(input: HttpRequest): Promise<unknown> {
     try {
-      return (await this.adapter.execute(input)) as T;
+      return await this.adapter.execute(input);
     } catch (error) {
       if (error instanceof SignatureProviderError) {
         throw error;
@@ -247,15 +280,33 @@ function serializeCertificate(certificate: SignatureCertificateRef): Record<stri
   };
 }
 
-function toRevocationSource(source: UpperRevocationSource): RevocationSource {
-  return source.toLowerCase() as RevocationSource;
+function toRevocationSource(source: unknown): RevocationSource {
+  const lowerCase = responseField(source, 'toLowerCase');
+  if (typeof lowerCase !== 'function') {
+    throw new TypeError('source.toLowerCase is not a function');
+  }
+  const normalized: unknown = Reflect.apply(lowerCase, source, []);
+  if (
+    normalized === 'ocsp' ||
+    normalized === 'crl' ||
+    normalized === 'embedded' ||
+    normalized === 'none'
+  ) {
+    return normalized;
+  }
+  throw new SignatureProviderResponseError(
+    'revocationSource must normalize to ocsp, crl, embedded, or none',
+  );
 }
 
-function parseDate(value: string | undefined, field: string): Date {
+function parseDate(value: unknown, field: string): Date {
   if (!value) {
     return new Date();
   }
-  const date = new Date(value);
+  // Exactly one native Date construction retains coercion and native failures.
+  const date: unknown = Reflect.construct(Date, [value]);
+  if (!(date instanceof Date))
+    throw new TypeError('Native Date construction did not return a Date');
   if (Number.isNaN(date.getTime())) {
     throw new SignatureProviderResponseError(`${field} is not a valid date`);
   }
@@ -274,7 +325,10 @@ function assertBoolean(value: unknown, field: string): asserts value is boolean 
   }
 }
 
-function assertRevocationSource(value: unknown, field: string): asserts value is UpperRevocationSource {
+function assertRevocationSource(
+  value: unknown,
+  field: string,
+): asserts value is UpperRevocationSource {
   if (value !== 'OCSP' && value !== 'CRL' && value !== 'EMBEDDED' && value !== 'NONE') {
     throw new SignatureProviderResponseError(`${field} must be OCSP, CRL, EMBEDDED, or NONE`);
   }
@@ -282,4 +336,88 @@ function assertRevocationSource(value: unknown, field: string): asserts value is
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Preserve native property lookup on the unknown response, including primitive
+ * boxing and the original receiver. The explicit nullish TypeError matches the
+ * pinned Node class/message and first-read position, not its stack frames.
+ */
+function responseField(value: unknown, key: string): unknown {
+  if (value === null || value === undefined) {
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  }
+  const target: unknown = Object(value);
+  if ((typeof target === 'object' && target !== null) || typeof target === 'function') {
+    return Reflect.get(target, key, value);
+  }
+  throw new TypeError('Invalid signature response property target');
+}
+
+function nativeBase64Buffer(value: unknown): Buffer {
+  const bytes: unknown = Reflect.apply(Buffer.from, Buffer, [value, 'base64']);
+  if (!Buffer.isBuffer(bytes))
+    throw new TypeError('Native Buffer conversion did not return a Buffer');
+  return bytes;
+}
+
+function booleanResult(value: unknown, field: string): boolean {
+  assertBoolean(value, field);
+  return value;
+}
+
+function statusResult(value: unknown): VerifyResult['status'] {
+  if (value !== 'valid' && value !== 'invalid' && value !== 'unknown') {
+    throw new SignatureProviderResponseError('status must be valid, invalid, or unknown');
+  }
+  return value;
+}
+
+function stringResult(value: unknown, field: string): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string') {
+    throw new SignatureProviderResponseError(`${field} must be a string`);
+  }
+  return value;
+}
+
+function isStringArray(value: unknown): value is string[] {
+  if (!Array.isArray(value)) return false;
+  const values: unknown[] = value;
+  for (let index = 0; index < values.length; index += 1) {
+    if (typeof values[index] !== 'string') return false;
+  }
+  return true;
+}
+
+function stringArrayResult(value: unknown, field: string): string[] {
+  if (!isStringArray(value)) {
+    throw new SignatureProviderResponseError(`${field} must be a string array`);
+  }
+  return value;
+}
+
+function isCertificateResult(value: unknown): value is SignatureCertificateResult {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  for (const key of ['subject', 'issuer', 'serialNumber', 'pem']) {
+    const field: unknown = Reflect.get(value, key);
+    if (field !== undefined && typeof field !== 'string') return false;
+  }
+  for (const key of ['notBefore', 'notAfter']) {
+    const field: unknown = Reflect.get(value, key);
+    if (field !== undefined && typeof field !== 'string' && !(field instanceof Date)) return false;
+  }
+  return true;
+}
+
+function certificateResult(value: unknown): SignatureCertificateResult | undefined {
+  if (value === undefined) return undefined;
+  if (!isCertificateResult(value)) {
+    throw new SignatureProviderResponseError('signerCertificate has invalid descriptive fields');
+  }
+  return value;
+}
+
+function optionalStringArrayResult(value: unknown, field: string): string[] | undefined {
+  return value === undefined ? undefined : stringArrayResult(value, field);
 }

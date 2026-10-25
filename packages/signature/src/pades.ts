@@ -76,11 +76,11 @@ export function encodePadesEvidenceBlock(envelope: PadesEvidenceEnvelope): Uint8
   );
 }
 
-export function decodePadesEvidenceBlock(document: Uint8Array): PadesEvidenceEnvelope | null {
+export function decodePadesEvidenceBlock(document: Uint8Array): unknown {
   const match = Buffer.from(document)
     .toString('latin1')
     .match(/%%STYNX-PADES-SIGNATURE:([A-Za-z0-9+/=]+)/u);
   const encoded = match?.[1];
   if (!encoded) return null;
-  return JSON.parse(Buffer.from(encoded, 'base64').toString('utf8')) as PadesEvidenceEnvelope;
+  return JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'));
 }
