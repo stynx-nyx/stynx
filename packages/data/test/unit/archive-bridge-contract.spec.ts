@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { customType, pgSchema, text, timestamp, uuid, type AnyPgTable } from 'drizzle-orm/pg-core';
+import { bigint, customType, interval, line, numeric, pgSchema, point, text, timestamp, uuid, type AnyPgTable } from 'drizzle-orm/pg-core';
 import type { PoolClient } from 'pg';
 import { ArchiveSelectQuery, type SelectBuilderLike } from '../../src/query-helpers.js';
 
@@ -109,6 +109,18 @@ describe('bounded legacy archive bridge contract', () => {
     expect(query).toHaveBeenCalledWith(compiled.sql, compiled.params);
   });
 
+  it('preserves arbitrary configured timestamp text without parsing or normalizing it', async () => {
+    const value = 'sensitive-invalid-time';
+    const dateTable = schema.table('date_mode_text', {
+      id: uuid('id').notNull(),
+      recordedAt: timestamp('recorded_at', { withTimezone: true, mode: 'date' }).notNull(),
+    });
+    const { archive, query } = fixture([{ ...row(), recorded_at: value, archived_at: value, deleted_at: value, last_erasure_at: value }], dateTable);
+    const result = await archive.execute();
+    for (const field of ['recordedAt', 'archivedAt', 'deletedAt', 'lastErasureAt']) expect(result[0]?.[field]).toBe(value);
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+
   it.each([
     { bad: { timestamp: 'sensitive-invalid-time' } },
     { bad: false },
@@ -125,7 +137,7 @@ describe('bounded legacy archive bridge contract', () => {
   });
 
   for (const [field, value] of [
-    ['archived_at', 'sensitive-invalid-time'],
+    ['archived_at', { invalid: 'sensitive-invalid-time' }],
     // An out-of-range Date is a possible raw PG representation, not malformed.
     // Keep this negative sensor on a genuinely invalid timestamp object instead.
     ['deleted_at', { invalid: 'sensitive-invalid-time' }],
@@ -146,4 +158,38 @@ describe('bounded legacy archive bridge contract', () => {
       expect(JSON.stringify(error)).not.toContain('sensitive-private-row');
     });
   }
+});
+
+
+// Expanded native representation support still rejects unrelated physical
+// shapes before mapping; configured primitive values are tested separately.
+describe('archive raw representation negative boundary', () => {
+  it.each([
+    { name: 'finite temporal number', column: timestamp('physical', { withTimezone: true }), bad: 0 },
+    { name: 'temporal NaN', column: timestamp('physical', { withTimezone: true }), bad: NaN },
+    { name: 'numeric boolean', column: numeric('physical', { mode: 'number' }), bad: false },
+    { name: 'numeric object', column: numeric('physical'), bad: { secret: 'private-shape' } },
+    { name: 'int8 boolean', column: bigint('physical', { mode: 'bigint' }), bad: false },
+    { name: 'int8 object', column: bigint('physical', { mode: 'bigint' }), bad: { secret: 'private-shape' } },
+    { name: 'interval array', column: interval('physical'), bad: [] },
+    { name: 'interval nonnumeric unit', column: interval('physical'), bad: { milliseconds: 'private-shape' } },
+    { name: 'point missing coordinate', column: point('physical', { mode: 'tuple' }), bad: { x: 1 } },
+    { name: 'point string coordinate', column: point('physical', { mode: 'tuple' }), bad: { x: 'private-shape', y: 2 } },
+    { name: 'line object', column: line('physical', { mode: 'tuple' }), bad: { secret: 'private-shape' } },
+    { name: 'line boolean', column: line('physical', { mode: 'tuple' }), bad: false },
+  ])('rejects $name with indexed redacted shape evidence', async ({ column, bad }) => {
+    const source = schema.table('malformed_physical', { id: uuid('id').notNull(), value: column.notNull() });
+    const { archive, query } = fixture([{ ...row(), physical: bad }], source);
+    const failure: unknown = await archive.execute().catch((error: unknown) => error);
+    expect(failure).toMatchObject({ code: 'QUERY_ROW_INVALID', rowIndex: 0 });
+    expect(JSON.stringify(failure)).not.toContain('private-shape');
+    expect(query).toHaveBeenCalledTimes(1);
+  });
+  it.each([false, { secret: 'private-shape' }])('rejects nonprimitive archive ID with redacted evidence: %s', async (bad) => {
+    const { archive, query } = fixture([{ ...row(), archive_id: bad }]);
+    const failure: unknown = await archive.execute().catch((error: unknown) => error);
+    expect(failure).toMatchObject({ code: 'QUERY_ROW_INVALID', rowIndex: 0 });
+    expect(JSON.stringify(failure)).not.toContain('private-shape');
+    expect(query).toHaveBeenCalledTimes(1);
+  });
 });
