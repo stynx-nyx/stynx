@@ -126,6 +126,12 @@ export interface MobileEntityDraft<TEntityType extends string = string> {
   readonly finalizedAt?: string;
 }
 
+/** A checked persisted draft; native storage may have serialized payload to any value. */
+export type MobileStoredEntityDraft<TEntityType extends string = string> = Omit<
+  MobileEntityDraft<TEntityType>,
+  'payload'
+> & { readonly payload: unknown };
+
 /** Queue entry awaiting (or undergoing) synchronization with the server. */
 export interface MobileSyncQueueItem<TEntityType extends string = string> {
   readonly queueItemId: string;
@@ -211,4 +217,11 @@ export interface MobileRuntimeOptions {
   readonly requireEvidenceToFinalize?: boolean;
   /** Prefix used for locally generated draft identifiers. */
   readonly draftIdPrefix?: string;
+}
+
+/** Required runtime vocabulary used to check persisted draft and queue subtypes. */
+export interface MobileRuntimeCheckedOptions<
+  TEntityType extends string,
+> extends MobileRuntimeOptions {
+  readonly entityTypes: readonly TEntityType[];
 }

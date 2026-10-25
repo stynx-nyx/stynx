@@ -17,7 +17,7 @@ import type {
 } from './ports.js';
 import type {
   MobileConflictResolution,
-  MobileEntityDraft,
+  MobileStoredEntityDraft,
   MobileNormativePackageSnapshot,
   MobileNumberingReservation,
   MobilePrintReceipt,
@@ -45,13 +45,13 @@ export class InMemoryEncryptedMobileStore implements MobileEncryptedStorePort {
     });
   }
 
-  async get<T>(collection: string, key: string): Promise<T | undefined> {
+  async get(collection: string, key: string): Promise<unknown> {
     const value = this.collection(collection).get(key);
-    return value ? this.open<T>(value) : undefined;
+    return value ? this.open(value) : undefined;
   }
 
-  async list<T>(collection: string): Promise<T[]> {
-    return [...this.collection(collection).values()].map((value) => this.open<T>(value));
+  async list(collection: string): Promise<unknown[]> {
+    return [...this.collection(collection).values()].map((value) => this.open(value));
   }
 
   async remove(collection: string, key: string): Promise<void> {
@@ -75,8 +75,8 @@ export class InMemoryEncryptedMobileStore implements MobileEncryptedStorePort {
     return collection;
   }
 
-  private open<T>(value: SealedValue): T {
-    return JSON.parse(Buffer.from(value.sealed, 'base64').toString('utf8')) as T;
+  private open(value: SealedValue): unknown {
+    return JSON.parse(Buffer.from(value.sealed, 'base64').toString('utf8'));
   }
 }
 
@@ -141,7 +141,7 @@ export class SimulatedMobilePrinterPort implements MobilePrinterPort {
 
   async printReceipt(input: {
     readonly session: MobileSessionContext;
-    readonly draft: MobileEntityDraft;
+    readonly draft: MobileStoredEntityDraft<string>;
     readonly contentHash: string;
   }): Promise<MobilePrintReceipt> {
     return {
@@ -266,9 +266,8 @@ export function stableJson(value: unknown): string {
   if (Array.isArray(value)) {
     return `[${value.map((item) => stableJson(item)).join(',')}]`;
   }
-  const record = value as Record<string, unknown>;
-  return `{${Object.keys(record)
+  return `{${Object.keys(value)
     .sort()
-    .map((key) => `${JSON.stringify(key)}:${stableJson(record[key])}`)
+    .map((key) => `${JSON.stringify(key)}:${stableJson(Reflect.get(value, key))}`)
     .join(',')}}`;
 }

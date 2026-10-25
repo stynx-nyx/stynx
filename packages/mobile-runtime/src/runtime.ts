@@ -1,3 +1,14 @@
+import {
+  checkedEntityTypes,
+  checkedSession,
+  checkedDevice,
+  checkedPackage,
+  checkedReservations,
+  checkedDraft,
+  checkedQueue,
+  checkedQueueList,
+  storedStatus,
+} from './checked-storage.js';
 import type {
   MobileBackendClientPort,
   MobileClockPort,
@@ -17,7 +28,8 @@ import type {
   MobileNumberingReservation,
   MobilePrintReceipt,
   MobileRemoteWipeReceipt,
-  MobileRuntimeOptions,
+  MobileRuntimeCheckedOptions,
+  MobileStoredEntityDraft,
   MobileRuntimeSnapshot,
   MobileSessionContext,
   MobileSyncBatchResult,
@@ -43,6 +55,7 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
   private readonly requiredRoles: readonly string[];
   private readonly requireEvidenceToFinalize: boolean;
   private readonly draftIdPrefix: string;
+  private readonly entityTypes: readonly TEntityType[];
 
   constructor(
     private readonly store: MobileEncryptedStorePort,
@@ -50,15 +63,18 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
     private readonly crypto: MobileCryptoPort,
     private readonly clock: MobileClockPort,
     private readonly ids: MobileIdPort,
-    private readonly printer?: MobilePrinterPort,
-    options: MobileRuntimeOptions = {},
+    private readonly printer: MobilePrinterPort | undefined,
+    options: MobileRuntimeCheckedOptions<TEntityType>,
   ) {
     if (!store.encrypted) {
       throw new Error('stynx mobile runtime requires an encrypted local store port');
     }
-    this.requiredRoles = options.requiredRoles ?? [];
-    this.requireEvidenceToFinalize = options.requireEvidenceToFinalize ?? true;
-    this.draftIdPrefix = options.draftIdPrefix ?? 'entity-local';
+    this.requiredRoles = (options === undefined ? undefined : options.requiredRoles) ?? [];
+    this.requireEvidenceToFinalize =
+      (options === undefined ? undefined : options.requireEvidenceToFinalize) ?? true;
+    this.draftIdPrefix =
+      (options === undefined ? undefined : options.draftIdPrefix) ?? 'entity-local';
+    this.entityTypes = checkedEntityTypes(options === undefined ? undefined : options.entityTypes);
   }
 
   async bootstrapFromStynxSession(
@@ -162,7 +178,7 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
   async attachEvidence(
     localEntityId: string,
     evidence: Omit<MobileEvidenceDraft, 'linkedLocalEntityId'>,
-  ): Promise<MobileEntityDraft<TEntityType>> {
+  ): Promise<MobileStoredEntityDraft<TEntityType>> {
     if (
       evidence.hashAlgorithm !== 'sha256' ||
       !evidence.hashValue ||
@@ -180,7 +196,7 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
     return updated;
   }
 
-  async finalizeOffline(localEntityId: string): Promise<MobileEntityDraft<TEntityType>> {
+  async finalizeOffline(localEntityId: string): Promise<MobileStoredEntityDraft<TEntityType>> {
     const draft = await this.requireDraft(localEntityId);
     if (draft.status !== 'draft') {
       throw new Error(`Entity draft ${localEntityId} is ${draft.status}; expected draft`);
@@ -230,21 +246,19 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
 
   async submitPendingQueue(): Promise<MobileSyncBatchResult> {
     const session = await this.requireSession();
-    const pending = (await this.store.list<MobileSyncQueueItem<TEntityType>>('sync-queue')).filter(
+    const pending = checkedQueueList(await this.store.list('sync-queue'), this.entityTypes).filter(
       (item) => item.status === 'pending',
     );
     if (!pending.length) {
       return { batchId: 'empty', acceptedItems: 0, conflicts: [] };
     }
     const submittedAt = this.clock.now();
-    const marked = pending.map(
-      (item): MobileSyncQueueItem<TEntityType> => ({
-        ...item,
-        status: 'sent',
-        attempts: item.attempts + 1,
-        lastSubmittedAt: submittedAt,
-      }),
-    );
+    const marked = pending.map((item): MobileSyncQueueItem<TEntityType> => ({
+      ...item,
+      status: 'sent',
+      attempts: item.attempts + 1,
+      lastSubmittedAt: submittedAt,
+    }));
     for (const item of marked) {
       await this.store.put('sync-queue', item.queueItemId, item);
     }
@@ -278,7 +292,7 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
     resolution: SyncConflictResolutionStrategy,
   ): Promise<MobileConflictResolution> {
     const session = await this.requireSession();
-    const item = await this.store.get<MobileSyncQueueItem<TEntityType>>('sync-queue', queueItemId);
+    const item = checkedQueue(await this.store.get('sync-queue', queueItemId), this.entityTypes);
     if (!item) {
       throw new Error(`Sync queue item ${queueItemId} was not found`);
     }
@@ -297,9 +311,9 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
     });
     await this.store.put('sync-conflict-resolution', resolved.conflictId, resolved);
     await this.store.put('sync-queue', item.queueItemId, { ...item, status: 'applied' });
-    const draft = await this.store.get<MobileEntityDraft<TEntityType>>(
-      'entity-draft',
-      item.localEntityId,
+    const draft = checkedDraft(
+      await this.store.get('entity-draft', item.localEntityId),
+      this.entityTypes,
     );
     if (draft) {
       await this.store.put(
@@ -337,7 +351,7 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
   }
 
   async applyRemoteWipe(reason: string): Promise<MobileRemoteWipeReceipt> {
-    const session = await this.store.get<MobileSessionContext>('session', 'active');
+    const session = checkedSession(await this.store.get('session', 'active'));
     const receipt: MobileRemoteWipeReceipt = {
       wipeReceiptId: this.ids.uuid('wipe'),
       deviceId: session?.deviceId ?? 'unknown-device',
@@ -350,30 +364,31 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
   }
 
   async snapshot(): Promise<MobileRuntimeSnapshot> {
-    const session = await this.store.get<MobileSessionContext>('session', 'active');
-    const activePackage = await this.store.get<MobileNormativePackageSnapshot>(
-      'normative-package',
-      'active',
-    );
+    const session = checkedSession(await this.store.get('session', 'active'));
+    const activePackage = checkedPackage(await this.store.get('normative-package', 'active'));
     const devicePosture = session
-      ? await this.store.get<MobileDevicePosture>('device', session.deviceId)
+      ? checkedDevice(await this.store.get('device', session.deviceId))
       : undefined;
-    const drafts = await this.store.list<MobileEntityDraft<TEntityType>>('entity-draft');
-    const queue = await this.store.list<MobileSyncQueueItem<TEntityType>>('sync-queue');
-    const evidence = await this.store.list<MobileEvidenceDraft>('evidence');
-    const printReceipts = await this.store.list<MobilePrintReceipt>('print-receipt');
-    const conflictResolutions = await this.store.list<MobileConflictResolution>(
-      'sync-conflict-resolution',
-    );
-    const wipeReceipts = await this.store.list<Record<string, unknown>>('wipe-receipt');
+    const drafts = await this.store.list('entity-draft');
+    const queue = await this.store.list('sync-queue');
+    const evidence = await this.store.list('evidence');
+    const printReceipts = await this.store.list('print-receipt');
+    const conflictResolutions = await this.store.list('sync-conflict-resolution');
+    const wipeReceipts = await this.store.list('wipe-receipt');
     return {
       ...(session === undefined ? {} : { activeSession: session }),
       ...(activePackage === undefined ? {} : { activePackage }),
       ...(devicePosture === undefined ? {} : { devicePosture }),
-      draftCount: drafts.filter((draft) => draft.status === 'draft').length,
-      queuedCount: queue.filter((item) =>
-        ['pending', 'sent', 'received', 'conflict'].includes(item.status),
-      ).length,
+      draftCount: drafts.filter((draft) => storedStatus(draft) === 'draft').length,
+      queuedCount: queue.filter((item) => {
+        const status = storedStatus(item);
+        return (
+          status === 'pending' ||
+          status === 'sent' ||
+          status === 'received' ||
+          status === 'conflict'
+        );
+      }).length,
       evidenceCount: evidence.length,
       printReceiptCount: printReceipts.length,
       conflictResolutionCount: conflictResolutions.length,
@@ -385,7 +400,7 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
     entityType: TEntityType,
     requestedNumber?: number,
   ): Promise<MobileNumberingReservation> {
-    const reservations = await this.store.list<MobileNumberingReservation>('numbering-reservation');
+    const reservations = checkedReservations(await this.store.list('numbering-reservation'));
     const reservation = reservations.find(
       (candidate) =>
         candidate.status === 'reserved' &&
@@ -406,7 +421,7 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
     return reservation;
   }
 
-  private assertOfflineInvariant(draft: MobileEntityDraft<TEntityType>): void {
+  private assertOfflineInvariant(draft: MobileStoredEntityDraft<TEntityType>): void {
     if (!draft.idempotencyKey || !draft.reservationId || !draft.localContentHash) {
       throw new Error('Offline entity draft lacks idempotency, reservation or content hash');
     }
@@ -423,7 +438,7 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
   }
 
   private async requireSession(): Promise<MobileSessionContext> {
-    const session = await this.store.get<MobileSessionContext>('session', 'active');
+    const session = checkedSession(await this.store.get('session', 'active'));
     if (!session) {
       throw new Error('Mobile session has not been bootstrapped');
     }
@@ -431,18 +446,15 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
   }
 
   private async requireNormativePackage(): Promise<MobileNormativePackageSnapshot> {
-    const normativePackage = await this.store.get<MobileNormativePackageSnapshot>(
-      'normative-package',
-      'active',
-    );
+    const normativePackage = checkedPackage(await this.store.get('normative-package', 'active'));
     if (!normativePackage) {
       throw new Error('No active mobile normative package is installed');
     }
     return normativePackage;
   }
 
-  private async requireDraft(localId: string): Promise<MobileEntityDraft<TEntityType>> {
-    const draft = await this.store.get<MobileEntityDraft<TEntityType>>('entity-draft', localId);
+  private async requireDraft(localId: string): Promise<MobileStoredEntityDraft<TEntityType>> {
+    const draft = checkedDraft(await this.store.get('entity-draft', localId), this.entityTypes);
     if (!draft) {
       throw new Error(`Local entity draft ${localId} was not found`);
     }
@@ -450,9 +462,11 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
   }
 
   private updateDraft(
-    draft: MobileEntityDraft<TEntityType>,
-    patch: Partial<Omit<MobileEntityDraft<TEntityType>, 'localId' | 'entityType' | 'createdAt'>>,
-  ): MobileEntityDraft<TEntityType> {
+    draft: MobileStoredEntityDraft<TEntityType>,
+    patch: Partial<
+      Omit<MobileStoredEntityDraft<TEntityType>, 'localId' | 'entityType' | 'createdAt'>
+    >,
+  ): MobileStoredEntityDraft<TEntityType> {
     return {
       ...draft,
       ...patch,
@@ -460,7 +474,7 @@ export class OfflineFirstMobileRuntime<TEntityType extends string = string> {
     };
   }
 
-  private toSyncPayload(draft: MobileEntityDraft<TEntityType>): Record<string, unknown> {
+  private toSyncPayload(draft: MobileStoredEntityDraft<TEntityType>): Record<string, unknown> {
     return {
       tenant_id: draft.tenantId,
       org_unit_id: draft.orgUnitId,

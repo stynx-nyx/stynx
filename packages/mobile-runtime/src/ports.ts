@@ -9,7 +9,7 @@
  */
 import type {
   MobileConflictResolution,
-  MobileEntityDraft,
+  MobileStoredEntityDraft,
   MobileNormativePackageSnapshot,
   MobileNumberingReservation,
   MobilePrintReceipt,
@@ -26,8 +26,8 @@ export interface MobileEncryptedStorePort {
   readonly encryptionScope: 'device' | 'session';
   readonly securityLevel: 'software-sealed' | 'hardware-backed';
   put<T>(collection: string, key: string, value: T): Promise<void>;
-  get<T>(collection: string, key: string): Promise<T | undefined>;
-  list<T>(collection: string): Promise<T[]>;
+  get(collection: string, key: string): Promise<unknown>;
+  list(collection: string): Promise<unknown[]>;
   remove(collection: string, key: string): Promise<void>;
   clear(): Promise<void>;
 }
@@ -57,7 +57,7 @@ export interface MobilePrinterPort {
   readonly adapterName: string;
   printReceipt(input: {
     readonly session: MobileSessionContext;
-    readonly draft: MobileEntityDraft;
+    readonly draft: MobileStoredEntityDraft<string>;
     readonly contentHash: string;
   }): Promise<MobilePrintReceipt>;
 }
