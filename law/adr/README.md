@@ -5,6 +5,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR-DEVAI-ADOPTION-0042 — Honest native i18n results and exact notification propagation](2026-10-24-s10-native-i18n-results-proposal.md) — accepted 2026-10-24: “Approve the bounded native i18n correction”; exact result/adapter propagation and two private native boundaries, implementation and verification pending.
+
 - [ADR-DEVAI-ADOPTION-0041 — Honest Offline hook contexts](2026-10-24-s10-offline-hook-context-proposal.md) — accepted 2026-10-24: “Approve the bounded Offline hook-context correction”; exact five interfaces/seven methods/four production carriers, implementation and verification pending; no production unsafe-rule exception.
 
 - [ADR-DEVAI-ADOPTION-0040 — Exact root tooling lifecycle SQL admissions](2026-10-24-s10-root-lifecycle-admission-proposal.md) — accepted 2026-10-24; exact eleven existing fixed-script/database lifecycle sites, implementation and verification pending.
