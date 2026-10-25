@@ -5,11 +5,13 @@ export interface ISize {
   type?: string;
 }
 
-export type ISizeCalculationResult = {
+export type ISizeCalculationResult = Omit<ISize, 'width' | 'height'> & {
+  width: number | undefined;
+  height: number | undefined;
   images?: ISize[];
-} & ISize;
+};
 
-export interface IImage {
+export interface IImage<Result extends ISizeCalculationResult = ISize & { images?: ISize[] }> {
   validate: (input: Uint8Array) => boolean;
-  calculate: (input: Uint8Array) => ISizeCalculationResult;
+  calculate: (input: Uint8Array) => Result;
 }

@@ -1,10 +1,15 @@
-import type { IImage, ISize } from './interface';
+import type { IImage, ISizeCalculationResult } from './interface';
 import { toUTF8String } from './utils';
 
+interface IViewbox {
+  width: number | undefined;
+  height: number | undefined;
+}
+
 interface IAttributes {
-  width: number | null;
-  height: number | null;
-  viewbox?: IAttributes | null;
+  width: number | null | undefined;
+  height: number | null | undefined;
+  viewbox?: IViewbox | null;
 }
 
 const svgReg = /<svg\s([^>"']|"[^"]*"|'[^']*')*>/;
@@ -39,11 +44,11 @@ function parseLength(len: string) {
   return Math.round(Number(m[1]) * (units[m[2]] || 1));
 }
 
-function parseViewbox(viewbox: string): IAttributes {
+function parseViewbox(viewbox: string): IViewbox {
   const bounds = viewbox.split(' ');
   return {
-    height: parseLength(bounds[3]) as number,
-    width: parseLength(bounds[2]) as number,
+    height: parseLength(bounds[3]),
+    width: parseLength(bounds[2]),
   };
 }
 
@@ -52,21 +57,14 @@ function parseAttributes(root: string): IAttributes {
   const height = root.match(extractorRegExps.height);
   const viewbox = root.match(extractorRegExps.viewbox);
   return {
-    height: height && (parseLength(height[2]) as number),
-    viewbox: viewbox && (parseViewbox(viewbox[2]) as IAttributes),
-    width: width && (parseLength(width[2]) as number),
+    height: height && parseLength(height[2]),
+    viewbox: viewbox && parseViewbox(viewbox[2]),
+    width: width && parseLength(width[2]),
   };
 }
 
-function calculateByDimensions(attrs: IAttributes): ISize {
-  return {
-    height: attrs.height as number,
-    width: attrs.width as number,
-  };
-}
-
-function calculateByViewbox(attrs: IAttributes, viewbox: IAttributes): ISize {
-  const ratio = (viewbox.width as number) / (viewbox.height as number);
+function calculateByViewbox(attrs: IAttributes, viewbox: IViewbox): ISizeCalculationResult {
+  const ratio = (viewbox.width ?? NaN) / (viewbox.height ?? NaN);
   if (attrs.width) {
     return {
       height: Math.floor(attrs.width / ratio),
@@ -80,12 +78,12 @@ function calculateByViewbox(attrs: IAttributes, viewbox: IAttributes): ISize {
     };
   }
   return {
-    height: viewbox.height as number,
-    width: viewbox.width as number,
+    height: viewbox.height,
+    width: viewbox.width,
   };
 }
 
-export const SVG: IImage = {
+export const SVG: IImage<ISizeCalculationResult> = {
   // Scan only the first kilo-byte to speed up the check on larger files
   validate: (input) => svgReg.test(toUTF8String(input, 0, 1000)),
 
@@ -94,7 +92,10 @@ export const SVG: IImage = {
     if (root) {
       const attrs = parseAttributes(root[0]);
       if (attrs.width && attrs.height) {
-        return calculateByDimensions(attrs);
+        return {
+          height: attrs.height,
+          width: attrs.width,
+        };
       }
       if (attrs.viewbox) {
         return calculateByViewbox(attrs, attrs.viewbox);
