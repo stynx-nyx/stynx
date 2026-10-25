@@ -28,7 +28,7 @@
     "build": "ng-packagr -p ng-package.json",
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc -p tsconfig.spec.json --noEmit",
-    "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\"",
+    "lint": "eslint --config ../../tools/eslint-config/angular.mjs \"src/**/*.ts\" \"testing/index.ts\"",
     "test": "vitest run --config ./vitest.config.ts",
     "stryker": "NODE_OPTIONS=\"--disable-warning=ExperimentalWarning --experimental-vm-modules\" pnpm exec stryker run stryker.conf.mjs",
     "build:tsc": "tsc -p tsconfig.json",

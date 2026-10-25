@@ -1,6 +1,13 @@
+import {
+  workspaceAngularTestingConfig,
+  workspaceAngularTestingFiles,
+} from './tools/eslint-config/workspace-angular-testing.mjs';
 import { workspaceImplementationConfig } from './tools/eslint-config/workspace-implementation.mjs';
 import { workspaceToolingConfig } from './tools/eslint-config/workspace-tooling.mjs';
-import { rootWorkspaceSourceConfig, workspaceSourceFiles } from './tools/eslint-config/root-workspace-source.mjs';
+import {
+  rootWorkspaceSourceConfig,
+  workspaceSourceFiles,
+} from './tools/eslint-config/root-workspace-source.mjs';
 import { rootDatabaseToolingConfig } from './tools/eslint-config/root-database-tooling.mjs';
 import js from '@eslint/js';
 import angularPlugin from '@angular-eslint/eslint-plugin';
@@ -41,7 +48,7 @@ export default [
     files: ['**/*.ts', '**/*.mts', '**/*.cts'],
     // Typed source configurations below own these paths; this fallback serves
     // the retained syntax-only configuration and test/fixture surfaces.
-    ignores: workspaceSourceFiles,
+    ignores: [...workspaceSourceFiles, ...workspaceAngularTestingFiles],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -81,7 +88,7 @@ export default [
   },
   {
     files: angularFiles,
-    ignores: workspaceSourceFiles,
+    ignores: [...workspaceSourceFiles, ...workspaceAngularTestingFiles],
     plugins: {
       '@angular-eslint': angularPlugin,
       '@angular-eslint/template': angularTemplatePlugin,
@@ -127,6 +134,7 @@ export default [
     },
   },
   ...rootWorkspaceSourceConfig,
+  ...workspaceAngularTestingConfig,
   ...rootDatabaseToolingConfig,
   ...workspaceToolingConfig,
   ...workspaceImplementationConfig,
