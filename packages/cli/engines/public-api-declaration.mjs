@@ -15,7 +15,7 @@ const packageVersion =
   /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/u;
 
 /**
- * @param {{ packageName: string, declarationPath: string, packageVersion: string, source: string }} input
+ * @param {{ packageName: string, declarationPath: string, packageVersion: unknown, source: string }} input
  */
 export function normalizePublicApiDeclaration({
   packageName,
@@ -36,7 +36,7 @@ export function normalizePublicApiDeclaration({
     rows.length !== 1 ||
     !match ||
     (normalized.match(/\breadonly packageVersion:/gu) ?? []).length !== 1 ||
-    !packageVersion.test(version) ||
+    !packageVersion.test(`${version}`) ||
     match[1] !== version
   ) {
     throw new Error(
