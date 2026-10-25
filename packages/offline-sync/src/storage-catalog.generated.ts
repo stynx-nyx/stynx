@@ -167,11 +167,11 @@ export const OFFLINE_STORAGE_CATALOG = {
     },
     {
       path: 'scripts/offline-storage-catalog-generate.mjs',
-      sha256: 'a933e105d351036e93292d2c72f285594e03ee0110619c757f329b14525585a9',
+      sha256: 'a8a069284434924c60fa46db0dfca2a7ea8f936ad73b16057b0eb98166782bc8',
     },
     {
       path: 'packages/data/src/storage-catalog.ts',
-      sha256: '9ed994b0458ab0f6e6d1fb27459580707a66bdfcd200bf81b5981bf7c5ff40f0',
+      sha256: '1c01fa1e85a9fcbda2eadbb7e2b32d03be8ec233a0e134203ffc74e145916c90',
     },
   ],
   entries: [

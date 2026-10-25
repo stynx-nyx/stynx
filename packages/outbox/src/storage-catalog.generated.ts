@@ -123,11 +123,11 @@ export const OUTBOX_STORAGE_CATALOG = {
     },
     {
       path: 'scripts/outbox-storage-catalog-generate.mjs',
-      sha256: 'ceb86d5942008980ec845a722c4cf1e623621fc576a2a4c4d0b9800d320c9fbb',
+      sha256: 'a89cc7089bb99eb562582b44731e315c9f3275aad4cc8fd8fe193c7745728882',
     },
     {
       path: 'packages/data/src/storage-catalog.ts',
-      sha256: '9ed994b0458ab0f6e6d1fb27459580707a66bdfcd200bf81b5981bf7c5ff40f0',
+      sha256: '1c01fa1e85a9fcbda2eadbb7e2b32d03be8ec233a0e134203ffc74e145916c90',
     },
   ],
   entries: [
