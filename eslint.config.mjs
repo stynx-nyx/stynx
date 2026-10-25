@@ -1,3 +1,4 @@
+import { workspaceImplementationConfig } from './tools/eslint-config/workspace-implementation.mjs';
 import { workspaceToolingConfig } from './tools/eslint-config/workspace-tooling.mjs';
 import { rootWorkspaceSourceConfig, workspaceSourceFiles } from './tools/eslint-config/root-workspace-source.mjs';
 import { rootDatabaseToolingConfig } from './tools/eslint-config/root-database-tooling.mjs';
@@ -8,6 +9,9 @@ import angularTemplateParser from '@angular-eslint/template-parser';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
+
+const recommended = tsPlugin.configs.recommended;
+if (!recommended) throw new Error('Installed TypeScript ESLint plugin has no recommended config.');
 
 // Angular sources live only in these trees; backend NestJS packages use
 // constructor injection and must NOT receive @angular-eslint rules here.
@@ -54,7 +58,7 @@ export default [
     },
     rules: {
       ...js.configs.recommended.rules,
-      ...tsPlugin.configs.recommended.rules,
+      ...recommended.rules,
       'no-redeclare': 'off',
       '@typescript-eslint/no-redeclare': 'error',
       'no-undef': 'off',
@@ -125,4 +129,5 @@ export default [
   ...rootWorkspaceSourceConfig,
   ...rootDatabaseToolingConfig,
   ...workspaceToolingConfig,
+  ...workspaceImplementationConfig,
 ];

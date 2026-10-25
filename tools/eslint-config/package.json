@@ -9,7 +9,7 @@
     "./test": "./test.mjs"
   },
   "scripts": {
-    "lint": "cd ../.. && eslint --config tools/eslint-config/workspace-tooling.mjs --max-warnings=0 \"tools/eslint-config/*.mjs\" \"packages-web/sdk/codegen/*.mjs\" \"packages-web/sdk/scripts/*.mjs\" \"packages/cli/engines/*.mjs\"",
+    "lint": "node ./lint-workspace.mjs",
     "test:coverage": "node ../../scripts/node-test-coverage.mjs test/eslint-config.spec.mjs test/rule-families.spec.mjs test/typed-query-lint.spec.mjs test/query-declaration-census.spec.mjs test/legacy-testing-assertions.spec.mjs test/root-database-tooling.spec.mjs",
     "clean": "node -e \"for (const path of ['dist', 'coverage']) require('node:fs').rmSync(path, { recursive: true, force: true })\"",
     "test": "node --test --test-concurrency=1 test/eslint-config.spec.mjs test/rule-families.spec.mjs test/typed-query-lint.spec.mjs test/query-declaration-census.spec.mjs test/legacy-testing-assertions.spec.mjs test/root-database-tooling.spec.mjs"
