@@ -74,11 +74,16 @@ test('every authored callable query/execute declaration has an explicit reviewed
     assert.ok(Object.isFrozen(entry));
     assert.ok(['raw-sql', 'non-sql', 'checked-archive'].includes(entry.classification));
   }
-  const actual = ['packages', 'packages-web', 'domain', 'reference'].flatMap((root) =>
-    authoredFiles(join(workspace, root)).flatMap((file) =>
-      declarations(file, readFileSync(join(workspace, file), 'utf8')),
-    ),
-  );
+  const files = [...['packages', 'packages-web', 'domain', 'reference'].flatMap((root) => authoredFiles(join(workspace, root))),
+    ...authoredFiles(join(workspace, 'tools/database-tooling')),
+    'scripts/lib/demo-bookmark-storage.mjs',
+    'scripts/lib/demo-bookmark-storage.d.mts',
+    'scripts/offline-storage-catalog-generate.mjs',
+    'scripts/outbox-storage-catalog-generate.mjs',
+    'scripts/ci-local/prepare-int-template.mjs',
+  ];
+  assert.equal(new Set(files).size, files.length, 'exact tooling population must not duplicate existing authored sources');
+  const actual = files.flatMap((file) => declarations(file, readFileSync(join(workspace, file), 'utf8')));
   assert.deepEqual(
     unresolved(actual),
     [],
