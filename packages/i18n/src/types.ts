@@ -1,3 +1,10 @@
+/** A JSON value retained in tenant override settings; not necessarily an ICU message. */
+export type I18nOverrideValue =
+  string | number | boolean | null | I18nOverrideValue[] | { [key: string]: I18nOverrideValue };
+
+/** Prefixed tenant override entries, preserving their stored JSON values. */
+export type I18nTenantOverrides = Record<string, I18nOverrideValue>;
+
 /** Messages for one locale, keyed by message key (ICU MessageFormat values). */
 export type I18nCatalogMessages = Record<string, string>;
 

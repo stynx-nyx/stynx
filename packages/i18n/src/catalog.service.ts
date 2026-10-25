@@ -6,21 +6,40 @@ import { ModuleRef } from '@nestjs/core';
 import { Database } from '@stynx-nyx/data';
 import IntlMessageFormat from 'intl-messageformat';
 import { STYNX_I18N_OPTIONS } from './tokens.js';
-import type { I18nCatalogMessages, StynxI18nModuleOptions } from './types.js';
+import type { I18nCatalogMessages, I18nTenantOverrides, StynxI18nModuleOptions } from './types.js';
 import { requireI18nCacheContext } from './tenant-context.js';
 
-type Catalogs = Map<string, Map<string, string>>;
+type Catalogs = Map<string, Map<string, unknown>>;
 
 export const STYNX_I18N_DEFAULT_LOCALE = 'en-US';
 
-function loadJsonCatalog(filePath: string): Record<string, string> {
-  return JSON.parse(readFileSync(filePath, 'utf8')) as Record<string, string>;
+function loadJsonCatalogEntries(filePath: string): [string, unknown][] {
+  const value: unknown = JSON.parse(readFileSync(filePath, 'utf8'));
+  if (value === null || value === undefined) {
+    // Preserve Object.entries' native nullish failure at the original consumption boundary.
+    Reflect.apply(Object.entries, Object, [value]);
+    throw new Error('Native Object.entries unexpectedly accepted a nullish catalog');
+  }
+  return Object.entries(value);
+}
+
+function formatCatalogMessage(
+  message: unknown,
+  locale: string,
+  vars: Record<string, unknown>,
+): unknown {
+  // This fixed native constructor owns its accepted ICU representations and errors.
+  const formatter: unknown = Reflect.construct(IntlMessageFormat, [message, locale]);
+  if (!(formatter instanceof IntlMessageFormat)) {
+    throw new Error('Native IntlMessageFormat returned an unexpected instance');
+  }
+  return formatter.format(vars);
 }
 
 @Injectable()
 export class CatalogService {
   private catalogs?: Catalogs;
-  private readonly tenantOverrideCache = new Map<string, Record<string, string>>();
+  private readonly tenantOverrideCache = new Map<string, I18nTenantOverrides>();
 
   constructor(
     private readonly moduleRef: ModuleRef,
@@ -44,7 +63,7 @@ export class CatalogService {
    */
   registerCatalog(locale: string, messages: I18nCatalogMessages): void {
     const catalogs = this.catalogsMap();
-    const target = catalogs.get(locale) ?? new Map<string, string>();
+    const target = catalogs.get(locale) ?? new Map<string, unknown>();
     for (const [key, value] of Object.entries(messages)) {
       target.set(key, value);
     }
@@ -62,12 +81,12 @@ export class CatalogService {
     const layered = this.mergeTenantOverrides(catalogs, tenantId);
     const exact = layered.get(locale)?.get(key);
     if (exact) {
-      return new IntlMessageFormat(exact, locale).format(vars);
+      return formatCatalogMessage(exact, locale, vars);
     }
 
     const fallback = layered.get(STYNX_I18N_DEFAULT_LOCALE)?.get(key);
     if (fallback) {
-      return new IntlMessageFormat(fallback, 'en-US').format(vars);
+      return formatCatalogMessage(fallback, 'en-US', vars);
     }
 
     return key;
@@ -81,23 +100,21 @@ export class CatalogService {
     this.setTenantOverrides(tenantId, await this.tenantOverrides(tenantId));
   }
 
-  setTenantOverrides(tenantId: string, overrides: Record<string, string>): void {
+  setTenantOverrides(tenantId: string, overrides: I18nTenantOverrides): void {
     requireI18nCacheContext(this.moduleRef, tenantId);
     this.tenantOverrideCache.set(tenantId, { ...overrides });
   }
 
-  async tenantOverrides(tenantId: string): Promise<Record<string, string>> {
+  async tenantOverrides(tenantId: string): Promise<I18nTenantOverrides> {
     const scope = requireI18nCacheContext(this.moduleRef, tenantId);
     const database = this.moduleRef.get(Database, { strict: false });
     return database.txIndependent(
       async (trx) => {
-        const result = await trx.run(readOverrideSettings,
-          [tenantId],
-        );
+        const result = await trx.run(readOverrideSettings, [tenantId]);
         const settings = result[0]?.settings ?? {};
         return Object.fromEntries(
           Object.entries(settings).filter(([entryKey]) => entryKey.startsWith('i18n.override.')),
-        ) as Record<string, string>;
+        );
       },
       { role: scope === 'tenant' ? 'reader' : 'owner', readonly: true, replica: false },
     );
@@ -155,8 +172,8 @@ export class CatalogService {
             continue;
           }
           const locale = entry.replace(/\.json$/u, '');
-          const target = catalogs.get(locale) ?? new Map<string, string>();
-          for (const [key, value] of Object.entries(loadJsonCatalog(join(i18nDir, entry)))) {
+          const target = catalogs.get(locale) ?? new Map<string, unknown>();
+          for (const [key, value] of loadJsonCatalogEntries(join(i18nDir, entry))) {
             target.set(key, value);
           }
           catalogs.set(locale, target);
@@ -185,7 +202,7 @@ export class CatalogService {
       }
       const locale = match[1]!;
       const catalogKey = match[2]!;
-      const target = merged.get(locale) ?? new Map<string, string>();
+      const target = merged.get(locale) ?? new Map<string, unknown>();
       target.set(catalogKey, value);
       merged.set(locale, target);
     }

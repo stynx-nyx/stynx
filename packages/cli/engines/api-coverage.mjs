@@ -4,7 +4,6 @@ import * as ts from 'typescript';
 import { parseNestControllerDeclarations } from './nest-route-declarations.mjs';
 import { bindHttpApiCompositions, operationId } from './http-api-compositions.mjs';
 
-
 /** @typedef {{ method: string, path: string, routePath: string, bodyType: string | null,
  * responseType: string | null, jsonResponseType: string | null, hasQueryObject: boolean,
  * isPublic: boolean, queryNames: string[], handler: string, controller: string,
@@ -38,11 +37,15 @@ let schemaRegistry;
 export function verifyApiCoverage({ root, writeOpenApi = false }) {
   repoRoot = resolve(root);
   const config = jsonField(readConfig(), 'apiCoverage') ?? {};
-  const openapiPath = resolveConfigurationPath(jsonField(config, 'openapiPath') ?? 'docs/framework/contracts/openapi.json');
+  const openapiPath = resolveConfigurationPath(
+    jsonField(config, 'openapiPath') ?? 'docs/framework/contracts/openapi.json',
+  );
   const sourceRoots = jsonField(config, 'sourceRoots') ?? ['reference/api/src', 'packages'];
   const routePrefix = jsonField(config, 'routePrefix') ?? '';
   if (!Array.isArray(sourceRoots)) throw new TypeError('sourceRoots.map is not a function');
-  const sourceRootPaths = sourceRoots.map((/** @type {unknown} */ sourceRoot) => resolveConfigurationPath(sourceRoot));
+  const sourceRootPaths = sourceRoots.map((/** @type {unknown} */ sourceRoot) =>
+    resolveConfigurationPath(sourceRoot),
+  );
   const returnTypeIndex = buildReturnTypeIndex(sourceRootPaths);
   composition = bindHttpApiCompositions(
     repoRoot,
@@ -52,7 +55,10 @@ export function verifyApiCoverage({ root, writeOpenApi = false }) {
   schemaRegistry = buildSchemaRegistry(
     sourceRootPaths,
     implementedOperations
-      .flatMap((operation) => [operation.bodyType, operation.jsonResponseType ?? operation.responseType])
+      .flatMap((operation) => [
+        operation.bodyType,
+        operation.jsonResponseType ?? operation.responseType,
+      ])
       .filter(Boolean),
     implementedOperations.filter((operation) => operation.jsonResponseType),
   );
@@ -169,7 +175,9 @@ function discoverNestOperations(roots, prefix, returnTypes) {
         const fragment = member.signature;
         const jsonResponseType = jsonResponseTypes.get(member.position.offset) ?? null;
         if (jsonResponseType && member.registrations.length === 0) {
-          throw new Error(`${relative(repoRoot, file)}:${member.position.line}: JSON response annotation requires an HTTP route`);
+          throw new Error(
+            `${relative(repoRoot, file)}:${member.position.line}: JSON response annotation requires an HTTP route`,
+          );
         }
         jsonResponseTypes.delete(member.position.offset);
         const bodyParameters = member.parameters.filter((parameter) =>
@@ -192,7 +200,9 @@ function discoverNestOperations(roots, prefix, returnTypes) {
           parameter.decorators.filter((decorator) => decorator.name === 'Query'),
         );
         const queryNames = queries
-          .flatMap((decorator) => decorator.selector?.kind === 'property' ? [decorator.selector.name] : [])
+          .flatMap((decorator) =>
+            decorator.selector?.kind === 'property' ? [decorator.selector.name] : [],
+          )
           .sort((left, right) => left.localeCompare(right));
         const attached = [...controller.decorators, ...member.decorators];
         for (const base of controller.paths) {
@@ -230,7 +240,9 @@ function discoverNestOperations(roots, prefix, returnTypes) {
       }
     }
     if (jsonResponseTypes.size > 0) {
-      throw new Error(`${relative(repoRoot, file)}: JSON response annotation requires a discovered controller route`);
+      throw new Error(
+        `${relative(repoRoot, file)}: JSON response annotation requires a discovered controller route`,
+      );
     }
   }
 
@@ -253,15 +265,17 @@ function jsonResponseAnnotations(text, file) {
   const annotations = new Map();
   /** @param {ts.Node} node */
   const visit = (node) => {
-    const tags = nativeJSDocTags(node)
-      .filter((tag) => tag.tagName.text === 'stynx-json-response-type');
+    const tags = nativeJSDocTags(node).filter(
+      (tag) => tag.tagName.text === 'stynx-json-response-type',
+    );
     if (tags.length > 0) {
       const line = source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
       /** @type {(reason: string) => never} */
       const refuse = (reason) => {
         throw new Error(`${relative(repoRoot, file)}:${line}: ${reason}`);
       };
-      if (!ts.isMethodDeclaration(node)) refuse('JSON response annotation is method-only, never a request-body annotation');
+      if (!ts.isMethodDeclaration(node))
+        refuse('JSON response annotation is method-only, never a request-body annotation');
       const tag = tags[0];
       if (tags.length !== 1 || !tag) refuse('duplicate JSON response annotation');
       const comment = tag.comment;
@@ -284,8 +298,15 @@ function jsonResponseAnnotations(text, file) {
 function validateJsonResponseDeclaration(operation, registry) {
   const name = operation.jsonResponseType;
   const declaration = name === null ? undefined : registry.declarations.get(name);
-  if (name === null || !declaration || registry.ambiguousDeclarations.has(name) || declaration.node.typeParameters?.length) {
-    throw new Error(`${operation.source}:${operation.sourceLine}: unresolved, ambiguous or generic JSON response declaration ${name}`);
+  if (
+    name === null ||
+    !declaration ||
+    registry.ambiguousDeclarations.has(name) ||
+    declaration.node.typeParameters?.length
+  ) {
+    throw new Error(
+      `${operation.source}:${operation.sourceLine}: unresolved, ambiguous or generic JSON response declaration ${name}`,
+    );
   }
 }
 
@@ -305,13 +326,17 @@ function validateJsonResponseType(operation, registry) {
     const ref = Reflect.get(schema, '$ref');
     if (typeof ref === 'string' && ref) {
       if (ref === '#/components/schemas/UnknownJson') {
-        throw new Error(`${operation.source}:${operation.sourceLine}: unresolved JSON response schema ${name}`);
+        throw new Error(
+          `${operation.source}:${operation.sourceLine}: unresolved JSON response schema ${name}`,
+        );
       }
       const component = ref.match(/^#\/components\/schemas\/(.+)$/u)?.[1];
       if (component && !visited.has(component)) {
         visited.add(component);
         if (registry.ambiguousDeclarations.has(component)) {
-          throw new Error(`${operation.source}:${operation.sourceLine}: ambiguous JSON response schema ${component}`);
+          throw new Error(
+            `${operation.source}:${operation.sourceLine}: ambiguous JSON response schema ${component}`,
+          );
         }
         validate(registry.schemas[component]);
       }
@@ -632,9 +657,14 @@ function compareOperations(file, operations, variants, compositionId) {
     ]),
   );
   const failures = [];
-  if (jsonField(contract, 'openapi') !== '3.1.0' || jsonField(contract, 'x-stynx-composition') !== compositionId)
+  if (
+    jsonField(contract, 'openapi') !== '3.1.0' ||
+    jsonField(contract, 'x-stynx-composition') !== compositionId
+  )
     failures.push({ reason: 'document-identity-mismatch' });
-  if (stableJson(jsonField(contract, 'components')) !== stableJson(openApiComponents(schemaRegistry)))
+  if (
+    stableJson(jsonField(contract, 'components')) !== stableJson(openApiComponents(schemaRegistry))
+  )
     failures.push({ reason: 'schema-components-mismatch' });
   for (const [path, item] of jsonEntries(paths)) {
     for (const [method, actual] of jsonEntries(item)) {
@@ -1033,12 +1063,9 @@ function objectShape(schema, state, seen = new Set()) {
 function mergeObjectShapes(shapes) {
   const indexConstraints = shapes
     .map((shape) => shape.additionalProperties)
+    .filter((constraint) => constraint !== false && constraint !== undefined && constraint !== true)
     .filter(
       (constraint) =>
-        constraint !== false &&
-        constraint !== undefined &&
-        constraint !== true,
-    ).filter((constraint) =>
         stableJson(constraint) !== stableJson({ $ref: '#/components/schemas/JsonValue' }),
     );
   const indexTypes = indexConstraints.map(primitiveIndexType);
@@ -1057,7 +1084,9 @@ function mergeObjectShapes(shapes) {
     for (const [name, schema] of Object.entries(shape.properties ?? {})) {
       const previous = properties[name];
       properties[name] =
-        Object.hasOwn(properties, name) && previous !== undefined && stableJson(previous) !== stableJson(schema)
+        Object.hasOwn(properties, name) &&
+        previous !== undefined &&
+        stableJson(previous) !== stableJson(schema)
           ? { allOf: [previous, schema] }
           : schema;
     }
@@ -1091,7 +1120,8 @@ function primitiveIndexType(schema) {
   if (schema.anyOf?.length === 1 && Object.keys(schema).length === 1)
     return schema.anyOf[0] ? primitiveIndexType(schema.anyOf[0]) : null;
   return Object.keys(schema).length === 1 &&
-    schema.type !== undefined && ['string', 'number', 'boolean', 'null'].includes(schema.type)
+    schema.type !== undefined &&
+    ['string', 'number', 'boolean', 'null'].includes(schema.type)
     ? schema.type
     : null;
 }
@@ -1147,6 +1177,40 @@ function objectSchemaFromMembers(members, state) {
 }
 
 /**
+ * @param {ts.TypeLiteralNode} node
+ * @param {Registry} state
+ * @returns {Schema}
+ */
+function typeLiteralSchema(node, state) {
+  const index = node.members.find(ts.isIndexSignatureDeclaration);
+  if (!index) return objectSchemaFromMembers(node.members, state);
+  const parameter = index.parameters[0];
+  if (
+    node.members.length !== 1 ||
+    index.name !== undefined ||
+    index.questionToken !== undefined ||
+    index.modifiers?.length ||
+    index.typeParameters?.length ||
+    index.parameters.length !== 1 ||
+    !index.type ||
+    index.type.kind === ts.SyntaxKind.NeverKeyword ||
+    !parameter ||
+    !ts.isIdentifier(parameter.name) ||
+    parameter.type?.kind !== ts.SyntaxKind.StringKeyword ||
+    parameter.questionToken !== undefined ||
+    parameter.dotDotDotToken !== undefined ||
+    parameter.initializer !== undefined ||
+    parameter.modifiers?.length
+  ) {
+    throw new Error('Unsupported object index signature schema');
+  }
+  return {
+    type: 'object',
+    additionalProperties: schemaForTypeNode(index.type, state),
+  };
+}
+
+/**
  * @param {ts.PropertyName} name
  */
 function propertyName(name) {
@@ -1183,7 +1247,7 @@ function schemaForTypeNode(node, state) {
   if (ts.isArrayTypeNode(node)) {
     return { type: 'array', items: schemaForTypeNode(node.elementType, state) };
   }
-  if (ts.isTypeLiteralNode(node)) return objectSchemaFromMembers(node.members, state);
+  if (ts.isTypeLiteralNode(node)) return typeLiteralSchema(node, state);
   if (ts.isLiteralTypeNode(node)) return literalSchema(node.literal);
   if (ts.isUnionTypeNode(node)) return unionSchema(node.types, state);
   if (ts.isIntersectionTypeNode(node)) return intersectionSchema(node.types, state);
@@ -1265,7 +1329,10 @@ function typeReferenceSchema(node, state) {
     while (ts.isParenthesizedTypeNode(keyType)) keyType = keyType.type;
     const valueType = node.typeArguments[1];
     // This exact source dictionary has no admissible property value.
-    if (keyType.kind === ts.SyntaxKind.StringKeyword && valueType?.kind === ts.SyntaxKind.NeverKeyword)
+    if (
+      keyType.kind === ts.SyntaxKind.StringKeyword &&
+      valueType?.kind === ts.SyntaxKind.NeverKeyword
+    )
       return { type: 'object', additionalProperties: false };
     const value = schemaForTypeNode(valueType, state);
     if (keyType.kind !== ts.SyntaxKind.StringKeyword) {
@@ -1308,7 +1375,7 @@ function unionSchema(types, state) {
   const literalSchemas = nonUndefined.map((type) => schemaForTypeNode(type, state));
   const enumValues = literalSchemas
     .filter((schema) => Object.prototype.hasOwnProperty.call(schema, 'const'))
-    .flatMap((schema) => schema.const === undefined ? [] : [schema.const]);
+    .flatMap((schema) => (schema.const === undefined ? [] : [schema.const]));
   if (enumValues.length === literalSchemas.length && enumValues.length > 0) {
     const valueTypes = [
       ...new Set(enumValues.map((value) => (value === null ? 'null' : typeof value))),
@@ -1518,7 +1585,11 @@ function isPropertyRecord(value) {
 /** @param {unknown} value
  * @returns {value is {tagName: {text: string}, comment?: unknown}} */
 function isNativeJSDocTag(value) {
-  return isPropertyRecord(value) && isPropertyRecord(value.tagName) && typeof value.tagName.text === 'string';
+  return (
+    isPropertyRecord(value) &&
+    isPropertyRecord(value.tagName) &&
+    typeof value.tagName.text === 'string'
+  );
 }
 /** @param {ts.Node} node
  * @returns {{tagName: {text: string}, comment?: unknown}[]} */
@@ -1541,7 +1612,8 @@ function nativeJSDocTags(node) {
 
 /** @param {unknown} value @returns {object} */
 function jsonObject(value) {
-  if (value === null || value === undefined) throw new TypeError('Cannot convert undefined or null to object');
+  if (value === null || value === undefined)
+    throw new TypeError('Cannot convert undefined or null to object');
   /** @type {unknown} */
   const boxed = Object(value);
   if ((typeof boxed !== 'object' || boxed === null) && typeof boxed !== 'function')
@@ -1550,11 +1622,14 @@ function jsonObject(value) {
 }
 /** @param {unknown} value @param {string} name @returns {unknown} */
 function jsonField(value, name) {
-  if (value === null || value === undefined) throw new TypeError(`Cannot read properties of ${value} (reading '${name}')`);
+  if (value === null || value === undefined)
+    throw new TypeError(`Cannot read properties of ${value} (reading '${name}')`);
   return Reflect.get(jsonObject(value), name, value);
 }
 /** @param {unknown} value @returns {[string, unknown][]} */
-function jsonEntries(value) { return Object.entries(jsonObject(value)); }
+function jsonEntries(value) {
+  return Object.entries(jsonObject(value));
+}
 /** Invoke the same native path resolver at the configuration consumption boundary.
  * @param {unknown} value @returns {string} */
 function resolveConfigurationPath(value) {
