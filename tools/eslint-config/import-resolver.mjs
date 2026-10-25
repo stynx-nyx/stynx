@@ -18,6 +18,7 @@ import { dirname, extname, join, resolve as resolvePath } from 'node:path';
 export const interfaceVersion = 2;
 
 const sourceExtensions = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs'];
+/** @type {Record<string, string[] | undefined>} */
 const emittedToSource = {
   '.js': ['.ts', '.tsx'],
   '.jsx': ['.tsx'],
@@ -25,13 +26,16 @@ const emittedToSource = {
   '.cjs': ['.cts'],
 };
 
+/** @param {string} source */
 const isRelative = (source) =>
   source === '.' || source === '..' || source.startsWith('./') || source.startsWith('../');
 
+/** @param {string} path */
 const isFile = (path) => existsSync(path) && statSync(path).isFile();
 
 const sourceEntries = ['src/index.ts', 'src/public-api.ts', 'src/main.ts'];
 
+/** @param {string} source @param {Record<string, string>} workspacePackages */
 function resolveWorkspacePackage(source, workspacePackages) {
   const name = Object.keys(workspacePackages).find(
     (candidate) => source === candidate || source.startsWith(`${candidate}/`),
@@ -40,6 +44,9 @@ function resolveWorkspacePackage(source, workspacePackages) {
     return { found: false };
   }
   const packageDir = workspacePackages[name];
+  // The private workspace map is built from own string-valued path entries.
+  // Keep the selected lookup lazy and fail if that construction invariant breaks.
+  if (packageDir === undefined) throw new TypeError(`Missing workspace source entry: ${name}`);
   // An explicit source entry classifies packages without a conventional barrel,
   // including their emitted subpaths, without consulting generated dist files.
   if (isFile(packageDir)) return { found: true, path: packageDir };
@@ -57,6 +64,7 @@ function resolveWorkspacePackage(source, workspacePackages) {
   return path === undefined ? { found: false } : { found: true, path };
 }
 
+/** @param {string} target */
 function fileCandidates(target) {
   const extension = extname(target);
   return [
@@ -69,6 +77,11 @@ function fileCandidates(target) {
   ];
 }
 
+/**
+ * @param {string} source
+ * @param {string} file
+ * @param {{ workspacePackages?: Record<string, string> }} [config]
+ */
 export function resolve(source, file, config = {}) {
   if (!isRelative(source)) {
     return config.workspacePackages

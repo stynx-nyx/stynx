@@ -1,18 +1,25 @@
 import ts from 'typescript';
 
+/** @typedef {import('typescript').Node} TsNode */
+/** @typedef {{ receiver: import('typescript').Expression, name: string, key?: TsNode }} MemberSlot */
+
 // Recover only targets of actual standard reflection intrinsics. This is not a
 // ban on reflection: the caller still classifies each recovered SQL declaration.
 // Unsupported arguments remain unknown; no evaluated code or asserted type is
 // used as evidence of the intrinsic's identity.
+/** @param {import('typescript').CallExpression} call @param {{ checker: import('typescript').TypeChecker, program: import('typescript').Program }} semantics */
 export function reflectedCallTargets(call, { checker, program }) {
+  /** @type {Set<TsNode>} */
   const pending = new Set();
   let work = 0;
+  /** @param {TsNode} node */
   const declarations = (node) => {
     const symbol = checker.getSymbolAtLocation(node);
     const resolved = symbol && symbol.flags & ts.SymbolFlags.Alias
       ? checker.getAliasedSymbol(symbol) : symbol;
     return resolved?.declarations ?? [];
   };
+  /** @param {TsNode} node */
   const standard = (node) => {
     const found = declarations(node);
     return found.length > 0 && found.every((declaration) =>
@@ -21,11 +28,13 @@ export function reflectedCallTargets(call, { checker, program }) {
   // Declaration-only metadata namespaces can merge with the native Reflect
   // namespace. The callable member is still proved separately below; a local
   // facade, runtime namespace, or variable declaration cannot establish it.
+  /** @param {readonly import('typescript').Declaration[]} found */
   const standardReflectNamespace = (found) => found.length > 0 &&
     found.some((declaration) => program.isSourceFileDefaultLibrary(declaration.getSourceFile())) &&
     found.every((declaration) => declaration.getSourceFile().isDeclarationFile &&
       ts.isModuleDeclaration(declaration) && ts.isIdentifier(declaration.name) &&
       declaration.name.text === 'Reflect');
+  /** @param {TsNode} node @returns {MemberSlot | undefined} */
   const member = (node) => {
     if (ts.isPropertyAccessExpression(node)) return { receiver: node.expression, name: node.name.text, key: node.name };
     if (ts.isElementAccessExpression(node) && ts.isStringLiteral(node.argumentExpression)) {
@@ -33,6 +42,7 @@ export function reflectedCallTargets(call, { checker, program }) {
     }
     return undefined;
   };
+  /** @param {MemberSlot | undefined} slot */
   const standardMember = (slot) => {
     if (!slot) return false;
     const found = checker.getTypeAtLocation(slot.receiver).getProperty(slot.name)?.declarations ?? [];
@@ -42,6 +52,7 @@ export function reflectedCallTargets(call, { checker, program }) {
   // An ambient overload cannot replace the native runtime callable. Require
   // the native apply declaration and verify every additional overload belongs
   // to this same merged namespace and has no emitted implementation.
+  /** @param {MemberSlot | undefined} slot */
   const standardReflectApply = (slot) => {
     if (!slot || slot.name !== 'apply') return false;
     const type = checker.getTypeAtLocation(slot.receiver);
@@ -54,15 +65,20 @@ export function reflectedCallTargets(call, { checker, program }) {
         ts.isModuleBlock(declaration.parent) &&
         namespaceDeclarations.includes(declaration.parent.parent));
   };
+  /** @param {import('typescript').VariableDeclaration} declaration */
   const isConst = (declaration) => ts.isVariableDeclarationList(declaration.parent) &&
     Boolean(declaration.parent.flags & ts.NodeFlags.Const);
+  /** @type {WeakMap<import('typescript').VariableDeclaration, boolean>} */
   const stableMemo = new WeakMap();
+  /** @param {import('typescript').VariableDeclaration} declaration @returns {boolean | undefined} */
   const stableBinding = (declaration) => {
     if (isConst(declaration)) return true;
     if (stableMemo.has(declaration)) return stableMemo.get(declaration);
-    if (!ts.isIdentifier(declaration.name) || !ts.isVariableStatement(declaration.parent.parent) ||
+    const name = declaration.name;
+    if (!ts.isIdentifier(name) || !ts.isVariableStatement(declaration.parent.parent) ||
         declaration.parent.parent.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)) return false;
-    const symbol = checker.getSymbolAtLocation(declaration.name);
+    const symbol = checker.getSymbolAtLocation(name);
+    /** @param {TsNode} node @returns {boolean} */
     const target = (node) => {
       if (ts.isIdentifier(node)) return checker.getSymbolAtLocation(node) === symbol;
       if (ts.isParenthesizedExpression(node) || ts.isSpreadElement(node) || ts.isSpreadAssignment(node)) return target(node.expression);
@@ -74,6 +90,7 @@ export function reflectedCallTargets(call, { checker, program }) {
       return false;
     };
     let stable = true;
+    /** @param {TsNode} node @returns {void} */
     const scan = (node) => {
       if (!stable) return;
       if ((ts.isBinaryExpression(node) && node.operatorToken.kind >= ts.SyntaxKind.FirstAssignment &&
@@ -81,7 +98,7 @@ export function reflectedCallTargets(call, { checker, program }) {
           ((ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) &&
             [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken].includes(node.operator) && target(node.operand)) ||
           ((ts.isForOfStatement(node) || ts.isForInStatement(node)) && target(node.initializer)) ||
-          (ts.isExportSpecifier(node) && (node.propertyName ?? node.name).text === declaration.name.text)) {
+          (ts.isExportSpecifier(node) && (node.propertyName ?? node.name).text === name.text)) {
         stable = false;
         return;
       }
@@ -91,6 +108,7 @@ export function reflectedCallTargets(call, { checker, program }) {
     stableMemo.set(declaration, stable);
     return stable;
   };
+  /** @param {TsNode | undefined} node @param {string} name @param {Set<TsNode>} [seen] @returns {boolean} */
   const globalRoot = (node, name, seen = new Set()) => {
     if (!node || seen.has(node) || seen.size > 64) return false;
     seen.add(node);
@@ -110,16 +128,25 @@ export function reflectedCallTargets(call, { checker, program }) {
     const symbol = checker.getSymbolAtLocation(slot.receiver);
     return symbol?.name === 'globalThis' && !symbol.declarations?.length;
   };
+  /** @param {TsNode | undefined} node @returns {TsNode | undefined} */
   const unwrap = (node) => {
     while (node && ts.isParenthesizedExpression(node)) node = node.expression;
     return node;
   };
+  /** @param {TsNode | undefined} node @returns {import('typescript').Expression[]} */
   const arrayArguments = (node) => {
     node = unwrap(node);
     return node && ts.isArrayLiteralExpression(node) &&
       node.elements.every((element) => !ts.isSpreadElement(element) && !ts.isOmittedExpression(element))
       ? [...node.elements] : [];
   };
+  /**
+   * @param {TsNode | undefined} raw
+   * @param {readonly import('typescript').Expression[]} args
+   * @param {import('typescript').Expression | undefined} receiver
+   * @param {number} [depth]
+   * @returns {import('typescript').Expression[]}
+   */
   const visit = (raw, args, receiver, depth = 0) => {
     const node = unwrap(raw);
     if (!node || depth > 64 || ++work > 2048 || pending.has(node)) return [];
@@ -142,10 +169,12 @@ export function reflectedCallTargets(call, { checker, program }) {
         }
         return [];
       }
-      const bound = ts.isCallExpression(node) ? member(node.expression) : undefined;
-      if (bound?.name === 'bind' && standardMember(bound) && !node.arguments.some(ts.isSpreadElement)) {
-        return visit(bound.receiver, [...node.arguments.slice(1), ...args],
-          node.arguments[0], depth + 1);
+      if (ts.isCallExpression(node)) {
+        const bound = member(node.expression);
+        if (bound?.name === 'bind' && standardMember(bound) && !node.arguments.some(ts.isSpreadElement)) {
+          return visit(bound.receiver, [...node.arguments.slice(1), ...args],
+            node.arguments[0], depth + 1);
+        }
       }
       const slot = member(node);
       if (!slot) return [];
