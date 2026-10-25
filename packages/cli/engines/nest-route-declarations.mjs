@@ -26,12 +26,27 @@ const unsupportedRouteFactories = new Set([
   'Unlock',
 ]);
 
-/** Source declarations only. Mounting and inherited registrations are separate evidence. */
+/**
+ * @typedef {{ localName: string, name: string, importSource: string | null } |
+ *   { localName: string, name: null, importSource: null }} DecoratorIdentity
+ * @typedef {string | boolean | { symbol: string, importSource: string } |
+ *   unknown[]} LiteralValue
+ */
+
+/**
+ * Source declarations only. Mounting and inherited registrations are separate evidence.
+ * @param {string} text
+ * @param {{ file?: string }} [options]
+ */
 export function parseNestControllerDeclarations(text, { file = 'controller.ts' } = {}) {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-  if (source.parseDiagnostics.length) {
+  // TypeScript constructs this private diagnostic array, but omits it from SourceFile.
+  /** @type {unknown} */
+  const parseDiagnostics = Reflect.get(source, 'parseDiagnostics');
+  if (!Array.isArray(parseDiagnostics) || parseDiagnostics.length) {
     throw new Error(`${file}: invalid TypeScript controller source`);
   }
+  /** @type {Map<string, { importSource: string, importedName: string }>} */
   const imports = new Map();
   for (const statement of source.statements) {
     if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier))
@@ -52,15 +67,20 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
       imports.set(bindings.name.text, { importSource: module, importedName: '*' });
     }
   }
+  /** @param {ts.Node} node */
   const position = (node) => {
     const offset = node.getStart(source);
     const location = source.getLineAndCharacterOfPosition(offset);
     return { offset, line: location.line + 1, column: location.character + 1 };
   };
+  /** @type {(node: ts.Node, reason: string) => never} */
   const refuse = (node, reason) => {
     const at = position(node);
     throw new Error(`${file}:${at.line}:${at.column}: ${reason}`);
   };
+  /** @param {ts.Expression} expression
+   * @returns {DecoratorIdentity}
+   */
   const symbol = (expression) => {
     if (ts.isIdentifier(expression)) {
       return {
@@ -80,6 +100,7 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
     }
     return { localName: expression.getText(source), name: null, importSource: null };
   };
+  /** @param {{ name: string, importSource: string | null }} record */
   const knownOrigin = (record) => {
     if (
       record.name === 'Controller' ||
@@ -100,6 +121,7 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
     }
     return true;
   };
+  /** @param {ts.Node} node */
   const decorators = (node) =>
     (ts.canHaveDecorators(node) ? (ts.getDecorators(node) ?? []) : []).map((decorator) => {
       const expression = decorator.expression;
@@ -121,9 +143,10 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
       ) {
         refuse(decorator, `decorator factory ${identity.localName} requires a call`);
       }
+      /** @type {{ kind: 'whole' } | { kind: 'property', name: string } | undefined} */
       let selector;
       if (['Body', 'Query'].includes(identity.name)) {
-        const argument = call.arguments[0];
+        const argument = call?.arguments[0];
         if (!argument) selector = { kind: 'whole' };
         else if (ts.isStringLiteral(argument) || ts.isNoSubstitutionTemplateLiteral(argument)) {
           selector = { kind: 'property', name: argument.text };
@@ -139,6 +162,9 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
         call,
       };
     });
+  /** @param {ts.Expression} node
+   * @returns {LiteralValue}
+   */
   const literalValue = (node) => {
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
     if (node.kind === ts.SyntaxKind.TrueKeyword) return true;
@@ -165,22 +191,28 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
     }
     return refuse(node, `unsupported computed route selector ${node.getText(source)}`);
   };
+  /** @param {string} key
+   * @param {ts.Expression} node
+   */
   const optionValue = (key, node) => {
     const value = literalValue(node);
     const flat = Array.isArray(value) ? value : [value];
-    const neutral = (item) => item?.symbol === 'VERSION_NEUTRAL';
+    /** @param {unknown} item */
+    const neutral = (item) =>
+      typeof item === 'object' && item !== null && 'symbol' in item && item.symbol === 'VERSION_NEUTRAL';
     const valid =
       key === 'version'
         ? flat.every((item) => typeof item === 'string' || neutral(item))
         : key === 'host'
           ? flat.every((item) => typeof item === 'string')
           : key === 'scope'
-            ? !Array.isArray(value) &&
-              ['Scope.DEFAULT', 'Scope.REQUEST', 'Scope.TRANSIENT'].includes(value?.symbol)
+            ? typeof value === 'object' && !Array.isArray(value) &&
+              ['Scope.DEFAULT', 'Scope.REQUEST', 'Scope.TRANSIENT'].includes(value.symbol)
             : key === 'durable' && typeof value === 'boolean';
     if (!valid) refuse(node, `invalid Controller ${key} option`);
     return value;
   };
+  /** @param {ts.Expression | undefined} node */
   const paths = (node) => {
     if (!node) return [''];
     const value = literalValue(node);
@@ -189,7 +221,12 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
       refuse(node, 'route paths must be literal strings');
     return values;
   };
-  const publicRecord = ({ node: _node, call: _call, ...record }) => record;
+  /** @param {ReturnType<typeof decorators>[number]} record */
+  const publicRecord = ({ node: _node, call: _call, ...record }) => {
+    void _node;
+    void _call;
+    return record;
+  };
   const controllers = [];
   for (const node of source.statements) {
     if (!ts.isClassDeclaration(node)) continue;
@@ -198,9 +235,10 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
     if (!controller) continue;
     if (!node.name) refuse(node, 'anonymous controller');
     const argument = controller.call?.arguments[0];
-    if (controller.call?.arguments.length > 1)
+    if ((controller.call?.arguments.length ?? 0) > 1)
       refuse(controller.node, 'multiple Controller arguments');
     let controllerPaths = [''];
+    /** @type {Record<string, LiteralValue>} */
     const options = {};
     if (argument && ts.isObjectLiteralExpression(argument)) {
       const seen = new Set();
@@ -212,7 +250,7 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
           ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)
             ? property.name.text
             : null;
-        if (!['path', 'version', 'host', 'scope', 'durable'].includes(key) || seen.has(key)) {
+        if (key === null || !['path', 'version', 'host', 'scope', 'durable'].includes(key) || seen.has(key)) {
           refuse(property, `unknown or duplicate Controller option ${key}`);
         }
         seen.add(key);
@@ -233,8 +271,11 @@ export function parseNestControllerDeclarations(text, { file = 'controller.ts' }
       for (const decorator of routeDecorators) {
         if (!decorator.call || decorator.call.arguments.length > 1)
           refuse(decorator.node, 'unsupported HTTP decorator arguments');
-        for (const path of paths(decorator.call.arguments[0]))
-          registrations.push({ method: verbs.get(decorator.name), path });
+        for (const path of paths(decorator.call.arguments[0])) {
+          const method = verbs.get(decorator.name);
+          if (method === undefined) refuse(decorator.node, 'unsupported HTTP decorator arguments');
+          registrations.push({ method, path });
+        }
       }
       methods.push({
         name: member.name.text,

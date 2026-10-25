@@ -3,10 +3,18 @@ import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 
 import { parseNestControllerDeclarations } from './nest-route-declarations.mjs';
 
+/** @typedef {{ name: string, shortName: string, dir: string }} PackageInfo */
+/** @typedef {ReturnType<typeof parseControllerFile>[number]} Route */
+/** @typedef {ReturnType<typeof parseNestControllerDeclarations>[number]['decorators'][number]} DeclaredDecorator */
+
 const ignoredDirs = new Set(['.git', '.turbo', 'coverage', 'dist', 'node_modules']);
 const ignoredFileParts = new Set(['test', 'tests', '__tests__', 'fixtures', '__fixtures__']);
 
-/** Declared Nest routes under `scanRoots`; the first unreadable declaration throws. */
+/**
+ * Declared Nest routes under `scanRoots`; the first unreadable declaration throws.
+ * @param {{ repoRoot: string, scanRoots: readonly string[], packageFilter?: string | null,
+ * controllerFilter?: string | null }} options
+ */
 export function collectRoutes(options) {
   const root = resolve(options.repoRoot);
   const packageFilter = normalizeFilter(options.packageFilter);
@@ -35,9 +43,11 @@ export function collectRoutes(options) {
  * Census form for `stynx list-routes`: every controller file under the roots is
  * scanned; a declaration that is not statically readable is a finding with its
  * locator instead of aborting the walk.
+ * @param {{ repoRoot: string, scanRoots: readonly string[] }} options
  */
 export function inventoryRoutes({ repoRoot, scanRoots }) {
   const root = resolve(repoRoot);
+  /** @type {string[]} */
   const scanned = [];
   const routes = [];
   const findings = [];
@@ -53,10 +63,11 @@ export function inventoryRoutes({ repoRoot, scanRoots }) {
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         const located = message.match(/^(.*?):(\d+):(\d+): (.*)$/su);
+        const locatedFile = located?.[1];
         findings.push(
-          located
+          located && locatedFile !== undefined
             ? {
-                locator: `${portable(relative(root, located[1]))}:${located[2]}`,
+                locator: `${portable(relative(root, locatedFile))}:${located[2]}`,
                 message: `${located[4]} (not statically readable)`,
               }
             : { locator: `${relativeFile}:1`, message },
@@ -71,10 +82,15 @@ export function inventoryRoutes({ repoRoot, scanRoots }) {
   };
 }
 
+/** @param {string} file
+ * @param {PackageInfo | null | undefined} packageInfo
+ * @param {string} root
+ */
 export function parseControllerFile(file, packageInfo, root) {
   const source = readFileSync(file, 'utf8');
   const routes = [];
   for (const declaration of parseNestControllerDeclarations(source, { file })) {
+    /** @param {DeclaredDecorator} decorator */
     const asText = (decorator) =>
       `@${decorator.name ?? decorator.localName}(${decorator.arguments.join(', ')})`;
     for (const controllerPath of declaration.paths) {
@@ -111,6 +127,7 @@ export function parseControllerFile(file, packageInfo, root) {
   return routes;
 }
 
+/** @param {readonly Route[]} routes */
 export function formatCsv(routes) {
   const header = ['package', 'controller', 'method', 'path', 'permissions', 'rate-limit-class'];
   const rows = routes.map((route) => [
@@ -124,7 +141,9 @@ export function formatCsv(routes) {
   return `${[header, ...rows].map((row) => row.map(csvEscape).join(',')).join('\n')}\n`;
 }
 
+/** @param {readonly Route[]} routes */
 export function formatReport(routes) {
+  /** @type {Map<string, number>} */
   const byPackage = new Map();
   const controllers = new Set();
   let withPermissions = 0;
@@ -156,51 +175,11 @@ export function formatReport(routes) {
   return `${lines.join('\n')}\n`;
 }
 
-function parseArgs(values) {
-  const parsed = { output: 'csv', package: null, controller: null };
-  for (let index = 0; index < values.length; index += 1) {
-    const value = values[index];
-    if (value === '--csv') parsed.output = 'csv';
-    else if (value === '--report') parsed.output = 'report';
-    else if (value === '--package') {
-      parsed.package = requireValue(values, index, value);
-      index += 1;
-    } else if (value.startsWith('--package=')) {
-      parsed.package = value.slice('--package='.length);
-    } else if (value === '--controller') {
-      parsed.controller = requireValue(values, index, value);
-      index += 1;
-    } else if (value.startsWith('--controller=')) {
-      parsed.controller = value.slice('--controller='.length);
-    } else if (value === '--help' || value === '-h') {
-      printUsage();
-      process.exit(0);
-    } else {
-      throw new Error(`Unknown option: ${value}`);
-    }
-  }
-  return parsed;
-}
-
-function printUsage(stream = process.stdout) {
-  stream.write(`Usage: node scripts/list-routes.mjs [--csv|--report] [--package <name>] [--controller <ControllerName>]
-
-Walks NestJS controllers under packages/*/src, reference/api/src, and
-domain/demo-bookmark/api/src and emits route metadata.
-
-Columns:
-  package, controller, method, path, permissions, rate-limit-class
-`);
-}
-
-function requireValue(values, index, flag) {
-  const value = values[index + 1];
-  if (!value || value.startsWith('--')) {
-    throw new Error(`Missing value for ${flag}`);
-  }
-  return value;
-}
-
+/**
+ * @param {string} dir
+ * @param {string} root
+ * @returns {string[]}
+ */
 function walkControllerFiles(dir, root) {
   const results = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -219,12 +198,20 @@ function walkControllerFiles(dir, root) {
   return results;
 }
 
+/**
+ * @param {string} file
+ * @param {string} root
+ */
 function hasIgnoredFilePart(file, root) {
   return relative(root, file)
     .split(sep)
     .some((part) => ignoredFileParts.has(part) || part.endsWith('.generated.ts'));
 }
 
+/**
+ * @param {string} file
+ * @param {string} root
+ */
 function resolvePackageInfo(file, root) {
   // The nearest package.json at or below the root names the route's package.
   const parts = relative(root, file).split(sep);
@@ -245,23 +232,40 @@ function resolvePackageInfo(file, root) {
   };
 }
 
+/**
+ * @param {string} manifestPath
+ */
 function packageName(manifestPath) {
   try {
+    /** @type {unknown} */
     const payload = JSON.parse(readFileSync(manifestPath, 'utf8'));
-    return typeof payload.name === 'string' ? payload.name : null;
+    // Native JSON.parse without a reviver creates data properties, not accessors.
+    if (typeof payload !== 'object' || payload === null) return null;
+    /** @type {unknown} */
+    const name = Reflect.get(payload, 'name');
+    return typeof name === 'string' ? name : null;
   } catch {
     return null;
   }
 }
 
+/**
+ * @param {string} path
+ */
 function portable(path) {
   return path.split(sep).join('/');
 }
 
+/**
+ * @param {string} decorator
+ */
 function decoratorName(decorator) {
   return decorator.match(/^@([A-Za-z_$][\w$]*)/)?.[1] ?? '';
 }
 
+/**
+ * @param {string} decorator
+ */
 function decoratorArgs(decorator) {
   const start = decorator.indexOf('(');
   const end = decorator.lastIndexOf(')');
@@ -269,15 +273,27 @@ function decoratorArgs(decorator) {
   return decorator.slice(start + 1, end);
 }
 
+/**
+ * @param {string} text
+ */
 function firstStringLiteral(text) {
   const match = text.match(/(['"`])((?:\\.|(?!\1).)*)\1/s);
-  return match ? unescapeLiteral(match[2]) : null;
+  const literal = match?.[2];
+  return literal === undefined ? null : unescapeLiteral(literal);
 }
 
+/**
+ * @param {string} value
+ */
 function unescapeLiteral(value) {
   return value.replace(/\\(['"`\\])/g, '$1');
 }
 
+/**
+ * @param {{ file: string, method: string, routePath: string, methodName: string,
+ * controller: { name: string, controllerPath: string, decorators: string[] },
+ * methodDecorators: string[], packageInfo: PackageInfo, root: string }} options
+ */
 function buildRoute({
   file,
   method,
@@ -301,6 +317,9 @@ function buildRoute({
   };
 }
 
+/**
+ * @param {readonly string[]} decorators
+ */
 function collectPermissions(decorators) {
   const permissions = decorators
     .filter((decorator) => decoratorName(decorator) === 'Permission')
@@ -314,6 +333,9 @@ function collectPermissions(decorators) {
   return [...new Set(permissions)].join(';');
 }
 
+/**
+ * @param {readonly string[]} decorators
+ */
 function collectRateLimit(decorators) {
   const decorator = decorators.find((candidate) => decoratorName(candidate) === 'RateLimit');
   if (!decorator) return '';
@@ -327,11 +349,20 @@ function collectRateLimit(decorators) {
   return args;
 }
 
+/**
+ * @param {string} text
+ * @param {string} key
+ */
 function objectProperty(text, key) {
   const match = text.match(new RegExp(`\\b${key}\\s*:\\s*(['"\`])((?:\\\\.|(?!\\1).)*)\\1`, 's'));
-  return match ? unescapeLiteral(match[2]) : null;
+  const literal = match?.[2];
+  return literal === undefined ? null : unescapeLiteral(literal);
 }
 
+/**
+ * @param {unknown} basePath
+ * @param {unknown} routePath
+ */
 function joinRoutePath(basePath, routePath) {
   const parts = [basePath, routePath]
     .map((part) => String(part ?? '').trim())
@@ -340,16 +371,26 @@ function joinRoutePath(basePath, routePath) {
   return `/${parts.join('/')}`.replace(/\/+/g, '/');
 }
 
+/**
+ * @param {unknown} value
+ */
 function csvEscape(value) {
   const text = String(value ?? '');
   if (!/[",\n\r]/.test(text)) return text;
   return `"${text.replace(/"/g, '""')}"`;
 }
 
+/**
+ * @param {string | null | undefined} value
+ */
 function normalizeFilter(value) {
   return value ? value.toLowerCase() : null;
 }
 
+/**
+ * @param {PackageInfo} packageInfo
+ * @param {string} filter
+ */
 function matchesPackageFilter(packageInfo, filter) {
   return (
     packageInfo.name.toLowerCase() === filter ||
@@ -360,6 +401,10 @@ function matchesPackageFilter(packageInfo, filter) {
   );
 }
 
+/**
+ * @param {Route} left
+ * @param {Route} right
+ */
 function compareRoutes(left, right) {
   return (
     left.package.localeCompare(right.package) ||
