@@ -1319,3 +1319,29 @@ test('a certificate cannot be reused for an AST owned by a different Program', (
   assert.notEqual(first.evaluate(second.calls[0])?.ok, true);
   assert.notEqual(second.evaluate(first.calls[0])?.ok, true);
 });
+
+
+// Ambient declarations cannot change the native callable, unlike a local value
+// facade. In particular an added apply overload must not hide a SQL invocation.
+for (const [label, setup, augmentation, expected] of [
+  ['ambient non-callable namespace member', '', 'export {}; declare global { namespace Reflect { const inspectorMarker: unique symbol; } }', 1],
+  ['ambient apply overload', '', 'export {}; declare global { namespace Reflect { function apply(target: unknown, receiver: unknown, args: unknown[]): unknown; } }', 1],
+  ['runtime namespace facade', 'namespace Reflect { export function apply(...values: unknown[]) { return values; } }', '', 0],
+  ['class and namespace facade', 'class Reflect { static apply(...values: unknown[]) { return values; } } namespace Reflect { export const marker = true; }', '', 0],
+]) {
+  for (const alias of [false, true]) {
+    test(`Reflect declaration merge preserves ${label} via ${alias ? 'destructured alias' : 'direct call'}`, async () => {
+      if (augmentation) {
+        const emitted = ts.transpileModule(augmentation, { compilerOptions: { module: ts.ModuleKind.ESNext }, fileName: 'augmentation.ts' }).outputText.trim();
+        assert.equal(emitted, 'export {};', 'ambient overload emits no native property replacement');
+      }
+      const invocation = alias
+        ? 'const { apply: invoke } = Reflect; invoke(executeTypedQuery, undefined, [client, forged, []]);'
+        : 'Reflect.apply(executeTypedQuery, undefined, [client, forged, []]);';
+      const source = provenanceImports + 'const forged = { ...safe, text: "select unreviewed" };' + setup + invocation;
+      const extra = augmentation ? { 'packages/health/src/reflect-inspector-augmentation.d.ts': augmentation } : {};
+      const findings = await lint(source, applicationPath, 'no-raw-query', { ...provenanceSources, ...extra });
+      assert.equal(findings.filter((finding) => finding.ruleId === 'stynx/no-raw-query' && finding.severity === 2).length, expected);
+    });
+  }
+}
