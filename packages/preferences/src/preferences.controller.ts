@@ -17,7 +17,6 @@ import { PreferencesError } from './errors.js';
 import { PreferencesService } from './preferences.service.js';
 import type {
   PlatformProfile,
-  PreferenceCategory,
   PreferencePatch,
   PreferencesDocument,
   PreferenceValues,
@@ -60,7 +59,11 @@ export class PreferencesController {
     @Req() request: AuthenticatedRequest,
   ): Promise<PlatformProfile> {
     this.rejectOverrides(query, body);
-    const result = await this.preferences.patchProfile(body, this.revision(ifMatch), this.scope(request));
+    const result = await this.preferences.patchProfile(
+      body,
+      this.revision(ifMatch),
+      this.scope(request),
+    );
     return this.respond(response, result);
   }
   @Get('preferences') async get(
@@ -80,7 +83,11 @@ export class PreferencesController {
     @Req() request: AuthenticatedRequest,
   ): Promise<PreferencesDocument> {
     this.rejectOverrides(query, body);
-    const result = await this.preferences.putPreferences(body, this.revision(ifMatch), this.scope(request));
+    const result = await this.preferences.putPreferences(
+      body,
+      this.revision(ifMatch),
+      this.scope(request),
+    );
     return this.respond(response, result);
   }
   @Patch('preferences') @NoIdempotent() async patch(
@@ -91,7 +98,11 @@ export class PreferencesController {
     @Req() request: AuthenticatedRequest,
   ): Promise<PreferencesDocument> {
     this.rejectOverrides(query, body);
-    const result = await this.preferences.patchPreferences(body, this.revision(ifMatch), this.scope(request));
+    const result = await this.preferences.patchPreferences(
+      body,
+      this.revision(ifMatch),
+      this.scope(request),
+    );
     return this.respond(response, result);
   }
   @Delete('preferences') @HttpCode(200) async reset(
@@ -113,7 +124,7 @@ export class PreferencesController {
   ): Promise<PreferencesDocument> {
     this.rejectOverrides(query);
     const result = await this.preferences.reset(
-      category as PreferenceCategory,
+      category,
       this.revision(ifMatch),
       this.scope(request),
     );

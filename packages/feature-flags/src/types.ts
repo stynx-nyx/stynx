@@ -23,7 +23,7 @@ export interface FlagSet {
 
 export interface FlagEvaluation {
   flag: string;
-  value: FlagValue;
+  value: unknown;
   source: 'tenant' | 'environment' | 'global' | 'fallback';
   context: FlagContext;
 }

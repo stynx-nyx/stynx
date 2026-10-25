@@ -37,7 +37,7 @@ export interface CognitoAdminAdapterOptions {
   region: string;
   userPoolId: string;
   endpoint?: string;
-  credentialsStrategy?: CognitoAdminCredentialStrategy;
+  credentialsStrategy?: string;
   profile?: string;
   credentials?: AwsCredentialIdentity | AwsCredentialIdentityProvider;
   usernameAttributeFallbackOrder?: string[];
@@ -89,7 +89,10 @@ export function mapCognitoError(error: unknown): IdentityAdminError {
 
   return identityAdminError('IDENTITY_PROVIDER_ERROR', message, {
     providerErrorName: name,
-    httpStatusCode: optionalErrorProperty(optionalErrorProperty(error, '$metadata'), 'httpStatusCode'),
+    httpStatusCode: optionalErrorProperty(
+      optionalErrorProperty(error, '$metadata'),
+      'httpStatusCode',
+    ),
   });
 }
 
@@ -196,7 +199,9 @@ export class CognitoIdentityAdminAdapter implements IdentityAdminAdapter {
       );
       const user = response.Users?.[0];
       if (!user?.Username) {
-        throw new IdentityAdminError('IDENTITY_NOT_FOUND', 'Cognito user not found by subject', { subject });
+        throw new IdentityAdminError('IDENTITY_NOT_FOUND', 'Cognito user not found by subject', {
+          subject,
+        });
       }
       return this.getUser(user.Username);
     } catch (error) {
@@ -205,7 +210,10 @@ export class CognitoIdentityAdminAdapter implements IdentityAdminAdapter {
     }
   }
 
-  async updateUser(username: string, request: IdentityUpdateUserRequest): Promise<IdentityUserDetail> {
+  async updateUser(
+    username: string,
+    request: IdentityUpdateUserRequest,
+  ): Promise<IdentityUserDetail> {
     const attributes: AttributeType[] = [];
     if (request.email !== undefined) attributes.push({ Name: 'email', Value: request.email });
     if (request.phoneNumber !== undefined) {
@@ -284,7 +292,9 @@ export class CognitoIdentityAdminAdapter implements IdentityAdminAdapter {
     }
   }
 
-  async listGroups(query: { limit?: number; token?: string } = {}): Promise<IdentityListGroupsResult> {
+  async listGroups(
+    query: { limit?: number; token?: string } = {},
+  ): Promise<IdentityListGroupsResult> {
     try {
       const response = await this.client.send(
         new ListGroupsCommand({
@@ -363,7 +373,10 @@ export class CognitoIdentityAdminAdapter implements IdentityAdminAdapter {
     }
   }
 
-  async verifyUserChannels(username: string, request: IdentityVerifyChannelsRequest): Promise<void> {
+  async verifyUserChannels(
+    username: string,
+    request: IdentityVerifyChannelsRequest,
+  ): Promise<void> {
     const attributes: AttributeType[] = [];
     if (request.email) attributes.push({ Name: 'email_verified', Value: 'true' });
     if (request.phone) attributes.push({ Name: 'phone_number_verified', Value: 'true' });
@@ -466,16 +479,8 @@ export function buildCognitoAdminOptionsFromEnv(
   overrides: CognitoAdminOptionsFromEnvOverrides = {},
 ): CognitoAdminAdapterOptions {
   const region =
-    overrides.region ??
-    env.COGNITO_REGION ??
-    env.AWS_REGION ??
-    env.AWS_DEFAULT_REGION ??
-    '';
-  const userPoolId =
-    overrides.userPoolId ??
-    env.COGNITO_USER_POOL_ID ??
-    env.COGNITO_POOL_ID ??
-    '';
+    overrides.region ?? env.COGNITO_REGION ?? env.AWS_REGION ?? env.AWS_DEFAULT_REGION ?? '';
+  const userPoolId = overrides.userPoolId ?? env.COGNITO_USER_POOL_ID ?? env.COGNITO_POOL_ID ?? '';
   const endpoint = overrides.endpoint ?? env.COGNITO_IDP_ENDPOINT ?? undefined;
 
   if (!region) {
@@ -495,7 +500,7 @@ export function buildCognitoAdminOptionsFromEnv(
 
   const credentialsStrategy =
     overrides.credentialsStrategy ??
-    (env.STYNX_IDENTITY_ADMIN_CREDENTIALS_STRATEGY as CognitoAdminCredentialStrategy | undefined) ??
+    env.STYNX_IDENTITY_ADMIN_CREDENTIALS_STRATEGY ??
     (env.AWS_PROFILE ? 'profile' : 'default-chain');
 
   const profile = overrides.profile ?? env.STYNX_IDENTITY_ADMIN_AWS_PROFILE ?? env.AWS_PROFILE;

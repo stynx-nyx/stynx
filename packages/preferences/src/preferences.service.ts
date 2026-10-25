@@ -123,15 +123,17 @@ export class PreferencesService {
     );
   }
   async reset(
-    category: PreferenceCategory | null,
+    category: string | null,
     expectedRevision: number,
     scope = this.scope(),
   ): Promise<PreferencesDocument> {
-    if (category !== null && !categories.includes(category))
+    const resetCategories: readonly string[] = categories;
+    if (category !== null && !resetCategories.includes(category))
       throw new PreferencesError('PREFERENCES_CATEGORY_NOT_FOUND', 404, ['category']);
     const current = await this.store.read(scope);
     const overrides = structuredClone(current?.overrides ?? {});
-    if (category) delete overrides[category];
+    const resetOverrides: Record<string, unknown> = overrides;
+    if (category) delete resetOverrides[category];
     else for (const key of categories) delete overrides[key];
     return this.mutate(
       overrides,
@@ -219,8 +221,7 @@ export class PreferencesService {
     for (const category of categories) {
       const diff = Object.fromEntries(
         Object.entries(values[category]).filter(
-          ([key, value]) =>
-            value !== Reflect.get(this.defaults[category], key),
+          ([key, value]) => value !== Reflect.get(this.defaults[category], key),
         ),
       );
       if (Object.keys(diff).length) (output as Record<string, unknown>)[category] = diff;
