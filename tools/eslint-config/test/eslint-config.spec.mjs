@@ -487,8 +487,10 @@ test('D3 normal tooling lint command uses the same real Program and unsafe polic
   const root = resolve(import.meta.dirname, '../../..');
   const manifest = JSON.parse(readFileSync(resolve(root, 'tools/eslint-config/package.json'), 'utf8'));
   assert.equal(typeof manifest.scripts.lint, 'string');
-  assert.match(manifest.scripts.lint, /^cd \.\.\/\.\. && eslint --config tools\/eslint-config\/workspace-tooling\.mjs --max-warnings=0 /u);
-  for (const glob of ['tools/eslint-config/*.mjs', 'packages-web/sdk/codegen/*.mjs', 'packages-web/sdk/scripts/*.mjs', 'packages/cli/engines/*.mjs']) assert.ok(manifest.scripts.lint.includes(`"${glob}"`));
+  assert.match(manifest.scripts.lint, /^node (?:\.\/)?lint-workspace\.mjs$/u);
+  const wrapper = readFileSync(resolve(root, 'tools/eslint-config/lint-workspace.mjs'), 'utf8');
+  assert.ok(wrapper.includes("'--max-warnings=0'"));
+  for (const glob of ['tools/eslint-config/*.mjs', 'packages-web/sdk/codegen/*.mjs', 'packages-web/sdk/scripts/*.mjs', 'packages/cli/engines/*.mjs']) assert.ok(wrapper.includes(`'${glob}'`));
   const direct = observeToolingProgram('root');
   const normal = observeToolingProgram('normal');
   assert.deepEqual(normal.files, direct.files);
@@ -497,4 +499,128 @@ test('D3 normal tooling lint command uses the same real Program and unsafe polic
   assert.equal(normal.visited.length, normal.files.length);
   assert.deepEqual(normal.results.flatMap(item => item.fatal), []);
   assert.ok(normal.witness.some(item => item.ruleId === '@typescript-eslint/no-unsafe-assignment'));
+});
+
+const nodeImplementationObservations = new Map();
+function observeNodeImplementation(mode) {
+  if (!nodeImplementationObservations.has(mode)) {
+    const root = resolve(import.meta.dirname, '../../..');
+    const child = spawnSync(process.execPath, [resolve(import.meta.dirname, 'support/node-implementation-probe.mjs'), root, mode], { cwd: root, encoding: 'utf8', timeout: 120_000, maxBuffer: 16 * 1024 * 1024 });
+    assert.equal(child.status, 0, child.stdout + child.stderr);
+    nodeImplementationObservations.set(mode, JSON.parse(child.stdout));
+  }
+  return nodeImplementationObservations.get(mode);
+}
+
+// The independent accepted inventory prevents a shrinking implementation route
+// from shrinking its own test denominator. Passive files and other runtimes stay separate.
+test('Node155 exact project includes the complete accepted Node population', () => {
+  const root = resolve(import.meta.dirname, '../../..');
+  const directory = resolve(root, 'tools/eslint-config');
+  const accepted = JSON.parse(readFileSync(resolve(import.meta.dirname, 'support/node-implementation-files.json'), 'utf8'));
+  assert.equal(accepted.length, 155);
+  assert.equal(new Set(accepted).size, accepted.length);
+  const project = JSON.parse(readFileSync(resolve(directory, 'tsconfig.workspace-node-implementation.json'), 'utf8'));
+  assert.deepEqual(project.files.map(file => resolve(directory, file)).sort(), accepted.map(file => resolve(root, file)).sort());
+  assert.deepEqual(project.include, []);
+  assert.equal(project.compilerOptions.allowJs, true);
+  assert.equal(project.compilerOptions.checkJs, true);
+  assert.deepEqual(accepted.filter(file => file.endsWith('.cjs')).sort(), ['scripts/lib/http-build-observer.cjs', 'tools/repo-config/commitlint.config.cjs']);
+  const existing = ['tools/eslint-config', 'packages-web/sdk/codegen', 'packages-web/sdk/scripts', 'packages/cli/engines'].flatMap(directory => readdirSync(resolve(root, directory)).filter(name => name.endsWith('.mjs')).map(name => `${directory}/${name}`));
+  assert.deepEqual(accepted.filter(file => existing.includes(file)), []);
+  for (const name of ['workspace-implementation.mjs', 'workspace-maintained.mjs', 'lint-workspace.mjs']) assert.ok(existing.includes(`tools/eslint-config/${name}`));
+});
+
+for (const mode of ['root', 'normal']) {
+  test(`Node155 ${mode} route provides real checkJs Programs and all unsafe/query policies`, () => {
+    const actual = observeNodeImplementation(mode);
+    assert.equal(actual.rows.length, 155);
+    for (const row of actual.rows) {
+      assert.equal(row.configured, true, row.file);
+      assert.equal(row.error, undefined, `${row.file}: ${JSON.stringify(row.error)}`);
+      assert.equal(row.hasProgram, true, row.file);
+      assert.equal(row.belongs, true, row.file);
+      assert.equal(row.allowJs, true, row.file);
+      assert.equal(row.checkJs, true, row.file);
+      for (const name of actual.names.filter(name => name !== '@typescript-eslint/no-require-imports' && name !== 'stynx/no-authored-cjs')) assert.equal(row.rules[name], 2, `${row.file}: ${name}`);
+      assert.equal(row.sourceType, row.file.endsWith('.cjs') ? 'commonjs' : 'module', row.file);
+    }
+    for (const witness of actual.witnesses) {
+      assert.deepEqual(witness.messages.filter(message => message.fatal || message.ruleId === null), []);
+      for (const rule of ['no-unsafe-assignment', 'no-unsafe-call', 'no-unsafe-member-access']) assert.ok(witness.messages.some(message => message.ruleId === `@typescript-eslint/${rule}` && message.severity === 2), `${witness.file}: ${rule}`);
+    }
+  });
+}
+
+test('Node155 root and normal policies agree and preserve genuine CommonJS execution', () => {
+  const direct = observeNodeImplementation('root');
+  const normal = observeNodeImplementation('normal');
+  assert.deepEqual(normal.rows.map(({ file, rules, sourceType }) => ({ file, rules, sourceType })), direct.rows.map(({ file, rules, sourceType }) => ({ file, rules, sourceType })));
+  for (const row of direct.rows.filter(row => row.file.endsWith('.cjs'))) {
+    assert.equal(row.rules['@typescript-eslint/no-require-imports'], 0, row.file);
+    assert.equal(row.rules['stynx/no-authored-cjs'], 0, row.file);
+  }
+});
+
+test('Node155 normal wrapper delegates exact arguments and cwd to installed native ESLint', () => {
+  const root = resolve(import.meta.dirname, '../../..');
+  const script = resolve(root, 'tools/eslint-config/lint-workspace.mjs');
+  assert.ok(existsSync(script));
+  const manifest = JSON.parse(readFileSync(resolve(root, 'tools/eslint-config/package.json'), 'utf8'));
+  assert.match(manifest.scripts.lint, /^node (?:\.\/)?lint-workspace\.mjs$/u);
+  const accepted = JSON.parse(readFileSync(resolve(import.meta.dirname, 'support/node-implementation-files.json'), 'utf8'));
+  const code = `
+    import childProcess from 'node:child_process';
+    import { syncBuiltinESMExports } from 'node:module';
+    import { pathToFileURL } from 'node:url';
+    childProcess.spawnSync = (...args) => { console.log(JSON.stringify(args)); return { status: 17, signal: null }; };
+    syncBuiltinESMExports();
+    process.argv = [process.execPath, ${JSON.stringify(script)}, '--format', 'json', '--stdin-filename', 'space name.mjs'];
+    await import(pathToFileURL(${JSON.stringify(script)}).href);
+  `;
+  const child = spawnSync(process.execPath, ['--input-type=module', '--eval', code], { cwd: tmpdir(), encoding: 'utf8', timeout: 30_000 });
+  assert.equal(child.error, undefined);
+  assert.equal(child.status, 17, child.stderr);
+  const [executable, args, options] = JSON.parse(child.stdout);
+  assert.equal(executable, process.execPath);
+  assert.ok(existsSync(args[0]));
+  assert.match(args[0], /eslint\/bin\/eslint\.js$/u);
+  assert.deepEqual(args.slice(1), ['--config', 'tools/eslint-config/workspace-maintained.mjs', '--max-warnings=0', 'tools/eslint-config/*.mjs', 'packages-web/sdk/codegen/*.mjs', 'packages-web/sdk/scripts/*.mjs', 'packages/cli/engines/*.mjs', ...accepted, '--format', 'json', '--stdin-filename', 'space name.mjs']);
+  assert.equal(realpathSync(options.cwd), realpathSync(root));
+  assert.equal(options.stdio, 'inherit');
+});
+
+test('Node155 native CLI preserves help version and invalid-option exits from another cwd', () => {
+  const root = resolve(import.meta.dirname, '../../..');
+  const script = resolve(root, 'tools/eslint-config/lint-workspace.mjs');
+  assert.ok(existsSync(script));
+  for (const [args, status, expected] of [[['--help'], 0, /--max-warnings/u], [['--version'], 0, /v\d+\.\d+\.\d+/u], [['--stynx-inspector-unknown-option'], 2, /Invalid option/u]]) {
+    const child = spawnSync(process.execPath, [script, ...args], { cwd: tmpdir(), encoding: 'utf8', timeout: 30_000 });
+    assert.equal(child.error, undefined);
+    assert.equal(child.status, status, child.stdout + child.stderr);
+    assert.match(child.stdout + child.stderr, expected);
+  }
+});
+
+test('Node155 native CLI preserves termination of its owned waiting process group', async () => {
+  const { spawn } = await import('node:child_process');
+  const root = resolve(import.meta.dirname, '../../..');
+  const script = resolve(root, 'tools/eslint-config/lint-workspace.mjs');
+  assert.ok(existsSync(script));
+  const child = spawn(process.execPath, [script, '--stdin', '--stdin-filename', 'scripts/clean-workspace.mjs'], { cwd: tmpdir(), stdio: ['pipe', 'pipe', 'pipe'], detached: true });
+  const exited = new Promise((resolve, reject) => { child.once('error', reject); child.once('exit', (code, signal) => resolve({ code, signal })); });
+  let stderr = '';
+  child.stderr.on('data', chunk => { stderr += chunk; });
+  try {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    assert.equal(child.exitCode, null, stderr);
+    assert.equal(child.signalCode, null, stderr);
+    process.kill(-child.pid, 'SIGTERM');
+    const outcome = await Promise.race([exited, new Promise((resolve, reject) => { const timer = setTimeout(() => reject(new Error('owned CLI did not terminate')), 10_000); timer.unref(); })]);
+    assert.deepEqual(outcome, { code: null, signal: 'SIGTERM' });
+  } finally {
+    child.stdin.destroy();
+    if (child.exitCode === null && child.signalCode === null) process.kill(-child.pid, 'SIGKILL');
+    await exited;
+  }
 });

@@ -8,7 +8,7 @@ const tsPlugin = require('@typescript-eslint/eslint-plugin');
 const directories = ['tools/eslint-config', 'packages-web/sdk/codegen', 'packages-web/sdk/scripts', 'packages/cli/engines'];
 const files = directories.flatMap(directory => readdirSync(resolve(root, directory)).filter(name => name.endsWith('.mjs')).map(name => `${directory}/${name}`)).sort();
 const visited = [];
-const configFile = resolve(root, mode === 'root' ? 'eslint.config.mjs' : 'tools/eslint-config/workspace-tooling.mjs');
+const configFile = resolve(root, mode === 'root' ? 'eslint.config.mjs' : 'tools/eslint-config/workspace-maintained.mjs');
 const inspectorRule = { meta: { schema: [] }, create(context) { return { Program() {
  const program = context.sourceCode.parserServices.program;
  visited.push({file:context.filename,hasProgram:!!program,belongs:!!program?.getSourceFile(context.filename),allowJs:program?.getCompilerOptions().allowJs,checkJs:program?.getCompilerOptions().checkJs});
