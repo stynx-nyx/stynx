@@ -1,3 +1,4 @@
+import { rangeCancellation } from '../../src/range-administration.js';
 import { describe, expect, it, vi } from 'vitest';
 import { InMemoryOfflineSyncStore } from '../../src/in-memory-offline-sync.store.js';
 import { OfflineSyncService } from '../../src/offline-sync.service.js';
@@ -204,5 +205,36 @@ describe('UPS-OFS-09 memory range administration', () => {
       ).rejects.toMatchObject({ code: 'OFFLINE_SYNC_INVALID_INPUT' });
     expect(cancel).not.toHaveBeenCalled();
     expect(get).toHaveBeenCalledOnce();
+  });
+});
+
+
+describe('range prototype operation preservation', () => {
+  it('accepts ordinary and null prototype records with the same cancellation result', () => {
+    expect(rangeCancellation({ reason: 'operator' })).toEqual({ reason: 'operator' });
+    const record = Object.create(null);
+    record.reason = 'operator';
+    expect(rangeCancellation(record)).toEqual({ reason: 'operator' });
+  });
+  it('propagates the prototype trap before requesting any keys', () => {
+    const sentinel = new Error('prototype trap');
+    const order: string[] = [];
+    const input = new Proxy({ reason: 'operator' }, {
+      getPrototypeOf() { order.push('prototype'); throw sentinel; },
+      ownKeys(target) { order.push('keys'); return Reflect.ownKeys(target); },
+    });
+    expect(() => rangeCancellation(input)).toThrow(sentinel);
+    expect(order).toEqual(['prototype']);
+  });
+  it('keeps prototype, key, descriptor and later value reads in their original order', () => {
+    const order: string[] = [];
+    const input = new Proxy({ reason: 'operator' }, {
+      getPrototypeOf(target) { order.push('prototype'); return Reflect.getPrototypeOf(target); },
+      ownKeys(target) { order.push('keys'); return Reflect.ownKeys(target); },
+      getOwnPropertyDescriptor(target, key) { order.push(`descriptor:${String(key)}`); return Reflect.getOwnPropertyDescriptor(target, key); },
+      get(target, key, receiver) { order.push(`get:${String(key)}`); return Reflect.get(target, key, receiver); },
+    });
+    expect(rangeCancellation(input)).toEqual({ reason: 'operator' });
+    expect(order).toEqual(['prototype', 'keys', 'keys', 'descriptor:reason', 'get:reason', 'get:reason', 'get:reason']);
   });
 });

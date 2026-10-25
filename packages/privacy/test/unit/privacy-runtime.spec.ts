@@ -1,3 +1,4 @@
+import type { PrivacyRule, PrivacyRetentionRule } from '../../src/types.js';
 import type { ExecutionContext } from '@nestjs/common';
 import { executeTypedQuery, type Transaction } from '@stynx-nyx/data';
 import { requirePrivacyTenantContext } from '../../src/privacy-context.js';
@@ -672,5 +673,161 @@ describe('privacy admission and optional-query unit boundaries', () => {
     expect(() => guard.canActivate(context(['privacy:subject-rights']))).toThrow(
       'Missing permission privacy:read',
     );
+  });
+});
+
+describe('native Privacy rule snapshot preservation', () => {
+  async function nativeRules(rules: unknown[], inspect: (service: PiiMapService, query: ReturnType<typeof vi.fn>) => Promise<void>) {
+    const root = mkdtempSync(join(tmpdir(), 'stynx-privacy-native-rules-'));
+    mkdirSync(join(root, 'app/privacy'), { recursive: true });
+    // JSON is a native YAML document and preserves explicit null versus omission.
+    writeFileSync(join(root, 'app/privacy/pii-map.yaml'), JSON.stringify({ rules }));
+    const query = vi.fn(async () => ({ rows: [] }));
+    const trx = checkedTransaction(query);
+    const database = {
+      withSystemContext: vi.fn((_reason: string, callback: () => unknown) => callback()),
+      hasHeldConnection: vi.fn(() => false),
+      txIndependent: vi.fn((callback: (input: typeof trx) => unknown) => callback(trx)),
+    };
+    const service = new PiiMapService(privacyUnitModuleRef(database), {
+      environment: 'test', region: 'us-east-1', erasureSalt: 'local-fixture', appRoot: root,
+    });
+    try { await inspect(service, query); }
+    finally { rmSync(root, { recursive: true, force: true }); }
+  }
+  const base = { tableSchema: 'app', tableName: 'customers', columnName: 'email', subjectColumn: 'person_id' };
+  it.each(['nullify', 'hash_with_salt', 'tombstone', 'delete_row'])('preserves actual YAML strategy %s and schema field order', async (strategy) => {
+    await nativeRules([{ notes: ' notes ', strategy, ...base, category: ' contact ', tenantColumn: 'tenant_id', discarded: 'extra' }], async (service, query) => {
+      const [rule] = await runPrivacyInternal(() => service.load());
+      expect(rule).toEqual({ tableSchema: 'app', tableName: 'customers', columnName: 'email', strategy, category: 'contact', notes: 'notes', subjectColumn: 'person_id', tenantColumn: 'tenant_id' });
+      expect(Object.keys(rule)).toEqual(['tableSchema', 'tableName', 'columnName', 'strategy', 'category', 'notes', 'subjectColumn', 'tenantColumn']);
+      expect(query).toHaveBeenCalledTimes(1);
+    });
+  });
+  it.each([undefined, 'live', 'archive', 'both'])('preserves native retention target %s, optional omission and trimmed reason', async (target) => {
+    await nativeRules([{ ...base, strategy: 'nullify', retention: { reason: ' statutory ', target, olderThanDays: 30, timestampColumn: 'created_at', extra: { opaque: true } } }], async (service, query) => {
+      const [rule] = await runPrivacyInternal(() => service.load());
+      expect(rule.retention).toEqual({ timestampColumn: 'created_at', olderThanDays: 30, ...(target === undefined ? {} : { target }), reason: 'statutory' });
+      expect(Object.keys(rule.retention ?? {})).toEqual(['timestampColumn', 'olderThanDays', ...(target === undefined ? [] : ['target']), 'reason']);
+      expect(query).toHaveBeenCalledTimes(1);
+    });
+  });
+  it('keeps the actual parsed retention identity through fresh top-level merge', async () => {
+    await nativeRules([{ ...base, strategy: 'nullify', retention: { timestampColumn: 'created_at', olderThanDays: 1 } }], async (service, query) => {
+      const original = Reflect.get(service, 'loadOverrideRules');
+      expect(typeof original).toBe('function');
+      let parsed: unknown;
+      Reflect.set(service, 'loadOverrideRules', function (this: PiiMapService) {
+        expect(this).toBe(service);
+        parsed = Reflect.apply(original, this, []);
+        return parsed;
+      });
+      const [rule] = await runPrivacyInternal(() => service.load());
+      if (!Array.isArray(parsed) || parsed.length !== 1) throw new Error('actual parser did not return one rule');
+      expect(rule).not.toBe(parsed[0]);
+      expect(rule.retention).toBe(Reflect.get(parsed[0], 'retention'));
+      expect(Object.hasOwn(rule.retention ?? {}, 'target')).toBe(false);
+      expect(Object.hasOwn(rule.retention ?? {}, 'reason')).toBe(false);
+      expect(query).toHaveBeenCalledTimes(1);
+    });
+  });
+  it.each([
+    [{ timestampColumn: 'created_at', olderThanDays: 0 }, ['olderThanDays']],
+    [{ timestampColumn: 'created_at', olderThanDays: 1.5 }, ['olderThanDays']],
+    [{ timestampColumn: 'created_at', olderThanDays: 1, target: 'unknown' }, ['target']],
+    [{ timestampColumn: 'created_at', olderThanDays: 1, reason: null }, ['reason']],
+    [{ timestampColumn: 'created_at', olderThanDays: 1, reason: '   ' }, ['reason']],
+  ])('retains native schema refusal and exact field path for %j', async (retention, path) => {
+    await nativeRules([{ ...base, strategy: 'nullify', retention }], async (service, query) => {
+      await expect(runPrivacyInternal(() => service.load())).rejects.toMatchObject({ issues: [expect.objectContaining({ path: ['rules', 0, 'retention', ...path] })] });
+      expect(query).toHaveBeenCalledTimes(1);
+    });
+  });
+});
+
+
+describe('public Privacy subclass retention preservation', () => {
+  it.each(['observable', 'throwing', 'optional-undefined'])('retains %s nested retention without reading its fields during merge', async (mode) => {
+    const root = mkdtempSync(join(tmpdir(), 'stynx-privacy-subclass-'));
+    mkdirSync(join(root, 'app/privacy'), { recursive: true });
+    writeFileSync(join(root, 'app/privacy/pii-map.yaml'), JSON.stringify({ rules: [{
+      tableSchema: 'app', tableName: 'customers', columnName: 'email', strategy: 'tombstone', notes: 'override',
+    }] }));
+    const reads: string[] = [];
+    const sentinel = new Error('retention getter sentinel');
+    const retention: PrivacyRetentionRule = {
+      get timestampColumn() { reads.push('timestampColumn'); if (mode === 'throwing') throw sentinel; return 'created_at'; },
+      get olderThanDays() { reads.push('olderThanDays'); return 30; },
+      ...(mode === 'optional-undefined' ? { target: undefined, reason: undefined } : {}),
+    };
+    const base: PrivacyRule = { tableSchema: 'app', tableName: 'customers', columnName: 'email', strategy: 'nullify', subjectColumn: 'id', retention };
+    let calls = 0;
+    class Extension extends PiiMapService {
+      override async loadDatabaseRules(): Promise<PrivacyRule[]> { calls += 1; expect(this).toBe(service); return [base]; }
+    }
+    const service = new Extension(privacyUnitModuleRef({}), { environment: 'test', region: 'us-east-1', appRoot: root });
+    try {
+      const [rule] = await runPrivacyInternal(() => service.load());
+      expect(calls).toBe(1);
+      expect(reads).toEqual([]);
+      expect(rule).not.toBe(base);
+      expect(rule.retention).toBe(retention);
+      expect(rule.strategy).toBe('tombstone');
+      expect(rule.subjectColumn).toBe('id');
+      expect(rule.notes).toBe('override');
+      expect(Object.keys(rule)).toEqual(['tableSchema', 'tableName', 'columnName', 'strategy', 'subjectColumn', 'retention', 'notes']);
+      if (mode === 'throwing') expect(() => rule.retention?.timestampColumn).toThrow(sentinel);
+      else expect(rule.retention?.timestampColumn).toBe('created_at');
+      expect(reads).toEqual(['timestampColumn']);
+      if (mode === 'optional-undefined') {
+        expect(Object.hasOwn(retention, 'target')).toBe(true);
+        expect(Object.hasOwn(retention, 'reason')).toBe(true);
+        expect(retention.target).toBeUndefined();
+        expect(retention.reason).toBeUndefined();
+      }
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+});
+
+
+describe('public Privacy fresh merge snapshot', () => {
+  it('preserves surviving keys, opaque extras and own proto while stripping symbols and undefined', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'stynx-privacy-merge-snapshot-'));
+    mkdirSync(join(root, 'app/privacy'), { recursive: true });
+    writeFileSync(join(root, 'app/privacy/pii-map.yaml'), JSON.stringify({ rules: [{ tableSchema: 'app', tableName: 'customers', columnName: 'email', strategy: 'tombstone' }] }));
+    const opaque = { retained: true };
+    const symbol = Symbol('discarded');
+    const order: string[] = [];
+    const base: PrivacyRule = { tableSchema: 'app', tableName: 'customers', columnName: 'email', strategy: 'nullify', subjectColumn: 'id' };
+    Object.defineProperties(base, {
+      '2': { value: 'numeric-key', enumerable: true },
+      extra: { enumerable: true, get() { order.push('extra'); return opaque; } },
+      omitted: { enumerable: true, get() { order.push('omitted'); return undefined; } },
+      __proto__: { value: opaque, enumerable: true },
+      hidden: { value: 'hidden', enumerable: false },
+      [symbol]: { enumerable: true, get() { order.push('symbol'); return opaque; } },
+    });
+    // The descriptor map must contain an own __proto__ key rather than object-literal prototype syntax.
+    Object.defineProperty(base, '__proto__', { value: opaque, enumerable: true, configurable: true });
+    class Extension extends PiiMapService {
+      override async loadDatabaseRules(): Promise<PrivacyRule[]> { return [base]; }
+    }
+    const service = new Extension(privacyUnitModuleRef({}), { environment: 'test', region: 'us-east-1', appRoot: root });
+    try {
+      const [rule] = await runPrivacyInternal(() => service.load());
+      // Capture production getter effects before assertion diagnostics inspect base.
+      expect([...order]).toEqual(['extra', 'omitted', 'symbol']);
+      expect(rule === base).toBe(false);
+      expect(Object.getPrototypeOf(rule)).toBe(Object.prototype);
+      expect(Object.keys(rule)).toEqual(['2', 'tableSchema', 'tableName', 'columnName', 'strategy', 'subjectColumn', 'extra', '__proto__']);
+      expect(Reflect.get(rule, 'extra')).toBe(opaque);
+      expect(Object.hasOwn(rule, '__proto__')).toBe(true);
+      expect(Reflect.get(rule, '__proto__')).toBe(opaque);
+      expect(Object.hasOwn(rule, 'omitted')).toBe(false);
+      expect(Object.hasOwn(rule, 'hidden')).toBe(false);
+      expect(Object.getOwnPropertySymbols(rule)).toEqual([]);
+      expect(Object.hasOwn(base, 'omitted')).toBe(true);
+      expect(Object.getOwnPropertySymbols(base)).toEqual([symbol]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
 });
