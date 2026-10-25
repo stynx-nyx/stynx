@@ -7,6 +7,7 @@ import { test } from 'node:test';
 import { ESLint } from 'eslint';
 import { createLibConfig, createScriptsConfig, createTestConfig } from '../index.mjs';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
+import ts from 'typescript';
 import { stynxWorkspaceOptions } from '../workspace.mjs';
 
 test('actual workspace source profiles enable every installed unsafe rule', async () => {
@@ -585,7 +586,7 @@ test('Node155 normal wrapper delegates exact arguments and cwd to installed nati
   assert.equal(executable, process.execPath);
   assert.ok(existsSync(args[0]));
   assert.match(args[0], /eslint\/bin\/eslint\.js$/u);
-  assert.deepEqual(args.slice(1), ['--config', 'tools/eslint-config/workspace-maintained.mjs', '--max-warnings=0', 'tools/eslint-config/*.mjs', 'packages-web/sdk/codegen/*.mjs', 'packages-web/sdk/scripts/*.mjs', 'packages/cli/engines/*.mjs', ...accepted, '--format', 'json', '--stdin-filename', 'space name.mjs']);
+  assert.deepEqual(args.slice(1), ['--config', 'tools/eslint-config/workspace-maintained.mjs', '--max-warnings=0', 'tools/eslint-config/*.mjs', 'packages-web/sdk/codegen/*.mjs', 'packages-web/sdk/scripts/*.mjs', 'packages/cli/engines/*.mjs', ...accepted, ...imageSizeFiles(root), '--format', 'json', '--stdin-filename', 'space name.mjs']);
   assert.equal(realpathSync(options.cwd), realpathSync(root));
   assert.equal(options.stdio, 'inherit');
 });
@@ -684,3 +685,67 @@ for (const packageName of ['angular', 'angular-auth', 'angular-i18n']) {
       assert.equal(root.rules[`@typescript-eslint/${rule}`]?.[0], 2, rule);
   });
 }
+
+
+function imageSizeFiles(root) {
+  return readdirSync(resolve(root, 'tools/image-size-safe/lib'), { recursive: true })
+    .filter(file => file.endsWith('.ts')).map(file => `tools/image-size-safe/lib/${file}`).sort();
+}
+const imageSizeObservations = new Map();
+function observeImageSize(mode) {
+  if (!imageSizeObservations.has(mode)) {
+    const root = resolve(import.meta.dirname, '../../..');
+    const child = spawnSync(process.execPath, [resolve(import.meta.dirname, 'support/node-implementation-probe.mjs'), root, mode, 'image-size'], { cwd: root, encoding: 'utf8', timeout: 120000, maxBuffer: 16 * 1024 * 1024 });
+    assert.equal(child.status, 0, child.stdout + child.stderr);
+    imageSizeObservations.set(mode, JSON.parse(child.stdout));
+  }
+  return imageSizeObservations.get(mode);
+}
+test('Image28 project keeps the complete maintained library and its real compiler inheritance', () => {
+  const root = resolve(import.meta.dirname, '../../..');
+  const directory = resolve(root, 'tools/eslint-config');
+  const accepted = imageSizeFiles(root);
+  assert.equal(accepted.length, 28);
+  const project = JSON.parse(readFileSync(resolve(directory, 'tsconfig.workspace-image-size.json'), 'utf8'));
+  assert.equal(resolve(directory, project.extends), resolve(root, 'tools/image-size-safe/tsconfig.json'));
+  assert.deepEqual(project.files.map(file => resolve(directory, file)).sort(), accepted.map(file => resolve(root, file)));
+  assert.deepEqual(project.include, []);
+  assert.equal(project.compilerOptions.noEmit, true);
+});
+for (const mode of ['root', 'normal']) {
+  test(`Image28 ${mode} route enforces typed policy and exact package boundaries`, () => {
+    const actual = observeImageSize(mode);
+    assert.equal(actual.rows.length, 28);
+    for (const row of actual.rows) {
+      assert.equal(row.configured, true, row.file);
+      assert.equal(row.error, undefined, `${row.file}: ${JSON.stringify(row.error)}`);
+      assert.equal(row.hasProgram, true, row.file);
+      assert.equal(row.belongs, true, row.file);
+      assert.equal(row.compiler.strict, true, row.file);
+      assert.equal(row.compiler.module, ts.ModuleKind.Node16);
+      assert.equal(row.compiler.moduleResolution, ts.ModuleResolutionKind.Node16);
+      assert.ok(row.compiler.lib.includes('lib.dom.d.ts'));
+      for (const name of actual.names.filter(name => name.startsWith('@typescript-eslint/no-unsafe-') || name === '@typescript-eslint/no-explicit-any')) assert.equal(row.rules[name], 2, `${row.file}: ${name}`);
+    }
+    assert.equal(actual.witnesses.length, 1);
+    const messages = actual.witnesses[0].messages;
+    assert.deepEqual(messages.filter(message => message.fatal || message.ruleId === null), []);
+    for (const rule of ['no-explicit-any', 'no-unsafe-assignment', 'no-unsafe-call', 'no-unsafe-member-access']) assert.ok(messages.some(message => message.ruleId === `@typescript-eslint/${rule}` && message.severity === 2), rule);
+    assert.deepEqual(actual.imageBoundary.self, []);
+    assert.ok(actual.imageBoundary.forbidden.some(message => message.ruleId === 'boundaries/dependencies' && message.severity === 2));
+    for (const file of ['dist/inspector.ts', 'build/inspector.ts', 'node_modules/inspector.ts']) assert.equal(actual.ignored[file], true, file);
+    // Outside the finite 28-file route, preserve the original root syntax
+    // fallback versus the normal command's unconfigured path.
+    assert.equal(actual.ignored['lib/generated/inspector.ts'], mode === 'normal');
+    assert.deepEqual(actual.outsidePopulation, { configured: mode === 'root', project: null });
+  });
+}
+test('Image28 root and canonical normal routes keep identical policy and Programs', () => {
+  const direct = observeImageSize('root'), normal = observeImageSize('normal');
+  assert.equal(direct.rows.length, 28);
+  assert.ok(direct.rows.every(row => row.hasProgram && row.belongs));
+  assert.deepEqual(normal.rows, direct.rows);
+  for (const file of ['dist/inspector.ts', 'build/inspector.ts', 'node_modules/inspector.ts']) assert.equal(normal.ignored[file], direct.ignored[file], file);
+  assert.equal(direct.ignored['lib/generated/inspector.ts'], false);
+  assert.equal(normal.ignored['lib/generated/inspector.ts'], true);
+});
