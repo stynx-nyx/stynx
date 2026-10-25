@@ -12,7 +12,6 @@ const PNMTypes = {
   PF: 'pfm',
 } as const;
 
-type ValidSignature = keyof typeof PNMTypes;
 type Handler = (type: string[]) => ISize;
 
 const handlers: Record<string, Handler> = {
@@ -20,7 +19,10 @@ const handlers: Record<string, Handler> = {
     let dimensions: string[] = [];
 
     while (lines.length > 0) {
-      const line = lines.shift() as string;
+      const line = lines.shift();
+      if (line === undefined) {
+        throw new TypeError('Invalid PNM');
+      }
       if (line[0] === '#') {
         continue;
       }
@@ -39,7 +41,10 @@ const handlers: Record<string, Handler> = {
   pam: (lines) => {
     const size: Record<string, number> = {};
     while (lines.length > 0) {
-      const line = lines.shift() as string;
+      const line = lines.shift();
+      if (line === undefined) {
+        throw new TypeError('Invalid PAM');
+      }
       if (line.length > 16 || line.charCodeAt(0) > 128) {
         continue;
       }
@@ -66,11 +71,10 @@ export const PNM: IImage = {
   validate: (input) => toUTF8String(input, 0, 2) in PNMTypes,
 
   calculate(input) {
-    const signature = toUTF8String(input, 0, 2) as ValidSignature;
-    const type = PNMTypes[signature];
+    const signature = toUTF8String(input, 0, 2);
     // TODO: this probably generates garbage. move to a stream based parser
     const lines = toUTF8String(input, 3).split(/[\r\n]+/);
-    const handler = handlers[type] || handlers.default;
+    const handler = signature === 'P7' ? handlers.pam : handlers.default;
     return handler(lines);
   },
 };
