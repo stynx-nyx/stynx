@@ -1,10 +1,91 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { ESLint } from 'eslint';
 import { createLibConfig } from '../index.mjs';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import { stynxWorkspaceOptions } from '../workspace.mjs';
+
+test('actual workspace source profiles enable every installed unsafe rule', async () => {
+  const workspaceRoot = resolve(import.meta.dirname, '../../..');
+  const previousCwd = process.cwd();
+  const previousName = process.env.npm_package_name;
+  try {
+    for (const [directory, profile] of [['packages/cli', 'lib'], ['packages/data', 'nest'], ['packages-web/sdk', 'angular']]) {
+      const cwd = join(workspaceRoot, directory);
+      process.chdir(cwd);
+      process.env.npm_package_name = JSON.parse(readFileSync(join(cwd, 'package.json'), 'utf8')).name;
+      const eslint = new ESLint({ cwd, overrideConfigFile: join(workspaceRoot, 'tools/eslint-config', `${profile}.mjs`) });
+      const config = await eslint.calculateConfigForFile(join(cwd, 'src/index.ts'));
+      assert.ok(config, `${profile}: actual source must resolve`);
+      for (const name of ['no-explicit-any', ...Object.keys(tsPlugin.rules).filter(name => name.startsWith('no-unsafe-'))]) {
+        assert.equal(config.rules[`@typescript-eslint/${name}`]?.[0], 2, `${profile}: ${name}`);
+      }
+    }
+  } finally {
+    process.chdir(previousCwd);
+    if (previousName === undefined) delete process.env.npm_package_name;
+    else process.env.npm_package_name = previousName;
+  }
+});
+
+test('workspace query enforcement reaches every declared source element', () => {
+  const roots = stynxWorkspaceOptions.boundaries.elements.map(element => element.pattern.replace(/\/src\/\*\*$/u, '')).sort();
+  assert.ok(roots.includes('domain/demo-bookmark/api'));
+  assert.ok(roots.includes('domain/demo-bookmark/web'));
+  assert.ok(roots.includes('reference/api'));
+  assert.ok(roots.includes('reference/web'));
+  assert.deepEqual([...stynxWorkspaceOptions.workspaceQuery.packageRoots].sort(), roots);
+});
+
+test('normal root lint selects reference and both domain application jobs', () => {
+  const manifest = JSON.parse(readFileSync(resolve(import.meta.dirname, '../../../package.json'), 'utf8'));
+  const filters = [...manifest.scripts.lint.matchAll(/--filter='([^']+)'/gu)].map(match => match[1]);
+  for (const root of ['./packages/*', './packages-web/*', './tools/*', './test/*', './reference/*', './domain/*/api', './domain/*/web']) assert.ok(filters.includes(root), `${root} must be selected by the ordinary command`);
+  assert.match(manifest.scripts.lint, /^turbo run lint /u);
+  assert.match(manifest.scripts.lint, / -- --max-warnings=0$/u);
+});
+
+test('the normal domain API lint command resolves its actual source configuration', () => {
+  const directory = resolve(import.meta.dirname, '../../../domain/demo-bookmark/api');
+  const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'));
+  const config = /--config\s+(\S+)/u.exec(manifest.scripts.lint)?.[1];
+  assert.ok(config);
+  assert.equal(resolve(directory, config), resolve(import.meta.dirname, '../nest.mjs'));
+  assert.ok(existsSync(resolve(directory, config)));
+});
+
+test('the actual domain web configuration gives all seven implementation files a Program', async () => {
+  const cwd = resolve(import.meta.dirname, '../../../domain/demo-bookmark/web');
+  const configPath = join(cwd, 'eslint.config.mjs');
+  assert.ok(existsSync(configPath), 'the ordinary domain web job must have its own typed configuration');
+  const previousCwd = process.cwd();
+  const visited = [];
+  try {
+    process.chdir(cwd);
+    const eslint = new ESLint({ cwd, overrideConfigFile: configPath, overrideConfig: [{
+      files: ['src/**/*.ts'],
+      plugins: { inspectorProgram: { rules: { actual: {
+        meta: { schema: [] },
+        create(context) { return { Program() {
+          const program = context.sourceCode.parserServices.program;
+          assert.ok(program, context.filename);
+          assert.ok(program.getSourceFile(context.filename), 'actual implementation belongs to the Program');
+          visited.push(context.filename);
+        } }; },
+      } } } },
+      rules: { 'inspectorProgram/actual': 'error' },
+    }] });
+    const results = await eslint.lintFiles(['src/**/*.ts']);
+    assert.equal(results.length, 7);
+    assert.equal(visited.length, 7);
+    assert.equal(new Set(visited).size, 7);
+    assert.deepEqual(results.flatMap(result => result.messages.filter(message => message.fatal)), []);
+    assert.equal(results.filter(result => result.messages.some(message => message.message.includes('ignored'))).length, 0);
+  } finally { process.chdir(previousCwd); }
+});
 
 test('the required ordinary command executes every authored ESLint contract suite', () => {
   const manifest = JSON.parse(readFileSync(join(import.meta.dirname, '../package.json'), 'utf8'));

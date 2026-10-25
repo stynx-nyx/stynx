@@ -1,5 +1,31 @@
 import { parseVeraPdfJson, VeraPdfReportParseError } from '../../src/index.js';
 
+describe('native veraPDF declaration grammar', () => {
+  const matrix = [1, 2, 3, 4].flatMap(version => ['a', 'b', 'u'].map(conformance => ({ version, conformance })));
+  it.each(matrix)('retains all spellings for A-$version/$conformance', ({ version, conformance }) => {
+    for (const profileName of [`PDF/A-${version}${conformance.toUpperCase()}`, `pdf/a${version} ${conformance}`, `${version}${conformance}`]) {
+      const report = parseVeraPdfJson(JSON.stringify({ validationResult: { profileName, isCompliant: true, details: { failedRules: [] } } }));
+      expect(report.declared).toEqual({ version: `A-${version}`, conformance });
+      expect(report.errors).toEqual([]);
+    }
+  });
+
+  it.each(['profileName', 'flavour', 'flavor', 'profile'])('retains report-level %s fallback', field => {
+    const report = parseVeraPdfJson(JSON.stringify({
+      [field]: 'PDF/A-3B',
+      jobs: [{ validationResult: { isCompliant: true, details: { failedRules: [] } } }],
+    }));
+    expect(report.declared).toEqual({ version: 'A-3', conformance: 'b' });
+  });
+
+  it('keeps the full-profile regex ahead of the earlier shorthand match', () => {
+    const report = parseVeraPdfJson(JSON.stringify({ validationResult: {
+      profileName: '1a', flavour: 'PDF/A-4U', isCompliant: true, details: { failedRules: [] },
+    } }));
+    expect(report.declared).toEqual({ version: 'A-4', conformance: 'u' });
+  });
+});
+
 describe('parseVeraPdfJson', () => {
   it('normalizes a passing veraPDF report', () => {
     const result = parseVeraPdfJson(

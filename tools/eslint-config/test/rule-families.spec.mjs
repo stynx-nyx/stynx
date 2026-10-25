@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import {
   copyFileSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -238,8 +239,14 @@ describe('rule-family fixtures', { concurrency: availableParallelism() }, () => 
 
 const rulesOf = (config) => Object.assign({}, ...config.map((item) => item.rules ?? {}));
 
-test('STYNX workspace entry points enforce every installed unsafe rule at error', () => {
-  for (const config of [libConfig, nestConfig, angularConfig]) {
+test('STYNX workspace entry points enforce every installed unsafe rule at error', async () => {
+  const previousCwd = process.cwd();
+  try {
+  for (const [profile, directory] of [['lib', 'packages/cli'], ['nest', 'packages/data'], ['angular', 'packages-web/sdk']]) {
+    process.chdir(join(workspaceRoot, directory));
+    // A workspace source gate is resolved in the package executing the command,
+    // not the test harness package, which intentionally has no source element.
+    const { default: config } = await import(new URL(`../${profile}.mjs?source-gate-contract`, import.meta.url).href);
     const rules = rulesOf(config);
     assert.equal(rules['@typescript-eslint/no-explicit-any'], 'error');
     for (const rule of unsafeRuleNames)
@@ -250,6 +257,7 @@ test('STYNX workspace entry points enforce every installed unsafe rule at error'
     assert.equal(rules['stynx/define-query-location'][0], 'error');
     assert.deepEqual(rules['stynx/define-query-location'][1], { rootDir: workspaceRoot });
   }
+  } finally { process.chdir(previousCwd); }
   assert.equal(rulesOf(nestConfig)['stynx/require-idempotent-route-decorator'], 'error');
 });
 
@@ -284,14 +292,16 @@ const workspaceLintedPackages = () =>
     .concat(
       readdirSync(join(workspaceRoot, 'domain'), { withFileTypes: true })
         .filter((entry) => entry.isDirectory())
-        .map((entry) => `domain/${entry.name}/api`),
+        .flatMap((entry) => [`domain/${entry.name}/api`, `domain/${entry.name}/web`]),
     )
     .filter((dir) => {
       try {
         const manifest = JSON.parse(readFileSync(join(workspaceRoot, dir, 'package.json'), 'utf8'));
         return (
           dir.startsWith('domain/') ||
-          /tools\/eslint-config\/(?:lib|nest|angular)\.mjs/u.test(manifest.scripts?.lint ?? '')
+          /tools\/eslint-config\/(?:lib|nest|angular)\.mjs/u.test(manifest.scripts?.lint ?? '') ||
+          (existsSync(join(workspaceRoot, dir, 'eslint.config.mjs')) &&
+            /create(?:Lib|Nest|Angular)Config/u.test(readFileSync(join(workspaceRoot, dir, 'eslint.config.mjs'), 'utf8')))
         );
       } catch {
         return false;

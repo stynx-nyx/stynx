@@ -1,4 +1,5 @@
 import type { ExecutionContext } from '@nestjs/common';
+import { executeTypedQuery, type Transaction } from '@stynx-nyx/data';
 import { requirePrivacyTenantContext } from '../../src/privacy-context.js';
 import { PrivacyRetentionPermissionGuard } from '../../src/privacy-retention.guard.js';
 import {
@@ -16,6 +17,11 @@ import { PrivacyConfigurationError, PrivacyValidationError } from '../../src/err
 import { PiiMapService } from '../../src/pii-map.service.js';
 import { PrivacyObjectStoreService } from '../../src/privacy-object-store.service.js';
 import { generateRopaMarkdown } from '../../src/ropa.js';
+
+function checkedTransaction(query: (sql: string, values?: unknown[]) => Promise<{ rows: unknown[] }>) {
+  const run: Transaction['run'] = (statement, values) => executeTypedQuery({ query }, statement, values);
+  return { query, run };
+}
 
 beforeAll(initializePrivacyTestContext);
 afterAll(closePrivacyTestContext);
@@ -106,8 +112,7 @@ describe('privacy runtime helpers', () => {
       ].join('\n'),
     );
 
-    const trx = {
-      query: vi.fn(async () => ({
+    const trx = checkedTransaction(vi.fn(async () => ({
         rows: [
           {
             table_schema: 'auth',
@@ -126,8 +131,7 @@ describe('privacy runtime helpers', () => {
             notes: null,
           },
         ],
-      })),
-    };
+      })));
     const database = {
       withSystemContext: vi.fn((_reason: string, fn: () => unknown) => fn()),
       hasHeldConnection: vi.fn(() => false),
@@ -162,8 +166,7 @@ describe('privacy runtime helpers', () => {
   });
 
   it('throws when loaded PII rules still lack subject metadata', async () => {
-    const trx = {
-      query: vi.fn(async () => ({
+    const trx = checkedTransaction(vi.fn(async () => ({
         rows: [
           {
             table_schema: 'app',
@@ -174,8 +177,7 @@ describe('privacy runtime helpers', () => {
             notes: null,
           },
         ],
-      })),
-    };
+      })));
     const database = {
       withSystemContext: vi.fn((_reason: string, fn: () => unknown) => fn()),
       hasHeldConnection: vi.fn(() => false),
@@ -211,7 +213,7 @@ describe('privacy runtime helpers', () => {
     const database = {
       withSystemContext: vi.fn((_reason: string, fn: () => unknown) => fn()),
       hasHeldConnection: vi.fn(() => false),
-      txIndependent: vi.fn((fn: (input: { query: typeof query }) => unknown) => fn({ query })),
+      txIndependent: vi.fn((fn: (input: ReturnType<typeof checkedTransaction>) => unknown) => fn(checkedTransaction(query))),
     };
     const service = new PiiMapService(privacyUnitModuleRef(database), {
       environment: 'test',
@@ -421,9 +423,7 @@ describe('privacy runtime helpers', () => {
       notes?: string | null;
     }>,
   ): PiiMapService {
-    const trx = {
-      query: vi.fn(async () => ({ rows })),
-    };
+    const trx = checkedTransaction(vi.fn(async () => ({ rows })));
     const database = {
       withSystemContext: vi.fn((_reason: string, fn: () => unknown) => fn()),
       hasHeldConnection: vi.fn(() => false),

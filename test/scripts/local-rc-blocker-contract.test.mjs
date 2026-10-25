@@ -4382,12 +4382,12 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': '5197931a965e37c0fa1eb2afab23bfcba2956111e0e3005d57daa13d481551bc',
+    'package.json': 'a7878127c8f382651cf7881cc12a4a845492b19a7bdcc7bff261918f62bbd8ad',
     'reference/api/package.json':
-      'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
+      'd87f204aa4cacff01a5d8370ac2f37dfd72571a71bdfef0472193e2b67be2e7c',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
-    'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
+    'turbo.json': '34280b8323ef3a8f612223b6fc3e0146b7364f36609f46eaa80d875d56432078',
   };
   for (const [path, digest] of Object.entries(frozenFiles)) {
     assert.equal(
@@ -4638,12 +4638,12 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': '5197931a965e37c0fa1eb2afab23bfcba2956111e0e3005d57daa13d481551bc',
+    'package.json': 'a7878127c8f382651cf7881cc12a4a845492b19a7bdcc7bff261918f62bbd8ad',
     'reference/api/package.json':
-      'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
+      'd87f204aa4cacff01a5d8370ac2f37dfd72571a71bdfef0472193e2b67be2e7c',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
-    'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
+    'turbo.json': '34280b8323ef3a8f612223b6fc3e0146b7364f36609f46eaa80d875d56432078',
   };
   for (const [path, digest] of Object.entries(frozenFiles)) {
     assert.equal(
@@ -4726,12 +4726,12 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': '95fd04b29c57830982b7669f13c5f4466d11ca54b913241599b6e4685478146f',
     'reference/web/playwright.config.mjs':
       'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
-    'package.json': '5197931a965e37c0fa1eb2afab23bfcba2956111e0e3005d57daa13d481551bc',
+    'package.json': 'a7878127c8f382651cf7881cc12a4a845492b19a7bdcc7bff261918f62bbd8ad',
     'reference/api/package.json':
-      'efe928a7a98a61824ceeb7e68ffdb6134c41eadc14534b02a2b0c989667dfa38',
+      'd87f204aa4cacff01a5d8370ac2f37dfd72571a71bdfef0472193e2b67be2e7c',
     'reference/web/package.json':
       'b62cc8a91bba892950fe60b08ba8f3d175cbc8fd4fb997449f8d89b1feeff204',
-    'turbo.json': 'd32a54129f37eb21a86d346cfcf09eb914cda06ebdc5166c432a9f23c67db467',
+    'turbo.json': '34280b8323ef3a8f612223b6fc3e0146b7364f36609f46eaa80d875d56432078',
   };
   for (const [path, digest] of Object.entries(frozen)) {
     const source = readFileSync(join(repoRoot, path), 'utf8');
