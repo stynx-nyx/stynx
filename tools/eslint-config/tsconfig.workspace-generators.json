@@ -1,0 +1,28 @@
+{
+  "extends": "../tsconfig/node24.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "files": [
+    "../../packages-web/sdk/codegen/generate.mjs",
+    "../../packages-web/sdk/codegen/parse.mjs",
+    "../../packages-web/sdk/codegen/render.mjs",
+    "../../packages-web/sdk/codegen/stynx-sdk-codegen.mjs",
+    "../../packages-web/sdk/scripts/codegen.mjs",
+    "../../packages/cli/engines/api-coverage.mjs",
+    "../../packages/cli/engines/http-api-compositions.mjs",
+    "../../packages/cli/engines/list-routes.mjs",
+    "../../packages/cli/engines/nest-route-declarations.mjs",
+    "../../packages/cli/engines/openapi-contract.mjs",
+    "../../packages/cli/engines/public-api-baselines.mjs",
+    "../../packages/cli/engines/public-api-declaration.mjs",
+    "../../packages/cli/engines/rls-negative.mjs",
+    "../../packages/cli/engines/sdk-operation-identities.mjs",
+    "../../packages/cli/engines/stynx-boundary.mjs"
+  ],
+  "include": []
+}

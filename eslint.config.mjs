@@ -1,3 +1,4 @@
+import { workspaceToolingConfig } from './tools/eslint-config/workspace-tooling.mjs';
 import { rootWorkspaceSourceConfig, workspaceSourceFiles } from './tools/eslint-config/root-workspace-source.mjs';
 import { rootDatabaseToolingConfig } from './tools/eslint-config/root-database-tooling.mjs';
 import js from '@eslint/js';
@@ -123,4 +124,5 @@ export default [
   },
   ...rootWorkspaceSourceConfig,
   ...rootDatabaseToolingConfig,
+  ...workspaceToolingConfig,
 ];
