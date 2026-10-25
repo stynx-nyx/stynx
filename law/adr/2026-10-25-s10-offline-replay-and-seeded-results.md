@@ -17,6 +17,18 @@ This records accepted design and implementation authority only. It does not clai
 
 Earlier ADR0028–0042 retain their own scopes, including the exact two-site F2 exception. The other ADR0043–0052 decisions were also answered in this batch and retain their separate scopes; historical pending-language below does not revoke those answers. Release classification/publication, formal DEVAI acceptance, #211, and downstream DETRAN/PORM acceptance remain separate. This record creates no workflow/forbidden-action receipt and grants no unrelated exception.
 
+## Accepted correlation supplement — 2026-10-25
+
+The Owner answered **“Approve the bounded Offline correlation result supplement”** for the exact supplemental proposal preserved below (SHA-256 `6cd587a351931124f70d76d85111ca1d932607499a94302d6355090d3a6bb3b8`). This explicitly amends the earlier required consumption-number presence and the numeric-only `unexpectedOnServer` condition. It supersedes only those disproved conditions; the original accepted scope and historical evidence remain preserved.
+
+In ADR0048's seed-capable output variants, consumption `number` is optional with its already approved JSON value domain; actual absence remains absence. `unexpectedOnServer` is a dense readonly array of `number | undefined`, while `missingOnServer` remains `readonly number[]`. Preserve genuinely narrow constructed/PostgreSQL domain models, all inputs, successful runtime behavior, SQL, property ownership and native Map/Set equality. No synthesized number, coercion or new refusal is authorized.
+
+Propagate only these changes through `getNumberingConsumption`, `reconcileNumberingReservation` and `listNumberingReconciliations` in the existing memory/store-port/service closure and nested replay/list records. The existing CTG9 consumption and reconcile HTTP results represent absent object `number` by omission and an undefined `unexpectedOnServer` array element by null; the wire array is `number | null` without changing direct programmatic undefined. Official response/model generation follows those exact operations and compositions; ADR0052's unknown endpoint result decision remains unchanged.
+
+The two six-operation original native modes and final genuine emitted consumer (zero diagnostics) establish the counterevidence. The initial failed consumer drafts are retained. HTTP route forwarding, candidate implementation, emitted type correction, official generation and final qualification remain required; original result-file JSON serialization is not an HTTP test. All detailed constraints and acceptance controls in the selected supplement below remain binding.
+
+Exact direct-answer custody: `/tmp/stynx-offline0048-correlation-witness-20261025/owner-answer.json`, SHA-256 `ac2b30e3f2c1270245ca4d6bfe11825bbe8b1535a544e58664a1d0644c374637`. This acceptance does not expand F2, other results or any release/publication, #211, formal DEVAI or downstream authority.
+
 ## Reviewed proposal custody
 
 - Original reviewed packet: `/tmp/stynx-offline-output3-boundary-20261025/proposed-adr0048.md`.
@@ -121,3 +133,56 @@ Recommended: exact preservation and output corrections A–C. Alternative: retai
 This is a genuine bounded public-result decision beyond ADR0041 contexts and ADR0039 audit, now supported by successful native/emitted observations. Suggested Owner question after root review: **Approve the bounded Offline replay and seeded-result corrections, preserving existing successes and inputs while updating only the affected result fields, forwarding methods and official response contracts?** Suggested answer: **Approve the bounded Offline result corrections**.
 
 Pending0043–0047 remain unanswered. F2 remains exactly two testing sites. Formal DEVAI acceptance, #211, DETRAN/PORM, release classification/publication remain separate. No repository writes/checks/builds in this review. Graft increment:2 calls, estimated124400 tokens saved; graph source spans were checked against live files, and graph results are discovery rather than current runtime verification.
+
+## Historical reviewed correlation supplement — now accepted
+
+The following supplemental proposal is retained as reviewed evidence. Its proposed/unaccepted wording and suggested question describe the pre-answer snapshot and are superseded by the accepted correlation supplement above. Implementation and verification obligations remain operative; no alternative behavior change was selected.
+
+# Proposed exact supplement to ADR0048: absent consumption number and reconciliation output
+
+2026-10-25. External proposal only; not accepted or implemented. ADR0048 remains accepted within its existing bounds and explicitly requires stopping when counterevidence disproves its numeric-correlation condition. This proposal amends that condition and exactly two seed-capable result obligations; it does not reopen or broaden the other approved decisions.
+
+## Recommended decision
+
+Preserve the successful seed/reserve/submit/consume/reconcile behavior and existing inputs. In ADR0048's seed-capable output variants only:
+
+1. Make the already approved JSON-valued consumption `number` property **optional**, preserving actual absence. Do not synthesize an own undefined or null property. A present number keeps ADR0048's existing JSON value domain; no new arbitrary unknown value is introduced.
+2. Change the seed-capable reconciliation `unexpectedOnServer` element type from `number` to `number | undefined`, keeping a dense readonly array. Retain `missingOnServer: readonly number[]`. Preserve complete constructed/PostgreSQL domain models and their genuinely narrow result types.
+
+Propagate these exact differences through the already approved three consumption/reconciliation store-port and service returns and their nested replay/list record models. Update only the corresponding official HTTP result representation: absent object number remains omitted; an undefined unexpectedOnServer array element serializes as null, so that HTTP field is a dense array of number|null. Direct programmatic undefined is not silently replaced by null.
+
+Suggested exact answer: **“Approve the bounded Offline correlation result supplement.”**
+
+## Actual counterevidence and limits
+
+result.json binds12 source/emitted files and records two successful public modes with six operations each. The ordinary numeric seed produces an applied consumption entry with own number1 and unexpectedOnServer[1]. A legitimate NumberingRange-shaped seed whose toJSON returns nextNumber:'1' produces a string-key initial entry. The unchanged numeric reservedNumber1 submission succeeds, invokes actual apply then append, and acceptedItems is1. The next consumption read includes an applied entry with **no own number**; reconciliation returns a **present dense array element whose value is undefined**. The JSON file shows null in that array, while explicit hasOwn/type observations prove the direct value is undefined. No private mutation or source correction created this result.
+
+The final genuine emitted consumer now passes with zero diagnostics (consumer-result.json). It uses the actual inferred object variable, structurally assigns it to the emitted SubmitSyncBatchInput and forwards the same identity; there is no assertion, source alias or fabricated output. Both failed drafts are retained separately: the initial CTG9 input had an incompatible optional idempotencyKey, and a fresh literal encountered the extra reservationId check. The final structural assignment is an ordinary legitimate TypeScript call. Runtime observation and original emitted input acceptance are complete; candidate proof and real HTTP forwarding remain future validation obligations. The JSON result-file serialization is not a mounted-controller test.
+
+## Why the narrow union is justified by actual source
+
+in-memory-offline-sync.store.ts:779–780 creates each initial entry under its actual loop value and copies that same value to number. Under the accepted seed model that value can be JSON, and its initial status is available. Later status projection, cancellation and transitions alter status through copies; they do not make those initial nonnumeric entries applied.
+
+Durable submission first requires any supplied reservedNumber to be a safe integer (line1540). Its coverage comparison at2080 is coercive, so a numeric1 item can be covered by a string-start reservation. The actual applied mutation at2334–2341 uses entries.get(numericKey), spreads that result, and writes status/serverEntityId/finalizedAt. If the numeric entry exists, its original number equals that numeric key. If absent, object spread creates an entry with no number. Subsequent same-key updates retain that absence. Native Map equality never equates the initial string key '1' with numeric1. The closed mutation census shows no other transition that assigns applied to a nonnumeric-key initial entry. Thus **applied entries have numeric number or absent number**, rather than arbitrary JSON number.
+
+reconciliation.ts:63–68 builds missingOnServer only from entries for which the Set of validated numeric claims contains e.number, then reads that same constructed entry's number. These are ordinary projected data entries, not user accessors. Consequently accepted numeric membership still proves missingOnServer is number[]. unexpectedOnServer instead selects applied entries absent from the claims Set; both number and absent-property undefined are possible. Map/set key identity and the applied mutation above justify exactly number|undefined. Do not widen either array to arbitrary JSON/unknown or hide this invariant behind an unchecked generic predicate.
+
+NumberingConsumptionEntry and ReconcileNumberingResult remain narrow models for genuinely typed PostgreSQL/constructed paths. The seed-capable variants introduced by ADR0048 replace only the named fields. The absence comes from the successful existing spread operation; adding a missing-entry refusal, fabricating number:reservedNumber, or converting the string seed to number would change behavior and is not selected.
+
+## Exact propagation and implementation boundary
+
+- Seed-capable consumption entry: optional number with ADR0048's existing JSON domain; all status/serverEntityId/finalizedAt fields retain their existing declarations and presence.
+- Seed-capable NumberingConsumptionResult.consumption; ReconcileNumberingResult.consumption and unexpectedOnServer; nested NumberingReconciliationRecord.result and its paged result.
+- InMemoryOfflineSyncStore, OfflineSyncDurableStore and OfflineSyncService methods getNumberingConsumption, reconcileNumberingReservation and listNumberingReconciliations. Reconciliation idempotent replay uses the same result model; no new endpoint or extra store method.
+- CTG9OfflineSyncController.getConsumption (GET numbering-reservations/:id/consumption) and reconcileNumbering (POST numbering-reservations/:id/reconcile), through their existing authorization/context/idempotency boundaries. The list forwarding has no controller in the current census; do not invent one.
+- Official source/OpenAPI result models and both composition SDK models only wherever those responses are genuinely reachable. ADR0052's unknown endpoint results remain as approved; model fidelity still matters. Input schemas, complete ACK, PG models, batch outputs, reservation fields and unrelated generated operations are unchanged by this supplement.
+
+Engineer must preserve original property ownership, direct values, map insertion/order, successful apply/append effects, input validation, SQL, driver behavior and replay semantics. No new runtime coercion/refusal, public input widening, storage/schema change, or F2 exception follows from this proposal. Internal typed representation must prove the closed applied-entry invariant and retain absence instead of asserting original correlation.
+
+## Bounded validation after approval
+
+Retain both six-operation original modes and the initial failed consumer attempt. Demonstrate actual strict emitted consumer changes: seed-capable number may be absent; unexpected elements require undefined handling; missing elements remain numbers; narrow PG/constructed consumers remain unchanged. Replay the corrected candidate through public calls; add one reconciliation idempotency replay/list continuation to preserve dense undefined and absent ownership under structuredClone. Verify the two actual HTTP routes serialize absent consumption number by omission and undefined array positions as null, while ordinary numeric controls remain numeric. Official writer/SDK model generation and final stable API/trace/RC gates follow the coordinated existing process; none is claimed complete here.
+
+Alternative: repair the runtime to populate a missing number or refuse the formerly successful item. That is a distinct behavioral decision, not an internal type fix and not recommended under the selected preservation direction. Deferral leaves only the dependent seed-capable correlation work held; independent approved work can continue.
+
+Release classification/publication, #211, formal DEVAI acceptance, downstream DETRAN/PORM and the separately approved upstream docs-routing preparation remain separate. No governed edits, tests/builds or new Graft calls were performed for this proposal.
