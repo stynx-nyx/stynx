@@ -141,9 +141,9 @@ function deliveryState(row: EventDeliverySqlRow): OutboxEventDeliveryState | nul
 function statusCounts(
   rows: readonly { status: OutboxEventDeliveryStatus; count: number }[],
 ): OutboxDeliveryStatusCounts {
-  const counts = Object.fromEntries(
-    DELIVERY_STATUSES.map((status) => [status, 0]),
-  ) as OutboxDeliveryStatusCounts;
+  const counts: OutboxDeliveryStatusCounts = {
+    PENDING: 0, SENT: 0, SENT_UNRESOLVED: 0, ERROR: 0, ACKED: 0, RETIRED: 0,
+  };
   for (const row of rows) counts[row.status] = row.count;
   return counts;
 }
@@ -167,15 +167,16 @@ function entityMatcher(
   allowEmpty: boolean,
 ): EntityMatcher | null {
   if (value === undefined) return null;
-  const list = (items: unknown, field: string): string[] => {
+  const list = (items: readonly string[] | undefined, field: string): string[] => {
     if (items === undefined) return [];
+    const declaredItems: readonly string[] = items;
     if (
       !Array.isArray(items) ||
       items.some((item) => typeof item !== 'string' || item.length === 0)
     ) {
       throw new RangeError(`${name}.${field} must be a list of non-empty strings`);
     }
-    return [...(items as string[])];
+    return [...declaredItems];
   };
   if (value === null || typeof value !== 'object')
     throw new RangeError(`${name} must be an entity selector`);
@@ -261,7 +262,7 @@ function destinationRegistry(
       port !== undefined &&
       (port === null ||
         typeof port !== 'object' ||
-        typeof (port as OutboxDispatcherPort).send !== 'function')
+        typeof Reflect.get(port, 'send') !== 'function')
     ) {
       throw new RangeError(`${name}.dispatcher must implement OutboxDispatcherPort`);
     }
@@ -307,9 +308,26 @@ function positiveMilliseconds(value: number | undefined, name: string): void {
   }
 }
 
+function readProperty(value: unknown, key: string): unknown {
+  if (value === null || value === undefined)
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  const target: unknown = Object(value);
+  if ((typeof target === 'object' && target !== null) || typeof target === 'function')
+    return Reflect.get(target, key, value);
+  throw new TypeError('Property receiver is unavailable');
+}
+
+function optionalProperty(value: unknown, key: string): unknown {
+  return value === null || value === undefined ? undefined : readProperty(value, key);
+}
+
+function copyStatusValues(values: readonly unknown[]): unknown[] {
+  return [...values];
+}
+
 function retryableSqlCode(error: unknown): '40P01' | '55P03' | undefined {
-  const value = error as { code?: string; context?: { code?: string; originalCode?: string } };
-  const code = value?.context?.code ?? value?.context?.originalCode ?? value?.code;
+  const code = optionalProperty(optionalProperty(error, 'context'), 'code') ??
+    optionalProperty(optionalProperty(error, 'context'), 'originalCode') ?? optionalProperty(error, 'code');
   return code === '40P01' || code === '55P03' ? code : undefined;
 }
 
@@ -368,7 +386,7 @@ export class OutboxService implements OnModuleInit {
       if (!marker[0]) throw new OutboxOwnershipContentionError();
       return marker[0].state;
     } catch (error) {
-      if ((error as { code?: string }).code === '55P03') throw new OutboxOwnershipContentionError();
+      if (readProperty(error, 'code') === '55P03') throw new OutboxOwnershipContentionError();
       throw error;
     }
   }
@@ -943,12 +961,12 @@ export class OutboxService implements OnModuleInit {
         : typeof rawStatus === 'string'
           ? [rawStatus]
           : Array.isArray(rawStatus)
-            ? [...rawStatus]
+            ? copyStatusValues(rawStatus)
             : [];
     if (
       statuses &&
       (statuses.length === 0 ||
-        statuses.some((status) => !DELIVERY_STATUSES.includes(status as OutboxEventDeliveryStatus)))
+        statuses.some((status) => !DELIVERY_STATUSES.some((known) => known === status)))
     ) {
       throw new RangeError('deliveryStatus must name event delivery states');
     }

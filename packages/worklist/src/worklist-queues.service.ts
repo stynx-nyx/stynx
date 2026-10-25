@@ -1,13 +1,12 @@
+import { selectQueueUpdateQuery } from './queue-update.repository.js';
 import { createQueue, readQueue, readQueueByCode, listQueues, countQueues, assertCanWork, setWorkerState } from './worklist.repository.js';
 import { Injectable } from '@nestjs/common';
 import { Database } from '@stynx-nyx/data';
 import { WorklistNotFoundError } from './errors.js';
 import {
-  QUEUE_COLUMNS,
   mapQueueRow,
   mapWorkerStateRow,
   pageLimitOffset,
-  type WorklistRow,
 } from './row-utils.js';
 import { mapWorklistSqlError } from './sql-errors.js';
 import type {
@@ -62,51 +61,46 @@ export class WorklistQueuesService {
 
   async update(id: string, input: UpdateWorklistQueueInput): Promise<WorklistQueueRecord> {
     const value = parseWorklistInput(updateQueueSchema, input);
-    const assignments: string[] = [];
+    let mask = 0;
     const parameters: unknown[] = [id];
-    const add = (column: string, valueToSet: unknown, cast = '') => {
+    const add = (bit: number, valueToSet: unknown) => {
       parameters.push(valueToSet);
-      assignments.push(`${column} = $${parameters.length}${cast}`);
+      mask |= bit;
     };
 
-    if (value.name !== undefined) add('name', value.name);
-    if (value.description !== undefined) add('description', value.description);
+    if (value.name !== undefined) add(1, value.name);
+    if (value.description !== undefined) add(2, value.description);
     /* v8 ignore else -- updateQueueSchema inherits createQueueSchema's strategy default ('pull'), so a parsed update never lacks it */
-    if (value.strategy !== undefined) add('strategy', value.strategy);
+    if (value.strategy !== undefined) add(0, value.strategy);
     if (value.strategyConfig !== undefined)
-      add('strategy_config', JSON.stringify(value.strategyConfig), '::jsonb');
+      add(4, JSON.stringify(value.strategyConfig));
     if (value.requiredPermission !== undefined)
-      add('required_permission', value.requiredPermission);
+      add(8, value.requiredPermission);
     if (value.supervisorPermission !== undefined)
-      add('supervisor_permission', value.supervisorPermission);
-    if (value.claimLimit !== undefined) add('claim_limit', value.claimLimit);
-    if (value.meta !== undefined) add('meta', JSON.stringify(value.meta), '::jsonb');
+      add(16, value.supervisorPermission);
+    if (value.claimLimit !== undefined) add(32, value.claimLimit);
+    if (value.meta !== undefined) add(64, JSON.stringify(value.meta));
     if (value.defaultDeadline !== undefined) {
       add(
-        'default_sla_seconds',
+        128,
         value.defaultDeadline?.kind === 'elapsed' ? value.defaultDeadline.seconds : null,
       );
       add(
-        'default_sla_business_days',
+        128,
         value.defaultDeadline?.kind === 'business_days' ? value.defaultDeadline.businessDays : null,
       );
       add(
-        'default_calendar_key',
+        128,
         value.defaultDeadline?.kind === 'business_days'
           ? (value.defaultDeadline.calendarKey ?? null)
           : null,
       );
     }
-    assignments.push(`updated_at = clock_timestamp()`);
-    assignments.push(`updated_by = current_setting('app.actor_id')::uuid`);
 
     try {
       return await this.database.tx(async (trx) => {
-        const result = await trx.query<WorklistRow>(
-          `update worklist.queues set ${assignments.join(', ')} where id = $1 returning ${QUEUE_COLUMNS}`,
-          parameters,
-        );
-        const row = result.rows[0];
+        const result = await trx.run(selectQueueUpdateQuery(mask), parameters);
+        const row = result[0];
         if (!row) throw new WorklistNotFoundError('queue', id);
         return mapQueueRow(row);
       });

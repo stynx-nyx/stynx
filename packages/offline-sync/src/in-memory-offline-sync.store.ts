@@ -113,8 +113,7 @@ interface MemoryMutationFrame {
 
 interface MemoryProjectionVersion {
   previous: MemoryProjectionVersion | undefined;
-  present: boolean;
-  value: unknown;
+  restore: () => void;
   rolledBack: boolean;
 }
 
@@ -279,7 +278,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     return map.get(key);
   }
 
-  private claimProjection<K, V>(map: Map<K, V>, key: K) {
+  private claimProjection<V>(map: Map<string, V>, key: string) {
     const frame = this.mutationContext.getStore()!;
     this.assertProjectionClaim(map, key);
     let versions = this.projectionVersions.get(map);
@@ -294,10 +293,16 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     }
     let previous = versions.get(key);
     if (!previous) {
+      const present = map.has(key);
+      const value = map.get(key);
+      // This same-map view only restores the value captured above, including undefined.
+      const restorationMap: Map<string, V | undefined> = map;
       previous = {
         previous: undefined,
-        present: map.has(key),
-        value: map.get(key),
+        restore: () => {
+          if (present) restorationMap.set(key, value);
+          else map.delete(key);
+        },
         rolledBack: false,
       };
       versions.set(key, previous);
@@ -305,12 +310,11 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     return { frame, versions, previous };
   }
 
-  private writeProjection<K, V>(map: Map<K, V>, key: K, value: V): Map<K, V> {
+  private writeProjection<V>(map: Map<string, V>, key: string, value: V): Map<string, V> {
     const { frame, versions, previous } = this.claimProjection(map, key);
     const version: MemoryProjectionVersion = {
       previous,
-      present: true,
-      value,
+      restore: () => { map.set(key, value); },
       rolledBack: false,
     };
     frame.changes.push({
@@ -320,8 +324,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         if (versions.get(key) !== version) return;
         let prior = version.previous!;
         while (prior.rolledBack) prior = prior.previous!;
-        if (prior.present) map.set(key, prior.value as V);
-        else map.delete(key);
+        prior.restore();
         versions.set(key, prior);
       },
     });

@@ -9,10 +9,11 @@ export function stableStringify(value: unknown): string {
   if (value === null || value === undefined) return 'null';
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
   if (typeof value === 'object') {
-    const entries = Object.entries(value as Record<string, unknown>)
+    const entries: [string, unknown][] = Object.entries(value);
+    const rendered = entries
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, entry]) => `"${key.replace(/"/g, '\\"')}":${stableStringify(entry)}`);
-    return `{${entries.join(',')}}`;
+    return `{${rendered.join(',')}}`;
   }
   return JSON.stringify(value);
 }

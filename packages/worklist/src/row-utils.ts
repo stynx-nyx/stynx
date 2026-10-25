@@ -201,10 +201,12 @@ export function requireObject(input: unknown): WorklistJsonObject {
   throw new WorklistInputError('Input must be an object');
 }
 
+function isWorklistJsonObject(value: unknown): value is WorklistJsonObject {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
 function jsonObject(value: unknown): WorklistJsonObject {
-  return value !== null && typeof value === 'object' && !Array.isArray(value)
-    ? (value as WorklistJsonObject)
-    : {};
+  return isWorklistJsonObject(value) ? value : {};
 }
 
 function nullableString(value: unknown): string | null {

@@ -6,14 +6,11 @@ export function instantMicroseconds(value: string, refuse: () => never): bigint 
       value,
     );
   if (!match) refuse();
-  const [year, month, day, hour, minute, second] = match.slice(1, 7).map(Number) as [
-    number,
-    number,
-    number,
-    number,
-    number,
-    number,
-  ];
+  const [year, month, day, hour, minute, second] = match.slice(1, 7).map(Number);
+  if (
+    year === undefined || month === undefined || day === undefined ||
+    hour === undefined || minute === undefined || second === undefined
+  ) refuse();
   const zoneHours = Number(match[10] ?? 0),
     zoneMinutes = Number(match[11] ?? 0);
   if (

@@ -11,12 +11,13 @@ const audit = {
   createdAt: timestamp, updatedAt: timestamp,
 };
 
+// Queue object/default results are established shallowly by mapQueueRow.
 export const worklistQueueRow = z.looseObject({
   ...identity, code: text, name: text, description: text.nullable(), strategy: text,
-  strategyConfig: z.json(), requiredPermission: text, supervisorPermission: text,
+  strategyConfig: z.unknown(), requiredPermission: text, supervisorPermission: text,
   claimLimit: numeric.nullable(), defaultSlaSeconds: numeric.nullable(),
   defaultSlaBusinessDays: numeric.nullable(), defaultCalendarKey: text.nullable(),
-  meta: z.json(), ...audit,
+  meta: z.unknown(), ...audit,
 });
 export const worklistWorkerRow = z.looseObject({
   ...identity, queueId: worklistUuid, userId: worklistUuid, available: z.boolean(),
