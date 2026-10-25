@@ -28,7 +28,7 @@ The package has no runtime dependencies. It has two entry points: the root expor
 
 ## Quick start
 
-The constructor takes the ports positionally: store, backend, crypto, clock, ids, optional printer, optional options. The sandbox adapters from the testing entry are enough to run the whole journey in a test.
+The constructor requires seven positional arguments: store, backend, crypto, clock, ids, printer (or explicit `undefined`), and `MobileRuntimeCheckedOptions<TEntityType>`. The options must provide the `entityTypes` vocabulary used to check persisted drafts and queue items. The sandbox adapters from the testing entry are enough to run the whole journey in a test.
 
 ```ts
 import { OfflineFirstMobileRuntime } from '@stynx-nyx/mobile-runtime';
@@ -50,6 +50,8 @@ const runtime = new OfflineFirstMobileRuntime<EntityType>(
   new NodeMobileCryptoPort(),
   clock,
   new SequentialMobileIdPort(),
+  undefined,
+  { entityTypes: ['inspection', 'notice'] },
 );
 
 await runtime.bootstrapFromStynxSession(new SandboxStynxMobileSessionPort(), {
@@ -69,23 +71,23 @@ await runtime.reserveNumbering({ entityType: 'inspection', requestedSize: 10 });
 
 `OfflineFirstMobileRuntime<TEntityType extends string = string>` is the only class in the root export.
 
-| Method                                            | Returns                                   | Description                                                                                                                           |
-| ------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `bootstrapSession(context, posture)`              | `Promise<void>`                           | Checks required roles and device posture, then stores the active session and posture.                                                 |
-| `bootstrapFromStynxSession(sessionPort, posture)` | `Promise<MobileSessionContext>`           | Reads the session from a `MobileStynxSessionPort` and calls `bootstrapSession`.                                                       |
-| `installPublishedNormativePackage()`              | `Promise<MobileNormativePackageSnapshot>` | Fetches the package from the backend port and stores it; rejects a package that is not `published` or whose `validUntil` has passed.  |
-| `reserveNumbering(input)`                         | `Promise<MobileNumberingReservation>`     | Requests an entity-scoped interval for the active session and stores it; rejects a reservation returned for a different `entityType`. |
-| `createDraft(input)`                              | `Promise<MobileEntityDraft>`              | Consumes the next number of a usable reservation and stores a draft with idempotency key and content hash.                            |
-| `attachEvidence(localEntityId, evidence)`         | `Promise<MobileEntityDraft>`              | Links evidence metadata to a draft; requires `hashAlgorithm: 'sha256'` and a `hashValue` starting with `sha256:`.                     |
-| `finalizeOffline(localEntityId)`                  | `Promise<MobileEntityDraft>`              | Moves a `draft` to `finalized` after checking the offline invariants, and recomputes the content hash.                                |
-| `enqueue(localEntityId)`                          | `Promise<MobileSyncQueueItem>`            | Creates a `pending` queue item from a `finalized` draft and marks the draft `queued`.                                                 |
-| `submitPendingQueue()`                            | `Promise<MobileSyncBatchResult>`          | Submits all `pending` items as one device batch; marks each `received` or `conflict` from the server result.                          |
-| `resolveSimpleConflict(queueItemId, resolution)`  | `Promise<MobileConflictResolution>`       | Resolves a `conflict` item through the backend port, marks the item `applied` and its draft `synced`.                                 |
-| `printReceipt(localEntityId)`                     | `Promise<MobilePrintReceipt>`             | Prints through the printer port for a `finalized`, `queued` or `synced` draft and stores the receipt.                                 |
-| `applyRemoteWipe(reason)`                         | `Promise<MobileRemoteWipeReceipt>`        | Clears the store, then stores a wipe receipt.                                                                                         |
-| `snapshot()`                                      | `Promise<MobileRuntimeSnapshot>`          | Aggregate counts and the active session, package and posture, for diagnostics.                                                        |
+| Method                                            | Returns                                         | Description                                                                                                                           |
+| ------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `bootstrapSession(context, posture)`              | `Promise<void>`                                 | Checks required roles and device posture, then stores the active session and posture.                                                 |
+| `bootstrapFromStynxSession(sessionPort, posture)` | `Promise<MobileSessionContext>`                 | Reads the session from a `MobileStynxSessionPort` and calls `bootstrapSession`.                                                       |
+| `installPublishedNormativePackage()`              | `Promise<MobileNormativePackageSnapshot>`       | Fetches the package from the backend port and stores it; rejects a package that is not `published` or whose `validUntil` has passed.  |
+| `reserveNumbering(input)`                         | `Promise<MobileNumberingReservation>`           | Requests an entity-scoped interval for the active session and stores it; rejects a reservation returned for a different `entityType`. |
+| `createDraft(input)`                              | `Promise<MobileEntityDraft>`                    | Consumes the next number of a usable reservation and stores a draft with idempotency key and content hash.                            |
+| `attachEvidence(localEntityId, evidence)`         | `Promise<MobileStoredEntityDraft<TEntityType>>` | Links evidence metadata to a draft; requires `hashAlgorithm: 'sha256'` and a `hashValue` starting with `sha256:`.                     |
+| `finalizeOffline(localEntityId)`                  | `Promise<MobileStoredEntityDraft<TEntityType>>` | Moves a `draft` to `finalized` after checking the offline invariants, and recomputes the content hash.                                |
+| `enqueue(localEntityId)`                          | `Promise<MobileSyncQueueItem>`                  | Creates a `pending` queue item from a `finalized` draft and marks the draft `queued`.                                                 |
+| `submitPendingQueue()`                            | `Promise<MobileSyncBatchResult>`                | Submits all `pending` items as one device batch; marks each `received` or `conflict` from the server result.                          |
+| `resolveSimpleConflict(queueItemId, resolution)`  | `Promise<MobileConflictResolution>`             | Resolves a `conflict` item through the backend port, marks the item `applied` and its draft `synced`.                                 |
+| `printReceipt(localEntityId)`                     | `Promise<MobilePrintReceipt>`                   | Prints through the printer port for a `finalized`, `queued` or `synced` draft and stores the receipt.                                 |
+| `applyRemoteWipe(reason)`                         | `Promise<MobileRemoteWipeReceipt>`              | Clears the store, then stores a wipe receipt.                                                                                         |
+| `snapshot()`                                      | `Promise<MobileRuntimeSnapshot>`                | Aggregate counts and the active session, package and posture, for diagnostics.                                                        |
 
-The runtime throws plain `Error` instances with descriptive messages; the package exports no error classes or error codes.
+The runtime throws `Error` instances for workflow failures and `TypeError` for invalid checked configuration or stored records; the package exports no custom error classes or error-code constants.
 
 ### Ports
 
@@ -101,21 +103,22 @@ The runtime throws plain `Error` instances with descriptive messages; the packag
 
 ### Types
 
-| Export                                                                 | Description                                                                                             |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `MobileSessionContext`                                                 | Tenant, org unit, agent, device, shift, app version and roles of the active session.                    |
-| `MobileDevicePosture`                                                  | Device-asserted posture: homologation, remote-wipe version, secure hardware, printer and network state. |
-| `MobileNormativePackageSnapshot`                                       | Published rule package pinned for offline validation.                                                   |
-| `MobileNumberingReservation`, `ReserveMobileNumberingInput`            | Reserved interval and the input that requests one.                                                      |
-| `MobileEntityDraft`, `CreateMobileDraftInput`, `MobileLocationContext` | Local draft, its creation input, and where it was drafted.                                              |
-| `MobileEvidenceDraft`                                                  | Hash-first evidence metadata.                                                                           |
-| `MobileSyncQueueItem`, `MobileSyncBatchResult`                         | Queue entry and the server acknowledgement of a submitted batch.                                        |
-| `MobileConflictResolution`, `SyncConflictResolutionStrategy`           | Server-confirmed resolution; strategies are `device-wins`, `server-wins` and `manual-review`.           |
-| `MobilePrintReceipt`, `MobileRemoteWipeReceipt`                        | Receipts stored after printing and after a remote wipe.                                                 |
-| `MobileRuntimeSnapshot`                                                | Result of `snapshot()`.                                                                                 |
-| `MobileRuntimeOptions`                                                 | Constructor options; see [Configuration](#configuration).                                               |
-| `LocalDraftStatus`                                                     | `'draft' \| 'finalized' \| 'queued' \| 'synced' \| 'conflict' \| 'wiped'`.                              |
-| `SyncQueueStatus`                                                      | `'pending' \| 'sent' \| 'received' \| 'applied' \| 'conflict' \| 'rejected'`.                           |
+| Export                                                                 | Description                                                                                                                     |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `MobileSessionContext`                                                 | Tenant, org unit, agent, device, shift, app version and roles of the active session.                                            |
+| `MobileDevicePosture`                                                  | Device-asserted posture: homologation, remote-wipe version, secure hardware, printer and network state.                         |
+| `MobileNormativePackageSnapshot`                                       | Published rule package pinned for offline validation.                                                                           |
+| `MobileNumberingReservation`, `ReserveMobileNumberingInput`            | Reserved interval and the input that requests one.                                                                              |
+| `MobileEntityDraft`, `CreateMobileDraftInput`, `MobileLocationContext` | Local draft, its creation input, and where it was drafted.                                                                      |
+| `MobileEvidenceDraft`                                                  | Hash-first evidence metadata.                                                                                                   |
+| `MobileSyncQueueItem`, `MobileSyncBatchResult`                         | Queue entry and the server acknowledgement of a submitted batch.                                                                |
+| `MobileConflictResolution`, `SyncConflictResolutionStrategy`           | Server-confirmed resolution; strategies are `device-wins`, `server-wins` and `manual-review`.                                   |
+| `MobilePrintReceipt`, `MobileRemoteWipeReceipt`                        | Receipts stored after printing and after a remote wipe.                                                                         |
+| `MobileRuntimeSnapshot`                                                | Result of `snapshot()`.                                                                                                         |
+| `MobileRuntimeOptions`, `MobileRuntimeCheckedOptions<TEntityType>`     | Optional behavior switches and the required constructor options with an entity vocabulary; see [Configuration](#configuration). |
+| `MobileStoredEntityDraft<TEntityType>`                                 | Checked persisted draft with `payload: unknown`; returned by `attachEvidence` and `finalizeOffline` and supplied to printers.   |
+| `LocalDraftStatus`                                                     | `'draft' \| 'finalized' \| 'queued' \| 'synced' \| 'conflict' \| 'wiped'`.                                                      |
+| `SyncQueueStatus`                                                      | `'pending' \| 'sent' \| 'received' \| 'applied' \| 'conflict' \| 'rejected'`.                                                   |
 
 ### Testing entry (`@stynx-nyx/mobile-runtime/testing`)
 
@@ -134,13 +137,61 @@ These adapters run in-process on Node and are intended for tests, sandboxes and 
 
 ## Configuration
 
-Configuration is the optional last constructor argument, `MobileRuntimeOptions`. The package reads no environment variables.
+Configuration is the required seventh constructor argument, `MobileRuntimeCheckedOptions<TEntityType>`, which extends `MobileRuntimeOptions`. Pass `undefined` as the sixth argument when no printer is configured. Existing five- or six-argument calls must migrate. The package reads no environment variables.
 
-| Option                      | Type                | Default          | Description                                                                     |
-| --------------------------- | ------------------- | ---------------- | ------------------------------------------------------------------------------- |
-| `requiredRoles`             | `readonly string[]` | `[]`             | Roles the bootstrapped session must carry. Empty means any session is accepted. |
-| `requireEvidenceToFinalize` | `boolean`           | `true`           | Whether `finalizeOffline` requires at least one linked evidence record.         |
-| `draftIdPrefix`             | `string`            | `'entity-local'` | Prefix passed to the id port for local draft identifiers.                       |
+| Option                      | Type                     | Default          | Description                                                                         |
+| --------------------------- | ------------------------ | ---------------- | ----------------------------------------------------------------------------------- |
+| `entityTypes`               | `readonly TEntityType[]` | Required         | Vocabulary for persisted draft and queue entity types; copied once at construction. |
+| `requiredRoles`             | `readonly string[]`      | `[]`             | Roles the bootstrapped session must carry. Empty means any session is accepted.     |
+| `requireEvidenceToFinalize` | `boolean`                | `true`           | Whether `finalizeOffline` requires at least one linked evidence record.             |
+| `draftIdPrefix`             | `string`                 | `'entity-local'` | Prefix passed to the id port for local draft identifiers.                           |
+
+## Checked storage migration
+
+`MobileEncryptedStorePort.get(collection, key)` now returns `Promise<unknown>` and
+`list(collection)` returns `Promise<unknown[]>`. The sandbox store follows those
+signatures; callers can no longer select a result type with `get<T>` or `list<T>`.
+Check raw values before using them. Missing `get` still returns `undefined`, and
+native JSON serialization/parsing is unchanged: storing a `Date` does not revive
+a `Date` on read. `put<T>`, storage metadata and the other store methods are unchanged.
+
+The runtime checks the six collections it consumes as typed models: session,
+device, normative package, numbering reservation, entity draft and sync queue.
+Draft and queue entity types must match a captured member of `entityTypes`.
+Missing, non-array, sparse or non-string vocabulary entries throw
+`TypeError('Invalid mobile runtime entityTypes')` after the existing encrypted-store
+check. Duplicates are allowed; an empty vocabulary admits no persisted draft or
+queue entity. Mutating the caller's array later does not change the captured vocabulary.
+
+Typed reads create fresh ordinary checked object snapshots. Enumerable extras
+and symbol keys retain their shallow values; declared inherited or non-enumerable
+fields can become own data properties. Only declared structural objects and
+arrays are copied recursively. Structural arrays are checked by captured length
+and own indices and copied densely, without carrying extra array properties or
+custom iteration methods into the result. Opaque payloads and other extra values
+retain their references. Results are not frozen, and no date parsing, number
+coercion or additional integer/finite restriction is introduced. Custom storage
+adapters must not rely on the original envelope identity, prototype or getter timing.
+
+Missing `get` values retain the existing missing-value errors and fallbacks.
+Present malformed records, holes in checked arrays, wrong entity subtypes and
+present `undefined` in optional fields whose declaration excludes it throw
+`TypeError('Invalid stored mobile record: <collection>')`, using the fixed collection
+name without stored values. Storage and getter exceptions propagate unchanged.
+Checks run before the old typed consumer; a malformed later list item can prevent
+earlier writes, and an invalid stored session can prevent a remote wipe before
+`clear`. Count-only receipt/evidence lists remain raw, and snapshot draft/queue
+counts retain their existing status reads rather than validating unused fields.
+
+`createDraft` still takes `CreateMobileDraftInput` with a record payload and returns
+`MobileEntityDraft<TEntityType>` with a record payload. After persistence,
+`attachEvidence` and `finalizeOffline` return `MobileStoredEntityDraft<TEntityType>`
+with `payload: unknown`. `MobilePrinterPort.printReceipt` receives that stored model,
+so printer adapters must check payloads they inspect. Native `toJSON` can turn a
+valid input record into a scalar during storage; that scalar remains supported.
+`enqueue` still returns `MobileSyncQueueItem<TEntityType>` with an outer record
+`payloadJson`, which can contain the unknown nested draft payload. Backend port
+contracts are unchanged.
 
 ## Examples
 
@@ -197,6 +248,7 @@ const runtime = new OfflineFirstMobileRuntime<'crash-record'>(
   ids,
   undefined,
   {
+    entityTypes: ['crash-record'],
     requiredRoles: ['field-agent'],
     requireEvidenceToFinalize: false,
     draftIdPrefix: 'crash-local',
@@ -231,7 +283,7 @@ const state = await runtime.snapshot();
 
 - [`@stynx-nyx/offline-sync`](/docs/packages/offline-sync/) — the server pair: NestJS numbering reservation, sync batch and conflict endpoints that a production `MobileBackendClientPort` adapter calls. It is not a dependency of this package.
 
-Contract and decisions: `docs/framework/contracts/mobile-runtime-api.md`, `law/adr/ADR-MOBILE-OFFLINE-0001-teat-promotion.md` and `law/adr/ADR-MOBILE-OFFLINE-0002-sync-parity.md`.
+Contract and decisions: `docs/framework/contracts/mobile-runtime-api.md`, `law/adr/ADR-MOBILE-OFFLINE-0001-teat-promotion.md`, `law/adr/ADR-MOBILE-OFFLINE-0002-sync-parity.md`, and the accepted checked migration in `law/adr/2026-10-25-s10-mobile-checked-storage-migration.md`.
 
 <!-- stynx:generated-dependencies:start -->
 
