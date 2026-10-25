@@ -1,3 +1,4 @@
+import { executeFormsList, type FormsListKey } from './forms-list.repository.js';
 import { executeFormsFixedRead, executeFormsExists, type FormsFixedRead } from './forms-read.repository.js';
 import { putQuestionScoreQuery, upsertAnswerQuery, isFormsWriteRow } from './forms-write.repository.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
@@ -29,7 +30,7 @@ export class FlowFormsService {
   ) {}
 
   listForms(scopeId?: string): Promise<Record<string, unknown>[]> {
-    return this.listRows('forms', scopeId ? { scope_id: scopeId } : {}, 'code, version');
+    return this.listRows('forms', scopeId ? { scope_id: scopeId } : {});
   }
 
   getForm(id: string): Promise<Record<string, unknown>> {
@@ -49,7 +50,7 @@ export class FlowFormsService {
   }
 
   listQuestions(formId: string): Promise<Record<string, unknown>[]> {
-    return this.listRows('questions', { form_id: formId }, 'sort_order, key');
+    return this.listRows('questions', { form_id: formId });
   }
 
   getQuestion(id: string): Promise<Record<string, unknown>> {
@@ -113,11 +114,11 @@ export class FlowFormsService {
         filters[columnName] = value;
       }
     }
-    return this.listRows('fills', filters, 'created_at desc');
+    return this.listRows('fills', filters);
   }
 
   listFormFills(formId: string): Promise<Record<string, unknown>[]> {
-    return this.listRows('fills', { form_id: formId }, 'created_at desc');
+    return this.listRows('fills', { form_id: formId });
   }
 
   getFill(id: string): Promise<Record<string, unknown>> {
@@ -147,7 +148,7 @@ export class FlowFormsService {
   }
 
   listAnswers(fillId: string): Promise<Record<string, unknown>[]> {
-    return this.listRows('answers', { fill_id: fillId }, 'created_at, id');
+    return this.listRows('answers', { fill_id: fillId });
   }
 
   async listFormFillAnswers(formId: string, fillId: string): Promise<Record<string, unknown>[]> {
@@ -211,7 +212,7 @@ export class FlowFormsService {
         filters[columnName] = value;
       }
     }
-    return this.listRows('waivers', filters, 'created_at desc');
+    return this.listRows('waivers', filters);
   }
 
   createWaiver(input: unknown): Promise<Record<string, unknown>> {
@@ -350,31 +351,10 @@ export class FlowFormsService {
     });
   }
 
-  private listRows(
-    key: FormTableKey,
-    filters: Record<string, string> = {},
-    orderBy = 'created_at desc',
-  ): Promise<Record<string, unknown>[]> {
-    const config = FORM_TABLES[key];
+  private listRows(key: FormsListKey, filters: Record<string, string> = {}): Promise<Record<string, unknown>[]> {
     return this.db.tx(async (trx) => {
-      const values = Object.values(filters);
-      const uuidColumns = new Set([
-        'fill_id',
-        'form_id',
-        'node_run_id',
-        'question_id',
-        'run_id',
-        'scope_id',
-        'task_id',
-      ]);
-      const where = Object.keys(filters)
-        .map((column, index) => `${column} = $${index + 1}${uuidColumns.has(column) ? '::uuid' : ''}`)
-        .join(' and ');
-      const result = await trx.query<FlowRow>(
-        `select * from ${config.sqlName}${where ? ` where ${where}` : ''} order by ${orderBy}`,
-        values,
-      );
-      return result.rows.map(camelizeRow);
+      const rows = await executeFormsList(trx, key, filters);
+      return rows.map(camelizeRow);
     }, {
       role: 'reader',
       readonly: true,

@@ -163,7 +163,7 @@ export class FlowGraphPackage {
     id: string,
   ): Promise<FlowGraphExportDocument> {
     const graph = withGraphPublishState(
-      await this.tableStore.getRowFromTransaction(trx, this.tableStore.tableConfig('graphs'), id),
+      await this.tableStore.getRowFromTransaction(trx, 'graphs', id),
     );
     const scopeId = requireString(graph.scopeId, 'graph.scopeId');
 

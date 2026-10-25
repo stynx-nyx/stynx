@@ -70,7 +70,7 @@ export class FlowDesignService {
   }
 
   listGraphs(scopeId?: string): Promise<FlowJsonObject[]> {
-    return this.tables.listRows('graphs', scopeId ? { scope_id: scopeId } : {});
+    return this.tables.listRows('graphs', scopeId || undefined);
   }
 
   getGraph(id: string): Promise<FlowJsonObject> {
@@ -94,7 +94,7 @@ export class FlowDesignService {
   }
 
   listGraphNodes(graphId: string): Promise<FlowJsonObject[]> {
-    return this.tables.listRows('nodes', { graph_id: graphId }, 'sort_order, code');
+    return this.tables.listRows('nodes', graphId);
   }
 
   createGraphNode(graphId: string, input: unknown): Promise<FlowJsonObject> {
@@ -114,7 +114,7 @@ export class FlowDesignService {
   }
 
   listGraphEdges(graphId: string): Promise<FlowJsonObject[]> {
-    return this.tables.listRows('edges', { graph_id: graphId }, 'sort_order, action NULLS FIRST');
+    return this.tables.listRows('edges', graphId);
   }
 
   createGraphEdge(graphId: string, input: unknown): Promise<FlowJsonObject> {
@@ -134,7 +134,7 @@ export class FlowDesignService {
   }
 
   listNodeAgentRules(nodeId: string): Promise<FlowJsonObject[]> {
-    return this.tables.listRows('agentRules', { node_id: nodeId }, 'sort_order, id');
+    return this.tables.listRows('agentRules', nodeId);
   }
 
   createNodeAgentRule(nodeId: string, input: unknown): Promise<FlowJsonObject> {
@@ -154,7 +154,7 @@ export class FlowDesignService {
   }
 
   listGraphTransitionEffects(graphId: string): Promise<FlowJsonObject[]> {
-    return this.tables.listRows('transitionEffects', { graph_id: graphId }, 'sort_order, id');
+    return this.tables.listRows('transitionEffects', graphId);
   }
 
   createGraphTransitionEffect(graphId: string, input: unknown): Promise<FlowJsonObject> {
@@ -177,7 +177,7 @@ export class FlowDesignService {
   }
 
   listNodeFormRules(nodeId: string): Promise<FlowJsonObject[]> {
-    return this.tables.listRows('nodeFormRules', { node_id: nodeId }, 'id');
+    return this.tables.listRows('nodeFormRules', nodeId);
   }
 
   createNodeFormRule(nodeId: string, input: unknown): Promise<FlowJsonObject> {
@@ -200,7 +200,7 @@ export class FlowDesignService {
   }
 
   listPolicySets(scopeId?: string): Promise<FlowJsonObject[]> {
-    return this.tables.listRows('policySets', scopeId ? { scope_id: scopeId } : {}, 'version, id');
+    return this.tables.listRows('policySets', scopeId || undefined);
   }
 
   createPolicySet(input: unknown): Promise<FlowJsonObject> {
@@ -220,7 +220,7 @@ export class FlowDesignService {
   }
 
   listPolicyRules(policySetId: string): Promise<FlowJsonObject[]> {
-    return this.tables.listRows('policyRules', { policy_set_id: policySetId }, 'priority, id');
+    return this.tables.listRows('policyRules', policySetId);
   }
 
   createPolicyRule(policySetId: string, input: unknown): Promise<FlowJsonObject> {

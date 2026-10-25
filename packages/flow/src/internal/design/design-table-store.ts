@@ -1,3 +1,5 @@
+import { executeScopeCreate, executeScopeUpdate } from './scope-mutations.repository.js';
+import { executeDesignList, executeDesignGet } from './design-read.repository.js';
 import { selectNodeInsertQuery } from './generated/nodes-insert.repository.js';
 import { selectNodeUpdateQuery } from './generated/nodes-update.repository.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
@@ -203,6 +205,16 @@ function nodeMutationMask(
   return mask;
 }
 
+function scopeMutationMask(entries: ReadonlyArray<readonly [string, unknown]>): number {
+  const columns: readonly string[] = Object.values(TABLES.scopes.columns);
+  let mask = 0;
+  for (const [column] of entries) {
+    const index = columns.indexOf(column);
+    if (index >= 0) mask |= 1 << index;
+  }
+  return mask;
+}
+
 function ensureNonEmptyUpdate(entries: Array<[string, unknown]>): void {
   if (entries.length === 0) {
     throw new BadRequestException('At least one update field is required');
@@ -220,19 +232,10 @@ export class FlowDesignTableStore {
     return TABLES[key];
   }
 
-  listRows(
-    key: DesignTableKey,
-    filters: Record<string, string> = {},
-    orderBy = 'created_at DESC',
-  ): Promise<FlowJsonObject[]> {
-    const config = TABLES[key];
+  listRows(key: DesignTableKey, filterId?: string): Promise<FlowJsonObject[]> {
     return this.db.tx(async (trx) => {
-      const { where, values } = this.buildWhere(filters);
-      const result = await trx.query<DesignFlowRow>(
-        `select * from ${config.sqlName}${where} order by ${orderBy}`,
-        values,
-      );
-      return result.rows.map((row) => this.presentRow(key, camelizeDesignRow(row)));
+      const rows = await executeDesignList(trx, key, filterId);
+      return rows.map((row) => this.presentRow(key, camelizeDesignRow(row)));
     }, {
       role: 'reader',
       readonly: true,
@@ -240,8 +243,7 @@ export class FlowDesignTableStore {
   }
 
   getRow(key: DesignTableKey, id: string): Promise<FlowJsonObject> {
-    const config = TABLES[key];
-    return this.db.tx(async (trx) => this.presentRow(key, await this.getRowFromTransaction(trx, config, id)), {
+    return this.db.tx(async (trx) => this.presentRow(key, await this.getRowFromTransaction(trx, key, id)), {
       role: 'reader',
       readonly: true,
     });
@@ -264,7 +266,9 @@ export class FlowDesignTableStore {
 
       const assignments = entries.map(([column], index) => `${column} = $${index + 2}`);
       const values = [id, ...entries.map(([, value]) => value)];
-      const rows = key === 'nodes'
+      const rows = key === 'scopes'
+        ? await executeScopeUpdate(trx, scopeMutationMask(entries), values)
+        : key === 'nodes'
         ? await trx.runGuarded(selectNodeUpdateQuery(nodeMutationMask(entries)), values, isOpaqueNodeRow)
         : (await trx.query<DesignFlowRow>(
           `update ${config.sqlName} set ${assignments.join(', ')} where id = $1::uuid returning *`,
@@ -281,7 +285,7 @@ export class FlowDesignTableStore {
   softDeleteRow(key: DesignTableKey, id: string): Promise<FlowJsonObject> {
     const config = TABLES[key];
     return this.db.tx(async (trx) => {
-      await this.getRowFromTransaction(trx, config, id);
+      await this.getRowFromTransaction(trx, key, id);
       await trx.softDelete(config.softDeleteTable, id);
       return { id, deleted: true };
     });
@@ -302,7 +306,9 @@ export class FlowDesignTableStore {
     const columns = entries.map(([column]) => column);
     const placeholders = entries.map((_entry, index) => `$${index + 1}`);
     const values = entries.map(([, value]) => value);
-    const rows = key === 'nodes'
+    const rows = key === 'scopes'
+      ? await executeScopeCreate(trx, scopeMutationMask(entries), values)
+      : key === 'nodes'
       ? await trx.runGuarded(selectNodeInsertQuery(nodeMutationMask(entries)), values, isOpaqueNodeRow)
       : (await trx.query<DesignFlowRow>(
         `insert into ${config.sqlName} (${columns.join(', ')}) values (${placeholders.join(', ')}) returning *`,
@@ -317,14 +323,11 @@ export class FlowDesignTableStore {
 
   async getRowFromTransaction(
     trx: Transaction,
-    config: DesignTableConfig,
+    key: DesignTableKey,
     id: string,
   ): Promise<FlowJsonObject> {
-    const result = await trx.query<DesignFlowRow>(
-      `select * from ${config.sqlName} where id = $1::uuid limit 1`,
-      [id],
-    );
-    const row = result.rows[0];
+    const rows = await executeDesignGet(trx, key, id);
+    const row = rows[0];
     if (!row) {
       throw new NotFoundException('Flow row not found');
     }
@@ -333,19 +336,6 @@ export class FlowDesignTableStore {
 
   presentRow(key: DesignTableKey, row: FlowJsonObject): FlowJsonObject {
     return key === 'graphs' ? withGraphPublishState(row) : row;
-  }
-
-  private buildWhere(filters: Record<string, string>): { where: string; values: string[] } {
-    const entries = Object.entries(filters);
-    if (entries.length === 0) {
-      return { where: '', values: [] };
-    }
-
-    const clauses = entries.map(([column], index) => `${column} = $${index + 1}::uuid`);
-    return {
-      where: ` where ${clauses.join(' and ')}`,
-      values: entries.map(([, value]) => value),
-    };
   }
 
   private requireTenantId(): string {
