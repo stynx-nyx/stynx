@@ -5,6 +5,9 @@ import globals from 'globals';
 import { fileURLToPath } from 'node:url';
 import { stynxPlugin } from './plugin.mjs';
 
+const recommended = tsPlugin.configs.recommended;
+if (!recommended) throw new Error('Installed TypeScript ESLint plugin has no recommended config.');
+
 const rootDir = fileURLToPath(new URL('../../', import.meta.url));
 const groups = [
   {
@@ -35,7 +38,7 @@ export const workspaceToolingConfig = groups.map(({ files, project }) => ({
   plugins: { '@typescript-eslint': tsPlugin, stynx: stynxPlugin },
   rules: {
     ...js.configs.recommended.rules,
-    ...tsPlugin.configs.recommended.rules,
+    ...recommended.rules,
     'no-undef': 'off',
     'no-redeclare': 'off',
     '@typescript-eslint/no-redeclare': 'error',

@@ -1,8 +1,17 @@
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRootToolingProof, rootToolingScriptFiles } from './query-root-tooling-provenance.mjs';
 import { relative, resolve } from 'node:path';
 import ts from 'typescript';
 import { createStaticQueryProof } from './query-provenance.mjs';
 import { reflectedCallTargets } from './query-reflection.mjs';
+
+/** @typedef {import('./plugin.mjs').NativeRule} NativeRule */
+/** @typedef {import('./plugin.mjs').ESTreeNode} ESTreeNode */
+/** @typedef {Omit<Parameters<NativeRule['create']>[0], 'options'> & {options: [{rootDir: string}]}} QueryContext */
+/** @typedef {{file: string, absoluteFile: string, scope: string, name: string | undefined}} QueryOrigin */
+/** @typedef {{checker: import('typescript').TypeChecker, program: import('typescript').Program, filename: string, pathOf: (file: string) => string, trustedTsFunction: (node: import('typescript').Node | undefined, module: string, name: string) => boolean}} QuerySemantics */
+/** @typedef {(origin: Pick<QueryOrigin, 'file' | 'absoluteFile'>, module: string) => boolean} DataModulePredicate */
+
 
 const executor = 'packages/data/src/checked-executor.ts';
 const scriptCallers = new Set([
@@ -21,27 +30,28 @@ const referenceScriptScopes = new Map([
   ['reference/api/src/app.module.ts', ['runReferenceApiMigrations']],
   ['reference/api/src/performance/offline-storage.ts', ['OfflinePerformanceStorageInstaller', 'onApplicationBootstrap']],
 ]);
+/** @param {ESTreeNode} node @param {readonly string[]} names */
 const withinReferenceInstaller = (node, names) => {
   const found = new Set();
   for (let parent = node.parent; parent; parent = parent.parent) {
-    if (parent.type === 'FunctionDeclaration' || parent.type === 'ClassDeclaration') {
+    if (parent.type === AST_NODE_TYPES.FunctionDeclaration || parent.type === AST_NODE_TYPES.ClassDeclaration) {
       if (parent.id) found.add(parent.id.name);
-    } else if (parent.type === 'MethodDefinition' && !parent.computed) {
-      found.add(parent.key.name ?? parent.key.value);
+    } else if (parent.type === AST_NODE_TYPES.MethodDefinition && !parent.computed) {
+      found.add(parent.key.type === AST_NODE_TYPES.Identifier || parent.key.type === AST_NODE_TYPES.PrivateIdentifier ? parent.key.name : parent.key.value);
     }
   }
   return names.every((name) => found.has(name));
 };
 const legacyOperationCallers = new Map([
   ['select', 'packages/data/src/query-helpers.ts'],
-  ...['hard-delete-live', 'hard-delete-archive'].map((operation) =>
+  ...['hard-delete-live', 'hard-delete-archive'].map(/** @returns {[string, string]} */ (operation) =>
     [operation, 'packages/data/src/transaction.ts']),
   ...['list-child-ids', 'count-blocking-children', 'sample-blocking-children',
     'load-archived-row', 'live-parent-exists', 'archived-parent-exists', 'restore-conflict']
-    .map((operation) => [operation, 'packages/data/src/internal/archive-relations.ts']),
-  ...['restore-insert', 'restore-delete-archive', 'restore-children'].map((operation) =>
+    .map(/** @returns {[string, string]} */ (operation) => [operation, 'packages/data/src/internal/archive-relations.ts']),
+  ...['restore-insert', 'restore-delete-archive', 'restore-children'].map(/** @returns {[string, string]} */ (operation) =>
     [operation, 'packages/data/src/internal/archive-restore.ts']),
-  ...['soft-delete-insert', 'soft-delete-live'].map((operation) =>
+  ...['soft-delete-insert', 'soft-delete-live'].map(/** @returns {[string, string]} */ (operation) =>
     [operation, 'packages/data/src/internal/soft-delete-cascade.ts']),
 ]);
 const legacyCallers = new Set(legacyOperationCallers.values());
@@ -52,6 +62,7 @@ const entryCallers = new Map([
   ['executeCompatibilityStatement', new Set(['packages/data/src/transaction.ts'])],
   ['executeTransactionControl', new Set(['packages/data/src/database.ts'])],
 ]);
+/** @satisfies {NativeRule["meta"]["schema"]} */
 const optionsSchema = [
   {
     type: 'object',
@@ -60,26 +71,34 @@ const optionsSchema = [
     additionalProperties: false,
   },
 ];
+/** @param {string} path */
 const normalized = (path) => path.replaceAll('\\', '/');
 
 // Follow declarations, not local spellings or structural method names. A pg
 // method keeps its declaration through receiver aliases, Pick<>, destructuring
 // and barrel imports, while a search engine's query method remains unrelated.
+/** @param {QueryContext} context */
 function semanticOrigins(context) {
   const services = context.sourceCode.parserServices;
   if (!services?.program || !services.esTreeNodeToTSNodeMap) {
     throw new Error('STYNX query rules require TypeScript parser services with a project.');
   }
+  const nodeMap = services.esTreeNodeToTSNodeMap;
   const checker = services.program.getTypeChecker();
   const root = resolve(context.options[0].rootDir);
+  /** @param {string} file */
   const pathOf = (file) => normalized(relative(root, resolve(file)));
+  /** @param {import('typescript').Declaration} declaration */
   const declarationScope = (declaration) => {
     const names = [];
-    for (let parent = declaration.parent; parent && !ts.isSourceFile(parent); parent = parent.parent) {
+    /** @type {import('typescript').Node & Pick<import('typescript').NamedDeclaration, 'name'>} */
+    let parent = declaration.parent;
+    for (; parent && !ts.isSourceFile(parent); parent = parent.parent) {
       if (parent.name && ts.isIdentifier(parent.name)) names.push(parent.name.text);
     }
     return names.join('/');
   };
+  /** @param {import('typescript').NamedDeclaration} declaration @returns {QueryOrigin} */
   const declarationOrigin = (declaration) => ({
     file: pathOf(declaration.getSourceFile().fileName),
     absoluteFile: normalized(declaration.getSourceFile().fileName),
@@ -91,9 +110,13 @@ function semanticOrigins(context) {
           ? declaration.name.text
           : undefined,
   });
+  /** @param {import('typescript').Node | undefined} node @returns {QueryOrigin[]} */
   const tsOrigins = (node) => {
+    /** @type {QueryOrigin[]} */
     const result = [];
+    /** @type {Set<import('typescript').Node>} */
     const visited = new Set();
+    /** @param {import('typescript').Node | undefined} current @returns {void} */
     const inspect = (current) => {
       if (!current || visited.has(current)) return;
       visited.add(current);
@@ -131,9 +154,13 @@ function semanticOrigins(context) {
     inspect(node);
     return result;
   };
-  const origins = (node) => tsOrigins(services.esTreeNodeToTSNodeMap.get(node));
+  /** @param {ESTreeNode} node */
+  const origins = (node) => tsOrigins(nodeMap.get(node));
+  /** @param {import('typescript').Node | undefined} node @param {string} module @param {string} name @returns {boolean} */
   const trustedTsFunction = (node, module, name) => {
+    /** @type {Set<import('typescript').Node>} */
     const visited = new Set();
+    /** @param {import('typescript').Symbol | undefined} symbol */
     const isExpectedFunction = (symbol) => {
       const resolved = symbol && symbol.flags & ts.SymbolFlags.Alias
         ? checker.getAliasedSymbol(symbol) : symbol;
@@ -142,10 +169,12 @@ function semanticOrigins(context) {
         return ts.isFunctionDeclaration(declaration) && origin.name === name && isDataModule(origin, module);
       }) ?? false;
     };
+    /** @param {import('typescript').Node} expression @returns {boolean} */
     const namespaceImport = (expression) => {
       if (!ts.isIdentifier(expression)) return false;
       return checker.getSymbolAtLocation(expression)?.declarations?.some(ts.isNamespaceImport) ?? false;
     };
+    /** @param {import('typescript').Node | undefined} expression @returns {boolean} */
     const inspect = (expression) => {
       if (!expression || visited.has(expression)) return false;
       visited.add(expression);
@@ -167,11 +196,12 @@ function semanticOrigins(context) {
     };
     return inspect(node);
   };
+  /** @param {ESTreeNode} node @param {string} module @param {string} name */
   const trustedFunction = (node, module, name) =>
-    trustedTsFunction(services.esTreeNodeToTSNodeMap.get(node), module, name);
+    trustedTsFunction(nodeMap.get(node), module, name);
   return {
     origins, tsOrigins, trustedFunction, trustedTsFunction, checker, pathOf, program: services.program,
-    tsNode: (node) => services.esTreeNodeToTSNodeMap.get(node),
+    tsNode: /** @template {ESTreeNode} Node @param {Node} node */ (node) => nodeMap.get(node),
     filename: pathOf(context.filename),
   };
 }
@@ -179,6 +209,7 @@ function semanticOrigins(context) {
 // TypeScript may resolve a workspace import to source, a pnpm realpath, or
 // the nested declaration tree emitted by this repository's package builds.
 // Every accepted layout names the exact package and module, never a basename.
+/** @param {Pick<QueryOrigin, 'file' | 'absoluteFile'>} origin @param {string} packageName @param {string} module */
 const isWorkspaceModule = (origin, packageName, module) => [
   `packages/${packageName}/src/${module}.ts`,
   `packages/${packageName}/dist/${module}.d.ts`,
@@ -188,10 +219,12 @@ const isWorkspaceModule = (origin, packageName, module) => [
   `/node_modules/@stynx-nyx/${packageName}/dist/${packageName}/src/${module}.d.ts`,
 ].some((path) => origin.absoluteFile.endsWith(path));
 
+/** @param {Pick<QueryOrigin, 'file' | 'absoluteFile'>} origin @param {string} module */
 const isDataModule = (origin, module) => isWorkspaceModule(origin, 'data', module);
 
 // Explicit declaration census: these are SQL ports even when consumers provide
 // only a structural query implementation rather than a pg Client/Transaction.
+/** @type {[string, string, string][]} */
 const rawQueryPorts = [
   ['data', 'checked-executor', 'CheckedQueryClient'],
   ['data', 'checked-executor', 'ConfiguredSqlExecutor'],
@@ -263,11 +296,11 @@ export const workspaceQueryDeclarationCensus = Object.freeze([
 
 const configuredOperationCallers = new Map([
   ...['idempotency.lookup', 'idempotency.reserve', 'idempotency.complete', 'idempotency.clear']
-    .map((operation) => [operation, new Set([
+    .map(/** @returns {[string, Set<string>]} */ (operation) => [operation, new Set([
       'packages/idempotency/src/pg-idempotency.store.ts',
       'packages/backend/src/idempotency/pg-idempotency.store.ts',
     ])]),
-  ...['testing.archive-count', 'testing.live-count'].map((operation) =>
+  ...['testing.archive-count', 'testing.live-count'].map(/** @returns {[string, Set<string>]} */ (operation) =>
     [operation, new Set(['packages/testing/src/matchers.ts'])]),
   ['catalog.foreign-key-orphans', new Set([
     'packages/offline-sync/src/storage.ts', 'packages/outbox/src/storage.ts',
@@ -275,7 +308,7 @@ const configuredOperationCallers = new Map([
   ['offline.import-tenant-present', new Set(['packages/offline-sync/src/import-state.ts'])],
   ['offline.import-foreign-key-orphans', new Set(['packages/offline-sync/src/import-preflight.ts'])],
   ['ratelimit.consume', new Set(['packages/ratelimit/src/pg-rate-limit.store.ts'])],
-  ...['ratelimit.increment', 'ratelimit.cleanup'].map((operation) =>
+  ...['ratelimit.increment', 'ratelimit.cleanup'].map(/** @returns {[string, Set<string>]} */ (operation) =>
     [operation, new Set(['packages/backend/src/rate-limit/pg-rate-limit.store.ts'])]),
   ['auth.tenant-entitlement', new Set(['packages/backend/src/auth/sql-tenant-entitlement.fallback.ts'])],
   ['identity.role-metadata', new Set(['packages/backend/src/identity-admin/pg-local-sync.adapter.ts'])],
@@ -283,7 +316,7 @@ const configuredOperationCallers = new Map([
     'outbox.legacy-retry-state', 'outbox.legacy-ack-target', 'outbox.legacy-record-ack',
     'outbox.legacy-enqueue', 'outbox.legacy-get-one', 'outbox.legacy-claim-due',
     'outbox.legacy-fail', 'outbox.legacy-acked-row', 'outbox.legacy-retry', 'outbox.legacy-ack',
-  ].map((operation) =>
+  ].map(/** @returns {[string, Set<string>]} */ (operation) =>
     [operation, new Set(['packages/outbox/src/outbox.service.ts'])]),
 // BEGIN GENERATED audit-porm32 admissions
   ['audit.read-porm.mask.0', new Set(['packages/audit/src/sql-adapter.ts'])],
@@ -583,16 +616,17 @@ const configuredOperationCallers = new Map([
 // END GENERATED audit-remaining512 events-admissions
 
   ['audit.write-table', new Set(['packages/audit/src/sql-adapter.ts'])],
-  ...['audit.partition-retention', 'audit.partition-detach', 'audit.partition-drop'].map((operation) =>
+  ...['audit.partition-retention', 'audit.partition-detach', 'audit.partition-drop'].map(/** @returns {[string, Set<string>]} */ (operation) =>
     [operation, new Set(['packages/audit/src/audit.service.ts'])]),
   ...[
     'privacy.retention-count', 'privacy.retention-delete', 'privacy.export',
     'privacy.erasure-delete', 'privacy.erasure-null', 'privacy.erasure-replace',
-  ].map((operation) => [operation, new Set(['packages/privacy/src/privacy.service.ts'])]),
+  ].map(/** @returns {[string, Set<string>]} */ (operation) => [operation, new Set(['packages/privacy/src/privacy.service.ts'])]),
 ]);
 
+/** @param {QueryOrigin} origin */
 const isRawMethod = (origin) => {
-  if (!['query', 'execute'].includes(origin.name)) return false;
+  if (origin.name === undefined || !['query', 'execute'].includes(origin.name)) return false;
   if (origin.scope === 'Transaction' && isDataModule(origin, 'transaction')) return true;
   if (origin.name === 'execute') {
     return origin.scope === 'db/executeCompatibilityStatement' && isDataModule(origin, 'checked-executor');
@@ -603,6 +637,7 @@ const isRawMethod = (origin) => {
   return /\/node_modules\/(?:@types\/(?:pg|pg-pool)|pg|pg-pool|pg-native|node-postgres)\//u.test(origin.absoluteFile);
 };
 
+/** @satisfies {NativeRule} */
 export const noRawQuery = {
   meta: {
     type: 'problem',
@@ -617,6 +652,7 @@ export const noRawQuery = {
       definition: 'Typed execution requires a proven static repository definition: {{reason}}.',
     },
   },
+  /** @param {QueryContext} context */
   create(context) {
     const semantics = semanticOrigins(context);
     const { origins, filename } = semantics;
@@ -633,9 +669,9 @@ export const noRawQuery = {
           return;
         }
         const typedEntry = declarations.find((origin) =>
-          (isDataModule(origin, 'checked-executor') &&
+          (origin.name !== undefined && isDataModule(origin, 'checked-executor') &&
             ['executeTypedQuery', 'executeTypedQueryResult', 'executeTypedCommand', 'executeGuardedQueryRows', 'executeRootToolingQueryRows'].includes(origin.name)) ||
-          (isDataModule(origin, 'transaction') && origin.scope === 'Transaction' &&
+          (origin.name !== undefined && isDataModule(origin, 'transaction') && origin.scope === 'Transaction' &&
             ['run', 'runGuarded'].includes(origin.name)),
         );
         if (typedEntry) {
@@ -655,30 +691,30 @@ export const noRawQuery = {
             (origin.name === 'executeRawScript' && rootToolingScriptFiles.has(filename))),
         );
         if (rootEntry) {
-          if (!rootTooling(semantics.tsNode(node), rootEntry.name)) {
+          if (rootEntry.name === undefined || !rootTooling(semantics.tsNode(node), rootEntry.name)) {
             context.report({ node, messageId: 'operation' });
           }
           return;
         }
-        const denied = declarations.find(
-          (origin) =>
-            isDataModule(origin, 'checked-executor') &&
-            entryCallers.has(origin.name) &&
-            (!entryCallers.get(origin.name).has(filename) ||
-              (origin.name === 'executeRawScript' && referenceScriptScopes.has(filename) &&
-                !withinReferenceInstaller(node, referenceScriptScopes.get(filename)))),
-        );
+        const denied = declarations.find((origin) => {
+          if (!isDataModule(origin, 'checked-executor') || origin.name === undefined) return false;
+          const callers = entryCallers.get(origin.name);
+          if (!callers) return false;
+          const scopes = referenceScriptScopes.get(filename);
+          return !callers.has(filename) ||
+            (origin.name === 'executeRawScript' && scopes !== undefined && !withinReferenceInstaller(node, scopes));
+        });
         if (denied) {
           context.report({ node, messageId: 'entry', data: { name: denied.name } });
           return;
         }
         const compatibility = declarations.find((origin) =>
-          isDataModule(origin, 'checked-executor') &&
+          origin.name !== undefined && isDataModule(origin, 'checked-executor') &&
           ['executeConfiguredQuery', 'executeLegacyArchive'].includes(origin.name),
         );
         if (compatibility) {
           const operation = node.arguments[1];
-          const admitted = operation?.type === 'Literal' && typeof operation.value === 'string' &&
+          const admitted = operation?.type === AST_NODE_TYPES.Literal && typeof operation.value === 'string' &&
             (compatibility.name === 'executeConfiguredQuery'
               ? configuredOperationCallers.get(operation.value)?.has(filename)
               : legacyOperationCallers.get(operation.value) === filename);
@@ -689,6 +725,7 @@ export const noRawQuery = {
   },
 };
 
+/** @satisfies {NativeRule} */
 export const defineQueryLocation = {
   meta: {
     type: 'problem',
@@ -702,6 +739,7 @@ export const defineQueryLocation = {
         'Typed-query sql literals must have zero interpolations; bind values with placeholders.',
     },
   },
+  /** @param {QueryContext} context */
   create(context) {
     const { origins, trustedFunction, filename } = semanticOrigins(context);
     return {
@@ -717,16 +755,16 @@ export const defineQueryLocation = {
           return;
         }
         const options = node.arguments[0];
-        const textProperties = options?.type === 'ObjectExpression'
-          ? options.properties.filter((property) => property.type === 'Property' &&
-              !property.computed && (property.key.name ?? property.key.value) === 'text')
+        const textProperties = options?.type === AST_NODE_TYPES.ObjectExpression
+          ? options.properties.filter((property) => property.type === AST_NODE_TYPES.Property &&
+              !property.computed && (property.key.type === AST_NODE_TYPES.Identifier ? property.key.name : property.key.value) === 'text')
           : [];
-        const text = textProperties.length === 1 && textProperties[0].kind === 'init'
+        const text = textProperties.length === 1 && textProperties[0]?.type === AST_NODE_TYPES.Property && textProperties[0].kind === 'init'
           ? textProperties[0].value
           : undefined;
-        if (node.arguments.length !== 1 || options?.type !== 'ObjectExpression' ||
-            options.properties.some((property) => property.type === 'SpreadElement' || property.computed) ||
-            text?.type !== 'TaggedTemplateExpression' || text.quasi.expressions.length !== 0 ||
+        if (node.arguments.length !== 1 || options?.type !== AST_NODE_TYPES.ObjectExpression ||
+            options.properties.some((property) => property.type === AST_NODE_TYPES.SpreadElement || property.computed) ||
+            text?.type !== AST_NODE_TYPES.TaggedTemplateExpression || text.quasi.expressions.length !== 0 ||
             !trustedFunction(text.tag, 'typed-query', 'sql')) {
           context.report({ node, messageId: 'literal' });
         }

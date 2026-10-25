@@ -1,10 +1,28 @@
 import ts from 'typescript';
 import { createSelectorCertificateProof } from './query-selector-certificates.mjs';
 
+/** @typedef {import('typescript').Node} TsNode */
+/** @typedef {import('./query-rules.mjs').QuerySemantics} QuerySemantics */
+/** @typedef {import('./query-rules.mjs').QueryOrigin} QueryOrigin */
+/** @typedef {import('./query-rules.mjs').DataModulePredicate} DataModulePredicate */
+/** @typedef {{ok: false, reason: string, transient?: boolean}} Failure */
+/** @typedef {{ok: true, transient?: never}} Success */
+/** @typedef {Success | Failure} Proof */
+/** @typedef {{kind: 'array', elements: TsNode[]} | {kind: 'object', entries: Map<string, TsNode>}} FrozenShape */
+/** @typedef {Failure | {ok: true, values: FrozenShape[], transient?: never}} Shapes */
+/** @typedef {Failure | {ok: true, nodes: TsNode[], transient?: never}} Selection */
+/** @typedef {import('typescript').FunctionDeclaration | import('typescript').VariableDeclaration} ForwardBinding */
+/** @typedef {import('typescript').FunctionDeclaration | import('typescript').FunctionExpression | import('typescript').ArrowFunction} ForwardFunction */
+
+
+/** @type {Success} */
 const pass = Object.freeze({ ok: true });
+/** @param {string} reason @param {boolean} [transient] @returns {Failure} */
 const fail = (reason, transient = false) => ({ ok: false, reason, transient });
+/** @param {import('typescript').VariableDeclaration} declaration */
 const isConst = (declaration) => ts.isVariableDeclarationList(declaration.parent) &&
   Boolean(declaration.parent.flags & ts.NodeFlags.Const);
+/** @param {import('typescript').TypeChecker} checker @param {TsNode} node */
 const symbolDeclarations = (checker, node) => {
   // A shorthand name's ordinary symbol denotes the newly created property.
   // Follow its value binding instead; the same immutable-origin proof below
@@ -27,13 +45,17 @@ const symbolDeclarations = (checker, node) => {
  * built-in semantics. It checks actual binding origins and query-bearing source
  * structure; it does not establish an ambient-runtime integrity policy.
  */
+/** @param {QuerySemantics} semantics @param {DataModulePredicate} isDataModule */
 export function createStaticQueryProof(semantics, isDataModule) {
   const { checker, pathOf, trustedTsFunction, filename, program } = semantics;
   const composedSelector = createSelectorCertificateProof(semantics, isDataModule);
+  /** @type {WeakMap<TsNode, Proof>} */
   const memo = new WeakMap();
+  /** @type {Set<TsNode>} */
   const pending = new Set();
   let work = 0;
 
+  /** @param {TsNode} node @param {Set<TsNode>} [seen] @returns {boolean} */
   const isNamespace = (node, seen = new Set()) => {
     if (!ts.isIdentifier(node) || seen.has(node) || seen.size > 64) return false;
     seen.add(node);
@@ -47,6 +69,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
   // The cold integration-template executable builds before importing. Admit
   // only that exact native import binding; a TypedQuery-looking namespace or
   // another module/argument cannot provide source-definition provenance.
+  /** @param {import('typescript').Declaration} declaration */
   const dynamicToolingBinding = (declaration) => {
     if (filename !== 'scripts/ci-local/prepare-int-template.mjs' ||
         !ts.isBindingElement(declaration) || !ts.isObjectBindingPattern(declaration.parent) ||
@@ -56,9 +79,10 @@ export function createStaticQueryProof(semantics, isDataModule) {
         !variable.initializer || !ts.isAwaitExpression(variable.initializer)) return undefined;
     const imported = variable.initializer.expression;
     if (!ts.isCallExpression(imported) || imported.expression.kind !== ts.SyntaxKind.ImportKeyword ||
-        imported.arguments.length !== 1 || !ts.isStringLiteral(imported.arguments[0]) ||
+        imported.arguments.length !== 1 || !imported.arguments[0] || !ts.isStringLiteral(imported.arguments[0]) ||
         !['../../tools/database-tooling/dist/catalog-control.repository.js',
           '../../packages/data/dist/data/src/index.js'].includes(imported.arguments[0].text)) return undefined;
+    /** @type {TsNode | undefined} */
     let fn = variable.parent;
     while (fn && !ts.isFunctionLike(fn)) fn = fn.parent;
     if (!fn || !ts.isFunctionDeclaration(fn) || fn.name?.text !== 'main' ||
@@ -74,11 +98,12 @@ export function createStaticQueryProof(semantics, isDataModule) {
       ? 'tools/database-tooling/dist/catalog-control.repository.d.ts'
       : 'packages/data/dist/data/src/checked-executor.d.ts';
     if (!definitionModule && key.text !== 'executeTypedQuery') return undefined;
-    return declarations?.length === 1 &&
+    return declarations?.length === 1 && declarations[0] !== undefined &&
       pathOf(declarations[0].getSourceFile().fileName) === expectedPath
       ? declarations : undefined;
   };
 
+  /** @param {import('typescript').Declaration} declaration */
   const namespaceBinding = (declaration) => {
     const dynamic = dynamicToolingBinding(declaration);
     if (dynamic) return dynamic;
@@ -96,8 +121,11 @@ export function createStaticQueryProof(semantics, isDataModule) {
     return resolved?.declarations;
   };
 
+  /** @type {WeakMap<TsNode, Shapes>} */
   const shapeMemo = new WeakMap();
+  /** @type {Set<TsNode>} */
   const shapePending = new Set();
+  /** @param {TsNode} node @param {string} method */
   const builtinObjectCall = (node, method) => {
     if (!ts.isCallExpression(node) || !ts.isPropertyAccessExpression(node.expression) ||
         !ts.isIdentifier(node.expression.expression) || node.expression.expression.text !== 'Object' ||
@@ -114,29 +142,35 @@ export function createStaticQueryProof(semantics, isDataModule) {
       declaration.parent.name.text === 'ObjectConstructor',
     );
   };
+  /** @param {TsNode} node */
   const propertyName = (node) => ts.isIdentifier(node) || ts.isStringLiteral(node) ||
     ts.isNumericLiteral(node) ? node.text : undefined;
+  /** @param {TsNode} node */
   const initializer = (node) => {
     const location = ts.isPropertyAccessExpression(node) && isNamespace(node.expression) ? node.name : node;
     if (!ts.isIdentifier(location)) return undefined;
     const declarations = symbolDeclarations(checker, location);
-    if (declarations.length !== 1 || !ts.isVariableDeclaration(declarations[0]) || !isConst(declarations[0])) return undefined;
+    if (declarations.length !== 1 || !declarations[0] || !ts.isVariableDeclaration(declarations[0]) || !isConst(declarations[0])) return undefined;
     return declarations[0].initializer;
   };
-  const sameIdentifier = (left, right) => ts.isIdentifier(left) && ts.isIdentifier(right) &&
+  /** @param {TsNode | undefined} left @param {TsNode | undefined} right */
+  const sameIdentifier = (left, right) => left !== undefined && right !== undefined && ts.isIdentifier(left) && ts.isIdentifier(right) &&
     checker.getSymbolAtLocation(left) === checker.getSymbolAtLocation(right);
-  const throws = (statement) => ts.isThrowStatement(statement) ||
-    (ts.isBlock(statement) && statement.statements.length === 1 && ts.isThrowStatement(statement.statements[0]));
+  /** @param {TsNode | undefined} statement */
+  const throws = (statement) => statement !== undefined && (ts.isThrowStatement(statement) ||
+    (ts.isBlock(statement) && statement.statements.length === 1 && statement.statements[0] !== undefined && ts.isThrowStatement(statement.statements[0])));
+  /** @param {TsNode} node */
   const guardedOwnKey = (node) => {
     if (!ts.isElementAccessExpression(node) || !ts.isIdentifier(node.expression) ||
         !ts.isIdentifier(node.argumentExpression)) return false;
     const key = symbolDeclarations(checker, node.argumentExpression);
-    if (key.length !== 1 || !ts.isVariableDeclaration(key[0]) || !isConst(key[0])) return false;
+    if (key.length !== 1 || !key[0] || !ts.isVariableDeclaration(key[0]) || !isConst(key[0])) return false;
+    /** @type {TsNode} */
     let statement = node;
     while (statement.parent && !ts.isBlock(statement.parent) && !ts.isSourceFile(statement.parent)) statement = statement.parent;
     if (!statement.parent || (!ts.isBlock(statement.parent) && !ts.isSourceFile(statement.parent))) return false;
     const siblings = statement.parent.statements;
-    const index = siblings.indexOf(statement);
+    const index = siblings.findIndex((sibling) => sibling === statement);
     return siblings.slice(0, index).some((previous) => {
       if (!ts.isIfStatement(previous) || !throws(previous.thenStatement) ||
           !ts.isBinaryExpression(previous.expression) ||
@@ -148,11 +182,12 @@ export function createStaticQueryProof(semantics, isDataModule) {
           !ts.isStringLiteral(primitive.right) || primitive.right.text !== 'string' ||
           !ts.isPrefixUnaryExpression(own) || own.operator !== ts.SyntaxKind.ExclamationToken) return false;
       const check = own.operand;
-      return builtinObjectCall(check, 'hasOwn') && check.arguments.length === 2 &&
+      return ts.isCallExpression(check) && builtinObjectCall(check, 'hasOwn') && check.arguments.length === 2 &&
         sameIdentifier(check.arguments[0], node.expression) &&
         sameIdentifier(check.arguments[1], node.argumentExpression);
     });
   };
+  /** @param {import('typescript').PropertyAccessExpression | import('typescript').ElementAccessExpression} node @returns {Failure | {ok: true, key: string | undefined}} */
   const keyFor = (node) => {
     if (ts.isPropertyAccessExpression(node)) return { ok: true, key: node.name.text };
     const key = node.argumentExpression;
@@ -160,22 +195,30 @@ export function createStaticQueryProof(semantics, isDataModule) {
     return guardedOwnKey(node) ? { ok: true, key: undefined }
       : fail('dynamic container index requires actual primitive-string and own-key guards with a terminating missing-key branch');
   };
+  /** @param {Shapes} shapes @param {string | undefined} key @returns {Selection} */
   const project = (shapes, key) => {
     if (!shapes.ok) return shapes;
+    /** @type {TsNode[]} */
     const nodes = [];
     for (const shape of shapes.values) {
       if (shape.kind !== 'object') return fail('indexed arrays require a separate bounds proof');
       if (key === undefined) nodes.push(...shape.entries.values());
-      else if (shape.entries.has(key)) nodes.push(shape.entries.get(key));
-      else return fail('selected query property is missing or inherited');
+      else {
+        const selected = shape.entries.get(key);
+        if (selected !== undefined) nodes.push(selected);
+        else return fail('selected query property is missing or inherited');
+      }
     }
     return nodes.length > 0 ? { ok: true, nodes } : fail('query selection has no own members');
   };
+  /** @param {import('typescript').PropertyAccessExpression | import('typescript').ElementAccessExpression} node @param {number} depth @returns {Selection} */
   const selection = (node, depth) => {
     const key = keyFor(node);
     return key.ok ? project(frozenShapes(node.expression, depth + 1), key.key) : key;
   };
+  /** @param {readonly TsNode[]} nodes @param {number} depth @returns {Shapes} */
   const joinShapes = (nodes, depth) => {
+    /** @type {FrozenShape[]} */
     const values = [];
     for (const node of nodes) {
       const result = frozenShapes(node, depth + 1);
@@ -184,6 +227,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     }
     return { ok: true, values };
   };
+  /** @param {TsNode} node @param {number} depth @returns {Shapes} */
   const inspectShape = (node, depth) => {
     if (ts.isParenthesizedExpression(node) || ts.isNonNullExpression(node) || ts.isSatisfiesExpression(node)) {
       return frozenShapes(node.expression, depth + 1);
@@ -195,7 +239,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
       const selected = selection(node, depth + 1);
       return selected.ok ? joinShapes(selected.nodes, depth + 1) : selected;
     }
-    if (!builtinObjectCall(node, 'freeze') || node.arguments.length !== 1) {
+    if (!ts.isCallExpression(node) || !builtinObjectCall(node, 'freeze') || node.arguments.length !== 1 || !node.arguments[0]) {
       return fail('query-bearing container is not a proven frozen literal');
     }
     let literal = node.arguments[0];
@@ -210,6 +254,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
       return { ok: true, values: [{ kind: 'array', elements: [...literal.elements] }] };
     }
     if (!ts.isObjectLiteralExpression(literal)) return fail('freeze input must be a fresh literal container');
+    /** @type {Map<string, TsNode>} */
     const entries = new Map();
     for (const property of literal.properties) {
       if ((!ts.isPropertyAssignment(property) && !ts.isShorthandPropertyAssignment(property)) ||
@@ -225,6 +270,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     }
     return { ok: true, values: [{ kind: 'object', entries }] };
   };
+  /** @param {TsNode | undefined} node @param {number} depth @returns {Shapes} */
   function frozenShapes(node, depth) {
     if (!node) return fail('container source unavailable');
     if (++work > 2048 || depth > 64) return fail('query provenance traversal budget exceeded', true);
@@ -237,11 +283,13 @@ export function createStaticQueryProof(semantics, isDataModule) {
     if (!result.transient) shapeMemo.set(node, result);
     return result;
   }
+  /** @param {import('typescript').VariableDeclaration} variable @param {number} depth @returns {Selection} */
   const iteration = (variable, depth) => {
     if (!isConst(variable) || !ts.isForOfStatement(variable.parent.parent) ||
         variable.parent.parent.initializer !== variable.parent) return fail('query binding is not a const native-array iteration');
     const shapes = frozenShapes(variable.parent.parent.expression, depth + 1);
     if (!shapes.ok) return shapes;
+    /** @type {TsNode[]} */
     const nodes = [];
     for (const shape of shapes.values) {
       if (shape.kind !== 'array') return fail('iteration requires a proven frozen native array');
@@ -249,6 +297,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     }
     return nodes.length > 0 ? { ok: true, nodes } : fail('query iteration is empty');
   };
+  /** @param {Selection} selected @param {number} depth @returns {Proof} */
   const proveAll = (selected, depth) => {
     if (!selected.ok) return selected;
     for (const node of selected.nodes) {
@@ -260,31 +309,37 @@ export function createStaticQueryProof(semantics, isDataModule) {
 
   // A pure identity forwarder does not select or manufacture a query. Prove
   // each actual argument independently; never memoize its result by the helper.
+  /** @type {WeakMap<ForwardBinding, Proof>} */
   const forwardingClosureMemo = new WeakMap();
+  /** @param {ForwardBinding} binding @returns {Proof} */
   const localForwardingClosure = (binding) => {
     const cached = forwardingClosureMemo.get(binding);
     if (cached) return cached;
     const source = binding.getSourceFile();
     if (!ts.isExternalModule(source)) return fail('forwarding declaration must be module-local');
+    /** @type {Set<ForwardBinding>} */
     const visited = new Set();
     let remaining = 20000;
+    /** @param {ForwardBinding} declaration @returns {Proof} */
     const inspectBinding = (declaration) => {
       if (visited.has(declaration)) return pass;
       visited.add(declaration);
       if (visited.size > 64) return fail('forwarder alias closure budget exceeded', true);
-      if (!ts.isIdentifier(declaration.name) || declaration.getSourceFile() !== source) {
+      if (!declaration.name || !ts.isIdentifier(declaration.name) || declaration.getSourceFile() !== source) {
         return fail('forwarder binding origin is unresolved');
       }
       const statement = ts.isFunctionDeclaration(declaration) ? declaration : declaration.parent.parent;
       if ((!ts.isFunctionDeclaration(declaration) &&
           (!ts.isVariableDeclaration(declaration) || !isConst(declaration) || !ts.isVariableStatement(statement))) ||
-          statement.modifiers?.some((modifier) =>
-            modifier.kind === ts.SyntaxKind.ExportKeyword || modifier.kind === ts.SyntaxKind.DefaultKeyword)) {
+          ((ts.isFunctionDeclaration(statement) || ts.isVariableStatement(statement)) && statement.modifiers?.some((modifier) =>
+            modifier.kind === ts.SyntaxKind.ExportKeyword || modifier.kind === ts.SyntaxKind.DefaultKeyword))) {
         return fail('mutable or exported forwarding declaration');
       }
       const symbol = checker.getSymbolAtLocation(declaration.name);
       if (!symbol) return fail('forwarder binding symbol is unavailable');
+      /** @type {Proof} */
       let result = pass;
+      /** @param {TsNode} node @returns {void} */
       const scan = (node) => {
         if (!result.ok) return;
         if (--remaining < 0) {
@@ -299,6 +354,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
           : ts.isShorthandPropertyAssignment(node.parent)
             ? checker.getShorthandAssignmentValueSymbol(node.parent) : checker.getSymbolAtLocation(node);
         if (ts.isIdentifier(node) && node !== declaration.name && reference === symbol) {
+          /** @type {TsNode} */
           let expression = node;
           while (ts.isParenthesizedExpression(expression.parent)) expression = expression.parent;
           const parent = expression.parent;
@@ -321,6 +377,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     if (!result.transient) forwardingClosureMemo.set(binding, result);
     return result;
   };
+  /** @param {TsNode | undefined} node @param {Set<TsNode>} [seen] @returns {{binding: ForwardBinding, fn: ForwardFunction} | undefined} */
   const resolveForwarder = (node, seen = new Set()) => {
     if (!node || seen.has(node) || seen.size > 64) return undefined;
     seen.add(node);
@@ -329,6 +386,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     const declarations = symbolDeclarations(checker, node);
     if (declarations.length !== 1) return undefined;
     const binding = declarations[0];
+    if (!binding) return undefined;
     if (ts.isFunctionDeclaration(binding)) return { binding, fn: binding };
     if (!ts.isVariableDeclaration(binding) || !isConst(binding) || !binding.initializer) return undefined;
     if (ts.isArrowFunction(binding.initializer) || ts.isFunctionExpression(binding.initializer)) {
@@ -336,6 +394,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     }
     return resolveForwarder(binding.initializer, seen);
   };
+  /** @param {import('typescript').CallExpression} call @param {number} depth @returns {Proof | undefined} */
   const identityForwarder = (call, depth) => {
     const resolved = resolveForwarder(call.expression);
     if (!resolved) return undefined;
@@ -343,22 +402,25 @@ export function createStaticQueryProof(semantics, isDataModule) {
     if (!fn.body || fn.parameters.length !== 1 || fn.asteriskToken ||
         fn.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword)) return undefined;
     const parameter = fn.parameters[0];
-    if (!ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken) return undefined;
+    if (!parameter || !ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken) return undefined;
+    /** @type {import('typescript').ConciseBody | undefined} */
     let returned = fn.body;
     if (ts.isBlock(returned)) {
-      if (returned.statements.length !== 1 || !ts.isReturnStatement(returned.statements[0])) return undefined;
+      if (returned.statements.length !== 1 || !returned.statements[0] || !ts.isReturnStatement(returned.statements[0])) return undefined;
       returned = returned.statements[0].expression;
     }
     while (returned && ts.isParenthesizedExpression(returned)) returned = returned.expression;
     if (!returned || !sameIdentifier(returned, parameter.name)) return undefined;
-    if (call.arguments.length !== 1 || ts.isSpreadElement(call.arguments[0])) {
+    if (call.arguments.length !== 1 || !call.arguments[0] || ts.isSpreadElement(call.arguments[0])) {
       return fail('identity forwarder requires exactly one explicit argument');
     }
     const closure = localForwardingClosure(binding);
     return closure.ok ? prove(call.arguments[0], depth + 1) : closure;
   };
 
+  /** @type {WeakMap<TsNode, Proof>} */
   const selectorMemo = new WeakMap();
+  /** @param {TsNode} declaration */
   const selectorShape = (declaration) => {
     if (!ts.isArrowFunction(declaration) ||
         !ts.isVariableDeclaration(declaration.parent) || !isConst(declaration.parent) ||
@@ -370,15 +432,16 @@ export function createStaticQueryProof(semantics, isDataModule) {
         declaration.parameters.length !== 1 || declaration.body.statements.length !== 1) return undefined;
     const parameter = declaration.parameters[0];
     const selection = declaration.body.statements[0];
-    if (!ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken ||
-        !ts.isSwitchStatement(selection) || !sameIdentifier(selection.expression, parameter.name)) return undefined;
+    if (!parameter || !ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken ||
+        !selection || !ts.isSwitchStatement(selection) || !sameIdentifier(selection.expression, parameter.name)) return undefined;
     const keys = new Set();
+    /** @type {TsNode[]} */
     const nodes = [];
     let defaults = 0;
     for (const clause of selection.caseBlock.clauses) {
       if (clause.statements.length !== 1) return undefined;
       if (ts.isDefaultClause(clause)) {
-        if (++defaults !== 1 || !ts.isThrowStatement(clause.statements[0])) return undefined;
+        if (++defaults !== 1 || !clause.statements[0] || !ts.isThrowStatement(clause.statements[0])) return undefined;
         continue;
       }
       if (!ts.isNumericLiteral(clause.expression)) return undefined;
@@ -386,9 +449,9 @@ export function createStaticQueryProof(semantics, isDataModule) {
       if (!Number.isFinite(key) || keys.has(key)) return undefined;
       keys.add(key);
       const returned = clause.statements[0];
-      if (!ts.isReturnStatement(returned) || !returned.expression || !ts.isIdentifier(returned.expression)) return undefined;
+      if (!returned || !ts.isReturnStatement(returned) || !returned.expression || !ts.isIdentifier(returned.expression)) return undefined;
       const leaves = symbolDeclarations(checker, returned.expression);
-      if (leaves.length !== 1 || !ts.isVariableDeclaration(leaves[0]) || !isConst(leaves[0]) ||
+      if (leaves.length !== 1 || !leaves[0] || !ts.isVariableDeclaration(leaves[0]) || !isConst(leaves[0]) ||
           !ts.isVariableStatement(leaves[0].parent.parent) || !ts.isSourceFile(leaves[0].parent.parent.parent) ||
           !leaves[0].initializer || !ts.isCallExpression(leaves[0].initializer) ||
           !trustedTsFunction(leaves[0].initializer.expression, 'typed-query', 'defineQuery')) return undefined;
@@ -396,6 +459,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     }
     return defaults === 1 && nodes.length > 0 ? { nodes } : undefined;
   };
+  /** @param {TsNode} node @param {Set<TsNode>} [seen] @returns {import('typescript').ArrowFunction | import('typescript').FunctionExpression | undefined} */
   const resolveSelector = (node, seen = new Set()) => {
     if (seen.has(node) || seen.size > 64) return undefined;
     seen.add(node);
@@ -404,7 +468,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     const declarations = symbolDeclarations(checker, ts.isPropertyAccessExpression(node) ? node.name : node);
     if (declarations.length !== 1) return undefined;
     const declaration = declarations[0];
-    if (ts.isVariableDeclaration(declaration) && isConst(declaration) && declaration.initializer) {
+    if (declaration && ts.isVariableDeclaration(declaration) && isConst(declaration) && declaration.initializer) {
       if (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer)) {
         return declaration.initializer;
       }
@@ -412,8 +476,9 @@ export function createStaticQueryProof(semantics, isDataModule) {
     }
     return undefined;
   };
+  /** @param {import('typescript').CallExpression} call @param {number} depth @returns {Proof} */
   const closedSelector = (call, depth) => {
-    if (call.arguments.length !== 1 || ts.isSpreadElement(call.arguments[0])) {
+    if (call.arguments.length !== 1 || !call.arguments[0] || ts.isSpreadElement(call.arguments[0])) {
       return fail('only a closed one-key numeric switch selector is proven');
     }
     const declaration = resolveSelector(call.expression);
@@ -433,6 +498,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
   // The private native tooling route imports emitted JS. Its adjacent d.ts
   // alone is never evidence: locate the exact source module in this same
   // Program and prove its exported const initializer by the ordinary rules.
+  /** @param {import('typescript').Declaration} declaration */
   const toolingSourceDeclaration = (declaration) => {
     if (!declaration.getSourceFile().isDeclarationFile ||
         !ts.isVariableDeclaration(declaration) || !isConst(declaration) ||
@@ -450,11 +516,12 @@ export function createStaticQueryProof(semantics, isDataModule) {
     if (!source) return undefined;
     const moduleSymbol = checker.getSymbolAtLocation(source);
     if (!moduleSymbol) return undefined;
+    const name = declaration.name.text;
     const exported = checker.getExportsOfModule(moduleSymbol)
-      .find((symbol) => symbol.name === declaration.name.text);
+      .find((symbol) => symbol.name === name);
     if (!exported || exported.flags & ts.SymbolFlags.Alias || exported.declarations?.length !== 1) return undefined;
     const original = exported.declarations[0];
-    if (!ts.isVariableDeclaration(original) || !isConst(original) ||
+    if (!original || !ts.isVariableDeclaration(original) || !isConst(original) ||
         !original.initializer || original.getSourceFile() !== source ||
         !ts.isIdentifier(original.name) || original.name.text !== declaration.name.text ||
         !ts.isVariableStatement(original.parent.parent) ||
@@ -462,6 +529,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     return original;
   };
 
+  /** @param {import('typescript').Declaration} declaration @param {number} depth @returns {Proof} */
   const declarationProof = (declaration, depth) => {
     if (ts.isVariableDeclaration(declaration)) {
       if (!isConst(declaration)) return fail('mutable query binding');
@@ -476,7 +544,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     }
     if (ts.isBindingElement(declaration)) {
       const declarations = namespaceBinding(declaration);
-      if (declarations?.length === 1) return declarationProof(declarations[0], depth + 1);
+      if (declarations?.length === 1 && declarations[0]) return declarationProof(declarations[0], depth + 1);
       if (!ts.isObjectBindingPattern(declaration.parent) || declaration.dotDotDotToken || declaration.initializer) {
         return fail('destructuring requires an explicit non-default object property');
       }
@@ -492,6 +560,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     return fail('query does not resolve to an immutable source initializer');
   };
 
+  /** @param {import('typescript').CallExpression} node @returns {Proof} */
   const literalDefinition = (node) => {
     if (!pathOf(node.getSourceFile().fileName).endsWith('.repository.ts')) {
       return fail('definition is outside a repository module');
@@ -504,8 +573,8 @@ export function createStaticQueryProof(semantics, isDataModule) {
       return fail('definition options must be explicit data properties');
     }
     const texts = options.properties.filter((property) =>
-      (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)) && property.name.text === 'text');
-    const text = texts.length === 1 && ts.isPropertyAssignment(texts[0]) ? texts[0].initializer : undefined;
+      property.name !== undefined && (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)) && property.name.text === 'text');
+    const text = texts.length === 1 && texts[0] !== undefined && ts.isPropertyAssignment(texts[0]) ? texts[0].initializer : undefined;
     if (!text || !ts.isTaggedTemplateExpression(text) ||
         !ts.isNoSubstitutionTemplateLiteral(text.template) ||
         !trustedTsFunction(text.tag, 'typed-query', 'sql')) {
@@ -514,6 +583,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     return pass;
   };
 
+  /** @param {TsNode} node @param {number} depth @returns {Proof} */
   const inspect = (node, depth) => {
     if (ts.isParenthesizedExpression(node) || ts.isNonNullExpression(node) ||
         ts.isSatisfiesExpression(node)) return prove(node.expression, depth + 1);
@@ -526,7 +596,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     }
     if (ts.isIdentifier(node)) {
       const declarations = symbolDeclarations(checker, node);
-      return declarations.length === 1
+      return declarations.length === 1 && declarations[0] !== undefined
         ? declarationProof(declarations[0], depth + 1)
         : fail('query declaration is unresolved or ambiguous');
     }
@@ -537,7 +607,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
         return proveAll(selection(node, depth + 1), depth + 1);
       }
       const declarations = symbolDeclarations(checker, node.name);
-      return declarations.length === 1
+      return declarations.length === 1 && declarations[0] !== undefined
         ? declarationProof(declarations[0], depth + 1)
         : fail('namespace query source is unavailable');
     }
@@ -549,6 +619,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     return fail('unsupported query expression; prove its finite selection and write/escape closure');
   };
 
+  /** @param {TsNode | undefined} node @param {number} [depth] @returns {Proof} */
   function prove(node, depth = 0) {
     if (!node) return fail('query argument is missing');
     if (++work > 2048 || depth > 64) return fail('query provenance traversal budget exceeded', true);
@@ -562,6 +633,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     return result;
   }
 
+  /** @param {import('typescript').NamedDeclaration} declaration @param {QueryOrigin} entry */
   const expectedCallable = (declaration, entry) => {
     if (!declaration.name || !ts.isIdentifier(declaration.name) || declaration.name.text !== entry.name) return false;
     const origin = {
@@ -575,6 +647,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     return ts.isFunctionDeclaration(declaration) && isDataModule(origin, 'checked-executor');
   };
 
+  /** @param {TsNode | undefined} node @param {QueryOrigin} entry @param {Set<TsNode>} [seen] @param {number} [depth] @returns {boolean} */
   const callable = (node, entry, seen = new Set(), depth = 0) => {
     if (!node || depth > 64 || seen.has(node)) return false;
     seen.add(node);
@@ -603,6 +676,7 @@ export function createStaticQueryProof(semantics, isDataModule) {
     });
   };
 
+  /** @param {import('typescript').CallExpression} call @param {QueryOrigin} entry */
   const internalForwarding = (call, entry) => {
     if (filename !== 'packages/data/src/transaction.ts') return false;
     const methodName = entry.name === 'executeTypedQuery' ? 'run'
@@ -616,23 +690,23 @@ export function createStaticQueryProof(semantics, isDataModule) {
     if (!parent.body || parent.body.statements.length !== 2 ||
         parent.parameters.some((parameter) => parameter.initializer || parameter.dotDotDotToken)) return false;
     const [preflight, forwarded] = parent.body.statements;
-    if (!ts.isExpressionStatement(preflight) || !ts.isCallExpression(preflight.expression) ||
+    if (!preflight || !ts.isExpressionStatement(preflight) || !ts.isCallExpression(preflight.expression) ||
         preflight.expression.arguments.length !== 0 || !ts.isPropertyAccessExpression(preflight.expression.expression) ||
         preflight.expression.expression.expression.kind !== ts.SyntaxKind.ThisKeyword ||
         preflight.expression.expression.name.text !== 'ensureActive' ||
-        !ts.isReturnStatement(forwarded) || forwarded.expression !== call) return false;
+        !forwarded || !ts.isReturnStatement(forwarded) || forwarded.expression !== call) return false;
     // The exact two-statement body has no assignment, alias, nested callback or
     // parameter initializer that could replace the original query parameter.
     const parameter = parent.parameters[0];
     const query = call.arguments[1];
     const client = call.arguments[0];
-    return parameter && ts.isIdentifier(parameter.name) && ts.isIdentifier(query) &&
+    return parameter && query && client && ts.isIdentifier(parameter.name) && ts.isIdentifier(query) &&
       checker.getSymbolAtLocation(query) === checker.getSymbolAtLocation(parameter.name) &&
       ts.isPropertyAccessExpression(client) && client.expression.kind === ts.SyntaxKind.ThisKeyword &&
       client.name.text === 'client';
   };
 
-  return (call, entry) => {
+  return /** @param {import('typescript').CallExpression} call @param {QueryOrigin} entry */ (call, entry) => {
     work = 0;
     if (!callable(call.expression, entry)) {
       return fail('callee alias, receiver or invocation arguments are not proven; call/apply/bind need explicit proof');

@@ -1,5 +1,13 @@
+import { AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 // The `stynx/*` ESLint rules shared by every profile in this package.
 import { noRawQuery, defineQueryLocation } from './query-rules.mjs';
+
+/** @typedef {(typeof import('@typescript-eslint/eslint-plugin'))['rules'][string]} NativeRule */
+/** @typedef {Parameters<NativeRule['create']>[0]} NativeContext */
+/** @typedef {Parameters<import('@typescript-eslint/parser').ParserServices['esTreeNodeToTSNodeMap']['get']>[0]} ESTreeNode */
+/** @typedef {Extract<ESTreeNode, {type: 'Decorator'}>} Decorator */
+/** @typedef {ReturnType<NativeContext['sourceCode']['getScope']>} NativeScope */
+
 
 const writeRouteDecoratorNames = new Set(['Post', 'Put', 'Patch']);
 const idempotencyDecoratorNames = new Set(['Idempotent', 'NoIdempotent']);
@@ -9,23 +17,25 @@ const idempotencyDecoratorNames = new Set(['Idempotent', 'NoIdempotent']);
 const commonJsBindings = new Set(['require', 'module', 'exports', '__dirname', '__filename']);
 const nodeModuleSpecifiers = new Set(['module', 'node:module']);
 
+/** @param {NativeScope['variables'][number] | undefined | null} variable */
 function isImplicitGlobal(variable) {
   return variable !== null && variable !== undefined && variable.defs.length === 0;
 }
 
+/** @param {Decorator} decorator */
 function getDecoratorName(decorator) {
   const expression = decorator.expression;
   if (!expression) return null;
-  if (expression.type === 'Identifier') {
+  if (expression.type === AST_NODE_TYPES.Identifier) {
     return expression.name;
   }
-  if (expression.type === 'CallExpression') {
-    if (expression.callee.type === 'Identifier') {
+  if (expression.type === AST_NODE_TYPES.CallExpression) {
+    if (expression.callee.type === AST_NODE_TYPES.Identifier) {
       return expression.callee.name;
     }
     if (
-      expression.callee.type === 'MemberExpression' &&
-      expression.callee.property.type === 'Identifier'
+      expression.callee.type === AST_NODE_TYPES.MemberExpression &&
+      expression.callee.property.type === AST_NODE_TYPES.Identifier
     ) {
       return expression.callee.property.name;
     }
@@ -33,6 +43,7 @@ function getDecoratorName(decorator) {
   return null;
 }
 
+/** @param {ESTreeNode & {decorators?: Decorator[]}} node */
 function collectDecoratorNames(node) {
   if (!Array.isArray(node.decorators)) return [];
   return node.decorators
@@ -40,6 +51,13 @@ function collectDecoratorNames(node) {
     .filter((name) => typeof name === 'string');
 }
 
+/** @satisfies {{ rules: {
+ * 'no-raw-query': typeof noRawQuery,
+ * 'define-query-location': typeof defineQueryLocation,
+ * 'no-authored-cjs': NativeRule,
+ * 'require-package-index-tsdoc': NativeRule,
+ * 'require-idempotent-route-decorator': NativeRule
+ * } }} */
 export const stynxPlugin = {
   rules: {
     'no-raw-query': noRawQuery,
@@ -63,6 +81,7 @@ export const stynxPlugin = {
       },
       create(context) {
         const sourceCode = context.sourceCode;
+        /** @param {NativeScope['references'][number]} reference */
         const reportReference = (reference) => {
           context.report({
             node: reference.identifier,
@@ -76,8 +95,8 @@ export const stynxPlugin = {
             if (!nodeModuleSpecifiers.has(node.source.value)) return;
             for (const specifier of node.specifiers) {
               if (
-                specifier.type === 'ImportSpecifier' &&
-                (specifier.imported.name ?? specifier.imported.value) === 'createRequire'
+                specifier.type === AST_NODE_TYPES.ImportSpecifier &&
+                (specifier.imported.type === AST_NODE_TYPES.Identifier ? specifier.imported.name : specifier.imported.value) === 'createRequire'
               ) {
                 context.report({ node: specifier, messageId: 'createRequire' });
               }
@@ -86,16 +105,16 @@ export const stynxPlugin = {
           MemberExpression(node) {
             const property = node.property;
             const name = node.computed
-              ? property.type === 'Literal'
+              ? property.type === AST_NODE_TYPES.Literal
                 ? property.value
                 : null
-              : property.name;
+              : node.property.name;
             if (name === 'createRequire') {
               context.report({ node, messageId: 'createRequire' });
             }
           },
           TSImportEqualsDeclaration(node) {
-            if (node.moduleReference.type === 'TSExternalModuleReference') {
+            if (node.moduleReference.type === AST_NODE_TYPES.TSExternalModuleReference) {
               context.report({ node, messageId: 'importEqualsRequire' });
             }
           },
@@ -106,7 +125,7 @@ export const stynxPlugin = {
             const globalScope = sourceCode.getScope(node);
             for (const name of commonJsBindings) {
               const variable = globalScope.set.get(name);
-              if (isImplicitGlobal(variable)) {
+              if (isImplicitGlobal(variable) && variable) {
                 variable.references.forEach(reportReference);
               }
             }
@@ -137,7 +156,7 @@ export const stynxPlugin = {
             const sourceCode = context.sourceCode;
             const firstComment = sourceCode.getAllComments()[0];
             if (
-              firstComment?.type === 'Block' &&
+              firstComment?.type === AST_TOKEN_TYPES.Block &&
               firstComment.value.includes('*') &&
               firstComment.value.includes('@packageDocumentation')
             ) {

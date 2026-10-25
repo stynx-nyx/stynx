@@ -113,6 +113,7 @@ const allowedDependencies = {
   ],
 };
 
+/** @param {string} type */
 const elementDirectory = (type) => {
   if (type === 'migration-linter') return 'tools/migration-linter';
   if (type === 'database-tooling') return 'tools/database-tooling';
@@ -139,7 +140,11 @@ const boundaryAllow = Object.entries(allowedDependencies)
 const workspacePackages = Object.fromEntries(
   Object.keys(allowedDependencies).map((type) => {
     const directory = join(workspaceRoot, elementDirectory(type));
+    /** @type {unknown} */
     const manifest = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'));
+    if (typeof manifest !== 'object' || manifest === null || !('name' in manifest) || typeof manifest.name !== 'string') {
+      throw new Error(`Workspace lint package has no name: ${directory}`);
+    }
     const source =
       type === 'domain-demo-bookmark-api'
         ? join(directory, 'src/demo-bookmark/demo-bookmark.module.ts')

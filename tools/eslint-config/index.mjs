@@ -13,6 +13,23 @@ import tsPlugin from '@typescript-eslint/eslint-plugin';
 import { stynxPlugin } from './plugin.mjs';
 import { withLegacyTestingAssertions } from './legacy-testing-assertions.mjs';
 
+/**
+ * @typedef {object} SourceProfileOptions
+ * @property {string[]} files
+ * @property {string | string[]} [tsconfig]
+ * @property {boolean} [browser]
+ * @property {boolean} [nest]
+ * @property {boolean} [angular]
+ * @property {boolean} [allowPgPool]
+ * @property {boolean} [allowS3Fetch]
+ * @property {string | import('eslint').Linter.Processor | typeof angularTemplatePlugin.processors['extract-inline-html']} [processor]
+ * @property {boolean} [strict]
+ * @property {{ rootDir: string, packageRoots: string[] }} [workspaceQuery]
+ * @property {string} [rootDir]
+ * @property {{ rootPath?: string, elements?: unknown[], allow?: unknown[], strict?: boolean, workspacePackages?: Record<string, string> }} [boundaries]
+ */
+
+
 const currentPackageName = () => process.env.npm_package_name ?? '';
 
 // Root and package invocations must derive workspace policy from the same
@@ -90,6 +107,7 @@ const tsdocPackages = new Set([
 ]);
 
 const tsdocExportContexts = ['ExportAllDeclaration', 'ExportNamedDeclaration'];
+/** @param {string} packageName */
 const tsdocExportContextsForPackage = (packageName) =>
   packageName === '@stynx-nyx/sdk'
     ? [
@@ -98,14 +116,18 @@ const tsdocExportContextsForPackage = (packageName) =>
       ]
     : tsdocExportContexts;
 
+const recommended = tsPlugin.configs.recommended;
+if (!recommended) throw new Error('Installed TypeScript ESLint plugin has no recommended config.');
+
 const sharedTypescriptRules = {
   ...js.configs.recommended.rules,
-  ...tsPlugin.configs.recommended.rules,
+  ...recommended.rules,
   'no-undef': 'off',
   '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
   '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: false }],
 };
 
+/** @param {{allowPgImports: boolean, allowS3Imports: boolean}} options */
 const restrictedImportsRule = ({ allowPgImports, allowS3Imports }) => ({
   'no-restricted-imports': [
     'error',
@@ -116,6 +138,7 @@ const restrictedImportsRule = ({ allowPgImports, allowS3Imports }) => ({
   ],
 });
 
+/** @param {boolean} allow */
 const s3FetchRule = (allow) =>
   allow
     ? {}
@@ -138,6 +161,7 @@ const unsafeTypeRuleNames = Object.keys(tsPlugin.rules)
   .sort()
   .map((name) => `@typescript-eslint/${name}`);
 
+/** @param {boolean} strict */
 const typeSafetyRules = (strict) =>
   strict
     ? {
@@ -160,6 +184,7 @@ const internalBoundaryRule = {
 
 // Strict profiles deny every dependency between declared elements unless the
 // consumer allows it (S-37).
+/** @param {boolean} strict @param {unknown[]} allow */
 const boundaryDependenciesRule = (strict, allow) => [
   'error',
   {
@@ -171,6 +196,7 @@ const boundaryDependenciesRule = (strict, allow) => [
 // Strict profiles resolve relative TypeScript imports so boundaries can
 // classify them (see import-resolver.mjs); bare specifiers use `node`.
 const importResolverPath = fileURLToPath(new URL('./import-resolver.mjs', import.meta.url));
+/** @param {boolean} strict @param {Record<string, string> | undefined} workspacePackages */
 const importResolverSettings = (strict, workspacePackages) =>
   strict
     ? {
@@ -181,8 +207,10 @@ const importResolverSettings = (strict, workspacePackages) =>
       }
     : {};
 
+/** @param {boolean} strict */
 const authoredCommonJsRule = (strict) => (strict ? { 'stynx/no-authored-cjs': 'error' } : {});
 
+/** @param {string | string[]} tsconfig @param {string} rootDir */
 const resolveTsconfigProject = (tsconfig, rootDir) => {
   if (Array.isArray(tsconfig)) {
     const existing = tsconfig.filter((candidate) => existsSync(resolve(rootDir, candidate)));
@@ -192,6 +220,7 @@ const resolveTsconfigProject = (tsconfig, rootDir) => {
   return tsconfig;
 };
 
+/** @param {SourceProfileOptions} options */
 const createConfig = ({
   files,
   tsconfig = './tsconfig.json',
@@ -375,10 +404,13 @@ const createConfig = ({
 ];
 };
 
+/** @param {Partial<SourceProfileOptions>} [options] */
 export const createLibConfig = (options = {}) =>
   createConfig({ files: ['src/**/*.ts', 'lib/**/*.ts'], ...options });
+/** @param {Partial<SourceProfileOptions>} [options] */
 export const createNestConfig = (options = {}) =>
   createConfig({ files: ['src/**/*.ts'], nest: true, ...options });
+/** @param {Partial<SourceProfileOptions>} [options] */
 export const createAngularConfig = (options = {}) =>
   createConfig({
     files: ['src/**/*.ts'],
@@ -394,6 +426,7 @@ const scriptIgnores = ['dist/**', 'build/**', 'coverage/**', 'node_modules/**'];
 // Plain JavaScript tooling (build and repository scripts). Strict profiles lint
 // every script as ESM and forbid authored CommonJS (D-057); the workspace
 // profile keeps STYNX's CommonJS `.js`/`.cjs` scripts until SM-01 lands.
+/** @param {{strict?: boolean, files?: string[]}} [options] */
 export const createScriptsConfig = ({ strict = true, files } = {}) =>
   strict
     ? [
@@ -446,6 +479,7 @@ export const createScriptsConfig = ({ strict = true, files } = {}) =>
 // syntax-based (no type information needed). We use the TS parser without a
 // `project:` reference so any package's test/ files can be linted directly
 // from the workspace root via `pnpm lint:tests`.
+/** @param {{files?: string[]}} [options] */
 export const createTestConfig = ({
   files = ['**/*.spec.ts', '**/*.test.ts', '**/*.spec.tsx', '**/*.test.tsx'],
 } = {}) => [
