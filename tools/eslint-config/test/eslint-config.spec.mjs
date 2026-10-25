@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { ESLint } from 'eslint';
-import { createLibConfig } from '../index.mjs';
+import { createLibConfig, createScriptsConfig, createTestConfig } from '../index.mjs';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import { stynxWorkspaceOptions } from '../workspace.mjs';
 
@@ -242,7 +243,7 @@ test('root hook TypeScript redeclarations preserve overloads and reject duplicat
   const single = 'export function convert(value: string): string { return value; }';
   const duplicate = 'var repeated = 1; var repeated = 2; export { repeated };';
   for (const extension of ['ts', 'mts', 'cts']) {
-    const filePath = join(workspaceRoot, `packages/core/src/__root-hook-contract.${extension}`);
+    const filePath = join(workspaceRoot, `packages/core/test/__root-hook-contract.${extension}`);
     const config = await eslint.calculateConfigForFile(filePath);
     assert.ok(config, `actual ${extension} root config must resolve`);
     assert.ok(config.languageOptions.parser, 'actual TypeScript parser must remain installed');
@@ -262,4 +263,170 @@ test('root hook TypeScript redeclarations preserve overloads and reject duplicat
     `${extension}: actual duplicate values remain errors`);
     assert.equal(invalid.messages.filter((message) => message.ruleId === 'no-redeclare').length, 0);
   }
+});
+
+// Actual owning profiles are checked in isolated processes because profile
+// factories capture cwd and package identity when their module is loaded.
+const parityRoots = [
+ ["packages/cli","src/audit.ts","lib"],
+ ["packages/data","src/storage-catalog.repository.ts","nest"],
+ ["packages/storage","src/s3.service.ts","nest"],
+ ["packages-web/sdk","src/index.ts","lib"],
+ ["reference/api","src/query-schemas.ts","nest"],
+ ["reference/web","src/app/app.component.ts","angular"],
+ ["domain/demo-bookmark/api","src/demo-bookmark/services/bookmark.service.ts","nest"],
+ ["domain/demo-bookmark/web","src/app/demo-bookmark/bookmark-list.component.ts","local"],
+ ["tools/database-tooling","src/demo-bookmark.repository.ts","local"],
+ ["tools/migration-linter","src/lint.ts","lib"]
+];
+function probeWorkspaceProfile(directory, file, profile, mode, configOnly = false, witness = '') {
+  const root = resolve(import.meta.dirname, '../../..');
+  const result = spawnSync(process.execPath, [join(import.meta.dirname, 'support/workspace-profile-probe.mjs'), root, directory, file, mode, profile], {
+    cwd: root, encoding: 'utf8', timeout: 90000,
+    env: { ...process.env, STYNX_INSPECTOR_CONFIG_ONLY: configOnly ? '1' : '0', STYNX_INSPECTOR_WITNESS: witness },
+  });
+  assert.equal(result.error, undefined);
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  const observation = JSON.parse(result.stdout);
+  assert.equal(observation.error, undefined);
+  return observation;
+}
+for (const [directory, file, profile] of parityRoots) {
+  test(`root typed source profile matches the owning package: ${directory}`, () => {
+    const root = probeWorkspaceProfile(directory, file, profile, 'root');
+    assert.equal(root.typedProject, true, 'root source must configure its real TypeScript project');
+    assert.deepEqual(root.visited.map(({ hasProgram, belongs }) => ({ hasProgram, belongs })), [{ hasProgram: true, belongs: true }]);
+    assert.deepEqual(root.results.flatMap(result => result.fatal), []);
+    const own = probeWorkspaceProfile(directory, file, profile, 'package');
+    assert.deepEqual(own.visited.map(({ hasProgram, belongs }) => ({ hasProgram, belongs })), [{ hasProgram: true, belongs: true }]);
+    assert.deepEqual(own.results.flatMap(result => result.fatal), []);
+    assert.deepEqual(root.rules, own.rules, 'unsafe, query, import, documentation and Angular policies must match');
+    assert.deepEqual(root.processor, own.processor, 'actual inline template extraction must match the owning profile');
+    assert.deepEqual(root.ignored, own.ignored, 'installed basePath must scope generated and output ignores correctly');
+  });
+}
+for (const [directory, file, profile] of parityRoots.filter(([directory]) => ['packages/cli', 'packages/data', 'packages/storage', 'packages-web/sdk'].includes(directory))) {
+  test(`workspace policy uses the owning manifest despite npm identity: ${directory}`, () => {
+    const own = probeWorkspaceProfile(directory, file, profile, 'package', true);
+    const poisoned = probeWorkspaceProfile(directory, file, profile, 'poisoned-package', true);
+    assert.deepEqual(poisoned.rules, own.rules);
+  });
+}
+
+test('root source keeps a native unsafe witness active in its owning sibling root', () => {
+  const observation = probeWorkspaceProfile('packages/data', 'src/storage-catalog.repository.ts', 'nest', 'root', false, 'unsafe');
+  assert.deepEqual(observation.witness.map(message => [message.ruleId, message.severity]), [['@typescript-eslint/no-explicit-any', 2]]);
+});
+test('root and package process the same native inline Angular template violation', () => {
+  const args = ['reference/web', 'src/app/app.component.ts', 'angular'];
+  const root = probeWorkspaceProfile(...args, 'root', true, 'template');
+  const own = probeWorkspaceProfile(...args, 'package', true, 'template');
+  assert.ok(root.witness.some(message => message.ruleId === '@angular-eslint/template/eqeqeq' && message.severity === 2));
+  assert.deepEqual(root.witness, own.witness);
+});
+test('root F2 keeps only its exact two admitted expressions while rejecting a new cast', async () => {
+  const root = resolve(import.meta.dirname, '../../..');
+  const filename = join(root, 'packages/testing/src/fake-transaction.ts');
+  const eslint = new ESLint({ cwd: root, overrideConfigFile: join(root, 'eslint.config.mjs') });
+  const config = await eslint.calculateConfigForFile(filename);
+  assert.equal(config.rules['@typescript-eslint/no-unsafe-type-assertion']?.[0], 2);
+  const original = readFileSync(filename, 'utf8');
+  const [clean] = await eslint.lintText(original, { filePath: filename });
+  assert.deepEqual(clean.messages.filter(message => message.ruleId === '@typescript-eslint/no-unsafe-type-assertion'), []);
+  const modified = original.replace('  const pending = [...script];', '  const forbidden = {} as Transaction;\n  const pending = [...script];');
+  assert.notEqual(modified, original);
+  const [negative] = await eslint.lintText(modified, { filePath: filename });
+  const actual = negative.messages.filter(message => message.ruleId === '@typescript-eslint/no-unsafe-type-assertion');
+  assert.equal(actual.length, 1);
+  assert.equal(actual[0].messageId, 'unsafeTypeAssertion');
+  assert.equal(actual[0].severity, 2);
+});
+test('published factories and ordinary test fallback retain their separate syntax contracts', async () => {
+  const root = resolve(import.meta.dirname, '../../..');
+  const filename = join(root, 'packages/preferences/test/preferences-patch-preservation.spec.ts');
+  const eslint = new ESLint({ cwd: root, overrideConfigFile: join(root, 'eslint.config.mjs') });
+  const config = await eslint.calculateConfigForFile(filename);
+  assert.equal(config.languageOptions.parserOptions.project, undefined);
+  assert.equal(config.rules['@typescript-eslint/no-explicit-any'][0], 0);
+  assert.equal(createTestConfig().find(config => config.languageOptions?.parser)?.languageOptions.parserOptions.project, undefined);
+  assert.ok(createScriptsConfig().some(config => config.rules?.['stynx/no-authored-cjs'] === 'error'));
+  const consumer = realpathSync(mkdtempSync(join(tmpdir(), 'stynx-public-profile-')));
+  try {
+    assert.doesNotThrow(() => createLibConfig({ rootDir: consumer }));
+    assert.equal(createLibConfig({ rootDir: consumer }).find(config => config.plugins?.['@typescript-eslint']).plugins['@typescript-eslint'], tsPlugin);
+  } finally { rmSync(consumer, { recursive: true, force: true }); }
+});
+test('workspace profile fails closed on a missing owning manifest', () => {
+  const consumer = realpathSync(mkdtempSync(join(tmpdir(), 'stynx-private-profile-')));
+  try {
+    assert.throws(() => createLibConfig({ rootDir: consumer, workspaceQuery: stynxWorkspaceOptions.workspaceQuery }), /package\.json/);
+  } finally { rmSync(consumer, { recursive: true, force: true }); }
+});
+
+for (const [name, lint, expected] of [
+  ['missing normal profile', null, /Workspace source root has no normal lint command: packages\/cli/u],
+  ['unclassified normal profile', 'eslint --config unsupported.mjs src', /Unclassified workspace source lint profile: packages\/cli/u],
+]) {
+  test(`root source composition refuses ${name}`, () => {
+    const root = resolve(import.meta.dirname, '../../..');
+    const subject = join(root, 'tools/eslint-config/root-workspace-source.mjs');
+    assert.ok(existsSync(subject), 'the complete root source configuration must be present');
+    const code = `
+      import fs from 'node:fs';
+      import { syncBuiltinESMExports } from 'node:module';
+      import { pathToFileURL } from 'node:url';
+      const target = ${JSON.stringify(join(root, 'packages/cli/package.json'))};
+      const original = fs.readFileSync;
+      fs.readFileSync = function(filename, ...args) {
+        const result = original.call(this, filename, ...args);
+        if (String(filename) !== target) return result;
+        const manifest = JSON.parse(String(result));
+        if (${JSON.stringify(lint)} === null) delete manifest.scripts.lint;
+        else manifest.scripts.lint = ${JSON.stringify(lint)};
+        return JSON.stringify(manifest);
+      };
+      syncBuiltinESMExports();
+      try { await import(pathToFileURL(${JSON.stringify(subject)}).href); console.log(JSON.stringify({ accepted: true })); }
+      catch (error) { console.log(JSON.stringify({ accepted: false, message: error.message })); }
+    `;
+    const result = spawnSync(process.execPath, ['--input-type=module', '--eval', code], { cwd: root, encoding: 'utf8', timeout: 30000 });
+    assert.equal(result.error, undefined);
+    assert.equal(result.status, 0, result.stderr);
+    const observation = JSON.parse(result.stdout);
+    assert.equal(observation.accepted, false);
+    assert.match(observation.message, expected);
+  });
+}
+
+test('root typed source redeclarations preserve overloads and reject duplicate values', async () => {
+  const workspaceRoot = resolve(import.meta.dirname, '../../..');
+  const filePath = join(workspaceRoot, 'packages/core/src/tokens.ts');
+  assert.ok(existsSync(filePath), 'typed witness uses a real Program member');
+  const observed = [];
+  const eslint = new ESLint({ cwd: workspaceRoot, overrideConfig: [{
+    files: ['**/*.ts'],
+    plugins: { inspectorTypedOverload: { rules: { membership: {
+      meta: { schema: [] },
+      create(context) { return { Program() {
+        const program = context.sourceCode.parserServices.program;
+        observed.push(!!program?.getSourceFile(context.filename));
+      } }; },
+    } } } },
+    rules: { 'inspectorTypedOverload/membership': 'error' },
+  }] });
+  const config = await eslint.calculateConfigForFile(filePath);
+  assert.ok(config.languageOptions.parserOptions.project);
+  assert.equal(config.rules['no-redeclare'][0], 0);
+  assert.equal(config.rules['@typescript-eslint/no-redeclare'][0], 2);
+  const overload = 'export function convert(value: string): string; export function convert(value: number): number; export function convert(value: string | number): string | number { return value; }';
+  const single = 'export function convert(value: string): string { return value; }';
+  for (const source of [overload, single]) {
+    const [result] = await eslint.lintText(source, { filePath });
+    assert.deepEqual(result.messages, []);
+  }
+  const [invalid] = await eslint.lintText('var repeated = 1; var repeated = 2; export { repeated };', { filePath });
+  assert.deepEqual(invalid.messages.filter(message => message.fatal), []);
+  assert.equal(invalid.messages.filter(message => message.ruleId === '@typescript-eslint/no-redeclare' && message.severity === 2).length, 1);
+  assert.equal(invalid.messages.filter(message => message.ruleId === 'no-redeclare').length, 0);
+  assert.deepEqual(observed, [true, true, true]);
 });
