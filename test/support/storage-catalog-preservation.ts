@@ -23,14 +23,14 @@ const families = [
     admission:oq.outboxStorageAdmission,visibility:oq.outboxStorageVisibility,roles:oq.outboxStorageRoles,schema:oq.outboxStorageSchema,applicable:oq.outboxStorageApplicable,privileges:oq.outboxStoragePrivileges,enforcement:oq.outboxStorageEnforcement},
 ];
 const golden: Record<string,string> = {
-  "offline:default": "316744361c7638845a7e997a2399a6e4587e24fdbc6bd4e8dd202d646b60cc92",
-  "offline:custom": "81a7eb9c5fb33b62642000e3fb4d9034dec26a273c3e249b5fcb53f7635204a7",
-  "offline:no-reader": "8e1475204411e2431ac7daee3cce772afd247765826ae13a52c3be4ed64a2c32",
-  "offline:role-words": "d7c9f5aed076a92086cb72c7a6a442e0734bba7a01a2bdf529cd529bb52e1fb9",
-  "outbox:default": "f8bbad8bb1df2f0dc62a4aa8da508c4ce7acf4c62bf77460919cf43462b5d42d",
-  "outbox:custom": "f17888909901b2eacf51f7db87537c713dc4939ade23c05fb4f73ecb62807b87",
-  "outbox:no-reader": "9215484edafc9e05600a93b714d21fff6d5786a359b3c4e980ef62be3f09e7f8",
-  "outbox:role-words": "b2634d56095e32da8f46ea6aa1252fe67e9349affeb049dc46a408bf8ffe9200"
+  "offline:default": "d2335bab15b3f625b8013fccbe069a33ba46e9bc35629cefb6f1b4ad13007286",
+  "offline:custom": "f65e413ec6848abc2f0fe4da486c76c041204f74b09ba2e0411209b430b64a57",
+  "offline:no-reader": "044ea9d0dd72f8e815f129200346200189852002118995e8d13ca934cd94da35",
+  "offline:role-words": "48cee7293637e8ef431093849aab816435b9629e0fd3cf2f3af60823663d8129",
+  "outbox:default": "02b6e9276c0c7a47d2bc4a91750c31500867b48a7cc0012e423471a3892d5fc9",
+  "outbox:custom": "63178c9961f26a434b7baf45a3a5ca4ef23803ffe2c0e47e1ebb17ced7663638",
+  "outbox:no-reader": "c7bc1b20769366b74d20289e7563e46be9c5461f2f280f35dfef81f01389bd76",
+  "outbox:role-words": "5461c4b03bc63b16603540816095034baad6e899e7a774700dd2f8d259c499f0"
 };
 const queryGolden: Record<string,string> = {
   "outbox:default": "7895b8353a950c56d67a20f92a282e7014f899fcad8a3fef4c522c8f7c23773a",
