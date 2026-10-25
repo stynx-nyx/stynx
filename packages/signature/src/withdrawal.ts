@@ -1,4 +1,5 @@
 import * as asn1js from 'asn1js';
+import { nativeAsn1Buffer } from './internal/asn1-buffer.js';
 import { timingSafeEqual } from 'node:crypto';
 import { sha256Hex } from './signature.service.js';
 import { canonicalRfc8785Json } from './manifest.js';
@@ -40,8 +41,8 @@ export class SignatureWithdrawalVerifier {
       input.contentHash !== sha256Hex(input.document)) return refuse('tampered','DOCUMENT_BINDING');
     if (!input.eligiblePartyIds.includes(input.signerPartyId)) return refuse('ineligible','PARTY_INELIGIBLE');
     if (!input.evidenceRef || !input.evidenceBytes?.length) return refuse('unavailable','EVIDENCE_ABSENT');
-    const parsed = asn1js.fromBER(input.evidenceBytes.buffer.slice(
-      input.evidenceBytes.byteOffset,input.evidenceBytes.byteOffset+input.evidenceBytes.byteLength) as ArrayBuffer);
+    const parsed = asn1js.fromBER(nativeAsn1Buffer(input.evidenceBytes.buffer.slice(
+      input.evidenceBytes.byteOffset,input.evidenceBytes.byteOffset+input.evidenceBytes.byteLength)));
     if (parsed.offset !== input.evidenceBytes.length) return refuse('untrusted','EVIDENCE_NOT_SIGNED');
     let verifiedAt:Date;let proofRef:string;
     if (input.verificationMethod === 'physical_verified') {

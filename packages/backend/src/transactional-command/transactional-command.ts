@@ -293,14 +293,56 @@ function isBrandedGuard(guard: unknown): boolean {
     && Reflect.get(constructor, STYNX_BUILTIN_AUTH_GUARD) === true;
 }
 
+function isMetadataObject(value: unknown): value is Record<PropertyKey, unknown> {
+  return value !== null && (typeof value === 'object' || typeof value === 'function');
+}
+
+function invokeMetadataMethod(receiver: unknown, key: PropertyKey, args: unknown[]): unknown {
+  const method = readOptionalProperty(receiver, key);
+  if (typeof method !== 'function') throw new TypeError('Metadata method is not callable');
+  return Reflect.apply(method, receiver, args);
+}
+
+// Each invocation acquires and consumes the original iterable independently.
+// The wrapper proves only the operations it performs, never the source's type.
+function copyFilterIterable(source: unknown): unknown[] {
+  const iterable: Iterable<unknown> = {
+    [Symbol.iterator](): Iterator<unknown, undefined, unknown> {
+      const method = readOptionalProperty(source, Symbol.iterator);
+      if (typeof method !== 'function') throw new TypeError('Filter metadata is not iterable');
+      const iterator: unknown = Reflect.apply(method, source, []);
+      if (!isMetadataObject(iterator)) throw new TypeError('Filter iterator is not an object');
+      const next = readOptionalProperty(iterator, 'next');
+      return {
+        next(): IteratorResult<unknown, undefined> {
+          if (typeof next !== 'function') throw new TypeError('Filter iterator next is not callable');
+          const result: unknown = Reflect.apply(next, iterator, []);
+          if (!isMetadataObject(result)) throw new TypeError('Filter iterator result is not an object');
+          if (readOptionalProperty(result, 'done')) return { done: true, value: undefined };
+          return { done: false, value: readOptionalProperty(result, 'value') };
+        },
+        return(): IteratorResult<unknown, undefined> {
+          const close = readOptionalProperty(iterator, 'return');
+          if (close === null || close === undefined) return { done: true, value: undefined };
+          if (typeof close !== 'function') throw new TypeError('Filter iterator return is not callable');
+          const result: unknown = Reflect.apply(close, iterator, []);
+          if (!isMetadataObject(result)) throw new TypeError('Filter iterator return result is not an object');
+          return { done: true, value: undefined };
+        },
+      };
+    },
+  };
+  return [...iterable];
+}
+
 function catchesCommitted(filter: unknown): boolean {
   const constructor = typeof filter === 'function' ? filter : readOptionalProperty(filter, 'constructor');
   if (typeof constructor !== 'function') return false;
-  const catches = (Reflect.getMetadata(FILTER_CATCH_EXCEPTIONS, constructor) as unknown[] | undefined) ?? [];
-  return catches.length === 0 || catches.some((exception) =>
+  const catches: unknown = Reflect.getMetadata(FILTER_CATCH_EXCEPTIONS, constructor) ?? [];
+  return readOptionalProperty(catches, 'length') === 0 || Boolean(invokeMetadataMethod(catches, 'some', [(exception: unknown) =>
     typeof exception === 'function' && typeof exception.prototype === 'object'
       && (exception === CommittedCommandResponse || CommittedCommandResponse.prototype instanceof exception
-        || exception === CommandRejectionResponse || CommandRejectionResponse.prototype instanceof exception));
+        || exception === CommandRejectionResponse || CommandRejectionResponse.prototype instanceof exception)]));
 }
 
 @Injectable()
@@ -369,12 +411,12 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
                 throw new Error(`Transactional command ${controller.name}.${name} requires a built-in STYNX auth guard`);
               }
             }
-            const methodFilters = (Reflect.getMetadata(EXCEPTION_FILTERS_METADATA, method) as unknown[] | undefined) ?? [];
-            if (!methodFilters.includes(CommittedCommandResponseFilter)) {
+            const methodFilters: unknown = Reflect.getMetadata(EXCEPTION_FILTERS_METADATA, method) ?? [];
+            if (!invokeMetadataMethod(methodFilters, 'includes', [CommittedCommandResponseFilter])) {
               throw new Error(`Transactional command ${controller.name}.${name} requires its committed response filter`);
             }
-            const precedingFilters = [...methodFilters].reverse().slice(0,
-              [...methodFilters].reverse().indexOf(CommittedCommandResponseFilter));
+            const precedingFilters = copyFilterIterable(methodFilters).reverse().slice(0,
+              copyFilterIterable(methodFilters).reverse().indexOf(CommittedCommandResponseFilter));
             if (precedingFilters.some(catchesCommitted)) {
               throw new Error(`Transactional command ${controller.name}.${name} has a filter that would intercept committed responses`);
             }

@@ -160,7 +160,13 @@ function calculateReferenceDigest(
   if (!node) {
     return undefined;
   }
-  const canonicalXml = verifier.getCanonXml(reference.transforms, node as never);
+  // xml-crypto accepts this native xmldom node, but declares the browser DOM Node.
+  const canonicalXml: unknown = Reflect.apply(verifier.getCanonXml, verifier, [
+    reference.transforms,
+    node,
+  ]);
+  if (typeof canonicalXml !== 'string')
+    throw new XmlDSigVerificationError('XML canonicalization did not produce a string');
   return digest(reference.digestAlgorithm, canonicalXml);
 }
 

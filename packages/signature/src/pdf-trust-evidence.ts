@@ -29,6 +29,14 @@ function failXref(): never {
   throw new SignatureTrustError('Post-signature modification');
 }
 
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object';
+}
+
+function isOffsetReader(value: unknown): value is (this: object) => unknown {
+  return typeof value === 'function';
+}
+
 function parsedObject(bytes: Uint8Array, context: PDFContext): { value: unknown; length: number } {
   try {
     const parser = PDFObjectParser.forBytes(bytes, context);
@@ -38,8 +46,14 @@ function parsedObject(bytes: Uint8Array, context: PDFContext): { value: unknown;
       if (!(declared instanceof PDFNumber) || declared.asNumber() !== value.getContentsSize())
         failXref();
     }
-    const length = (parser as unknown as { bytes: { offset(): number } }).bytes.offset();
-    if (!Number.isSafeInteger(length) || length <= 0) failXref();
+    const parserValue: unknown = parser;
+    if (!isObjectRecord(parserValue)) failXref();
+    const stream = parserValue.bytes;
+    if (!isObjectRecord(stream)) failXref();
+    const offset = stream.offset;
+    if (!isOffsetReader(offset)) failXref();
+    const length = offset.call(stream);
+    if (typeof length !== 'number' || !Number.isSafeInteger(length) || length <= 0) failXref();
     return { value, length };
   } catch {
     return failXref();
@@ -638,10 +652,13 @@ export async function readLtaPdfEvidence(
   const values = range
     .asArray()
     .map((value) => (value instanceof PDFNumber ? value.asNumber() : NaN));
-  const [start, before, after, tail] = values as [number, number, number, number];
+  const [start, before, after, tail] = values;
   if (
     values.some((value) => !Number.isSafeInteger(value) || value < 0) ||
     start !== 0 ||
+    before === undefined ||
+    after === undefined ||
+    tail === undefined ||
     before <= dssEnd ||
     after <= before ||
     after + tail !== pdf.length

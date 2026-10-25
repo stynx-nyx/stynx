@@ -10,6 +10,7 @@ import {
   SignatureEvidenceMismatchError,
 } from './errors.js';
 import { sha256 as sha256Hex } from './digest.js';
+import { nativeAsn1Buffer } from './internal/asn1-buffer.js';
 import {
   readPdfTrustEvidence,
   readSelectedSignatureDictionary,
@@ -26,7 +27,7 @@ export function isCmsTrustVerifier(value: object): boolean {
   return branded.has(value);
 }
 const der = (bytes: Uint8Array): ArrayBuffer =>
-  bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  nativeAsn1Buffer(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
 const parse = (bytes: Uint8Array) => {
   const parsed = asn1js.fromBER(der(bytes));
   if (parsed.offset !== bytes.length) throw new SignatureTrustError('Invalid ASN.1 evidence');
@@ -43,7 +44,7 @@ const content = (bytes: Uint8Array): pkijs.SignedData => {
   return new pkijs.SignedData({ schema: info.content });
 };
 const hasPolicy = (certificate: pkijs.Certificate, oids: readonly string[]): boolean => {
-  const policies = certificate.extensions?.find((ext) => ext.extnID === '2.5.29.32')?.parsedValue;
+  const policies: unknown = certificate.extensions?.find((ext) => ext.extnID === '2.5.29.32')?.parsedValue;
   return (
     policies instanceof pkijs.CertificatePolicies &&
     policies.certificatePolicies.some((p) => oids.includes(p.policyIdentifier))
@@ -149,14 +150,14 @@ function coveredPdf(
   return { covered, firstRangeEnd: before, revisionEnd, byteRange: [start, before, after, tail] };
 }
 
-function sequence(value: asn1js.AsnType): asn1js.AsnType[] {
+function sequence(value: unknown): asn1js.AsnType[] {
   if (!(value instanceof asn1js.Sequence))
     throw new SignatureTrustError('SigningCertificateV2 malformed');
   return value.valueBlock.value;
 }
 
 function verifyEssSignerBinding(
-  value: asn1js.AsnType,
+  value: unknown,
   signer: pkijs.Certificate,
   signerDer: Uint8Array,
 ): void {
@@ -357,7 +358,12 @@ async function refusePostArchiveStatus(
         matches++;
         if (!positiveDate(item.thisUpdate) || item.thisUpdate > at)
           throw new SignatureTrustError('Covered OCSP update exceeds archive time');
-        if (item.certStatus.idBlock.tagClass !== 3 || item.certStatus.idBlock.tagNumber !== 0)
+        const certStatus: unknown = item.certStatus;
+        if (
+          !(certStatus instanceof asn1js.Primitive) ||
+          certStatus.idBlock.tagClass !== 3 ||
+          certStatus.idBlock.tagNumber !== 0
+        )
           throw new SignatureTrustError('Covered OCSP status is not good');
       }
     }
@@ -441,7 +447,7 @@ async function verifyHistoricalOcspResponder(
 ): Promise<boolean> {
   const candidates: pkijs.Certificate[] = [];
   for (const candidate of basic.certs ?? []) {
-    const responder = basic.tbsResponseData.responderID;
+    const responder: unknown = basic.tbsResponseData.responderID;
     const matches =
       responder instanceof pkijs.RelativeDistinguishedNames
         ? responder.isEqual(candidate.subject)
@@ -458,7 +464,7 @@ async function verifyHistoricalOcspResponder(
   const isIssuer = certificateBytes(responder).equals(certificateBytes(issuer));
   if (!isIssuer) {
     const extensions = responder.extensions?.filter((ext) => ext.extnID === '2.5.29.37') ?? [];
-    const eku = extensions[0]?.parsedValue;
+    const eku: unknown = extensions[0]?.parsedValue;
     if (
       !permitsDigitalSignature(responder) ||
       !responder.issuer.isEqual(issuer.subject) ||
@@ -538,7 +544,7 @@ function verifyTimestampBinding(data: pkijs.SignedData, signer: pkijs.Certificat
   }
   const extensions = signer.extensions?.filter((ext) => ext.extnID === '2.5.29.37') ?? [];
   const extension = extensions[0];
-  const eku = extension?.parsedValue;
+  const eku: unknown = extension?.parsedValue;
   if (
     extensions.length !== 1 ||
     !permitsDigitalSignature(signer) ||
@@ -731,9 +737,9 @@ export function createCmsTrustVerifier(options: CmsTrustVerifierOptions): Signat
         const signingTimeAttr = signerInfo.signedAttrs!.attributes.find(
           (a) => a.type === '1.2.840.113549.1.9.5',
         );
-        const signingTime = (
-          signingTimeAttr?.values[0] as { toDate?: () => Date } | undefined
-        )?.toDate?.();
+        const signingTimeValue: unknown = signingTimeAttr?.values[0];
+        const signingTime =
+          signingTimeValue instanceof asn1js.UTCTime ? signingTimeValue.toDate() : undefined;
         if (!signingTime || !validDate(signingTime, now) || (archive && signingTime > archive.at))
           throw new SignatureTrustError('CMS signed signing time absent');
         const verified = await signed.verify({
@@ -758,7 +764,10 @@ export function createCmsTrustVerifier(options: CmsTrustVerifierOptions): Signat
         );
         if (timestampAttr?.values.length !== 1)
           throw new SignatureTrustError('Embedded signature timestamp absent');
-        const embeddedToken = Buffer.from(timestampAttr.values[0].toBER(false));
+        const timestampValue: unknown = timestampAttr.values[0];
+        if (!(timestampValue instanceof asn1js.BaseBlock))
+          throw new SignatureTrustError('Embedded signature timestamp absent');
+        const embeddedToken = Buffer.from(timestampValue.toBER(false));
         const token = new pkijs.ContentInfo({ schema: parse(embeddedToken) });
         if (token.contentType !== pkijs.ContentInfo.SIGNED_DATA)
           throw new SignatureTrustError('Embedded timestamp is not CMS');
@@ -804,7 +813,7 @@ export function createCmsTrustVerifier(options: CmsTrustVerifierOptions): Signat
             archive.at,
           );
         }
-        const tsaEku = tsaValidation.signerCertificate.extensions?.find(
+        const tsaEku: unknown = tsaValidation.signerCertificate.extensions?.find(
           (ext) => ext.extnID === '2.5.29.37',
         )?.parsedValue;
         if (

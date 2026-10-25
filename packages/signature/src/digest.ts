@@ -16,15 +16,19 @@ export function canonicalJson(value: unknown): string {
   if (Array.isArray(value)) {
     return `[${value.map((item) => canonicalJson(item)).join(',')}]`;
   }
-  if (value && typeof value === 'object') {
-    return `{${Object.keys(value as Record<string, unknown>)
+  if (isJsonObject(value)) {
+    return `{${Object.keys(value)
       .sort()
       .map(
-        (key) => `${JSON.stringify(key)}:${canonicalJson((value as Record<string, unknown>)[key])}`,
+        (key) => `${JSON.stringify(key)}:${canonicalJson(value[key])}`,
       )
       .join(',')}}`;
   }
   return JSON.stringify(value);
+}
+
+function isJsonObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object';
 }
 
 export function sha256CanonicalJson(value: unknown, options: Sha256Options = {}): string {
