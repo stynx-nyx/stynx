@@ -506,3 +506,54 @@ describe('transactional independent reflection preservation', () => {
     expect(() => fixture.interceptor.onApplicationBootstrap()).toThrow(failure);
   });
 });
+
+describe('transactional filter metadata native operation preservation', () => {
+  function applyMetadata(value: unknown) {
+    const fixture = bootstrapper(); Reflect.defineMetadata(EXCEPTION_FILTERS_METADATA, value, fixture.method); return fixture.interceptor;
+  }
+  it.each([[], [CommittedCommandResponseFilter], [undefined, CommittedCommandResponseFilter], Object.assign(Array(2), { 1: CommittedCommandResponseFilter })].map((value) => ({ value })))('retains ordinary and sparse filter array behavior %#', ({ value }) => {
+    const interceptor = applyMetadata(value);
+    if (value.length === 0) expect(() => interceptor.onApplicationBootstrap()).toThrow(/committed response filter/);
+    else expect(() => interceptor.onApplicationBootstrap()).not.toThrow();
+  });
+  it('reads includes once and independently acquires both iterators with original receivers', () => {
+    const order: string[] = []; let copies = 0;
+    const source = {
+      get includes() { order.push('includes-get'); expect(this).toBe(source); return function(this: unknown, filter: unknown) { expect(this).toBe(source); expect(filter).toBe(CommittedCommandResponseFilter); order.push('includes-call'); return 'truthy'; }; },
+      get [Symbol.iterator]() { const copy = ++copies; order.push(`iterator-get-${copy}`); expect(this).toBe(source); return function(this: unknown) {
+        expect(this).toBe(source); order.push(`iterator-call-${copy}`); let index = 0;
+        const iterator = { get next() { order.push(`next-get-${copy}`); return function(this: unknown, ...args: unknown[]) { expect(this).toBe(iterator); expect(args).toEqual([]); const at = index++; order.push(`next-${copy}-${at}`); return { get done() { order.push(`done-${copy}-${at}`); return at > 0; }, get value() { order.push(`value-${copy}-${at}`); if (at > 0) throw new Error('done skips value'); return CommittedCommandResponseFilter; } }; }; }, get return() { throw new Error('normal spread must not close'); } };
+        return iterator;
+      }; },
+    };
+    expect(() => applyMetadata(source).onApplicationBootstrap()).not.toThrow();
+    expect(order).toEqual(['includes-get', 'includes-call', ...[1, 2].flatMap((copy) => [`iterator-get-${copy}`, `iterator-call-${copy}`, `next-get-${copy}`, `next-${copy}-0`, `done-${copy}-0`, `value-${copy}-0`, `next-${copy}-1`, `done-${copy}-1`])]);
+  });
+  it.each(['iterator-get', 'iterator-call', 'next-get', 'next-call', 'done', 'value'] as const)('preserves %s failure identity without invented iterator close', (site) => {
+    const error = new Error(site); const close = vi.fn();
+    const source = { includes: () => true, get [Symbol.iterator]() { if (site === 'iterator-get') throw error; return function() { if (site === 'iterator-call') throw error; return { get next() { if (site === 'next-get') throw error; return function() { if (site === 'next-call') throw error; return { get done() { if (site === 'done') throw error; return false; }, get value() { throw error; } }; }; }, get return() { close(); return () => ({}); } }; }; } };
+    expect(() => applyMetadata(source).onApplicationBootstrap()).toThrow(error); expect(close).not.toHaveBeenCalled();
+  });
+  it.each(['includes', 'iterator', 'iterator-result', 'next', 'next-result'] as const)('retains TypeError at invalid native %s boundary', (site) => {
+    const source = { includes: site === 'includes' ? 3 : () => true, [Symbol.iterator]: site === 'iterator' ? 3 : () => site === 'iterator-result' ? 3 : { next: site === 'next' ? 3 : () => 3 } };
+    expect(() => applyMetadata(source).onApplicationBootstrap()).toThrow(TypeError);
+  });
+  it('uses each changed iterator output independently in reverse/slice/indexOf order', () => {
+    let copies = 0; class CatchAll {}
+    Reflect.defineMetadata(FILTER_CATCH_EXCEPTIONS, [], CatchAll);
+    const source = { includes: () => true, [Symbol.iterator]() { return (++copies === 1 ? [CommittedCommandResponseFilter, CatchAll] : [CommittedCommandResponseFilter])[Symbol.iterator](); } };
+    expect(() => applyMetadata(source).onApplicationBootstrap()).not.toThrow(); expect(copies).toBe(2);
+  });
+  it.each([false, 0, '', true, 'truthy', {}])('preserves custom catches.some truthiness and receiver: %s', (value) => {
+    class Filter {} const order: string[] = [];
+    const catches = { get length() { order.push('length'); return 1; }, get some() { order.push('some-get'); return function(this: unknown, callback: unknown) { expect(this).toBe(catches); expect(typeof callback).toBe('function'); order.push('some-call'); return value; }; } };
+    Reflect.defineMetadata(FILTER_CATCH_EXCEPTIONS, catches, Filter);
+    const call = () => applyMetadata([CommittedCommandResponseFilter, Filter]).onApplicationBootstrap();
+    if (value) expect(call).toThrow(/intercept committed responses/); else expect(call).not.toThrow();
+    expect(order).toEqual(['length', 'some-get', 'some-call']);
+  });
+  it('keeps zero-length catch-all short circuit before some lookup', () => {
+    class Filter {} const some = vi.fn(); Reflect.defineMetadata(FILTER_CATCH_EXCEPTIONS, { length: 0, get some() { some(); throw Error('unused'); } }, Filter);
+    expect(() => applyMetadata([CommittedCommandResponseFilter, Filter]).onApplicationBootstrap()).toThrow(/intercept committed responses/); expect(some).not.toHaveBeenCalled();
+  });
+});
