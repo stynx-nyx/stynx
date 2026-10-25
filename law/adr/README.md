@@ -5,6 +5,8 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR-DEVAI-ADOPTION-0041 — Honest Offline hook contexts](2026-10-24-s10-offline-hook-context-proposal.md) — accepted 2026-10-24: “Approve the bounded Offline hook-context correction”; exact five interfaces/seven methods/four production carriers, implementation and verification pending; no production unsafe-rule exception.
+
 - [ADR-DEVAI-ADOPTION-0040 — Exact root tooling lifecycle SQL admissions](2026-10-24-s10-root-lifecycle-admission-proposal.md) — accepted 2026-10-24; exact eleven existing fixed-script/database lifecycle sites, implementation and verification pending.
 
 - [ADR-DEVAI-ADOPTION-0039 — Honest audit opaque read results and JSON wire projection](2026-10-24-s10-audit-opaque-result-proposal.md) — accepted 2026-10-24; bounded audit read-result correction and official wire/SDK propagation, implementation and verification pending.
