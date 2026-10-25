@@ -49,8 +49,59 @@ function keyOf(rule: Pick<PrivacyRule, 'tableSchema' | 'tableName' | 'columnName
   return `${rule.tableSchema}.${rule.tableName}.${rule.columnName}`;
 }
 
-function withoutUndefined<T extends Record<string, unknown>>(value: T): T {
-  return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as T;
+function checkedParsedRule(value: Record<string, unknown>): PrivacyRule {
+  const result: unknown = Object.fromEntries(
+    Object.entries(value).filter(([, entry]) => entry !== undefined),
+  );
+  if (!isPrivacyRule(result)) {
+    throw new PrivacyConfigurationError('Invalid PII rule representation');
+  }
+  return result;
+}
+
+// The caller supplies a fresh spread snapshot of already typed rules.
+// Remove only top-level entries; retained nested objects are never inspected.
+function withoutUndefinedMergedRule(value: PrivacyRule): PrivacyRule {
+  for (const key of Object.keys(value)) {
+    if (Reflect.get(value, key) === undefined) Reflect.deleteProperty(value, key);
+  }
+  for (const key of Object.getOwnPropertySymbols(value)) {
+    Reflect.deleteProperty(value, key);
+  }
+  return value;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function optionalString(value: Record<string, unknown>, key: string): boolean {
+  return !(key in value) || typeof value[key] === 'string';
+}
+
+function isPrivacyRule(value: unknown): value is PrivacyRule {
+  if (!isRecord(value)) return false;
+  if (
+    typeof value.tableSchema !== 'string' ||
+    typeof value.tableName !== 'string' ||
+    typeof value.columnName !== 'string' ||
+    (value.strategy !== 'nullify' &&
+      value.strategy !== 'hash_with_salt' &&
+      value.strategy !== 'tombstone' &&
+      value.strategy !== 'delete_row') ||
+    !optionalString(value, 'category') ||
+    !optionalString(value, 'notes') ||
+    !optionalString(value, 'subjectColumn') ||
+    !optionalString(value, 'tenantColumn')
+  ) return false;
+  if (!('retention' in value)) return true;
+  const retention = value.retention;
+  return isRecord(retention) &&
+    typeof retention.timestampColumn === 'string' &&
+    typeof retention.olderThanDays === 'number' &&
+    (!('target' in retention) ||
+      retention.target === 'live' || retention.target === 'archive' || retention.target === 'both') &&
+    optionalString(retention, 'reason');
 }
 
 function normalizeDbRule(row: PiiMapRow): PrivacyRule {
@@ -64,13 +115,13 @@ function normalizeDbRule(row: PiiMapRow): PrivacyRule {
   });
 
   if (rule.tableSchema === 'auth' && rule.tableName === 'users') {
-    return withoutUndefined({
+    return checkedParsedRule({
       ...rule,
       subjectColumn: 'id',
-    }) as PrivacyRule;
+    });
   }
 
-  return withoutUndefined(rule) as PrivacyRule;
+  return checkedParsedRule(rule);
 }
 
 @Injectable()
@@ -110,10 +161,10 @@ export class PiiMapService {
       const base = merged.get(key);
       merged.set(
         key,
-        withoutUndefined({
+        withoutUndefinedMergedRule({
           ...(base ?? {}),
           ...override,
-        }) as PrivacyRule,
+        }),
       );
     }
 
@@ -158,7 +209,7 @@ export class PiiMapService {
     }
 
     const parsed: unknown = parse(readFileSync(overridePath, 'utf8'));
-    return overrideSchema.parse(parsed).rules.map((rule) => withoutUndefined(rule) as PrivacyRule);
+    return overrideSchema.parse(parsed).rules.map((rule) => checkedParsedRule(rule));
   }
 
   private database(): Database {
