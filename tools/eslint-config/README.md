@@ -154,6 +154,7 @@ This section is generated from `package.json`. Run `pnpm package-readmes:write` 
 - `@eslint/js`: `^10.0.1`
 - `@typescript-eslint/eslint-plugin`: `^8.61.0`
 - `@typescript-eslint/parser`: `^8.61.0`
+- `@typescript-eslint/utils`: `^8.70.0`
 - `eslint-plugin-boundaries`: `^6.0.2`
 - `eslint-plugin-jsdoc`: `^63.0.2`
 - `globals`: `^17.7.0`
