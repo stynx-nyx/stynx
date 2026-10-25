@@ -29,9 +29,6 @@ export default [
       // /* eslint-disable */ headers as "unused directives", making every
       // sdk build dirty the tree against the committed snapshot.
       'packages-web/sdk/src/generated/**',
-      // CLI-generated demo module output (header: "Generated from BP-DEMO-BOOKMARK-001");
-      // the generator's templates, not this tree, own its Angular idioms.
-      'domain/*/web/src/**',
     ],
   },
   {

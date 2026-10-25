@@ -9,9 +9,9 @@
     "./test": "./test.mjs"
   },
   "scripts": {
-    "test:coverage": "node ../../scripts/node-test-coverage.mjs test/eslint-config.spec.mjs test/rule-families.spec.mjs test/typed-query-lint.spec.mjs test/query-declaration-census.spec.mjs test/legacy-testing-assertions.spec.mjs",
+    "test:coverage": "node ../../scripts/node-test-coverage.mjs test/eslint-config.spec.mjs test/rule-families.spec.mjs test/typed-query-lint.spec.mjs test/query-declaration-census.spec.mjs test/legacy-testing-assertions.spec.mjs test/root-database-tooling.spec.mjs",
     "clean": "node -e \"for (const path of ['dist', 'coverage']) require('node:fs').rmSync(path, { recursive: true, force: true })\"",
-    "test": "node --test --test-concurrency=1 test/eslint-config.spec.mjs test/rule-families.spec.mjs test/typed-query-lint.spec.mjs test/query-declaration-census.spec.mjs test/legacy-testing-assertions.spec.mjs"
+    "test": "node --test --test-concurrency=1 test/eslint-config.spec.mjs test/rule-families.spec.mjs test/typed-query-lint.spec.mjs test/query-declaration-census.spec.mjs test/legacy-testing-assertions.spec.mjs test/root-database-tooling.spec.mjs"
   },
   "files": [
     "*.mjs",

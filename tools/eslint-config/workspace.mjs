@@ -2,12 +2,8 @@
 // STYNX's own `--config ../../tools/eslint-config/*.mjs` entry points use
 // them; this module is not exported.
 //
-// `strict: false` keeps the type-safety levels STYNX lints with today:
-// `no-explicit-any` and four `no-unsafe-*` rules off and no `no-authored-cjs`.
-// `stynx/require-idempotent-route-decorator` is at error in every profile since
-// SM-13, and boundaries are deny-by-default since SM-12 (below). SM-11 moves
-// STYNX onto the remaining strict (published default) levels and then deletes
-// this switch.
+// Workspace source uses the published strict rule levels. Test and plain-script
+// factories retain their separate public contracts.
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -78,6 +74,8 @@ const allowedDependencies = {
   'database-tooling': ['data'],
   // domain/*/api
   'domain-demo-bookmark-api': ['auth', 'core', 'data', 'idempotency'],
+  // domain/*/web
+  'domain-demo-bookmark-web': [],
   // reference/*
   'reference-api': [
     'audit',
@@ -119,6 +117,7 @@ const elementDirectory = (type) => {
   if (type === 'migration-linter') return 'tools/migration-linter';
   if (type === 'database-tooling') return 'tools/database-tooling';
   if (type === 'domain-demo-bookmark-api') return 'domain/demo-bookmark/api';
+  if (type === 'domain-demo-bookmark-web') return 'domain/demo-bookmark/web';
   if (type.startsWith('reference-')) return `reference/${type.slice('reference-'.length)}`;
   if (type === 'sdk' || type === 'angular' || type.startsWith('angular-')) {
     return `packages-web/${type}`;
@@ -150,10 +149,12 @@ const workspacePackages = Object.fromEntries(
 );
 
 export const stynxWorkspaceOptions = {
-  strict: false,
-  // S10 C1 ratchet. Expand only after each batch passes its converted-query
-  // checks; D removes the ratchet and enables the rules for the full workspace.
-  workspaceQuery: { rootDir: workspaceRoot, packageRoots: ['packages/data'] },
+  strict: true,
+  // Apply workspace query enforcement to every declared source element.
+  workspaceQuery: {
+    rootDir: workspaceRoot,
+    packageRoots: Object.keys(allowedDependencies).map(elementDirectory),
+  },
   boundaries: {
     rootPath: workspaceRoot,
     elements: boundaryElements,

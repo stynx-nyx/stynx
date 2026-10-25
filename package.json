@@ -12,7 +12,7 @@
   "scripts": {
     "check:outbox-storage": "node scripts/outbox-storage-generate.mjs --check && node scripts/verify-outbox-storage-references.mjs",
     "build": "turbo run build --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*' --filter=@stynx-nyx/docs-site",
-    "lint": "turbo run lint --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*' -- --max-warnings=0",
+    "lint": "turbo run lint --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*' --filter='./reference/*' --filter='./domain/*/api' --filter='./domain/*/web' -- --max-warnings=0",
     "lint:tests": "eslint --config tools/eslint-config/test.mjs --max-warnings=0 --no-error-on-unmatched-pattern 'packages/*/test/**/*.{spec,test}.ts' 'packages-web/*/test/**/*.{spec,test}.ts'",
     "typecheck": "turbo run typecheck --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter=@stynx-nyx/docs-site",
     "test": "pnpm api:baselines && STYNX_API_BASELINE_MODE=preverified-test-graph turbo run test --filter='./packages/*' --filter='./packages-web/*' --filter='./tools/*' --filter='./test/*'",
