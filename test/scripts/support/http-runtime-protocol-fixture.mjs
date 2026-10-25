@@ -13,6 +13,7 @@ import {
 import { basename, dirname, join, parse, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { historicalDiagnosticFlowManifest } from './http-runtime-historical-flow-manifest.mjs';
+import { historicalDiagnosticReferenceManifest } from './http-runtime-historical-reference-manifest.mjs';
 
 // Pure parser fixture facts. These files/bytes are test-owned copies, never a
 // private live build handle, producing build, native worker or custody proof.
@@ -88,7 +89,7 @@ export function createProtocolFixture(repository, root) {
   ];
   for (const file of [...controls, ...required.filter((f) => f !== bootstrapEmitted)])
     put(file, readFileSync(join(repository, file)));
-  put('reference/api/package.json', readFileSync(join(repository, 'reference/api/package.json')));
+  put('reference/api/package.json', historicalDiagnosticReferenceManifest());
   put('packages/flow/package.json', historicalDiagnosticFlowManifest());
   const anchorFacts = [
     [

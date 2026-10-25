@@ -130,6 +130,26 @@ test('both exact non-evaluated anchors permit finite parser rows without inventi
   assert.equal(protocol.snapshot().readinessPromoting, false);
 });
 
+test('current reference manifest cannot replace the historical diagnostic anchor', () => {
+  const directory = join(root, 'current-reference-anchor-refusal');
+  const local = createProtocolFixture(repository, directory);
+  const expected = local.context();
+  const manifest = expected.bindings.resolutionAnchors[0].manifest;
+  const bytes = readFileSync(join(repository, 'reference/api/package.json'));
+  assert.notEqual(digest(bytes), manifest.sha256);
+  const path = join(directory, manifest.path);
+  writeFileSync(path, bytes);
+  const stat = lstatSync(path);
+  manifest.sha256 = digest(bytes);
+  manifest.blob = createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+  manifest.byteLength = bytes.length;
+  manifest.permissions = stat.mode & 0o7777;
+  manifest.device = stat.dev;
+  manifest.inode = stat.ino;
+  assert.deepEqual(readFileSync(path), bytes);
+  assert.throws(() => createHttpRuntimeProtocol(expected), invalid);
+});
+
 test('actual 1.6.0 flow manifest cannot replace the historical diagnostic anchor', () => {
   const directory = join(root, 'actual-1.6-anchor-refusal');
   const local = createProtocolFixture(repository, directory);

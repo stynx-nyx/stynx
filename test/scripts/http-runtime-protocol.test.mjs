@@ -1413,3 +1413,41 @@ test('validated actual serializer refuses caller code and illegal JSON before se
   assert.throws(() => serializeHttpRuntimePlainJson(), invalid);
   assert.throws(() => serializeHttpRuntimePlainJson({}, {}), invalid);
 });
+
+test('bootstrap constructor detaches native JSON without invoking inherited serializers', () => {
+  const expected = context();
+  expected.bindings.observation.sourceDeclaration.start = -0;
+  const normalized = JSON.parse(serializeHttpRuntimePlainJson(expected));
+  const prototypes = [Object.prototype, Array.prototype];
+  const descriptors = prototypes.map((prototype) =>
+    Object.getOwnPropertyDescriptor(prototype, 'toJSON'),
+  );
+  let calls = 0;
+  let protocol;
+  const sentinel = new Error('inherited constructor serializer');
+  try {
+    for (const prototype of prototypes)
+      Object.defineProperty(prototype, 'toJSON', {
+        configurable: true,
+        get() {
+          calls++;
+          throw sentinel;
+        },
+      });
+    protocol = createHttpRuntimeProtocol(expected);
+  } finally {
+    for (const [index, prototype] of prototypes.entries()) {
+      const descriptor = descriptors[index];
+      if (descriptor) Object.defineProperty(prototype, 'toJSON', descriptor);
+      else delete prototype.toJSON;
+    }
+  }
+  assert.equal(calls, 0);
+  expected.nonce = 'caller mutation';
+  expected.bindings.observation.sourceDeclaration.start = 999999;
+  assert.deepEqual(protocol.snapshot().expected, normalized);
+  assert.equal(
+    Object.is(protocol.snapshot().expected.bindings.observation.sourceDeclaration.start, -0),
+    false,
+  );
+});

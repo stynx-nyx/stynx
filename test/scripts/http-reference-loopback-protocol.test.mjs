@@ -245,11 +245,18 @@ function fullResolutionFacts() {
   const anchor = context.bindings.resolutionAnchors[2];
   // Require-condition facts remain an explicit CJS fixture, independent of the
   // ESM host; changing the resolver would change what these parser rows mean.
-  const resolved = JSON.parse(execFileSync(process.execPath, ['-e',
-    "const { createRequire } = require('node:module'); const resolve = createRequire(new URL(process.argv[1])).resolve; process.stdout.write(JSON.stringify(JSON.parse(process.argv[2]).map(specifier => resolve(specifier))));",
-    new URL('../../packages/flow/package.json', import.meta.url).href,
-    JSON.stringify(anchor.requests),
-  ], { encoding: 'utf8' }));
+  const resolved = JSON.parse(
+    execFileSync(
+      process.execPath,
+      [
+        '-e',
+        "const { createRequire } = require('node:module'); const resolve = createRequire(new URL(process.argv[1])).resolve; process.stdout.write(JSON.stringify(JSON.parse(process.argv[2]).map(specifier => resolve(specifier))));",
+        new URL('../../packages/flow/package.json', import.meta.url).href,
+        JSON.stringify(anchor.requests),
+      ],
+      { encoding: 'utf8' },
+    ),
+  );
   let sequence = Math.max(...modules.evaluations.map((row) => row.sequence));
   for (const [index, specifier] of anchor.requests.entries()) {
     const file = realpathSync(resolved[index]);
@@ -706,4 +713,55 @@ for (const kind of ['success', 'phase-order', 'binding', 'send-drift', 'reentran
       assert.throws(() => process.kill(child.pid, 0), { code: 'ESRCH' });
     }
   });
+}
+
+for (const constructorMode of ['reference-owned-loopback', 'http-endpoint-qualification']) {
+  test(`${constructorMode} constructor detaches native JSON without invoking inherited serializers`, () => {
+    const expected = full().context.moduleContext;
+    expected.mode = constructorMode;
+    expected.bindings.observation.sourceDeclaration.start = -0;
+    const modules = moduleFacts(JSON.parse(serializeHttpRuntimePlainJson(expected)));
+    const prototypes = [Object.prototype, Array.prototype];
+    const descriptors = prototypes.map((prototype) =>
+      Object.getOwnPropertyDescriptor(prototype, 'toJSON'),
+    );
+    let calls = 0;
+    let validator;
+    const sentinel = new Error('inherited constructor serializer');
+    try {
+      for (const prototype of prototypes)
+        Object.defineProperty(prototype, 'toJSON', {
+          configurable: true,
+          get() {
+            calls++;
+            throw sentinel;
+          },
+        });
+      validator = createHttpModuleSnapshotValidator(expected);
+    } finally {
+      for (const [index, prototype] of prototypes.entries()) {
+        const descriptor = descriptors[index];
+        if (descriptor) Object.defineProperty(prototype, 'toJSON', descriptor);
+        else delete prototype.toJSON;
+      }
+    }
+    assert.equal(calls, 0);
+    expected.nonce = 'caller mutation';
+    expected.bindings.observation.sourceDeclaration.start = 999999;
+    assert.equal(validator.accepts(modules), true);
+  });
+
+  for (const anchor of [null, 7]) {
+    test(`${constructorMode} preserves ${anchor === null ? 'null native manifest read' : 'primitive anchor admission'} refusal`, () => {
+      const expected = full().context.moduleContext;
+      expected.mode = constructorMode;
+      expected.bindings.resolutionAnchors[1] = anchor;
+      assert.throws(
+        () => createHttpModuleSnapshotValidator(expected),
+        anchor === null
+          ? { name: 'TypeError', message: "Cannot read properties of null (reading 'manifest')" }
+          : { code: 'HTTP_RUNTIME_PROTOCOL_INVALID' },
+      );
+    });
+  }
 }

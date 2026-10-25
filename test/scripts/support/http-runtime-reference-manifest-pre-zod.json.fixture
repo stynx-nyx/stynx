@@ -1,0 +1,59 @@
+{
+  "name": "@stynx-nyx/reference-api",
+  "private": true,
+  "version": "0.3.5",
+  "description": "Reference API app exercising the STYNX backend package family",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "build": "node ../../scripts/verify-reference-api-build-inputs.mjs && tsc -p tsconfig.json",
+    "clean": "rm -rf dist coverage",
+    "smoke:local": "bash scripts/smoke-local.sh",
+    "start": "node dist/reference/api/src/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --config ../../tools/eslint-config/nest.mjs \"src/**/*.ts\"",
+    "test": "vitest run --config ./vitest.config.ts",
+    "test:int": "vitest run --config ./vitest.config.ts test/integration/*.spec.ts",
+    "test:e2e": "vitest run --config ./vitest.e2e.config.ts test/e2e/flows/*.e2e.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.26",
+    "@nestjs/core": "^11.1.26",
+    "@nestjs/platform-express": "^11.1.26",
+    "@stynx-domain/demo-bookmark-api": "workspace:*",
+    "@stynx-nyx/audit": "workspace:*",
+    "@stynx-nyx/auth": "workspace:*",
+    "@stynx-nyx/backend": "workspace:*",
+    "@stynx-nyx/core": "workspace:*",
+    "@stynx-nyx/data": "workspace:*",
+    "@stynx-nyx/flow": "workspace:*",
+    "@stynx-nyx/health": "workspace:*",
+    "@stynx-nyx/i18n": "workspace:*",
+    "@stynx-nyx/idempotency": "workspace:*",
+    "@stynx-nyx/logging": "workspace:*",
+    "@stynx-nyx/offline-sync": "workspace:*",
+    "@stynx-nyx/preferences": "workspace:*",
+    "@stynx-nyx/privacy": "workspace:*",
+    "@stynx-nyx/ratelimit": "workspace:*",
+    "@stynx-nyx/sessions": "workspace:*",
+    "@stynx-nyx/storage": "workspace:*",
+    "@stynx-nyx/tenancy": "workspace:*",
+    "class-validator": "^0.15.1",
+    "drizzle-orm": "^0.45.2",
+    "helmet": "^8.2.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1068.0",
+    "@nestjs/testing": "^11.1.26",
+    "@types/node": "25.9.3",
+    "@types/pg": "^8.20.0",
+    "pg": "^8.22.0",
+    "supertest": "^7.2.2",
+    "testcontainers": "^12.0.2",
+    "typescript": "6.0.3"
+  }
+}
