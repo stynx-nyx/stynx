@@ -66,6 +66,74 @@ test('audit32 barrel origins preserve exact caller ownership for all operation I
   assert.equal(errors.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 32);
 });
 
+const auditRemainingOperations = ['log', 'events'].flatMap((family) =>
+  Array.from({ length: 128 }, (_, mask) => `audit.read-${family}.mask.${mask}`),
+);
+
+test('audit512 configured census is exact in registry, caller and admissions', () => {
+  for (const path of ['packages/data/src/configured-query.repository.ts', 'packages/audit/src/sql-adapter.ts', 'tools/eslint-config/query-rules.mjs']) {
+    const operations = [...readFileSync(join(workspace, path), 'utf8').matchAll(/['"](audit\.read-(?:log|events)\.mask\.\d+)['"]/g)].map((match) => match[1]);
+    assert.deepEqual(operations, auditRemainingOperations, path);
+  }
+});
+
+test('audit512 actual configured entries admit all direct aliased and destructured IDs', async () => {
+  const calls = auditRemainingOperations.map((operation) => {
+    const args = `{} as never, ${JSON.stringify(operation)}, {} as never, [] as never`;
+    return `executor.executeConfiguredQuery(${args}); alias(${args}); run(${args});`;
+  }).join('\n');
+  const source = `import * as executor from ${JSON.stringify(executorPath)}; const alias = executor.executeConfiguredQuery; const { executeConfiguredQuery: run } = executor; ${calls}`;
+  assert.deepEqual(await lint(source, 'packages/audit/src/sql-adapter.ts', 'no-raw-query'), []);
+});
+
+test('audit512 wrong caller refuses every operation and callable spelling', async () => {
+  const calls = auditRemainingOperations.map((operation) => {
+    const args = `{} as never, ${JSON.stringify(operation)}, {} as never, [] as never`;
+    return `executor.executeConfiguredQuery(${args}); alias(${args}); run(${args});`;
+  }).join('\n');
+  const source = `import * as executor from ${JSON.stringify(executorPath)}; const alias = executor.executeConfiguredQuery; const { executeConfiguredQuery: run } = executor; ${calls}`;
+  const errors = await lint(source, 'packages/health/src/probe.ts', 'no-raw-query');
+  assert.equal(errors.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 768);
+});
+
+test('audit512 invalid and dynamic values remain refused at the genuine caller', async () => {
+  const source = `import { executeConfiguredQuery } from ${JSON.stringify(executorPath)};
+    declare const dynamic: Parameters<typeof executeConfiguredQuery>[1];
+    executeConfiguredQuery({} as never, dynamic, {} as never, [] as never);
+    executeConfiguredQuery({} as never, 'audit.read-log.mask.128', {} as never, [] as never);
+    executeConfiguredQuery({} as never, 'audit.read-events.mask.-1', {} as never, [] as never);
+    executeConfiguredQuery({} as never, '__proto__', {} as never, [] as never);`;
+  const errors = await lint(source, 'packages/audit/src/sql-adapter.ts', 'no-raw-query');
+  assert.equal(errors.filter((finding) => finding.ruleId === 'stynx/no-raw-query').length, 4);
+});
+
+test('audit512 service has exactly 256 eager zero-hole definitions and direct selector calls', () => {
+  const path = 'packages/audit/src/audit-log-read.repository.ts';
+  const source = readFileSync(join(workspace, path), 'utf8');
+  const parsed = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
+  const definitions = [];
+  for (const statement of parsed.statements) {
+    if (!ts.isVariableStatement(statement)) continue;
+    assert.ok(statement.declarationList.flags & ts.NodeFlags.Const);
+    for (const declaration of statement.declarationList.declarations) {
+      const call = declaration.initializer;
+      if (!call || !ts.isCallExpression(call) || call.expression.getText(parsed) !== 'defineQuery') continue;
+      assert.equal(call.arguments.length, 1);
+      const properties = call.arguments[0].properties;
+      const name = properties.find((property) => property.name?.getText(parsed) === 'name').initializer;
+      const text = properties.find((property) => property.name?.getText(parsed) === 'text').initializer;
+      assert.ok(ts.isStringLiteral(name));
+      assert.ok(ts.isTaggedTemplateExpression(text));
+      assert.equal(text.tag.getText(parsed), 'sql');
+      assert.ok(ts.isNoSubstitutionTemplateLiteral(text.template));
+      definitions.push(name.text);
+    }
+  }
+  assert.deepEqual(definitions, Array.from({ length: 256 }, (_, mask) => `audit.listLog.mask.${mask}`));
+  const calls = [...readFileSync(join(workspace, 'packages/audit/src/audit.service.ts'), 'utf8').matchAll(/trx\.run\(auditLogReads\.auditLogRead(\d+),/g)].map((match) => Number(match[1]));
+  assert.deepEqual(calls, Array.from({ length: 256 }, (_, mask) => mask));
+});
+
 // A real TypeScript checker sees actual pg and Transaction declarations. Virtual
 // files exercise exact admitted paths without writing or modifying production.
 async function lint(source, relativePath, rule, extraSources = {}, packagePaths = {}) {

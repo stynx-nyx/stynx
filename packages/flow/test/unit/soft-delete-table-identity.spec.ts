@@ -1,5 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import {
+  executeTypedQuery, executeGuardedQueryRows, type Transaction, type CheckedQueryClient,
   agentRules, answers, edges, fills, forms, graphs, nodeFormRules, nodes,
   policyRules, policySets, questions, scopes, scores, transitionEffects, waivers,
 } from '@stynx-nyx/data';
@@ -29,10 +30,16 @@ const formCases = [
 const cases = [...designCases, ...formCases];
 type Case = typeof cases[number];
 
+function checked(query: CheckedQueryClient['query']) {
+  const run: Transaction['run'] = (statement, params) => executeTypedQuery({ query }, statement, params);
+  const runGuarded: Transaction['runGuarded'] = (statement, params, guard) => executeGuardedQueryRows({ query }, statement, params, guard);
+  return { run, runGuarded };
+}
+
 function harness(item: Case, outcome: 'found' | 'missing' | 'precheck-error' | 'delete-error') {
   const order: string[] = [];
   const marker = new Error(outcome);
-  const query = vi.fn(async (_sql: string, _params: unknown[]) => {
+  const query = vi.fn(async (_sql: string, _params?: unknown[]) => {
     order.push('precheck');
     await Promise.resolve();
     if (outcome === 'precheck-error') throw marker;
@@ -45,7 +52,7 @@ function harness(item: Case, outcome: 'found' | 'missing' | 'precheck-error' | '
     expect(id).toBe(ID);
     if (outcome === 'delete-error') throw marker;
   });
-  const trx = { query, softDelete };
+  const trx = { query, softDelete, ...checked(query) };
   const tx = vi.fn(async (callback: (transaction: typeof trx) => unknown) => {
     order.push('tx');
     return callback(trx);
@@ -97,7 +104,7 @@ describe('all concrete Flow soft-delete tables retain identity and precheck orde
   it('score deletion looks up question score before String(id), existence and actual scores deletion', async () => {
     const order: string[] = [];
     const scoreId = { toString() { order.push('String(score.id)'); return ID; } };
-    const query = vi.fn(async (sql: string, params: unknown[]) => {
+    const query = vi.fn(async (sql: string, params?: unknown[]) => {
       order.push('query');
       if (query.mock.calls.length === 1) {
         expect(sql).toBe('select * from flow.scores where question_id = $1::uuid limit 1');
@@ -113,7 +120,7 @@ describe('all concrete Flow soft-delete tables retain identity and precheck orde
       expect(table).toBe(scores);
       expect(id).toBe(ID);
     });
-    const trx = { query, softDelete };
+    const trx = { query, softDelete, ...checked(query) };
     const tx = vi.fn(async (callback: (transaction: typeof trx) => unknown) => callback(trx));
     const service = new FlowFormsService({ tx } as never, {} as never);
     await expect(service.deleteQuestionScore('question-key')).resolves.toEqual({ id: ID, deleted: true });
@@ -125,7 +132,7 @@ describe('all concrete Flow soft-delete tables retain identity and precheck orde
   it('score lookup failure stops before score precheck and deletion', async () => {
     const query = vi.fn(async () => ({ rows: [] }));
     const softDelete = vi.fn();
-    const trx = { query, softDelete };
+    const trx = { query, softDelete, ...checked(query) };
     const tx = vi.fn(async (callback: (transaction: typeof trx) => unknown) => callback(trx));
     const service = new FlowFormsService({ tx } as never, {} as never);
     await expect(service.deleteQuestionScore(ID)).rejects.toThrow(new NotFoundException('Question score not found'));

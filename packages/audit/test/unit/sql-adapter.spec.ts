@@ -294,7 +294,7 @@ describe('AuditSqlReader.list', () => {
       const executor = makeExecutor([{ rows: [] }]);
       const result = await reader(executor).list();
       const [sql, params] = executor.query.mock.calls[0]!;
-      expect(sql).toContain('FROM audit.log');
+      expect(sql).toContain('FROM "audit"."log"');
       expect(sql).not.toContain('WHERE');
       expect(params).toEqual([100, 0]); // limit, offset
       expect(result.items).toEqual([]);
@@ -405,7 +405,7 @@ describe('AuditSqlReader.list', () => {
         table: 'my_log',
       }).list();
       const [sql] = executor.query.mock.calls[0]!;
-      expect(sql).toContain('FROM my_audit.my_log');
+      expect(sql).toContain('FROM "my_audit"."my_log"');
     });
 
     it('accepts array-shaped executor results (no .rows wrapper)', async () => {
@@ -460,7 +460,7 @@ describe('AuditSqlReader.list', () => {
         to: 't',
       });
       const [sql, params] = executor.query.mock.calls[0]!;
-      expect(sql).toContain('FROM audit.events');
+      expect(sql).toContain('FROM "audit"."events"');
       expect(sql).toContain('tenancy_id::text = $1');
       expect(sql).toContain('entity = $2');
       expect(params).toEqual(['t', 'doc', 'UPDATE', 'u', 'r', 'f', 't', 100, 0]);
@@ -715,7 +715,7 @@ describe('AuditSqlReader — empty-query coverage for non-audit_log modes', () =
       const executor = makeExecutor([{ rows: [] }]);
       await new AuditSqlReader(executor, { mode: 'stynx_events' }).list();
       const [sql, params] = executor.query.mock.calls[0]!;
-      expect(sql).toContain('FROM audit.events');
+      expect(sql).toContain('FROM "audit"."events"');
       // Any ConditionalExpression → true mutation forces a filter branch to
       // fire even with no query field; that would push to params and emit a
       // WHERE clause. .not.toContain('WHERE') catches the EqualityOperator

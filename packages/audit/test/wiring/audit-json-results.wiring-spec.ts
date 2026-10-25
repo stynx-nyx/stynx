@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { ModuleRef } from '@nestjs/core';
 import type { INestApplication } from '@nestjs/common';
-import { Database } from '@stynx-nyx/data';
+import { Database, executeTypedQuery, type Transaction } from '@stynx-nyx/data';
 import { StynxAuthGuard, PermissionGuard } from '@stynx-nyx/auth';
 import request from '../../../core/test/support/request-with-id.js';
 import { AuditSqlReader } from '../../src/sql-adapter.js';
@@ -30,10 +30,12 @@ describe('actual audit JSON result observations', () => {
   let service: StynxAuditService;
   let rows: unknown[] = [];
   let failure: Error | undefined;
-  const trx = { query: vi.fn(async () => {
+  const query = vi.fn(async () => {
     if (failure) throw failure;
     return { rows };
-  }) };
+  });
+  const run: Transaction['run'] = (statement, params) => executeTypedQuery({ query }, statement, params);
+  const trx = { query, run };
   const database = {
     withSystemContext: vi.fn(async <T>(_reason: string, consume: () => Promise<T>) => consume()),
     tx: vi.fn(async <T>(consume: (port: typeof trx) => Promise<T>, _options: unknown) => consume(trx)),
