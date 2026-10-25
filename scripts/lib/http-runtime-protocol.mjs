@@ -6,9 +6,28 @@ import { isBuiltin } from 'node:module';
 import { basename, dirname, isAbsolute, join, normalize, parse, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+/**
+ * @typedef {null | boolean | number | string | unknown[] | {[key: string]: unknown}} JsonValue
+ * @typedef {{[key: string]: unknown}} JsonObject
+ * @typedef {JsonObject & {path: string, canonicalPath: string, permissions: number, device: number, inode: number, kind: string, linkTarget: string | null}} ChainEntry
+ * @typedef {JsonObject & {scope: string, packageRoot: string, outcome: string, firstMissingPath: string, missingComponentChain: string[], nearestExistingAncestor: ChainEntry, chain: ChainEntry[]}} Absence
+ * @typedef {JsonObject & {url: string, sha256: string, moduleKind: JsonValue, byteLength: number}} Member
+ * @typedef {JsonObject & {path: string, url: string, sha256: string, permissions: number, byteLength: number, device: number, inode: number}} PhysicalFile
+ * @typedef {JsonObject & {parent: PhysicalFile, helper: PhysicalFile, manifest: PhysicalFile}} Provenance
+ * @typedef {{ruleId: string, specifier: string, packageName: string, start: number, end: number, binding: string}} Rule
+ * @typedef {JsonObject & {ruleId: string, declaredCallsite: JsonObject, provenance: Provenance, search: JsonObject & {scopes: string[], localPaths: string[], globalFallbackPaths: string[]}, absence: Absence[]}} Probe
+ * @typedef {JsonObject & {path: string, sha256: string, byteLength: number, permissions: number}} ByteRow
+ * @typedef {JsonObject & {bootstrap: JsonObject & {source: ByteRow, emitted: ByteRow, map: ByteRow}}} Observation
+ * @typedef {JsonObject & {manifest: PhysicalFile, caller: PhysicalFile, requests: string[], conditions: string[]}} Anchor
+ * @typedef {JsonObject & {tree: string, parentPid: number, descriptorSha256: string, nodePath: string, nodeSha256: string, cwd: string, environment: JsonObject, roster: Member[], resolutionAnchors: Anchor[], observation: Observation, trustedBootstrap: ByteRow[], optionalProbes: Probe[], requiredEvaluationURLs: string[]}} Bindings
+ * @typedef {{cwd: string, tree: unknown, trustedBootstrap: ByteRow[]}} AnchorBinding
+ * @typedef {JsonObject & {bindings: Bindings, candidateCommit: string, mode: string, nonce: string, pid: number}} Context
+ */
+
 const frameLimit = 32 * 1024 * 1024;
 const captureLimit = 64 * 1024 * 1024;
 
+/** @param {unknown} value @param {Set<object>} [seen] @returns {value is JsonValue} */
 function plainJson(value, seen = new Set()) {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return true;
   if (typeof value === 'number') return Number.isFinite(value);
@@ -18,7 +37,7 @@ function plainJson(value, seen = new Set()) {
   seen.add(value);
   const keys = Reflect.ownKeys(value);
   for (const key of keys) {
-    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    const descriptor = ownDescriptor(value, key);
     if (array && key === 'length') continue;
     if (
       array &&
@@ -38,12 +57,16 @@ function plainJson(value, seen = new Set()) {
   return true;
 }
 
+/** @returns {never} */
 function invalid() {
-  const error = new Error('Runtime worker did not complete its closed diagnostic protocol');
-  error.code = 'HTTP_RUNTIME_PROTOCOL_INVALID';
+  const error = Object.assign(
+    new Error('Runtime worker did not complete its closed diagnostic protocol'),
+    { code: 'HTTP_RUNTIME_PROTOCOL_INVALID' },
+  );
   throw error;
 }
 
+/** @param {unknown} value @returns {value is JsonValue} */
 function safePlainJson(value) {
   try {
     return plainJson(value);
@@ -55,16 +78,21 @@ function safePlainJson(value) {
 // JSON.stringify consults inherited toJSON hooks before its replacer. Build a
 // descriptor-only data copy with no object OR array prototype first. Callers
 // below have already validated the complete input as plain JSON data.
+/** @param {JsonValue} value @returns {string} */
 function stringifyPlainJson(value) {
+  /** @param {unknown} item @returns {unknown} */
   const copy = (item) => {
     if (item === null || typeof item !== 'object') return item;
+    /** @type {unknown} */
     const result = Array.isArray(item) ? [] : Object.create(null);
+    if (!objectRecord(result)) invalid();
     if (Array.isArray(item)) Object.setPrototypeOf(result, null);
-    for (const key of Object.keys(item))
-      result[key] = copy(Object.getOwnPropertyDescriptor(item, key).value);
+    for (const key of Object.keys(item)) result[key] = copy(ownDescriptor(item, key).value);
     return result;
   };
-  return JSON.stringify(copy(value));
+  const serialized = JSON.stringify(copy(value));
+  if (typeof serialized !== 'string') invalid();
+  return serialized;
 }
 
 /**
@@ -72,11 +100,13 @@ function stringifyPlainJson(value) {
  * or inherited toJSON hooks before using the actual protocol serializer.
  * This data operation supplies no process custody or protocol admission.
  */
+/** @param {unknown} value */
 export function serializeHttpRuntimePlainJson(value) {
   if (arguments.length !== 1 || !safePlainJson(value)) invalid();
   return stringifyPlainJson(value);
 }
 
+/** @param {unknown} value @param {readonly string[]} names @returns {value is JsonObject} */
 function ownFields(value, names) {
   return (
     value !== null &&
@@ -86,21 +116,31 @@ function ownFields(value, names) {
   );
 }
 
+/** @param {string} value */
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
+/** @param {unknown} value @returns {value is string} */
 const hashValue = (value) => typeof value === 'string' && /^[a-f0-9]{64}$/u.test(value);
+/** @param {unknown} value @returns {value is string} */
 const commitValue = (value) => typeof value === 'string' && /^[a-f0-9]{40}$/u.test(value);
-const natural = (value) => Number.isSafeInteger(value) && value >= 0;
+/** @param {unknown} value @returns {value is number} */
+const natural = (value) => safeInteger(value) && value >= 0;
+/** @param {unknown} value @returns {value is number} */
 const positive = (value) => natural(value) && value > 0;
+/** @param {unknown} value @param {readonly string[]} keys @returns {value is JsonObject} */
 const exact = (value, keys) =>
   ownFields(value, keys) && Object.keys(value).sort().join(',') === [...keys].sort().join(',');
+/** @param {unknown} value @param {boolean} [nonempty] @returns {value is string[]} */
 const strings = (value, nonempty = false) =>
   Array.isArray(value) &&
   (!nonempty || value.length > 0) &&
   value.every((entry) => typeof entry === 'string');
+/** @param {unknown} value @param {boolean} [nonempty] @returns {value is string[]} */
 const uniqueStrings = (value, nonempty = false) =>
   strings(value, nonempty) && new Set(value).size === value.length;
+/** @param {unknown} value @returns {value is string} */
 const absolute = (value) =>
   typeof value === 'string' && isAbsolute(value) && normalize(value) === value;
+/** @param {unknown} value @returns {value is string} */
 const fileURL = (value) => {
   if (typeof value !== 'string') return false;
   try {
@@ -115,7 +155,9 @@ const fileURL = (value) => {
     return false;
   }
 };
+/** @param {unknown} value @returns {value is number} */
 const permissions = (value) => natural(value) && value <= 0o7777;
+/** @type {ReadonlySet<unknown>} */
 const moduleKinds = new Set(['module', 'commonjs', 'json']);
 const ruleTable = [
   {
@@ -197,6 +239,7 @@ const probeKeys = [
   'readinessPromoting',
 ];
 
+/** @param {string} directory @returns {string[]} */
 function localSearchPaths(directory) {
   const paths = [];
   for (let path = directory; ; path = dirname(path)) {
@@ -205,6 +248,7 @@ function localSearchPaths(directory) {
   }
 }
 
+/** @param {unknown} value @returns {value is ChainEntry} */
 function validChainEntry(value) {
   return (
     exact(value, chainKeys) &&
@@ -220,6 +264,7 @@ function validChainEntry(value) {
   );
 }
 
+/** @param {unknown} value @param {string} scope @param {string} packageName @returns {value is Absence} */
 function validAbsence(value, scope, packageName) {
   if (
     !exact(value, absenceKeys) ||
@@ -238,21 +283,30 @@ function validAbsence(value, scope, packageName) {
   const root = parse(value.packageRoot).root;
   const parts = value.packageRoot.slice(root.length).split(sep);
   if (
-    value.chain[0].path !== root ||
+    present(value.chain[0]).path !== root ||
     value.chain.length > parts.length ||
     !isDeepStrictEqual(value.missingComponentChain, parts.slice(value.chain.length - 1))
   )
     return false;
   for (let i = 1; i < value.chain.length; i++)
-    if (value.chain[i].path !== join(value.chain[i - 1].path, parts[i - 1])) return false;
+    if (
+      present(value.chain[i]).path !== join(present(value.chain[i - 1]).path, present(parts[i - 1]))
+    )
+      return false;
   return (
-    value.firstMissingPath === join(value.chain.at(-1).path, value.missingComponentChain[0]) &&
+    value.firstMissingPath ===
+      join(present(value.chain.at(-1)).path, present(value.missingComponentChain[0])) &&
     join(value.firstMissingPath, ...value.missingComponentChain.slice(1)) === value.packageRoot
   );
 }
 
+/** @param {Absence[]} value */
 function orderedAbsence(value) {
-  const chainEntry = (entry) => Object.fromEntries(chainKeys.map((key) => [key, entry[key]]));
+  /** @param {ChainEntry} entry */
+  const chainEntry = (entry) =>
+    Object.fromEntries(
+      chainKeys.map(/** @returns {[string, unknown]} */ (key) => [key, entry[key]]),
+    );
   return value.map((entry) => ({
     scope: entry.scope,
     packageRoot: entry.packageRoot,
@@ -264,6 +318,7 @@ function orderedAbsence(value) {
   }));
 }
 
+/** @param {unknown} value @param {Rule} rule @returns {value is JsonObject} */
 function validCallsite(value, rule) {
   const callback = `() => require('${rule.specifier}')`;
   const statement = `const { ${rule.binding} } = (0, optional_require_1.optionalRequire)('${rule.specifier}', ${callback});`;
@@ -277,40 +332,34 @@ function validCallsite(value, rule) {
   );
 }
 
+/** @param {unknown} value @param {ReadonlyMap<unknown, Member>} members @returns {value is Provenance} */
 function validProvenance(value, members) {
   if (!exact(value, ['parent', 'helper', 'manifest'])) return false;
+  /** @type {Record<'parent' | 'helper' | 'manifest', [string, string]>} */
   const expected = {
     parent: [parentHash, 'commonjs'],
     helper: [helperHash, 'commonjs'],
     manifest: [manifestHash, 'json'],
   };
-  for (const name of ['parent', 'helper', 'manifest']) {
+  /** @type {Array<'parent' | 'helper' | 'manifest'>} */
+  const names = ['parent', 'helper', 'manifest'];
+  /** @type {Partial<Record<'parent' | 'helper' | 'manifest', PhysicalFile>>} */
+  const checked = {};
+  for (const name of names) {
     const file = value[name],
-      member = members.get(file?.url);
-    if (
-      !exact(file, provenanceKeys) ||
-      !absolute(file.path) ||
-      !fileURL(file.url) ||
-      file.url !== pathToFileURL(file.path).href ||
-      file.sha256 !== expected[name][0] ||
-      !permissions(file.permissions) ||
-      !natural(file.byteLength) ||
-      !natural(file.device) ||
-      !natural(file.inode) ||
-      !member ||
-      member.sha256 !== file.sha256 ||
-      member.byteLength !== file.byteLength ||
-      member.moduleKind !== expected[name][1]
-    )
-      return false;
+      member = members.get(optionalField(file, 'url'));
+    if (!validPhysicalFile(file, member, expected[name])) return false;
+    checked[name] = file;
   }
   return (
-    basename(value.parent.path) === 'nest-application.js' &&
-    value.helper.path === join(dirname(value.parent.path), 'helpers/optional-require.js') &&
-    value.manifest.path === join(dirname(value.parent.path), 'package.json')
+    basename(present(checked.parent).path) === 'nest-application.js' &&
+    present(checked.helper).path ===
+      join(dirname(present(checked.parent).path), 'helpers/optional-require.js') &&
+    present(checked.manifest).path === join(dirname(present(checked.parent).path), 'package.json')
   );
 }
 
+/** @param {unknown} value @param {ReadonlyMap<unknown, Member>} members @returns {value is Probe} */
 function validProbeExpectation(value, members) {
   if (!exact(value, ['ruleId', 'declaredCallsite', 'provenance', 'search', 'absence']))
     return false;
@@ -336,11 +385,13 @@ function validProbeExpectation(value, members) {
     value.absence.length !== value.search.scopes.length
   )
     return false;
+  const scopes = value.search.scopes;
   return value.absence.every((entry, i) =>
-    validAbsence(entry, value.search.scopes[i], rule.packageName),
+    validAbsence(entry, present(scopes[i]), rule.packageName),
   );
 }
 
+/** @param {unknown} value @param {boolean} [source] @returns {value is ByteRow} */
 function validByteRow(value, source = false) {
   const keys = source
     ? ['path', 'mode', 'blob', 'permissions', 'sha256', 'byteLength']
@@ -355,6 +406,7 @@ function validByteRow(value, source = false) {
   );
 }
 
+/** @param {unknown} value @param {string} cwd @returns {value is Observation} */
 function validObservation(value, cwd) {
   const keys = [
     'schemaVersion',
@@ -423,7 +475,9 @@ function validObservation(value, cwd) {
   return true;
 }
 
+/** @param {unknown} anchors @param {AnchorBinding} binding @param {JsonObject} context @param {ReadonlyMap<unknown, Member>} members @returns {anchors is Anchor[]} */
 function validResolutionAnchors(anchors, binding, context, members) {
+  /** @type {Array<[string, string, string, number, string, string, string[]]>} */
   const rules = [
     [
       'reference/api/package.json',
@@ -452,7 +506,7 @@ function validResolutionAnchors(anchors, binding, context, members) {
       ],
     ],
   ];
-  if (['reference-owned-loopback', 'http-endpoint-qualification'].includes(context.mode))
+  if (snapshotMode(context.mode))
     rules.push([
       'packages/flow/package.json',
       '7a9bc69161ab7e2a2c2f1a61e6dd94ee558f1c76b25c3aa48fd564f0e633bbb1',
@@ -480,16 +534,21 @@ function validResolutionAnchors(anchors, binding, context, members) {
     'mode',
   ];
   if (!Array.isArray(anchors) || anchors.length !== rules.length) return false;
+  /** @type {unknown[]} */
+  const candidateAnchors = anchors;
   if (
-    ['reference-owned-loopback', 'http-endpoint-qualification'].includes(context.mode) &&
-    !isDeepStrictEqual(anchors[1].manifest, anchors[2].manifest)
+    snapshotMode(context.mode) &&
+    !isDeepStrictEqual(
+      field(candidateAnchors[1], 'manifest'),
+      field(candidateAnchors[2], 'manifest'),
+    )
   )
     return false;
   for (const [
     index,
     [path, sha256, blob, byteLength, callerPath, literal, requests],
   ] of rules.entries()) {
-    const anchor = anchors[index];
+    const anchor = candidateAnchors[index];
     if (
       !exact(anchor, [
         'classification',
@@ -519,7 +578,7 @@ function validResolutionAnchors(anchors, binding, context, members) {
       return false;
     for (const row of [anchor.manifest, anchor.caller])
       if (
-        row.url !== pathToFileURL(join(binding.cwd, row.path)).href ||
+        row.url !== pathToFileURL(join(binding.cwd, validatedPath(row.path))).href ||
         !fileURL(row.url) ||
         !hashValue(row.sha256) ||
         !natural(row.byteLength) ||
@@ -561,6 +620,7 @@ function validResolutionAnchors(anchors, binding, context, members) {
   return true;
 }
 
+/** @param {unknown} value @param {JsonObject} context @returns {value is Bindings} */
 function validBindings(value, context) {
   if (
     !exact(value, [
@@ -597,36 +657,24 @@ function validBindings(value, context) {
     value.optionalProbes.length > 2
   )
     return false;
+  /** @type {Map<unknown, Member>} */
   const members = new Map();
   for (const row of value.roster) {
-    if (
-      !exact(row, ['url', 'sha256', 'moduleKind', 'byteLength']) ||
-      !fileURL(row.url) ||
-      !hashValue(row.sha256) ||
-      !moduleKinds.has(row.moduleKind) ||
-      !natural(row.byteLength) ||
-      members.has(row.url)
-    )
-      return false;
+    if (!validMember(row, members)) return false;
     members.set(row.url, row);
   }
+  /** @type {[string, string, string]} */
   const controlPaths = [
     'scripts/lib/http-composition-roster.mjs',
     'scripts/lib/http-runtime-worker.mjs',
     'scripts/lib/http-module-custody.mjs',
   ];
+  /** @type {ByteRow[]} */
+  const checkedBootstrap = [];
   for (let i = 0; i < value.trustedBootstrap.length; i++) {
+    /** @type {unknown} */
     const row = value.trustedBootstrap[i];
-    if (
-      !exact(row, ['path', 'sha256', 'byteLength', 'permissions', 'blob', 'classification']) ||
-      row.path !== controlPaths[i] ||
-      !hashValue(row.sha256) ||
-      !natural(row.byteLength) ||
-      !permissions(row.permissions) ||
-      !commitValue(row.blob) ||
-      row.classification !== 'observer-source'
-    )
-      return false;
+    if (!validBootstrapRow(row, present(controlPaths[i]))) return false;
     const member = members.get(pathToFileURL(join(value.cwd, row.path)).href);
     if (
       !member ||
@@ -635,19 +683,31 @@ function validBindings(value, context) {
       member.byteLength !== row.byteLength
     )
       return false;
+    checkedBootstrap.push(row);
   }
-  if (!validResolutionAnchors(value.resolutionAnchors, value, context, members)) return false;
+  if (
+    !validResolutionAnchors(
+      value.resolutionAnchors,
+      { cwd: value.cwd, tree: value.tree, trustedBootstrap: checkedBootstrap },
+      context,
+      members,
+    )
+  )
+    return false;
+  const cwd = value.cwd;
   const required = [
     'scripts/lib/http-runtime-census.mjs',
     'scripts/lib/http-runtime-bindings.mjs',
     value.observation.bootstrap.emitted.path,
-  ].map((path) => pathToFileURL(join(value.cwd, path)).href);
+  ].map((path) => pathToFileURL(join(cwd, path)).href);
   if (
     !isDeepStrictEqual(value.requiredEvaluationURLs, required) ||
     !required.every((url) => members.has(url))
   )
     return false;
+  /** @type {Set<unknown>} */
   const seen = new Set();
+  /** @type {Provenance | undefined} */
   let optionalOrigin;
   for (const probe of value.optionalProbes) {
     if (
@@ -662,6 +722,7 @@ function validBindings(value, context) {
   return true;
 }
 
+/** @param {unknown} value @param {Context} expected @returns {boolean} */
 function validModules(value, expected) {
   const binding = expected.bindings;
   if (
@@ -701,16 +762,19 @@ function validModules(value, expected) {
     })
   )
     return false;
+  /** @type {Map<unknown, Member>} */
   const members = new Map(binding.roster.map((row) => [row.url, row]));
+  /** @type {unknown[]} */
+  const evaluations = value.evaluations;
+  /** @type {unknown[]} */
+  const resolutions = value.resolutions;
   const sequences = new Set();
+  /** @param {unknown[]} rows @param {(row: JsonObject & {sequence: number}) => unknown} validate */
   const sequencePopulation = (rows, validate) => {
     let previous = 0;
     for (const row of rows) {
       if (
-        !row ||
-        typeof row !== 'object' ||
-        Array.isArray(row) ||
-        !positive(row.sequence) ||
+        !sequenceRow(row) ||
         row.sequence <= previous ||
         sequences.has(row.sequence) ||
         !validate(row)
@@ -721,6 +785,7 @@ function validModules(value, expected) {
     }
     return true;
   };
+  /** @param {JsonObject & {sequence: number}} row */
   const parent = (row) => {
     const url = row.parentURL;
     if (
@@ -732,13 +797,12 @@ function validModules(value, expected) {
     const eligible = binding.resolutionAnchors.filter(
       (anchor) =>
         anchor.manifest.url === url &&
-        anchor.requests.includes(row.specifier) &&
+        includesValue(anchor.requests, row.specifier) &&
         isDeepStrictEqual(row.conditions, anchor.conditions) &&
         (anchor.manifest.path === 'reference/api/package.json' ||
-          value.evaluations.some(
+          evaluations.some(
             (entry) =>
-              entry !== null &&
-              typeof entry === 'object' &&
+              objectRecord(entry) &&
               !Array.isArray(entry) &&
               entry.canonicalURL === anchor.caller.url &&
               entry.sha256 === anchor.caller.sha256 &&
@@ -799,11 +863,12 @@ function validModules(value, expected) {
     return false;
   if (
     !binding.requiredEvaluationURLs.every((url) =>
-      value.evaluations.some((row) => row.canonicalURL === url),
+      evaluations.some((row) => optionalField(row, 'canonicalURL') === url),
     )
   )
     return false;
   const seenRules = new Set();
+  /** @type {string | undefined} */
   let planId;
   if (
     !sequencePopulation(value.optionalResolutionProbes, (row) => {
@@ -822,8 +887,10 @@ function validModules(value, expected) {
         row.specifier !== rule.specifier ||
         row.parentURL !== admitted.provenance.parent.url ||
         ![admitted.provenance.parent.url, admitted.provenance.helper.url].every((url) =>
-          value.evaluations.some(
-            (entry) => entry.canonicalURL === url && entry.sequence < row.sequence,
+          evaluations.some(
+            (entry) =>
+              optionalField(entry, 'canonicalURL') === url &&
+              observedSequence(entry) < row.sequence,
           ),
         ) ||
         !isDeepStrictEqual(row.conditions, ['require', 'node', 'node-addons', 'module-sync']) ||
@@ -849,11 +916,13 @@ function validModules(value, expected) {
         !isDeepStrictEqual(row.declaredCallsite, admitted.declaredCallsite) ||
         !isDeepStrictEqual(row.provenance, admitted.provenance) ||
         !isDeepStrictEqual(row.search, admitted.search) ||
-        !isDeepStrictEqual(row.absence, admitted.absence) ||
+        !sameAbsence(row.absence, admitted.absence) ||
         row.beforeAndEdgeAbsenceId !==
           sha256(serializeHttpRuntimePlainJson(orderedAbsence(row.absence))) ||
-        value.resolutions.some(
-          (entry) => entry.specifier === row.specifier && entry.parentURL === row.parentURL,
+        resolutions.some(
+          (entry) =>
+            optionalField(entry, 'specifier') === row.specifier &&
+            optionalField(entry, 'parentURL') === row.parentURL,
         )
       )
         return false;
@@ -871,8 +940,9 @@ function validModules(value, expected) {
   // load-hook row alone means module execution completed.
   return binding.optionalProbes.every(
     (admitted) =>
-      !value.evaluations.some((entry) => entry.canonicalURL === admitted.provenance.parent.url) ||
-      seenRules.has(admitted.ruleId),
+      !evaluations.some(
+        (entry) => optionalField(entry, 'canonicalURL') === admitted.provenance.parent.url,
+      ) || seenRules.has(admitted.ruleId),
   );
 }
 
@@ -880,12 +950,13 @@ function validModules(value, expected) {
  * Shared strict module-snapshot validator. It grants no mode/startup authority;
  * the supervisor must derive these facts from its actual private child handle.
  */
+/** @param {unknown} context */
 export function createHttpModuleSnapshotValidator(context) {
   if (
     arguments.length !== 1 ||
     !safePlainJson(context) ||
     !exact(context, ['bindings', 'candidateCommit', 'mode', 'nonce', 'pid']) ||
-    !['reference-owned-loopback', 'http-endpoint-qualification'].includes(context.mode) ||
+    !snapshotMode(context.mode) ||
     !commitValue(context.candidateCommit) ||
     typeof context.nonce !== 'string' ||
     !/^[a-f0-9-]{36}$/u.test(context.nonce) ||
@@ -893,8 +964,9 @@ export function createHttpModuleSnapshotValidator(context) {
     !validBindings(context.bindings, context)
   )
     invalid();
-  const expected = JSON.parse(serializeHttpRuntimePlainJson(context));
+  const expected = detachedContext(serializeHttpRuntimePlainJson(context));
   return Object.freeze({
+    /** @param {unknown} value */
     accepts(value) {
       return arguments.length === 1 && safePlainJson(value) && validModules(value, expected);
     },
@@ -905,18 +977,18 @@ export function createHttpModuleSnapshotValidator(context) {
  * The actual supervisor uses this component for parsed IPC frame admission.
  * Context supplied to this lower-level component never proves process custody.
  */
+/** @param {unknown} context */
 export function createHttpRuntimeProtocol(context) {
   if (
     arguments.length !== 1 ||
     !context ||
     !safePlainJson(context) ||
-    Array.isArray(context) ||
-    Object.keys(context).sort().join(',') !== 'bindings,candidateCommit,mode,nonce,pid' ||
+    !exact(context, ['bindings', 'candidateCommit', 'mode', 'nonce', 'pid']) ||
     typeof context.candidateCommit !== 'string' ||
     typeof context.nonce !== 'string' ||
     !/^[a-f0-9]{40}$/u.test(context.candidateCommit) ||
     !/^[a-f0-9-]{36}$/u.test(context.nonce) ||
-    !Number.isSafeInteger(context.pid) ||
+    !safeInteger(context.pid) ||
     context.pid <= 0 ||
     context.mode !== 'bootstrap-module-only' ||
     !validBindings(context.bindings, context)
@@ -924,21 +996,24 @@ export function createHttpRuntimeProtocol(context) {
     invalid();
   // Plain comparison expectations do not prove custody. Only the actual private
   // supervisor can derive/corroborate them; no legacy context enables this path.
-  const expected = JSON.parse(serializeHttpRuntimePlainJson(context));
+  const expected = detachedContext(serializeHttpRuntimePlainJson(context));
   let started = false;
   let terminalSeen = false;
+  /** @type {JsonObject | undefined} */
   let terminal;
   let refused = false;
   let finished = false;
   let observedFrames = 0;
   let observedBytes = 0;
   let captureComplete = true;
+  /** @type {string[]} */
   const frames = [];
   const reject = () => {
     refused = true;
     return false;
   };
 
+  /** @param {unknown} value */
   function receive(value) {
     observedFrames++;
     let serialized;
@@ -966,13 +1041,10 @@ export function createHttpRuntimeProtocol(context) {
     // JSON reserialization, not Node's already-consumed transport wire bytes.
     frames.push(serialized);
     if (refused || finished) return reject();
+    /** @type {unknown} */
     const frame = JSON.parse(serialized);
     if (
-      !frame ||
-      typeof frame !== 'object' ||
-      Array.isArray(frame) ||
-      Object.keys(frame).sort().join(',') !==
-        'candidateCommit,kind,nonce,pid,result,schemaVersion' ||
+      !exact(frame, ['candidateCommit', 'kind', 'nonce', 'pid', 'result', 'schemaVersion']) ||
       frame.schemaVersion !== 1 ||
       frame.nonce !== expected.nonce ||
       frame.candidateCommit !== expected.candidateCommit ||
@@ -1000,11 +1072,13 @@ export function createHttpRuntimeProtocol(context) {
     terminalSeen = true;
     if (
       !started ||
-      !frame.result ||
-      typeof frame.result !== 'object' ||
-      Array.isArray(frame.result) ||
-      Object.keys(frame.result).sort().join(',') !==
-        'modules,observation,readinessPromoting,runtimeCustodyComplete,trustedBootstrap' ||
+      !exact(frame.result, [
+        'modules',
+        'observation',
+        'readinessPromoting',
+        'runtimeCustodyComplete',
+        'trustedBootstrap',
+      ]) ||
       frame.result.runtimeCustodyComplete !== false ||
       frame.result.readinessPromoting !== false ||
       !isDeepStrictEqual(frame.result.observation, expected.bindings.observation) ||
@@ -1016,6 +1090,7 @@ export function createHttpRuntimeProtocol(context) {
     return true;
   }
 
+  /** @param {unknown} exit */
   function finish(exit) {
     if (finished) {
       reject();
@@ -1030,8 +1105,7 @@ export function createHttpRuntimeProtocol(context) {
       !terminal ||
       !exit ||
       !safePlainJson(exit) ||
-      Array.isArray(exit) ||
-      Object.keys(exit).sort().join(',') !== 'code,signal' ||
+      !exact(exit, ['code', 'signal']) ||
       exit.code !== 0 ||
       exit.signal !== null
     ) {
@@ -1049,7 +1123,7 @@ export function createHttpRuntimeProtocol(context) {
       observedFrames,
       observedBytes,
       captureComplete,
-      frames: frames.map((serialized) => JSON.parse(serialized)),
+      frames: frames.map(parseUnknown),
       started,
       terminalSeen,
       refused,
@@ -1059,14 +1133,9 @@ export function createHttpRuntimeProtocol(context) {
     };
   }
 
+  /** @param {unknown} supervisorFailure */
   function captureArtifact(supervisorFailure) {
-    if (
-      arguments.length !== 1 ||
-      ![null, 'HTTP_RUNTIME_WORKER_INVALID', 'HTTP_RUNTIME_CAPTURE_INVALID'].includes(
-        supervisorFailure,
-      )
-    )
-      invalid();
+    if (arguments.length !== 1 || !supervisorFailureValue(supervisorFailure)) invalid();
     const capture = { ...snapshot(), supervisorFailure };
     let body = serializeHttpRuntimePlainJson(capture);
     let overflowed = false;
@@ -1098,4 +1167,165 @@ export function createHttpRuntimeProtocol(context) {
     return { body, byteLength: Buffer.byteLength(body), overflowed };
   }
   return Object.freeze({ receive, finish, snapshot, captureArtifact });
+}
+
+/** @param {unknown} value @returns {value is number} */
+function safeInteger(value) {
+  return Number.isSafeInteger(value);
+}
+
+/** @template T @param {T | undefined} value @returns {T} */
+function present(value) {
+  if (value === undefined) invalid();
+  return value;
+}
+
+/** @param {object} value @param {PropertyKey} key */
+function ownDescriptor(value, key) {
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  if (descriptor === undefined) invalid();
+  return descriptor;
+}
+
+/** @param {unknown} value @param {PropertyKey} key @returns {unknown} */
+function optionalField(value, key) {
+  if (value === null || value === undefined) return undefined;
+  /** @type {unknown} */
+  const target = Object(value);
+  if ((typeof target !== 'object' || target === null) && typeof target !== 'function') invalid();
+  return Reflect.get(target, key, value);
+}
+
+/** @param {unknown} value @returns {value is Record<string, unknown>} */
+function objectRecord(value) {
+  return typeof value === 'object' && value !== null;
+}
+
+/** @param {string} text @returns {unknown} */
+function parseUnknown(text) {
+  return JSON.parse(text);
+}
+
+/** @param {unknown} value @returns {boolean} */
+function supervisorFailureValue(value) {
+  /** @type {readonly unknown[]} */
+  const failures = [null, 'HTTP_RUNTIME_WORKER_INVALID', 'HTTP_RUNTIME_CAPTURE_INVALID'];
+  return failures.includes(value);
+}
+
+// This concrete snapshot proof runs only after the original input admission and
+// descriptor-only serialization. It neither supplies process custody nor admits
+// a new context mode. No generic JSON-to-domain result claim is used.
+/** @param {string} text @returns {Context} */
+function detachedContext(text) {
+  const value = parseUnknown(text);
+  if (!validDetachedContext(value)) invalid();
+  return value;
+}
+
+/** @param {unknown} value @returns {value is Context} */
+function validDetachedContext(value) {
+  return (
+    safePlainJson(value) &&
+    exact(value, ['bindings', 'candidateCommit', 'mode', 'nonce', 'pid']) &&
+    typeof value.candidateCommit === 'string' &&
+    typeof value.mode === 'string' &&
+    typeof value.nonce === 'string' &&
+    positive(value.pid) &&
+    validBindings(value.bindings, value)
+  );
+}
+
+/** @param {unknown} file @param {Member | undefined} member @param {[string, string]} expectation @returns {file is PhysicalFile} */
+function validPhysicalFile(file, member, expectation) {
+  return !(
+    !exact(file, provenanceKeys) ||
+    !absolute(file.path) ||
+    !fileURL(file.url) ||
+    file.url !== pathToFileURL(file.path).href ||
+    file.sha256 !== expectation[0] ||
+    !permissions(file.permissions) ||
+    !natural(file.byteLength) ||
+    !natural(file.device) ||
+    !natural(file.inode) ||
+    !member ||
+    member.sha256 !== file.sha256 ||
+    member.byteLength !== file.byteLength ||
+    member.moduleKind !== expectation[1]
+  );
+}
+
+/** @param {unknown} value @returns {value is string} */
+function moduleKind(value) {
+  return moduleKinds.has(value);
+}
+
+/** @param {unknown} value @returns {value is string} */
+function snapshotMode(value) {
+  /** @type {readonly unknown[]} */
+  const modes = ['reference-owned-loopback', 'http-endpoint-qualification'];
+  return modes.includes(value);
+}
+
+/** @param {unknown} row @param {string} expectedPath @returns {row is ByteRow} */
+function validBootstrapRow(row, expectedPath) {
+  return !(
+    !exact(row, ['path', 'sha256', 'byteLength', 'permissions', 'blob', 'classification']) ||
+    row.path !== expectedPath ||
+    !hashValue(row.sha256) ||
+    !natural(row.byteLength) ||
+    !permissions(row.permissions) ||
+    !commitValue(row.blob) ||
+    row.classification !== 'observer-source'
+  );
+}
+
+/** @param {unknown} row @param {ReadonlyMap<unknown, Member>} members @returns {row is Member} */
+function validMember(row, members) {
+  return !(
+    !exact(row, ['url', 'sha256', 'moduleKind', 'byteLength']) ||
+    !fileURL(row.url) ||
+    !hashValue(row.sha256) ||
+    !moduleKind(row.moduleKind) ||
+    !natural(row.byteLength) ||
+    members.has(row.url)
+  );
+}
+
+/** @param {unknown} value @returns {value is JsonObject & {sequence: number}} */
+function sequenceRow(value) {
+  return objectRecord(value) && !Array.isArray(value) && positive(value.sequence);
+}
+
+/** @param {readonly unknown[]} values @param {unknown} value */
+function includesValue(values, value) {
+  return values.includes(value);
+}
+
+/** @param {unknown} value @param {Absence[]} admitted @returns {value is Absence[]} */
+function sameAbsence(value, admitted) {
+  return isDeepStrictEqual(value, admitted);
+}
+
+/** @param {unknown} value @returns {number} */
+function observedSequence(value) {
+  const sequence = optionalField(value, 'sequence');
+  if (!positive(sequence)) invalid();
+  return sequence;
+}
+
+/** @param {unknown} value @returns {string} */
+function validatedPath(value) {
+  if (typeof value !== 'string') invalid();
+  return value;
+}
+
+/** @param {unknown} value @param {string} key @returns {unknown} */
+function field(value, key) {
+  if (value === null || value === undefined)
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  /** @type {unknown} */
+  const target = Object(value);
+  if ((typeof target !== 'object' || target === null) && typeof target !== 'function') invalid();
+  return Reflect.get(target, key, value);
 }
