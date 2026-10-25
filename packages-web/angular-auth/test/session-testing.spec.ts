@@ -78,4 +78,65 @@ describe('@stynx-nyx/angular-auth/testing', () => {
     expect(stub.calls.onAuthFailure).toHaveBeenCalledOnce();
     expect(stub.calls.switchTenant).toHaveBeenCalledWith('tenant-2');
   });
+
+
+  it('preserves callable metadata, own-key order and method descriptors for every public spy', () => {
+    const { calls } = createStynxSessionStub();
+    for (const [name, spy] of Object.entries(calls)) {
+      expect(spy.name).toBe('spy');
+      expect(spy.length).toBe(0);
+      expect(spy.getMockName()).toBe(name);
+      expect(Reflect.ownKeys(spy)).toEqual([
+        'length', 'name', '_isMockFunction', 'mock', 'getMockName', 'mockClear', 'mockImplementation',
+      ]);
+      expect(Object.getOwnPropertyDescriptor(spy, '_isMockFunction')).toEqual({
+        value: true, writable: false, enumerable: false, configurable: false,
+      });
+      expect(Object.getOwnPropertyDescriptor(spy, 'mock')).toEqual({
+        value: spy.mock, writable: false, enumerable: true, configurable: false,
+      });
+      for (const [method, arity] of [
+        [spy.getMockName, 0], [spy.mockClear, 0], [spy.mockImplementation, 1],
+      ] as const) {
+        expect(method.name).toBe('');
+        expect(method.length).toBe(arity);
+      }
+      for (const key of ['getMockName', 'mockClear', 'mockImplementation']) {
+        expect(Object.getOwnPropertyDescriptor(spy, key)).toMatchObject({
+          writable: true, enumerable: true, configurable: true,
+        });
+      }
+    }
+  });
+
+  it('retains calls identity, replacement behavior and recording before the original thrown error', () => {
+    const stub = createStynxSessionStub();
+    const spy = stub.calls.login;
+    const calls = spy.mock.calls;
+    const sentinel = new Error('session implementation sentinel');
+    expect(stub.login).toBe(spy);
+    expect(spy.mockImplementation(() => {
+      expect(calls).toEqual([[]]);
+      throw sentinel;
+    })).toBe(spy);
+    let caught: unknown;
+    try { stub.login(); } catch (error) { caught = error; }
+    expect(caught).toBe(sentinel);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith();
+    expect(spy.mock.calls).toBe(calls);
+    expect(spy.mockClear()).toBe(spy);
+    expect(spy.mock.calls).toBe(calls);
+    expect(calls).toEqual([]);
+    expect(spy).not.toHaveBeenCalled();
+    let invoked = 0;
+    expect(spy.mockImplementation(() => { invoked += 1; })).toBe(spy);
+    expect(stub.login()).toBeUndefined();
+    expect(invoked).toBe(1);
+    expect(calls).toEqual([[]]);
+    const promise = Promise.resolve('replacement-token');
+    const accessToken = stub.calls.getAccessToken;
+    expect(accessToken.mockImplementation(() => promise)).toBe(accessToken);
+    expect(stub.getAccessToken()).toBe(promise);
+  });
 });
