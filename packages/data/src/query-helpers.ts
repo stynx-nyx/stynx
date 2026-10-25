@@ -2,6 +2,7 @@ import { PgColumn } from 'drizzle-orm/pg-core';
 import { getTableColumns, sql, SQL, type SQLWrapper } from 'drizzle-orm';
 import { QueryRowValidationError } from './errors.js';
 import { executeLegacyArchive } from './checked-executor.js';
+import { isRawArchiveTemporal, knownArchiveDriverValue } from './internal/archive-driver-values.js';
 import type {
   AnyPgTable,
   PgSelectBuilder,
@@ -313,6 +314,11 @@ export class ArchiveSelectQuery<TTable extends AnyPgTable, TMode extends Archive
         if (column.notNull) invalid(column.name);
         continue;
       }
+      const physical = knownArchiveDriverValue(column, value);
+      if (physical !== undefined) {
+        if (!physical) invalid(column.name);
+        continue;
+      }
       // Custom mappers and erased $type refinements are the documented legacy
       // limit; do not coerce their values or claim their application shape is proven.
       switch (column.dataType) {
@@ -333,14 +339,13 @@ export class ArchiveSelectQuery<TTable extends AnyPgTable, TMode extends Archive
     const archiveId = row.archive_id;
     if (archiveId === null || archiveId === undefined) {
       if (required) invalid('archive_id');
-    } else if (!(typeof archiveId === 'bigint' ||
-      (typeof archiveId === 'number' && Number.isSafeInteger(archiveId)) ||
-      (typeof archiveId === 'string' && /^-?\d+$/u.test(archiveId)))) invalid('archive_id');
+    } else if (!(typeof archiveId === 'bigint' || typeof archiveId === 'number' ||
+      typeof archiveId === 'string')) invalid('archive_id');
     for (const name of ['archived_at', 'deleted_at', 'last_erasure_at']) {
       const value = row[name];
       if (value === null || value === undefined) {
         if (required && name !== 'last_erasure_at') invalid(name);
-      } else if (!(value instanceof Date)) invalid(name);
+      } else if (!isRawArchiveTemporal(value)) invalid(name);
     }
     if (row.deleted_by === null || row.deleted_by === undefined) {
       if (required) invalid('deleted_by');
@@ -349,7 +354,7 @@ export class ArchiveSelectQuery<TTable extends AnyPgTable, TMode extends Archive
   }
 
   // This overload preserves the historical Drizzle generic contract. The bridge
-  // validates built-in representations; custom/$type schemas remain erased.
+  // validates raw representation classes; custom/$type schemas remain erased.
   private mapRow(row: Record<string, unknown>): ArchiveQueryRow<TTable, TMode>;
   private mapRow(row: Record<string, unknown>): Record<string, unknown> {
     const mapped: Record<string, unknown> = {};
