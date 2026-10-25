@@ -5,6 +5,10 @@ shape package boundaries, generated diagnostics, or adoption policy.
 
 ## Accepted Decisions
 
+- [ADR-DEVAI-ADOPTION-0054 — Optional typed Offline store capabilities and exact eight-site presence amendment](2026-10-25-s10-offline-typed-capabilities.md) — accepted 2026-10-25: “Approve capabilities and exact eight-site amendment”; explicitly amends ADR0028 SM-11 only for eight named presence assertions; preserves ADR0033 F2 separately; bounded implementation and independent verification remain required.
+
+- [ADR-DEVAI-ADOPTION-0053 — Bounded Offline raw-error and retry receipt results](2026-10-25-s10-offline-error-and-retry-results.md) — accepted 2026-10-25: “Approve bounded Offline result corrections”; bounded implementation and independent verification remain required.
+
 - [ADR-DEVAI-ADOPTION-0052 — Honest generated SDK results with caller-owned decoding](2026-10-25-s10-generated-sdk-unknown-results.md) — accepted 2026-10-25: “Approve the bounded generated SDK unknown-result correction”; bounded implementation and independent verification remain required.
 
 - [ADR-DEVAI-ADOPTION-0051 — Mobile checked storage migration](2026-10-25-s10-mobile-checked-storage-migration.md) — accepted 2026-10-25: “Approve mobile checked migration A (Recommended)”; bounded implementation and independent verification remain required.

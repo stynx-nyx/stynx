@@ -35,6 +35,11 @@
       "pathPattern": "^/sessions/logout$",
       "methods": ["post"],
       "reason": "Logout returns a minimal status object."
+    },
+    {
+      "pathPattern": "^/offline-sync/sync-batches$",
+      "methods": ["post"],
+      "reason": "ADR-DEVAI-ADOPTION-0048 preserves opaque replay-capable submit results in the existing offline-e6 and offline-ctg9 compositions. This admits only this operation's broad successful JSON representation; it does not assert that archived bytes are JSON or authorize generic Offline read responses."
     }
   ]
 }
