@@ -1249,3 +1249,44 @@ test('annotation-shaped strings and ordinary comments do not override source res
   assert.equal(Object.hasOwn(media, 'x-stynx-json-response-type'), false);
   assert.deepEqual(media.schema, { $ref: '#/components/schemas/DirectAuditPage' });
 });
+
+for (const [name, declaration, expected] of [
+  ['empty Record', 'type Mutation = Record<string, never>;', { type: 'object', additionalProperties: false }],
+  ['unknown Record sibling', 'type Mutation = Record<string, unknown>;', { type: 'object', additionalProperties: { $ref: '#/components/schemas/JsonValue' } }],
+  ['typed Record sibling', 'type Mutation = Record<string, number>;', { type: 'object', additionalProperties: { type: 'number' } }],
+  ['closed named sibling', 'interface Mutation { label: string; }', { type: 'object', additionalProperties: false, properties: { label: { type: 'string' } }, required: ['label'] }],
+]) {
+  test(`source emitter fidelity preserves ${name}`, () => withBodyContract(declaration, (result, fixture) => {
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(readFixtureJson(fixture).components.schemas.Mutation, { ...expected, 'x-stynx-source': 'packages/fixture/src/body.controller.ts' });
+  }));
+}
+
+for (const [name, config, expected] of [
+  ['null root', null, { error: 'TypeError' }],
+  ['primitive root', 17, { paths: ['/native-config'] }],
+  ['nonarray source roots', { apiCoverage: { sourceRoots: { map: 17 } } }, { error: 'TypeError' }],
+  ['nonstring native path argument', { apiCoverage: { sourceRoots: [17] } }, { error: 'TypeError', code: 'ERR_INVALID_ARG_TYPE' }],
+  ['object route prefix coercion', { apiCoverage: { routePrefix: { prefix: 'kept opaque' } } }, { paths: ['/[object Object]/native-config'] }],
+]) {
+  test(`native API config preserves ${name}`, () => {
+    const fixture = mkdtempSync(join(tmpdir(), 'stynx-api-native-config-'));
+    try {
+      writeFixtureFile(fixture, '.stynxrc.json', config);
+      writeFixtureFile(fixture, 'packages/fixture/src/native.controller.ts', "import { Controller, Get } from '@nestjs/common'; @Controller('/native-config') export class NativeController { @Get() read() { return {}; } }");
+      const code = `
+        import { pathToFileURL } from 'node:url';
+        const { verifyApiCoverage } = await import(pathToFileURL(${JSON.stringify(join(root, 'packages/cli/engines/api-coverage.mjs'))}).href);
+        try {
+          const result = verifyApiCoverage({ root: ${JSON.stringify(fixture)}, writeOpenApi: true });
+          console.log(JSON.stringify({ paths: result.operations.map(operation => operation.path) }));
+        } catch (error) { console.log(JSON.stringify({ error: error.name, code: error.code })); }
+      `;
+      const result = spawnSync(process.execPath, ['--input-type=module', '--eval', code], { cwd: fixture, encoding: 'utf8', timeout: 20_000 });
+      assert.ifError(result.error);
+      assert.equal(result.status, 0, result.stderr);
+      assert.deepEqual(JSON.parse(result.stdout), expected);
+      assert.equal(existsSync(join(fixture, contractPath)), !expected.error, 'native refusal precedes contract output');
+    } finally { rmSync(fixture, { recursive: true, force: true }); }
+  });
+}
