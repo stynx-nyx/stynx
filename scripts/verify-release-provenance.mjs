@@ -13,6 +13,7 @@ const readinessReference = readFileSync(
   resolve(repoRoot, 'docs/adopters/stynx/production-grade-private-regulated.md'),
   'utf8',
 );
+/** @type {string[]} */
 const failures = [];
 
 requireText(workflow, /id-token:\s*write/u, 'release workflow must grant OIDC id-token: write');
@@ -87,10 +88,20 @@ if (failures.length > 0) {
 
 console.log('[release-provenance] OK: release provenance controls are wired');
 
+/**
+ * @param {string} text
+ * @param {RegExp} pattern
+ * @param {string} message
+ */
 function requireText(text, pattern, message) {
   if (!pattern.test(text)) failures.push(message);
 }
 
+/**
+ * @param {string} text
+ * @param {RegExp} pattern
+ * @param {string} message
+ */
 function forbidText(text, pattern, message) {
   if (pattern.test(text)) failures.push(message);
 }

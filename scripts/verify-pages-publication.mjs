@@ -12,6 +12,7 @@ const workflowDir = resolve(repoRoot, '.github/workflows');
 const workflows = readdirSync(workflowDir)
   .filter((name) => /\.ya?ml$/u.test(name))
   .map((name) => ({ name, text: readFileSync(resolve(workflowDir, name), 'utf8') }));
+/** @type {string[]} */
 const failures = [];
 
 for (const { name, text } of workflows) {
@@ -115,6 +116,11 @@ if (failures.length > 0) {
 
 console.log('[pages-publication] OK: local exact-main Pages publication is fail-closed');
 
+/**
+ * @param {string} text
+ * @param {RegExp} pattern
+ * @param {string} message
+ */
 function requireText(text, pattern, message) {
   if (!pattern.test(text)) failures.push(message);
 }
