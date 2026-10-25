@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Database } from '@stynx-nyx/data';
+import { executeTypedQuery, type Database, type Transaction } from '@stynx-nyx/data';
 import {
   OfflineSyncReservationReplayError,
   OfflineSyncUpgradeRequiredError,
@@ -24,11 +24,21 @@ const input = {
 };
 const at = new Date('2026-09-28T12:00:00.000Z');
 
+function checkedTransaction(
+  query: (sql: string, values?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>,
+) {
+  const run: Transaction['run'] = (statement, params) =>
+    executeTypedQuery({ query }, statement, params);
+  return { query, run };
+}
+
 function storeWith(
   query: (sql: string, values?: unknown[]) => Promise<{ rows: unknown[]; rowCount?: number }>,
 ) {
   const database = {
-    tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) => fn({ query })),
+    tx: vi.fn(async (fn: (trx: { query: typeof query }) => Promise<unknown>) =>
+      fn(checkedTransaction(query)),
+    ),
   } as unknown as Database;
   return { store: new PostgresOfflineSyncStore({ get: () => database } as never), database };
 }
@@ -36,9 +46,9 @@ function storeWith(
 describe('PostgreSQL reservation idempotency boundary', () => {
   it('locks the tenant key, then replays the stored reservation without touching the range', async () => {
     const row = {
-      id: 'r-1',
+      id: '10000000-0000-4000-8000-000000000001',
       tenant_id: scope.tenantId,
-      range_id: 'g-1',
+      range_id: '20000000-0000-4000-8000-000000000001',
       org_unit_id: 'org-a',
       entity_type: 'record',
       series: 'S',
@@ -58,7 +68,10 @@ describe('PostgreSQL reservation idempotency boundary', () => {
     const { store } = storeWith(query);
     await expect(
       store.reserveNumbering(scope, { ...input, idempotencyKey: 'k' }, 'now', 'default'),
-    ).resolves.toMatchObject({ reservationId: 'r-1', startNumber: 5 });
+    ).resolves.toMatchObject({
+      reservationId: '10000000-0000-4000-8000-000000000001',
+      startNumber: 5,
+    });
     expect(query).toHaveBeenCalledTimes(2);
     expect(query.mock.calls[0]![1]).toEqual([`${scope.tenantId}:numbering-reserve:k`]);
     await expect(
@@ -73,7 +86,7 @@ describe('PostgreSQL reservation idempotency boundary', () => {
 
   it('writes the key and fingerprint only for keyed reservations', async () => {
     const range = {
-      id: 'g-1',
+      id: '20000000-0000-4000-8000-000000000001',
       tenant_id: scope.tenantId,
       org_unit_id: 'org-a',
       entity_type: 'record',
@@ -82,6 +95,7 @@ describe('PostgreSQL reservation idempotency boundary', () => {
       end_number: '9',
       next_number: '1',
       status: 'active',
+      upgrade_marker: null,
     };
     const statements: { sql: string; values?: unknown[] }[] = [];
     const { store } = storeWith(async (sql, values) => {
@@ -91,9 +105,9 @@ describe('PostgreSQL reservation idempotency boundary', () => {
         return {
           rows: [
             {
-              id: 'r-2',
+              id: '10000000-0000-4000-8000-000000000002',
               tenant_id: scope.tenantId,
-              range_id: 'g-1',
+              range_id: '20000000-0000-4000-8000-000000000001',
               org_unit_id: 'org-a',
               entity_type: 'record',
               series: 'S',
@@ -168,12 +182,12 @@ describe('PostgreSQL listing boundary', () => {
     const calls: unknown[][] = [];
     const database = {
       tx: vi.fn(async (fn: (trx: unknown) => Promise<unknown>) =>
-        fn({
-          query: async (_sql: string, values: unknown[]) => {
+        fn(
+          checkedTransaction(async (_sql: string, values: unknown[]) => {
             calls.push(values);
             return { rows: [] };
-          },
-        }),
+          }),
+        ),
       ),
     } as unknown as Database;
     const at6 = '2026-09-28T12:00:00.000000Z';
@@ -215,7 +229,7 @@ describe('PostgreSQL listing boundary', () => {
   it('maps optional columns and a missing schema to the published upgrade error', async () => {
     const rows = [
       {
-        id: 'c-2',
+        id: '30000000-0000-4000-8000-000000000002',
         tenant_id: scope.tenantId,
         sync_queue_item_id: 'q',
         local_entity_id: 'l',
@@ -229,9 +243,10 @@ describe('PostgreSQL listing boundary', () => {
         created_at: at,
         device_id: 'dev',
         sort_at: '2026-09-28T12:00:00.000000Z',
+        stynx: null,
       },
       {
-        id: 'c-1',
+        id: '30000000-0000-4000-8000-000000000001',
         tenant_id: scope.tenantId,
         sync_queue_item_id: 'q',
         local_entity_id: 'l',
@@ -245,17 +260,18 @@ describe('PostgreSQL listing boundary', () => {
         created_at: at,
         device_id: 'dev',
         sort_at: '2026-09-28T12:00:00.000000Z',
+        stynx: null,
       },
     ];
     const database = {
       tx: vi.fn(async (fn: (trx: unknown) => Promise<unknown>) =>
-        fn({ query: async () => ({ rows }) }),
+        fn(checkedTransaction(async () => ({ rows }))),
       ),
     } as unknown as Database;
     const page = await pgListConflicts(database, scope, { limit: 1 });
     expect(page.items).toEqual([
       {
-        conflictId: 'c-2',
+        conflictId: '30000000-0000-4000-8000-000000000002',
         tenantId: scope.tenantId,
         queueItemId: 'q',
         localEntityId: 'l',
@@ -267,7 +283,9 @@ describe('PostgreSQL listing boundary', () => {
         createdAt: at.toISOString(),
       },
     ]);
-    expect(page.nextCursor).toBe(encodeCursor(['2026-09-28T12:00:00.000000Z', 'c-2']));
+    expect(page.nextCursor).toBe(
+      encodeCursor(['2026-09-28T12:00:00.000000Z', '30000000-0000-4000-8000-000000000002']),
+    );
     expect((await pgListConflicts(database, scope, {})).items[1]).toMatchObject({
       resolution: 'reject',
       resolvedBy: 'actor-a',
@@ -288,7 +306,7 @@ describe('PostgreSQL listing boundary', () => {
     };
     const receipts = {
       tx: vi.fn(async (fn: (trx: unknown) => Promise<unknown>) =>
-        fn({ query: async () => ({ rows: [receipt] }) }),
+        fn(checkedTransaction(async () => ({ rows: [receipt] }))),
       ),
     } as unknown as Database;
     expect((await pgListItemReceipts(receipts, scope, {})).items[0]).toMatchObject({
@@ -306,7 +324,7 @@ describe('PostgreSQL listing boundary', () => {
     };
     const batches = {
       tx: vi.fn(async (fn: (trx: unknown) => Promise<unknown>) =>
-        fn({ query: async () => ({ rows: [batch] }) }),
+        fn(checkedTransaction(async () => ({ rows: [batch] }))),
       ),
     } as unknown as Database;
     expect((await pgListBatches(batches, scope, {})).items[0]!.batchSequence).toBe(3);
@@ -324,13 +342,14 @@ describe('PostgreSQL listing boundary', () => {
       payload_json: {},
       created_locally_at: at,
       reserved_number: '7',
+      stynx: null,
       status: 'received',
       received_at: at,
       sort_at: 'x',
     };
     const queues = {
       tx: vi.fn(async (fn: (trx: unknown) => Promise<unknown>) =>
-        fn({ query: async () => ({ rows: [queue] }) }),
+        fn(checkedTransaction(async () => ({ rows: [queue] }))),
       ),
     } as unknown as Database;
     expect((await pgListQueueItems(queues, scope, {})).items[0]!.reservedNumber).toBe(7);
