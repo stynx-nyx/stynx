@@ -147,10 +147,15 @@ function declaredFrom(
   if (!match?.[1] || !match[2]) {
     return null;
   }
-  return {
-    version: `A-${match[1]}` as PdfAVersion,
-    conformance: match[2].toLowerCase() as PdfAConformance,
-  };
+  const version = `A-${match[1]}`;
+  const conformance = match[2].toLowerCase();
+  if (
+    (version === 'A-1' || version === 'A-2' || version === 'A-3' || version === 'A-4') &&
+    (conformance === 'a' || conformance === 'b' || conformance === 'u')
+  ) {
+    return { version, conformance };
+  }
+  return null;
 }
 
 function rulesetVersionFrom(report: JsonRecord): string {
@@ -175,9 +180,11 @@ function syntheticFailure(): PdfARuleError {
 }
 
 function asRecord(value: unknown): JsonRecord | undefined {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as JsonRecord)
-    : undefined;
+  return isRecord(value) ? value : undefined;
+}
+
+function isRecord(value: unknown): value is JsonRecord {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 function firstRecord(value: unknown): JsonRecord | undefined {

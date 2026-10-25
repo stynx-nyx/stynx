@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { PrivacyConfigurationError } from './errors.js';
 import { requirePrivacySystemContext, requirePrivacyTenantContext } from './privacy-context.js';
 import { STYNX_PRIVACY_OPTIONS } from './tokens.js';
-import type { PrivacyMapOverrideFile, PrivacyRule, StynxPrivacyModuleOptions } from './types.js';
+import type { PrivacyRule, StynxPrivacyModuleOptions } from './types.js';
 
 const identifierPattern = /^[A-Za-z_][A-Za-z0-9_]*$/u;
 
@@ -157,7 +157,7 @@ export class PiiMapService {
       return [];
     }
 
-    const parsed = parse(readFileSync(overridePath, 'utf8')) as PrivacyMapOverrideFile;
+    const parsed: unknown = parse(readFileSync(overridePath, 'utf8'));
     return overrideSchema.parse(parsed).rules.map((rule) => withoutUndefined(rule) as PrivacyRule);
   }
 
