@@ -10,11 +10,13 @@ import {
   symlinkSync,
   realpathSync,
   cpSync,
+  readdirSync,
 } from 'node:fs';
 import { resolveTestImport, resolveTestImportPath } from './support/esm-test-imports.mjs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+import { registerHooks } from 'node:module';
 import test from 'node:test';
 import { createNativeCoverage } from '../../tools/repo-config/native-coverage.mjs';
 import { createVitestConfig } from '../../tools/repo-config/vitest.base.mjs';
@@ -22,9 +24,14 @@ const compiler = resolveTestImportPath('typescript/lib/tsc.js', import.meta.url)
 const engineAnchor = import.meta.resolve('vitest/package.json');
 const { moduleRunnerTransform } = await import(resolveTestImport('vite', engineAnchor));
 // Keep the explicit UMD witness distinct from the package's ESM entry.
-const remappingManifestPath = resolveTestImportPath('@jridgewell/remapping/package.json', engineAnchor);
+const remappingManifestPath = resolveTestImportPath(
+  '@jridgewell/remapping/package.json',
+  engineAnchor,
+);
 const remappingManifest = JSON.parse(readFileSync(remappingManifestPath, 'utf8'));
-const { default: remappingUmd } = await import(pathToFileURL(join(dirname(remappingManifestPath), remappingManifest.main)));
+const { default: remappingUmd } = await import(
+  pathToFileURL(join(dirname(remappingManifestPath), remappingManifest.main))
+);
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const sourceText =
   "import { double } from './math.js';\nexport function choose(enabled: boolean): string {\n  return enabled ? `olá 日本語 ${double(2)}` : 'off';\n}\n";
@@ -330,17 +337,23 @@ test('duplicate bindings, undeclared census members, escaping and symlink paths 
     assert.doesNotThrow(admit);
   }));
 
-test('isolated installed compiler/package/lib snapshots reject real dependency byte tampering', async () => {
+test('isolated installed compiler/package/lib snapshots reject real dependency byte tampering', async (t) => {
   const owner = realpathSync(mkdtempSync(join(tmpdir(), 'stynx compiler dependency 日本語-')));
   try {
     mkdirSync(join(owner, 'tools/repo-config'), { recursive: true });
     mkdirSync(join(owner, 'node_modules'), { recursive: true });
     cpSync(
-      resolveTestImportPath('typescript/package.json', import.meta.url).replace(/\/package\.json$/u, ''),
+      resolveTestImportPath('typescript/package.json', import.meta.url).replace(
+        /\/package\.json$/u,
+        '',
+      ),
       join(owner, 'node_modules/typescript'),
       { recursive: true },
     );
-    const codecManifest = resolveTestImportPath('@jridgewell/sourcemap-codec/package.json', import.meta.url);
+    const codecManifest = resolveTestImportPath(
+      '@jridgewell/sourcemap-codec/package.json',
+      import.meta.url,
+    );
     cpSync(dirname(codecManifest), join(owner, 'node_modules/@jridgewell/sourcemap-codec'), {
       recursive: true,
     });
@@ -357,7 +370,48 @@ test('isolated installed compiler/package/lib snapshots reject real dependency b
     );
     writeFileSync(helperPath, helperBytes);
     assert.deepEqual(readFileSync(helperPath), helperBytes);
-    const { createNativeCoverage: isolated } = await import(pathToFileURL(helperPath).href);
+    const codecLoads = [];
+    const capture = registerHooks({
+      load(url, context, nextLoad) {
+        const loaded = nextLoad(url, context);
+        if (
+          url.startsWith(
+            pathToFileURL(join(owner, 'node_modules/@jridgewell/sourcemap-codec/')).href,
+          ) &&
+          url.endsWith('.mjs')
+        ) {
+          codecLoads.push({ url, format: loaded.format, sha256: digest(loaded.source) });
+        }
+        return loaded;
+      },
+    });
+    let isolated;
+    try {
+      ({ createNativeCoverage: isolated } = await import(pathToFileURL(helperPath).href));
+    } finally {
+      capture.deregister();
+    }
+    assert.equal(
+      codecLoads.length,
+      1,
+      'awaited helper import must evaluate its actual codec ESM dependency',
+    );
+    assert.equal(codecLoads[0].format, 'module');
+    const actualCodecEsm = fileURLToPath(codecLoads[0].url);
+    assert.equal(
+      actualCodecEsm,
+      join(owner, 'node_modules/@jridgewell/sourcemap-codec/dist/sourcemap-codec.mjs'),
+    );
+    assert.equal(digest(readFileSync(actualCodecEsm)), codecLoads[0].sha256);
+    t.diagnostic(
+      JSON.stringify({
+        actualCodecLoad: codecLoads[0],
+        copiedNativeMapper: digest(
+          readFileSync(join(owner, 'tools/repo-config/native-source-map.mjs')),
+        ),
+        copiedCoverage: digest(helperBytes),
+      }),
+    );
     await fixture(({ options }) => {
       const helper = isolated(options);
       assert.equal(helper.evidence.compiler.version, '6.0.3');
@@ -365,6 +419,71 @@ test('isolated installed compiler/package/lib snapshots reject real dependency b
         row.path.endsWith('/lib/lib.es2022.d.ts'),
       );
       assert.ok(library, 'real Program must bind its actual standard library');
+      const fixtureSnapshot = () =>
+        Object.fromEntries(
+          readdirSync(options.packageDir, { recursive: true, withFileTypes: true })
+            .filter((entry) => entry.isFile())
+            .map((entry) => {
+              const file = join(entry.parentPath, entry.name);
+              return [file, digest(readFileSync(file))];
+            }),
+        );
+      const beforeMissing = fixtureSnapshot();
+      const missingDependencies = [
+        [
+          'umd',
+          join(
+            owner,
+            'node_modules/@jridgewell/sourcemap-codec',
+            JSON.parse(
+              readFileSync(
+                join(owner, 'node_modules/@jridgewell/sourcemap-codec/package.json'),
+                'utf8',
+              ),
+            ).main,
+          ),
+        ],
+        ['codec-manifest', join(owner, 'node_modules/@jridgewell/sourcemap-codec/package.json')],
+        ['compiler', helper.evidence.compiler.path],
+      ];
+      for (const [kind, path] of missingDependencies) {
+        assert.ok(path.startsWith(owner), 'missing dependency must remain inside owned runtime');
+        const bytes = readFileSync(path);
+        rmSync(path);
+        let escaped;
+        let failure;
+        try {
+          try {
+            escaped = isolated(options);
+          } catch (error) {
+            failure = error;
+          }
+          assert(failure instanceof Error, 'absent dependency must refuse admission');
+          assert.equal(
+            escaped,
+            undefined,
+            'no admission handle, plugin, report or coverage credit escapes',
+          );
+          assert.deepEqual(
+            fixtureSnapshot(),
+            beforeMissing,
+            'admission refusal must not alter compiler fixture files',
+          );
+          t.diagnostic(
+            JSON.stringify({
+              missingDependency: kind,
+              name: failure.name,
+              code: failure.code,
+              syscall: failure.syscall,
+              message: failure.message,
+              returnedAdmission: false,
+            }),
+          );
+        } finally {
+          writeFileSync(path, bytes);
+        }
+        helper.verify();
+      }
       for (const path of [
         helper.evidence.compiler.path,
         join(owner, 'node_modules/typescript/package.json'),
@@ -387,8 +506,17 @@ test('isolated installed compiler/package/lib snapshots reject real dependency b
         join(owner, 'node_modules/@jridgewell/sourcemap-codec/package.json'),
         // The current producer binds the package's UMD/CommonJS entry. Keep
         // that exact byte-tampering witness even though this test host is ESM.
-        join(owner, 'node_modules/@jridgewell/sourcemap-codec',
-          JSON.parse(readFileSync(join(owner, 'node_modules/@jridgewell/sourcemap-codec/package.json'), 'utf8')).main),
+        join(
+          owner,
+          'node_modules/@jridgewell/sourcemap-codec',
+          JSON.parse(
+            readFileSync(
+              join(owner, 'node_modules/@jridgewell/sourcemap-codec/package.json'),
+              'utf8',
+            ),
+          ).main,
+        ),
+        actualCodecEsm,
       ]) {
         const original = readFileSync(path);
         writeFileSync(path, Buffer.concat([original, Buffer.from('\n')]));
