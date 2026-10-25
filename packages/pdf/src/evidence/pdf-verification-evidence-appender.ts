@@ -1,10 +1,9 @@
 import { PDFDocument, rgb } from 'pdf-lib';
 import { embedPdfAFonts } from '../internals/pdf-a-fonts.js';
 import { applyPdfAConformanceMetadata } from '../internals/pdf-a-metadata.js';
-import { appendIncrementalEvidenceObject } from '../internals/pdf-incremental-evidence.js';
+import { appendIncrementalEvidenceObject, copyEvidenceBlock } from '../internals/pdf-incremental-evidence.js';
 
 import type {
-  PdfPadesEvidenceAdapter,
   PdfVerificationEvidenceAppenderOptions,
   PdfVerificationEvidenceInput,
 } from './types.js';
@@ -15,7 +14,7 @@ import type {
 const SIGNATURE_PEER_SPECIFIER: string = '@stynx-nyx/signature';
 
 export class PdfVerificationEvidenceAppender {
-  private evidenceAdapter: PdfPadesEvidenceAdapter | undefined;
+  private evidenceAdapter: unknown;
 
   constructor(private readonly options: PdfVerificationEvidenceAppenderOptions = {}) {
     this.evidenceAdapter = options.evidenceAdapter;
@@ -45,34 +44,37 @@ export class PdfVerificationEvidenceAppender {
       return Buffer.concat([
         Buffer.from(input.payload),
         Buffer.from(`\n%%STYNX-PDF-VERIFY:${input.verifyUrl}\n`, 'utf8'),
-        Buffer.from(this.evidenceBlock(evidenceAdapter, input.payload, input)),
+        copyEvidenceBlock(this.evidenceBlock(evidenceAdapter, input.payload, input)),
       ]);
     }
   }
 
-  private appendEvidenceBlock(payload: Uint8Array, evidenceBlock: Uint8Array): Uint8Array {
+  private appendEvidenceBlock(payload: Uint8Array, evidenceBlock: unknown): Uint8Array {
     return appendIncrementalEvidenceObject(payload, evidenceBlock);
   }
 
-  private async resolveEvidenceAdapter(): Promise<PdfPadesEvidenceAdapter> {
+  private async resolveEvidenceAdapter(): Promise<unknown> {
     this.evidenceAdapter ??= await createDefaultPadesEvidenceAdapter(this.options.now);
     return this.evidenceAdapter;
   }
 
   private evidenceBlock(
-    evidenceAdapter: PdfPadesEvidenceAdapter,
+    evidenceAdapter: unknown,
     payload: Uint8Array,
     input: PdfVerificationEvidenceInput,
-  ): Uint8Array {
-    const signed = evidenceAdapter.sign({
+  ): unknown {
+    const sign = evidenceProperty(evidenceAdapter, 'sign');
+    const request = {
       payload,
       verifyUrl: input.verifyUrl,
       reason: input.reason,
       signedAt: input.signedAt,
       signerName: input.signerName ?? this.options.defaultSignerName,
       evidenceUri: input.evidenceUri,
-    });
-    return signed.block;
+    };
+    if (typeof sign !== 'function') throw new TypeError('evidenceAdapter.sign is not a function');
+    const signed: unknown = Reflect.apply(sign, evidenceAdapter, [request]);
+    return evidenceProperty(signed, 'block');
   }
 }
 
@@ -99,11 +101,29 @@ function parseDate(value: string | undefined): Date | undefined {
 
 async function createDefaultPadesEvidenceAdapter(
   now: (() => Date) | undefined,
-): Promise<PdfPadesEvidenceAdapter> {
+): Promise<unknown> {
   // Keep @stynx-nyx/signature as a runtime peer so @stynx-nyx/pdf does not compile the
   // sibling package source into its tarball through monorepo tsconfig paths.
-  const signature = (await import(SIGNATURE_PEER_SPECIFIER)) as {
-    createMockPadesEvidenceAdapter: (now?: () => Date) => PdfPadesEvidenceAdapter;
-  };
-  return signature.createMockPadesEvidenceAdapter(now);
+  const signature: unknown = await import(SIGNATURE_PEER_SPECIFIER);
+  const factory = evidenceProperty(signature, 'createMockPadesEvidenceAdapter');
+  if (typeof factory !== 'function') {
+    throw new TypeError('signature.createMockPadesEvidenceAdapter is not a function');
+  }
+  const adapter: unknown = Reflect.apply(factory, signature, [now]);
+  return adapter;
+}
+
+function evidenceProperty(
+  value: unknown,
+  key: 'sign' | 'block' | 'createMockPadesEvidenceAdapter',
+): unknown {
+  if (value === null || value === undefined) {
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  }
+  const target: unknown = Object(value);
+  if ((typeof target !== 'object' || target === null) && typeof target !== 'function') {
+    throw new TypeError('Expected native boxed evidence value');
+  }
+  const property: unknown = Reflect.get(target, key, value);
+  return property;
 }

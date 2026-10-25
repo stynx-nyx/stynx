@@ -7,19 +7,19 @@ const OBJECT_PATTERN = /(\d+)\s+0\s+obj\b/gu;
 
 export function appendIncrementalEvidenceObject(
   pdf: Uint8Array,
-  evidenceBlock: Uint8Array,
+  evidenceBlock: unknown,
 ): Uint8Array {
   const text = Buffer.from(pdf).toString('latin1');
   const previousStartXref = STARTXREF_PATTERN.exec(text)?.[1];
   const root = ROOT_PATTERN.exec(text);
   if (!previousStartXref || !root) {
-    return Buffer.concat([Buffer.from(pdf), Buffer.from(evidenceBlock)]);
+    return Buffer.concat([Buffer.from(pdf), copyEvidenceBlock(evidenceBlock)]);
   }
 
   const objectNumber = nextObjectNumber(text);
   const objectOffset = pdf.length + 1;
   const evidence = Buffer.from(
-    Buffer.from(evidenceBlock).toString('latin1').replace(/\n$/u, ''),
+    copyEvidenceBlock(evidenceBlock).toString('latin1').replace(/\n$/u, ''),
     'latin1',
   );
   const object = Buffer.from(
@@ -75,4 +75,13 @@ function trailerIds(text: string, pdf: Uint8Array, evidence: Uint8Array): [strin
     .digest('hex')
     .slice(0, 32);
   return [id, id];
+}
+
+// Keep the native conversion at the evidence consumer, including native input errors.
+export function copyEvidenceBlock(value: unknown): Buffer {
+  const copied: unknown = Reflect.apply(Buffer.from, Buffer, [value]);
+  if (!Buffer.isBuffer(copied)) {
+    throw new TypeError('Native Buffer.from did not return an evidence buffer');
+  }
+  return copied;
 }
