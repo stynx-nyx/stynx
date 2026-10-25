@@ -38,12 +38,20 @@ const completionRow = z.object({ window: text, completed: text, total: text });
 
 `;
 
+/** @type {[column: string, cast: string][]} */
 const commonFilters = [
   ['r.scope_id', '::uuid'], ['r.graph_id', '::uuid'], ['s.code', ''],
 ];
+/** @type {[column: string, cast: string][]} */
 const taskFilters = [...commonFilters, ['r.target_type', ''], ['r.target_id', ''], ['t.assignee_user_id', '::uuid']];
+/** @type {[column: string, cast: string][]} */
 const summaryFilters = [...commonFilters, ['r.target_type', ''], ['r.target_id', ''], ['r.status', '']];
 
+/**
+ * @param {number} mask
+ * @param {readonly [column: string, cast: string][]} filters
+ * @param {readonly string[]} [initial]
+ */
 function predicates(mask, filters, initial = []) {
   let position = 0;
   const where = [...initial];
@@ -53,15 +61,31 @@ function predicates(mask, filters, initial = []) {
   return { where: where.length ? `where ${where.join(' and ')}` : '', count: position };
 }
 
+/**
+ * @param {string} name
+ * @param {string} statement
+ * @param {number} parameterCount
+ * @param {boolean} paging
+ * @param {string} row
+ */
 function definition(name, statement, parameterCount, paging, row) {
   if (statement.includes('`') || statement.includes('${')) throw new Error('Non-literal analytics SQL');
   // UUID filter values deliberately remain strings: the original SQL performs
   // its own ::uuid conversion, preserving supported syntax and driver failures.
-  const params = [...Array(parameterCount).fill('text'), ...(paging ? ['number', 'number'] : [])];
+  const params = [...Array.from({ length: parameterCount }, () => 'text'), ...(paging ? ['number', 'number'] : [])];
   return `defineQuery({\n    name: '${name}',\n    text: sql\`${statement}\`,\n    params: z.tuple([${params.join(', ')}]), row: ${row}, expects: 'many',\n  })`;
 }
 
 let definitions = 0;
+/**
+ * @param {string} exportName
+ * @param {string} name
+ * @param {readonly [column: string, cast: string][]} filters
+ * @param {readonly string[]} initial
+ * @param {boolean} paging
+ * @param {string} row
+ * @param {(selection: { where: string, count: number }) => string} statement
+ */
 function family(exportName, name, filters, initial, paging, row, statement) {
   const entries = [];
   const cases = [];

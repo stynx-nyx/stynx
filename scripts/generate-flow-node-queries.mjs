@@ -5,6 +5,7 @@ import { format, resolveConfig } from 'prettier';
 
 // Authoring-time only. Runtime code selects a literal definition by its mask;
 // it never interpolates a table, column, assignment, or SQL fragment.
+/** @type {[column: string, schema: string][]} */
 const columns = [
   ['graph_id', 'uuid'],
   ['code', 'text'],
@@ -23,6 +24,7 @@ const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const output = resolve(root, 'packages/flow/src/internal/design/generated');
 const check = process.argv.includes('--check');
 const chunkSize = 128;
+/** @type {Map<string, string>} */
 const files = new Map();
 let queryCount = 0;
 
