@@ -1,4 +1,8 @@
 import {
+  workspaceImageSizeConfig,
+  workspaceImageSizeFiles,
+} from './tools/eslint-config/workspace-image-size.mjs';
+import {
   workspaceAngularTestingConfig,
   workspaceAngularTestingFiles,
 } from './tools/eslint-config/workspace-angular-testing.mjs';
@@ -48,7 +52,7 @@ export default [
     files: ['**/*.ts', '**/*.mts', '**/*.cts'],
     // Typed source configurations below own these paths; this fallback serves
     // the retained syntax-only configuration and test/fixture surfaces.
-    ignores: [...workspaceSourceFiles, ...workspaceAngularTestingFiles],
+    ignores: [...workspaceSourceFiles, ...workspaceAngularTestingFiles, ...workspaceImageSizeFiles],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -138,4 +142,5 @@ export default [
   ...rootDatabaseToolingConfig,
   ...workspaceToolingConfig,
   ...workspaceImplementationConfig,
+  ...workspaceImageSizeConfig,
 ];

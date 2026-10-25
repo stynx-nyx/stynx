@@ -1,0 +1,37 @@
+{
+  "extends": "../image-size-safe/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "files": [
+    "../image-size-safe/lib/detector.ts",
+    "../image-size-safe/lib/fromFile.ts",
+    "../image-size-safe/lib/index.ts",
+    "../image-size-safe/lib/lookup.ts",
+    "../image-size-safe/lib/types/bmp.ts",
+    "../image-size-safe/lib/types/cur.ts",
+    "../image-size-safe/lib/types/dds.ts",
+    "../image-size-safe/lib/types/gif.ts",
+    "../image-size-safe/lib/types/heif.ts",
+    "../image-size-safe/lib/types/icns.ts",
+    "../image-size-safe/lib/types/ico.ts",
+    "../image-size-safe/lib/types/index.ts",
+    "../image-size-safe/lib/types/interface.ts",
+    "../image-size-safe/lib/types/j2c.ts",
+    "../image-size-safe/lib/types/jp2.ts",
+    "../image-size-safe/lib/types/jpg.ts",
+    "../image-size-safe/lib/types/jxl-stream.ts",
+    "../image-size-safe/lib/types/jxl.ts",
+    "../image-size-safe/lib/types/ktx.ts",
+    "../image-size-safe/lib/types/png.ts",
+    "../image-size-safe/lib/types/pnm.ts",
+    "../image-size-safe/lib/types/psd.ts",
+    "../image-size-safe/lib/types/svg.ts",
+    "../image-size-safe/lib/types/tga.ts",
+    "../image-size-safe/lib/types/tiff.ts",
+    "../image-size-safe/lib/types/utils.ts",
+    "../image-size-safe/lib/types/webp.ts",
+    "../image-size-safe/lib/utils/bit-reader.ts"
+  ],
+  "include": []
+}
