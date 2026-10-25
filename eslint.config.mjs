@@ -1,3 +1,4 @@
+import { rootWorkspaceSourceConfig, workspaceSourceFiles } from './tools/eslint-config/root-workspace-source.mjs';
 import { rootDatabaseToolingConfig } from './tools/eslint-config/root-database-tooling.mjs';
 import js from '@eslint/js';
 import angularPlugin from '@angular-eslint/eslint-plugin';
@@ -33,6 +34,9 @@ export default [
   },
   {
     files: ['**/*.ts', '**/*.mts', '**/*.cts'],
+    // Typed source configurations below own these paths; this fallback serves
+    // the retained syntax-only configuration and test/fixture surfaces.
+    ignores: workspaceSourceFiles,
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -72,6 +76,7 @@ export default [
   },
   {
     files: angularFiles,
+    ignores: workspaceSourceFiles,
     plugins: {
       '@angular-eslint': angularPlugin,
       '@angular-eslint/template': angularTemplatePlugin,
@@ -116,5 +121,6 @@ export default [
       '@angular-eslint/template/click-events-have-key-events': 'warn',
     },
   },
+  ...rootWorkspaceSourceConfig,
   ...rootDatabaseToolingConfig,
 ];

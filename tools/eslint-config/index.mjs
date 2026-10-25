@@ -1,5 +1,5 @@
 import js from '@eslint/js';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import angularPlugin from '@angular-eslint/eslint-plugin';
@@ -14,6 +14,21 @@ import { stynxPlugin } from './plugin.mjs';
 import { withLegacyTestingAssertions } from './legacy-testing-assertions.mjs';
 
 const currentPackageName = () => process.env.npm_package_name ?? '';
+
+// Root and package invocations must derive workspace policy from the same
+// owning manifest. Published factory consumers keep the existing environment
+// behavior when they do not opt into the private workspace query contract.
+/** @param {string} rootDir @param {unknown} workspaceQuery @returns {string} */
+const workspacePackageName = (rootDir, workspaceQuery) => {
+  if (!workspaceQuery) return currentPackageName();
+  /** @type {unknown} */
+  const manifest = JSON.parse(readFileSync(resolve(rootDir, 'package.json'), 'utf8'));
+  if (typeof manifest !== 'object' || manifest === null || !('name' in manifest) ||
+      typeof manifest.name !== 'string') {
+    throw new Error(`Workspace lint root has no package name: ${rootDir}`);
+  }
+  return manifest.name;
+};
 
 const deepImportPatterns = [
   {
@@ -75,8 +90,8 @@ const tsdocPackages = new Set([
 ]);
 
 const tsdocExportContexts = ['ExportAllDeclaration', 'ExportNamedDeclaration'];
-const tsdocExportContextsForPackage = () =>
-  currentPackageName() === '@stynx-nyx/sdk'
+const tsdocExportContextsForPackage = (packageName) =>
+  packageName === '@stynx-nyx/sdk'
     ? [
         "ExportAllDeclaration[source.value!='./generated']",
         "ExportNamedDeclaration[source.value!='./generated']",
@@ -199,7 +214,9 @@ const createConfig = ({
     strict: strictBoundaries = strict,
     workspacePackages = undefined,
   } = {},
-}) => [
+}) => {
+  const packageName = workspacePackageName(rootDir, workspaceQuery);
+  return [
   {
     ignores: [
       'dist/**',
@@ -255,10 +272,10 @@ const createConfig = ({
       ...sharedTypescriptRules,
       ...restrictedImportsRule({
         allowPgImports:
-          allowPgPool || ['@stynx-nyx/data', '@stynx-nyx/cli'].includes(currentPackageName()),
-        allowS3Imports: currentPackageName() === '@stynx-nyx/storage',
+          allowPgPool || ['@stynx-nyx/data', '@stynx-nyx/cli'].includes(packageName),
+        allowS3Imports: packageName === '@stynx-nyx/storage',
       }),
-      ...s3FetchRule(allowS3Fetch || currentPackageName() === '@stynx-nyx/storage'),
+      ...s3FetchRule(allowS3Fetch || packageName === '@stynx-nyx/storage'),
       'boundaries/dependencies': boundaryDependenciesRule(strictBoundaries, allow),
       ...typeSafetyRules(strict),
       ...authoredCommonJsRule(strict),
@@ -314,12 +331,12 @@ const createConfig = ({
   },
   {
     files: ['src/index.ts'],
-    rules: tsdocPackages.has(currentPackageName())
+    rules: tsdocPackages.has(packageName)
       ? {
           'jsdoc/require-jsdoc': [
             'error',
             {
-              contexts: tsdocExportContextsForPackage(),
+              contexts: tsdocExportContextsForPackage(packageName),
               publicOnly: true,
             },
           ],
@@ -356,6 +373,7 @@ const createConfig = ({
       ]
     : []),
 ];
+};
 
 export const createLibConfig = (options = {}) =>
   createConfig({ files: ['src/**/*.ts', 'lib/**/*.ts'], ...options });
