@@ -43,11 +43,13 @@ export function decodeCursor(cursor: string | undefined, arity: number): SortKey
   if (
     !Array.isArray(values) ||
     values.length !== arity ||
-    !values.every((value) => typeof value === 'string') ||
-    !validInstant(values[0] as string)
+    !values.every((value) => typeof value === 'string')
   )
     throw new OfflineSyncError('OFFLINE_SYNC_INVALID_INPUT', 400, 'cursor is invalid.');
-  return values as string[];
+  const first = values[0];
+  if (first === undefined || !validInstant(first))
+    throw new OfflineSyncError('OFFLINE_SYNC_INVALID_INPUT', 400, 'cursor is invalid.');
+  return values;
 }
 
 const compare = (a: SortKey, b: SortKey): number => {

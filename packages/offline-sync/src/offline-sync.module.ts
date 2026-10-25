@@ -13,6 +13,16 @@ import {
 } from './tokens.js';
 import type { StynxOfflineSyncModuleOptions } from './types.js';
 
+// Preserve one ordinary property Get, including primitive boxing and the original receiver.
+function readProperty(value: unknown, key: string): unknown {
+  if (value === null || value === undefined)
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  const target: unknown = Object(value);
+  if ((typeof target === 'object' && target !== null) || typeof target === 'function')
+    return Reflect.get(target, key, value);
+  throw new TypeError('Property receiver is unavailable');
+}
+
 @Module({})
 export class StynxOfflineSyncModule {
   static forRoot(options: StynxOfflineSyncModuleOptions = {}): DynamicModule {
@@ -53,7 +63,7 @@ export class StynxOfflineSyncModule {
         'getSyncItemReceipt',
       ].every(
         (method) =>
-          typeof (options.store as unknown as Record<string, unknown>)[method] === 'function',
+          typeof readProperty(options.store, method) === 'function',
       )
     )
       throw new OfflineSyncConfigurationError('store');

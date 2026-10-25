@@ -71,6 +71,16 @@ function isArrayValue(value: unknown): boolean {
   return Array.isArray(value);
 }
 
+// Preserve one ordinary property Get, including primitive boxing and the original receiver.
+function readProperty(value: unknown, key: string): unknown {
+  if (value === null || value === undefined)
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  const target: unknown = Object(value);
+  if ((typeof target === 'object' && target !== null) || typeof target === 'function')
+    return Reflect.get(target, key, value);
+  throw new TypeError('Property receiver is unavailable');
+}
+
 @Injectable()
 export class OfflineSyncService {
   constructor(
@@ -522,7 +532,7 @@ export class OfflineSyncService {
       this.assertEntityType(item.entityType);
       this.assertText(item.localEntityId, 'localEntityId');
       if (!this.options.policyResolver || item.idempotencyKey !== undefined)
-        this.assertText(item.idempotencyKey as string, 'idempotencyKey');
+        this.assertText(item.idempotencyKey, 'idempotencyKey');
       if (item.idempotencyKey?.startsWith('stynx:legacy:'))
         this.invalid('idempotencyKey uses a reserved namespace.');
       if (
@@ -686,8 +696,8 @@ export class OfflineSyncService {
 
   private assertFilters(input: object, fields: readonly string[]): void {
     for (const field of fields) {
-      const value = (input as Record<string, unknown>)[field];
-      if (value !== undefined) this.assertText(value as string, field);
+      const value = readProperty(input, field);
+      if (value !== undefined) this.assertText(value, field);
     }
   }
 
@@ -708,7 +718,7 @@ export class OfflineSyncService {
     if (value.length > 100) this.invalid('entityType must not exceed 100 characters.');
   }
 
-  private assertText(value: string, field: string): void {
+  private assertText(value: unknown, field: string): void {
     if (typeof value !== 'string' || value.trim().length === 0) {
       this.invalid(`${field} is required.`);
     }

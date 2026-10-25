@@ -11,6 +11,10 @@ import type {
   TrustedOfflineSyncScope,
 } from './types.js';
 
+function isArrayValue(value: unknown): boolean {
+  return Array.isArray(value);
+}
+
 /** Canonical request identity is shared with the lossless import validator. */
 export function reconciliationRequest(
   scope: TrustedOfflineSyncScope,
@@ -29,7 +33,7 @@ export function reconciliationRequest(
     throw new OfflineSyncError('OFFLINE_SYNC_INVALID_INPUT', 400, 'userRef is invalid.');
   if (
     input.claimedNumbers !== undefined &&
-    (!Array.isArray(input.claimedNumbers) || !input.claimedNumbers.every(Number.isSafeInteger))
+    (!isArrayValue(input.claimedNumbers) || !input.claimedNumbers.every(Number.isSafeInteger))
   )
     throw new OfflineSyncError('OFFLINE_SYNC_INVALID_INPUT', 400, 'claimedNumbers is invalid.');
   const claimedNumbers = [...new Set(input.claimedNumbers ?? [])].sort((a, b) => a - b);
