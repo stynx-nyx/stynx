@@ -6,7 +6,7 @@ import { LocaleService } from './locale.service.js';
 export class ErrorTranslatorService implements ErrorTranslator {
   constructor(private readonly localeService: LocaleService) {}
 
-  translate(key: string, locale: string, vars: Record<string, unknown> = {}): string {
+  translate(key: string, locale: string, vars: Record<string, unknown> = {}): unknown {
     return this.localeService.t(key, vars, locale);
   }
 }

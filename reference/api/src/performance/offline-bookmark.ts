@@ -12,6 +12,7 @@ import {
   type OfflineSyncEventPort,
   type OfflineSyncItemApplier,
   type OfflineSyncItemContext,
+  type OfflineSyncHookContext,
   type OfflineSyncPayloadHashPort,
 } from '@stynx-nyx/offline-sync';
 import * as queries from './offline-bookmark.repository.js';
@@ -90,9 +91,9 @@ function payload(item: CTG9SyncBatchItemInput): { value: BookmarkPayload & Recor
 }
 
 async function transactionIdentity(
-  trx: Transaction,
+  trx: OfflineSyncHookContext,
   context: OfflineSyncItemContext,
-): Promise<string> {
+): Promise<{ trx: Transaction; transactionId: string }> {
   if (
     !(trx instanceof Transaction) ||
     trx.role !== 'app' ||
@@ -124,7 +125,7 @@ async function transactionIdentity(
       'The supplied transaction must retain its actual tenant and actor.',
     );
   }
-  return live.transaction_id;
+  return { trx, transactionId: live.transaction_id };
 }
 
 /**
@@ -137,8 +138,8 @@ export function createOfflineBookmarkApplicationPorts(): {
   payloadHashPort: OfflineSyncPayloadHashPort;
   eventPort: OfflineSyncEventPort;
 } {
-  const applications = new WeakMap<Transaction, Map<string, AppliedBookmark>>();
-  const append = async (trx: Transaction, event: OfflineSyncEvent): Promise<void> => {
+  const applications = new WeakMap<OfflineSyncHookContext, Map<string, AppliedBookmark>>();
+  const append = async (trx: OfflineSyncHookContext, event: OfflineSyncEvent): Promise<void> => {
     const rows = applications.get(trx);
     const applied = rows?.get(event.entityId);
     if (
@@ -146,15 +147,21 @@ export function createOfflineBookmarkApplicationPorts(): {
       !applied ||
       event.entity !== 'demo.bookmark' ||
       canonicalEventPayload(event.payload) !==
-        applied.canonicalPayload ||
-      (await transactionIdentity(trx, applied.context)) !== applied.transactionId
+        applied.canonicalPayload
     ) {
       reject(
         'OFFLINE_SYNC_BOOKMARK_EVENT_MISMATCH',
         'The event must belong to the bookmark application in this exact transaction.',
       );
     }
-    const receipt = await trx.run(queries.bookmarkReceiptAttemptsQuery, [applied.context.tenantId, applied.context.receiptId]);
+    const { trx: transaction, transactionId } = await transactionIdentity(trx, applied.context);
+    if (transactionId !== applied.transactionId) {
+      reject(
+        'OFFLINE_SYNC_BOOKMARK_EVENT_MISMATCH',
+        'The event must belong to the bookmark application in this exact transaction.',
+      );
+    }
+    const receipt = await transaction.run(queries.bookmarkReceiptAttemptsQuery, [applied.context.tenantId, applied.context.receiptId]);
     const attempts = receipt?.attempts;
     if (
       attempts === undefined || attempts === null ||
@@ -170,7 +177,7 @@ export function createOfflineBookmarkApplicationPorts(): {
       );
     }
     const context = applied.context;
-    await new AuditSqlSink(trx, { mode: 'audit_write_function' }).writeInTransaction(
+    await new AuditSqlSink(transaction, { mode: 'audit_write_function' }).writeInTransaction(
       {
         occurredAt: context.now,
         action: 'offline-sync.bookmark.create',
@@ -196,7 +203,7 @@ export function createOfflineBookmarkApplicationPorts(): {
             : { concurrentPairs: context.concurrentPairs }),
         },
       },
-      trx,
+      transaction,
     );
     rows.delete(event.entityId);
     if (!rows.size) applications.delete(trx);
@@ -208,10 +215,10 @@ export function createOfflineBookmarkApplicationPorts(): {
     itemApplier: {
       async apply(trx, item, context) {
         const decoded = payload(item);
-        const transactionId = await transactionIdentity(trx, context);
+        const { trx: transaction, transactionId } = await transactionIdentity(trx, context);
         const serverEntityId = randomUUID();
         try {
-          const inserted = await trx.run(queries.insertOfflineBookmarkQuery,
+          const inserted = await transaction.run(queries.insertOfflineBookmarkQuery,
             [
               serverEntityId,
               context.tenantId,

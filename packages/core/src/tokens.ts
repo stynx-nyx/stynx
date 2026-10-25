@@ -15,5 +15,5 @@ export interface SystemOperationSink {
 }
 
 export interface ErrorTranslator {
-  translate(key: string, locale: string, vars?: Record<string, unknown>): string;
+  translate(key: string, locale: string, vars?: Record<string, unknown>): unknown;
 }

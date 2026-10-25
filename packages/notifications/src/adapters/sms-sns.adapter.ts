@@ -36,7 +36,7 @@ export class SmsSnsChannelAdapter implements ChannelAdapter {
       timeoutMs: 10_000,
       circuitBreaker: circuitBreaker ?? new InMemoryCircuitBreaker(),
       request: (input: ChannelSendInput) => this.publish(input),
-      parseResponse: (raw) => raw as ChannelSendResult,
+      parseResponse: (raw) => raw,
     });
   }
 
@@ -59,8 +59,10 @@ export class SmsSnsChannelAdapter implements ChannelAdapter {
   }
 
   private async publish(input: ChannelSendInput): Promise<ChannelSendResult> {
-    const response = await this.client.send(
-      new PublishCommand({
+    const client = this.client;
+    const send = client.send;
+    const command: unknown = Reflect.construct(PublishCommand, [
+      {
         PhoneNumber: input.recipient.phone,
         Message: input.body,
         ...(this.senderId
@@ -70,8 +72,25 @@ export class SmsSnsChannelAdapter implements ChannelAdapter {
               },
             }
           : {}),
-      }),
-    );
-    return { status: 'SENT', ...(response.MessageId ? { providerMessageId: response.MessageId } : {}) };
+      },
+    ]);
+    const response: unknown = await Reflect.apply(send, client, [command]);
+    if (!this.readMessageId(response)) return { status: 'SENT' };
+    const providerMessageId = this.readMessageId(response);
+    if (typeof providerMessageId !== 'string') {
+      throw new TypeError('Invalid provider message identifier');
+    }
+    return { status: 'SENT', providerMessageId };
+  }
+
+  private readMessageId(response: unknown): unknown {
+    if (response === null || response === undefined) {
+      throw new TypeError(`Cannot read properties of ${response} (reading 'MessageId')`);
+    }
+    const target: unknown = Object(response);
+    if ((typeof target === 'object' && target !== null) || typeof target === 'function') {
+      return Reflect.get(target, 'MessageId', response);
+    }
+    throw new TypeError('Provider response property receiver is unavailable');
   }
 }

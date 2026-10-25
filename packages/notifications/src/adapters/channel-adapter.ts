@@ -14,8 +14,8 @@ export interface ChannelSendInput {
   tenantId: string;
   recipient: ChannelAdapterRecipient;
   /** Email subject, or in-app inbox title. Unused by sms/push. */
-  subject?: string;
-  body: string;
+  subject?: unknown;
+  body: unknown;
   locale: string;
 }
 

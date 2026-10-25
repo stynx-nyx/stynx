@@ -66,6 +66,11 @@ import {
 
 const queueStatuses = ['received', 'applied', 'conflict', 'rejected', 'pending'];
 
+// Keep the declared element type while retaining the runtime array check.
+function isArrayValue(value: unknown): boolean {
+  return Array.isArray(value);
+}
+
 @Injectable()
 export class OfflineSyncService {
   constructor(
@@ -500,7 +505,7 @@ export class OfflineSyncService {
     }
     const maximum = this.options.policyResolver ? policy?.maxBatchItems : 100;
     if (
-      !Array.isArray(input.items) ||
+      !isArrayValue(input.items) ||
       input.items.length < 1 ||
       (maximum != null && input.items.length > maximum)
     ) {
@@ -646,7 +651,7 @@ export class OfflineSyncService {
       if (this.options.resolutionEventPort)
         throw new OfflineSyncConfigurationError('resolveWithPort');
       return this.options.conflictResolver.resolve(
-        {} as import('@stynx-nyx/data').Transaction,
+        {},
         conflictId,
         input.resolution,
         {

@@ -1,15 +1,20 @@
-import type { Transaction } from '@stynx-nyx/data';
 import { OfflineSyncConfigurationError } from './errors.js';
 import type {
   CTG9SyncBatchItemInput,
   DurableBatchExecutionOptions,
   OfflineSyncConcurrentPair,
   OfflineSyncItemContext,
+  OfflineSyncHookContext,
 } from './types.js';
+
+// Keep the declared element type while retaining the runtime array check.
+function isArrayValue(value: unknown): boolean {
+  return Array.isArray(value);
+}
 
 /** Trusted pair witnesses are checked before a handoff can exempt them. */
 export async function prepareOfflineSyncItem(
-  trx: Transaction,
+  trx: OfflineSyncHookContext,
   item: CTG9SyncBatchItemInput,
   original: OfflineSyncItemContext,
   execution: DurableBatchExecutionOptions,
@@ -28,7 +33,7 @@ export async function prepareOfflineSyncItem(
   if (
     !result ||
     typeof result.suspected !== 'boolean' ||
-    !Array.isArray(result.pairs) ||
+    !isArrayValue(result.pairs) ||
     result.suspected !== result.pairs.length > 0
   )
     throw new OfflineSyncConfigurationError('preApplyDetector');

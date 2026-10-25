@@ -362,20 +362,25 @@ export interface OfflineSyncPayloadHashPort {
   /** Compute from documented effect-bearing bytes independently of the submitted digest. */
   hash(item: CTG9SyncBatchItemInput, context: OfflineSyncItemContext): Promise<string>;
 }
+/** The original native transaction or opaque in-memory callback carrier. */
+export type OfflineSyncHookContext =
+  | import('@stynx-nyx/data').Transaction
+  | { readonly token?: string };
+
 export interface OfflineSyncItemApplier {
   apply(
-    trx: import('@stynx-nyx/data').Transaction,
+    trx: OfflineSyncHookContext,
     item: CTG9SyncBatchItemInput,
     context: OfflineSyncItemContext,
   ): Promise<OfflineSyncApplyResult>;
 }
 export interface OfflineSyncEventPort {
   appendInTransaction(
-    trx: import('@stynx-nyx/data').Transaction,
+    trx: OfflineSyncHookContext,
     event: OfflineSyncEvent,
   ): Promise<void>;
   appendManyInTransaction(
-    trx: import('@stynx-nyx/data').Transaction,
+    trx: OfflineSyncHookContext,
     events: readonly OfflineSyncEvent[],
   ): Promise<void>;
 }
@@ -389,14 +394,14 @@ export interface OfflineSyncConcurrencyResult {
 }
 export interface OfflineSyncConcurrencyDetector {
   detect(
-    trx: import('@stynx-nyx/data').Transaction,
+    trx: OfflineSyncHookContext,
     item: CTG9SyncBatchItemInput,
     context: OfflineSyncItemContext,
   ): Promise<OfflineSyncConcurrencyResult>;
 }
 export interface OfflineSyncHandoffPort {
   permits(
-    trx: import('@stynx-nyx/data').Transaction,
+    trx: OfflineSyncHookContext,
     pair: OfflineSyncConcurrentPair,
     context: OfflineSyncItemContext,
   ): Promise<boolean>;
@@ -408,13 +413,13 @@ export interface OfflineSyncConflictResolution extends SyncConflict {
 }
 export interface OfflineSyncConflictResolver {
   resolve(
-    trx: import('@stynx-nyx/data').Transaction,
+    trx: OfflineSyncHookContext,
     conflictId: string,
     action: string,
     context: OfflineSyncItemContext,
   ): Promise<OfflineSyncConflictResolution>;
   allowedActions?(
-    trx: import('@stynx-nyx/data').Transaction,
+    trx: OfflineSyncHookContext,
     conflictId: string,
     context: OfflineSyncItemContext,
   ): Promise<readonly OfflineSyncConflictResolutionStrategy[]>;

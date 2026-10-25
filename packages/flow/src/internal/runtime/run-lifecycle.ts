@@ -1,3 +1,4 @@
+import { executeRunsList } from './runs-list.repository.js';
 import { buildRunFactsQuery, updateRunStatusQuery, isRunLifecycleRow } from './run-lifecycle.repository.js';
 import { executeNodeRunsList } from './node-runs-list.repository.js';
 import { ensureFlowRun } from './runtime-queries.repository.js';
@@ -12,12 +13,9 @@ import {
   updateRunSchema,
 } from '../../validation.js';
 import {
-  addTextFilter,
-  addUuidFilter,
   camelizeRow,
   optionalString,
   pageLimitOffset,
-  type FlowRow,
   type RuntimeFilterInput,
 } from './runtime-filters.js';
 import { FlowRuntimeReadModel } from './runtime-read-model.js';
@@ -57,30 +55,20 @@ export class FlowRunLifecycle {
 
   listRuns(query: RuntimeFilterInput = {}): Promise<Record<string, unknown>> {
     const { limit, offset, page, pageSize } = pageLimitOffset(query);
-    const where: string[] = [];
-    const values: unknown[] = [];
-    addUuidFilter(where, values, 'scope_id', query.scopeId);
-    addUuidFilter(where, values, 'graph_id', query.graphId);
-    addTextFilter(where, values, 'target_type', query.targetType);
-    addTextFilter(where, values, 'target_id', query.targetId);
-    addTextFilter(where, values, 'status', query.status);
-    const whereSql = where.length > 0 ? ` where ${where.join(' and ')}` : '';
+    const scopeId = optionalString(query.scopeId);
+    const graphId = optionalString(query.graphId);
+    const targetType = optionalString(query.targetType);
+    const targetId = optionalString(query.targetId);
+    const status = optionalString(query.status);
 
     return this.db.tx(async (trx) => {
-      const rows = await trx.query<FlowRow>(
-        `select * from flow.runs${whereSql} order by created_at desc limit $${values.length + 1} offset $${values.length + 2}`,
-        [...values, limit, offset],
-      );
-      const total = await trx.query<{ total: string }>(
-        `select count(*)::text as total from flow.runs${whereSql}`,
-        values,
-      );
+      const { rows, total } = await executeRunsList(trx, scopeId, graphId, targetType, targetId, status, limit, offset);
       return {
-        data: rows.rows.map(camelizeRow),
+        data: rows.map(camelizeRow),
         meta: {
           page,
           pageSize,
-          total: Number(total.rows[0]?.total ?? 0),
+          total: Number(total[0]?.total ?? 0),
         },
       };
     }, {

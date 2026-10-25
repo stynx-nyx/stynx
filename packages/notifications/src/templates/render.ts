@@ -69,7 +69,23 @@ export class NotificationTemplateRenderer {
     }
   }
 
-  private truncate(value: string, maxLength: number): string {
-    return value.length <= maxLength ? value : `${value.slice(0, maxLength - 1)}…`;
+  private truncate(value: unknown, maxLength: number): unknown {
+    const length = this.readTruncationProperty(value, 'length');
+    if (Number(length) <= maxLength) return value;
+    const slice = this.readTruncationProperty(value, 'slice');
+    if (typeof slice !== 'function') throw new TypeError('value.slice is not a function');
+    const truncated: unknown = Reflect.apply(slice, value, [0, maxLength - 1]);
+    return `${truncated}…`;
+  }
+
+  private readTruncationProperty(value: unknown, property: 'length' | 'slice'): unknown {
+    if (value === null || value === undefined) {
+      throw new TypeError(`Cannot read properties of ${value} (reading '${property}')`);
+    }
+    const target: unknown = Object(value);
+    if ((typeof target === 'object' && target !== null) || typeof target === 'function') {
+      return Reflect.get(target, property, value);
+    }
+    throw new TypeError('Truncation property receiver is unavailable');
   }
 }

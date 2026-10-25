@@ -1,3 +1,4 @@
+import { executeEventsList } from './events-list.repository.js';
 import { readPendingEffects } from './runtime-queries.repository.js';
 import { recordEffectResult, signalChanged } from './effect-commands.repository.js';
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -7,13 +8,10 @@ import { FlowAdapterRegistry } from '../../adapters.js';
 import type { FlowJsonObject } from '../../types.js';
 import { dispatchEffectsSchema, parseDto, signalSchema } from '../../validation.js';
 import {
-  addTextFilter,
-  addUuidFilter,
   asJsonObject,
   camelizeRow,
   optionalString,
   pageLimitOffset,
-  type FlowRow,
   type PendingEffectRow,
   type RuntimeFilterInput,
 } from './runtime-filters.js';
@@ -30,28 +28,18 @@ export class FlowEffectDispatch {
 
   listEvents(query: RuntimeFilterInput = {}): Promise<Record<string, unknown>> {
     const { limit, offset, page, pageSize } = pageLimitOffset(query);
-    const where: string[] = [];
-    const values: unknown[] = [];
-    addUuidFilter(where, values, 'run_id', query.runId);
-    addUuidFilter(where, values, 'node_id', query.nodeId);
-    addUuidFilter(where, values, 'task_id', query.taskId);
-    addTextFilter(where, values, 'kind', query.kind);
-    addTextFilter(where, values, 'actor_id', query.actorId);
-    const whereSql = where.length > 0 ? ` where ${where.join(' and ')}` : '';
+    const runId = optionalString(query.runId);
+    const nodeId = optionalString(query.nodeId);
+    const taskId = optionalString(query.taskId);
+    const kind = optionalString(query.kind);
+    const actorId = optionalString(query.actorId);
 
     return this.db.tx(
       async (trx) => {
-        const rows = await trx.query<FlowRow>(
-          `select * from flow.events${whereSql} order by created_at desc, id desc limit $${values.length + 1} offset $${values.length + 2}`,
-          [...values, limit, offset],
-        );
-        const total = await trx.query<{ total: string }>(
-          `select count(*)::text as total from flow.events${whereSql}`,
-          values,
-        );
+        const { rows, total } = await executeEventsList(trx, runId, nodeId, taskId, kind, actorId, limit, offset);
         return {
-          data: rows.rows.map(camelizeRow),
-          meta: { page, pageSize, total: Number(total.rows[0]?.total ?? 0) },
+          data: rows.map(camelizeRow),
+          meta: { page, pageSize, total: Number(total[0]?.total ?? 0) },
         };
       },
       {

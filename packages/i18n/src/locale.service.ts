@@ -54,7 +54,7 @@ export class LocaleService {
     return fallback;
   }
 
-  t(key: string, vars: Record<string, unknown> = {}, locale?: string): string {
+  t(key: string, vars: Record<string, unknown> = {}, locale?: string): unknown {
     const requestContext = this.requestContext();
     const effectiveLocale =
       locale ??

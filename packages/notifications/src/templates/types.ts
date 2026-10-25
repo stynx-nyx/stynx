@@ -22,9 +22,9 @@ export interface NotificationTemplate {
 }
 
 export interface RenderedContent {
-  subject?: string;
-  body: string;
-  inAppTitle: string;
+  subject?: unknown;
+  body: unknown;
+  inAppTitle: unknown;
 }
 
 export interface TemplateRegistry {

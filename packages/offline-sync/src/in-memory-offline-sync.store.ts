@@ -283,9 +283,9 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     const frame = this.mutationContext.getStore()!;
     this.assertProjectionClaim(map, key);
     let versions = this.projectionVersions.get(map);
-    if (!versions) this.projectionVersions.set(map, (versions = new Map()));
+    if (!versions) this.projectionVersions.set(map, (versions = new Map<unknown, MemoryProjectionVersion>()));
     let claims = this.projectionClaims.get(map);
-    if (!claims) this.projectionClaims.set(map, (claims = new Map()));
+    if (!claims) this.projectionClaims.set(map, (claims = new Map<unknown, MemoryProjectionClaim>()));
     let claim = claims.get(key);
     if (!claim) claims.set(key, (claim = { owners: new Set(), versions, key }));
     for (let current: MemoryMutationFrame | undefined = frame; current; current = current.parent) {
@@ -1026,7 +1026,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     const prefix = `${scope.tenantId}:`;
     const itemKey = this.key(scope.tenantId, conflict.queueItemId);
     const item = this.readProjection(this.queueItems, itemKey)!;
-    const trx = { token: randomUUID() } as unknown as import('@stynx-nyx/data').Transaction;
+    const trx = { token: randomUUID() };
     const receiptEntry = [...this.itemReceipts.entries()].find(
       ([storedKey, value]) =>
         storedKey.startsWith(prefix) && value.item.queueItemId === conflict.queueItemId,
@@ -1237,7 +1237,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
     }
 
     const conflictId = randomUUID();
-    const trx = { token: randomUUID() } as unknown as import('@stynx-nyx/data').Transaction;
+    const trx = { token: randomUUID() };
     const context = {
       ...scope,
       agentId: runtime.agentId,
@@ -1935,7 +1935,7 @@ export class InMemoryOfflineSyncStore implements OfflineSyncDurableStore {
         else {
           const trx = {
             token: randomUUID(),
-          } as unknown as import('@stynx-nyx/data').Transaction;
+          };
 
           const apply = async (): Promise<void> => {
             const prepared = await this.checkedAwait(

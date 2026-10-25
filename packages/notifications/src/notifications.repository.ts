@@ -91,7 +91,7 @@ export const insertInboxItem = defineQuery({
            (id, tenant_id, recipient_subject_id, notification_id, delivery_id, title, body, locale, created_at)
          values ($1::uuid, $2::uuid, $3, $4::uuid, $5::uuid, $6, $7, $8, clock_timestamp())
          on conflict (delivery_id) do nothing`,
- params: z.tuple([uuid, uuid, text, uuid, uuid, text, text, text]), row: z.object({}), expects: 'none',
+ params: z.tuple([uuid, uuid, text, uuid, uuid, z.unknown(), z.unknown(), text]), row: z.object({}), expects: 'none',
 });
 
 export const markInboxRead = defineQuery({

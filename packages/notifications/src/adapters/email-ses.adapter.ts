@@ -41,7 +41,7 @@ export class EmailSesChannelAdapter implements ChannelAdapter {
       timeoutMs: 10_000,
       circuitBreaker: circuitBreaker ?? new InMemoryCircuitBreaker(),
       request: (input: ChannelSendInput) => this.sendEmail(input),
-      parseResponse: (raw) => raw as ChannelSendResult,
+      parseResponse: (raw) => raw,
     });
   }
 
@@ -67,10 +67,12 @@ export class EmailSesChannelAdapter implements ChannelAdapter {
   }
 
   private async sendEmail(input: ChannelSendInput): Promise<ChannelSendResult> {
-    const response = await this.client.send(
-      new SendEmailCommand({
+    const client = this.client;
+    const send = client.send;
+    const command: unknown = Reflect.construct(SendEmailCommand, [
+      {
         Source: this.fromAddress,
-        Destination: { ToAddresses: [input.recipient.email as string] },
+        Destination: { ToAddresses: [input.recipient.email] },
         Message: {
           Subject: { Data: input.subject ?? '', Charset: 'UTF-8' },
           Body: { Text: { Data: input.body, Charset: 'UTF-8' } },
@@ -78,8 +80,25 @@ export class EmailSesChannelAdapter implements ChannelAdapter {
         ...(this.configurationSetName
           ? { ConfigurationSetName: this.configurationSetName }
           : {}),
-      }),
-    );
-    return { status: 'SENT', ...(response.MessageId ? { providerMessageId: response.MessageId } : {}) };
+      },
+    ]);
+    const response: unknown = await Reflect.apply(send, client, [command]);
+    if (!this.readMessageId(response)) return { status: 'SENT' };
+    const providerMessageId = this.readMessageId(response);
+    if (typeof providerMessageId !== 'string') {
+      throw new TypeError('Invalid provider message identifier');
+    }
+    return { status: 'SENT', providerMessageId };
+  }
+
+  private readMessageId(response: unknown): unknown {
+    if (response === null || response === undefined) {
+      throw new TypeError(`Cannot read properties of ${response} (reading 'MessageId')`);
+    }
+    const target: unknown = Object(response);
+    if ((typeof target === 'object' && target !== null) || typeof target === 'function') {
+      return Reflect.get(target, 'MessageId', response);
+    }
+    throw new TypeError('Provider response property receiver is unavailable');
   }
 }

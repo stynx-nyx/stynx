@@ -56,18 +56,18 @@ export class CatalogService {
     locale: string,
     vars: Record<string, unknown> = {},
     tenantId?: string,
-  ): string {
+  ): unknown {
     if (tenantId !== undefined) requireI18nCacheContext(this.moduleRef, tenantId);
     const catalogs = this.catalogsMap();
     const layered = this.mergeTenantOverrides(catalogs, tenantId);
     const exact = layered.get(locale)?.get(key);
     if (exact) {
-      return new IntlMessageFormat(exact, locale).format(vars) as string;
+      return new IntlMessageFormat(exact, locale).format(vars);
     }
 
     const fallback = layered.get(STYNX_I18N_DEFAULT_LOCALE)?.get(key);
     if (fallback) {
-      return new IntlMessageFormat(fallback, 'en-US').format(vars) as string;
+      return new IntlMessageFormat(fallback, 'en-US').format(vars);
     }
 
     return key;

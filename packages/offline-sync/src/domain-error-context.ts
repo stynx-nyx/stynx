@@ -8,7 +8,7 @@ export function domainErrorContext(error: unknown): {
 } {
   try {
     const response = error instanceof HttpException ? error.getResponse() : undefined;
-    const value =
+    const value: unknown =
       response && typeof response === 'object' && 'context' in response
         ? Object.getOwnPropertyDescriptor(response, 'context')?.value
         : error && typeof error === 'object' && 'context' in error
