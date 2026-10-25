@@ -225,6 +225,10 @@ const families = [
   }
 ];
 const output = resolve(dirname(fileURLToPath(import.meta.url)), '../src/internal/design/small-mutations.repository.ts');
+/**
+ * @param {string} _table
+ * @param {string} column
+ */
 const schema = (_table, column) => {
   if (column === 'meta' || column === 'payload') return 'metadata';
   if (column === 'is_active') return 'boolean';
@@ -275,7 +279,8 @@ for (const family of families) {
 `;
       total += 1;
     }
-    const title = (value) => value[0].toUpperCase() + value.slice(1);
+    /** @param {string} value */
+    const title = (value) => value.charAt(0).toUpperCase() + value.slice(1);
     source += `export function execute${title(family.table)}${title(operation)}(trx: Transaction, mask: number, values: readonly unknown[]) {
   switch (mask) {
 `;

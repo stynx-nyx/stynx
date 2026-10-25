@@ -91,6 +91,10 @@ const families = [
   }
 ];
 const output = resolve(dirname(fileURLToPath(import.meta.url)), '../src/forms-small-mutations.repository.ts');
+/**
+ * @param {string} table
+ * @param {string} column
+ */
 const schema = (table, column) => {
   if (column === 'value' || column === 'attachment') return 'opaqueValue';
   if (column === 'created_by' || column === 'updated_by') return 'actor';
@@ -141,7 +145,8 @@ for (const family of families) {
 `;
       total += 1;
     }
-    const title = (value) => value[0].toUpperCase() + value.slice(1);
+    /** @param {string} value */
+    const title = (value) => value.charAt(0).toUpperCase() + value.slice(1);
     source += `export function execute${title(family.table)}${title(operation)}(trx: Transaction, mask: number, values: readonly unknown[]) {
   switch (mask) {
 `;
