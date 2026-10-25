@@ -18,6 +18,14 @@ export function reflectedCallTargets(call, { checker, program }) {
     return found.length > 0 && found.every((declaration) =>
       program.isSourceFileDefaultLibrary(declaration.getSourceFile()));
   };
+  // Declaration-only metadata namespaces can merge with the native Reflect
+  // namespace. The callable member is still proved separately below; a local
+  // facade, runtime namespace, or variable declaration cannot establish it.
+  const standardReflectNamespace = (found) => found.length > 0 &&
+    found.some((declaration) => program.isSourceFileDefaultLibrary(declaration.getSourceFile())) &&
+    found.every((declaration) => declaration.getSourceFile().isDeclarationFile &&
+      ts.isModuleDeclaration(declaration) && ts.isIdentifier(declaration.name) &&
+      declaration.name.text === 'Reflect');
   const member = (node) => {
     if (ts.isPropertyAccessExpression(node)) return { receiver: node.expression, name: node.name.text, key: node.name };
     if (ts.isElementAccessExpression(node) && ts.isStringLiteral(node.argumentExpression)) {
@@ -30,6 +38,21 @@ export function reflectedCallTargets(call, { checker, program }) {
     const found = checker.getTypeAtLocation(slot.receiver).getProperty(slot.name)?.declarations ?? [];
     return found.length > 0 && found.every((declaration) =>
       program.isSourceFileDefaultLibrary(declaration.getSourceFile()));
+  };
+  // An ambient overload cannot replace the native runtime callable. Require
+  // the native apply declaration and verify every additional overload belongs
+  // to this same merged namespace and has no emitted implementation.
+  const standardReflectApply = (slot) => {
+    if (!slot || slot.name !== 'apply') return false;
+    const type = checker.getTypeAtLocation(slot.receiver);
+    const namespaceDeclarations = type.symbol?.declarations ?? [];
+    const found = type.getProperty('apply')?.declarations ?? [];
+    return found.length > 0 &&
+      found.some((declaration) => program.isSourceFileDefaultLibrary(declaration.getSourceFile())) &&
+      found.every((declaration) => declaration.getSourceFile().isDeclarationFile &&
+        ts.isFunctionDeclaration(declaration) && declaration.name?.text === 'apply' &&
+        ts.isModuleBlock(declaration.parent) &&
+        namespaceDeclarations.includes(declaration.parent.parent));
   };
   const isConst = (declaration) => ts.isVariableDeclarationList(declaration.parent) &&
     Boolean(declaration.parent.flags & ts.NodeFlags.Const);
@@ -72,13 +95,18 @@ export function reflectedCallTargets(call, { checker, program }) {
     if (!node || seen.has(node) || seen.size > 64) return false;
     seen.add(node);
     if (ts.isIdentifier(node)) {
-      if (node.text === name && standard(node)) return true;
+      if (node.text === name && (name === 'Reflect'
+        ? standardReflectNamespace(declarations(node)) : standard(node))) return true;
       return declarations(node).some((declaration) => ts.isVariableDeclaration(declaration) &&
         stableBinding(declaration) && declaration.initializer && globalRoot(declaration.initializer, name, seen));
     }
     const slot = member(node);
-    if (!slot || slot.name !== name || !standardMember(slot) ||
-        !ts.isIdentifier(slot.receiver) || slot.receiver.text !== 'globalThis') return false;
+    if (!slot || slot.name !== name || !ts.isIdentifier(slot.receiver) ||
+        slot.receiver.text !== 'globalThis') return false;
+    const intrinsic = name === 'Reflect'
+      ? standardReflectNamespace(checker.getTypeAtLocation(slot.receiver).getProperty(slot.name)?.declarations ?? [])
+      : standardMember(slot);
+    if (!intrinsic) return false;
     const symbol = checker.getSymbolAtLocation(slot.receiver);
     return symbol?.name === 'globalThis' && !symbol.declarations?.length;
   };
@@ -108,7 +136,8 @@ export function reflectedCallTargets(call, { checker, program }) {
             const key = declaration.propertyName ?? declaration.name;
             if (ts.isVariableDeclaration(variable) && isConst(variable) && variable.initializer &&
                 (ts.isIdentifier(key) || ts.isStringLiteral(key)) && key.text === 'apply' &&
-                globalRoot(variable.initializer, 'Reflect')) return args[0] ? [args[0]] : [];
+                globalRoot(variable.initializer, 'Reflect') &&
+                standardReflectApply({ receiver: variable.initializer, name: 'apply' })) return args[0] ? [args[0]] : [];
           }
         }
         return [];
@@ -120,7 +149,7 @@ export function reflectedCallTargets(call, { checker, program }) {
       }
       const slot = member(node);
       if (!slot) return [];
-      if (slot.name === 'apply' && globalRoot(slot.receiver, 'Reflect') && standardMember(slot)) {
+      if (slot.name === 'apply' && globalRoot(slot.receiver, 'Reflect') && standardReflectApply(slot)) {
         return args[0] ? [args[0]] : [];
       }
       const prototype = member(slot.receiver);
