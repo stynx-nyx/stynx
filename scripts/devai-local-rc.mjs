@@ -28,12 +28,17 @@ const lawToolchain = 'law/policy/devai-local-rc-toolchain.json';
 const lawEnvironment = 'law/policy/devai-local-rc-environment.json';
 const lawTrustStore = 'law/policy/devai-local-rc-trust-store.json';
 
+/**
+ * @param {string} message
+ * @returns {never}
+ */
 function fail(message) {
   process.stderr.write(`${JSON.stringify({ ok: false, code: 'STYNX_LOCAL_RC', message })}\n`);
   process.exit(2);
 }
 
 function argumentsAfterCommand() {
+  /** @type {Record<string, string | undefined>} */
   const values = {};
   const argv = process.argv.slice(3);
   for (let index = 0; index < argv.length; index += 2) {
@@ -47,6 +52,11 @@ function argumentsAfterCommand() {
   return values;
 }
 
+/**
+ * @param {string} executable
+ * @param {readonly string[]} args
+ * @param {{cwd?: string, inherit?: boolean, env?: NodeJS.ProcessEnv}} [options]
+ */
 function run(executable, args, options = {}) {
   const result = spawnSync(executable, args, {
     cwd: options.cwd ?? repoRoot,
@@ -65,10 +75,16 @@ function run(executable, args, options = {}) {
   return String(result.stdout ?? '').trim();
 }
 
+/** @param {readonly string[]} args */
 function git(args) {
   return run('git', ['-C', repoRoot, ...args]);
 }
 
+/**
+ * @param {unknown} value
+ * @param {string} label
+ * @param {{mustExist?: boolean}} [options]
+ */
 function externalPath(value, label, { mustExist = true } = {}) {
   if (typeof value !== 'string' || value === '' || !isAbsolute(value)) {
     fail(`${label} must be an absolute path outside STYNX`);
@@ -81,16 +97,23 @@ function externalPath(value, label, { mustExist = true } = {}) {
   return path;
 }
 
+/** @param {string} name */
 function requiredEnvironment(name) {
   const value = process.env[name];
   if (value === undefined || value === '') fail(`${name} is required`);
   return value;
 }
 
+/** @param {import('node:crypto').BinaryLike} value */
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
 }
 
+/**
+ * @param {string} path
+ * @param {string} label
+ * @returns {unknown}
+ */
 function json(path, label) {
   try {
     return JSON.parse(readFileSync(path, 'utf8'));
@@ -99,10 +122,61 @@ function json(path, label) {
   }
 }
 
+/**
+ * @param {unknown} actual
+ * @param {unknown} expected
+ * @param {string} label
+ */
 function exactMap(actual, expected, label) {
   if (canonicalize(actual) !== canonicalize(expected)) {
     fail(`${label} does not match the approved local environment`);
   }
+}
+
+/**
+ * Read one original JSON property without admitting a record-shaped schema.
+ * Object boxes primitives; Reflect.get retains the original receiver.
+ * The nullish branches preserve the pinned Node runtime's ordinary-read errors.
+ * @param {unknown} value
+ * @param {string} key
+ * @returns {unknown}
+ */
+function jsonProperty(value, key) {
+  if (value === null) throw new TypeError(`Cannot read properties of null (reading '${key}')`);
+  if (value === undefined)
+    throw new TypeError(`Cannot read properties of undefined (reading '${key}')`);
+  /** @type {unknown} */
+  const boxed = Object(value);
+  if ((typeof boxed !== 'object' || boxed === null) && typeof boxed !== 'function') {
+    throw new TypeError('native Object boxing returned a non-object');
+  }
+  return Reflect.get(boxed, key, value);
+}
+
+/** @param {unknown} value @param {string} key @returns {unknown} */
+function optionalJsonProperty(value, key) {
+  return value === null || value === undefined ? undefined : jsonProperty(value, key);
+}
+
+/**
+ * The original native path sink validates its arguments, in their original order.
+ * @param {string} outputRoot
+ * @param {string} candidate
+ * @param {unknown} digest
+ */
+function receiptOutputDirectory(outputRoot, candidate, digest) {
+  /** @type {unknown} */
+  const result = Reflect.apply(join, undefined, [outputRoot, candidate, digest]);
+  if (typeof result !== 'string') throw new TypeError('native path.join returned a non-string');
+  return result;
+}
+
+/** @param {string} root @param {unknown} path */
+function receiptPath(root, path) {
+  /** @type {unknown} */
+  const result = Reflect.apply(resolve, undefined, [root, path]);
+  if (typeof result !== 'string') throw new TypeError('native path.resolve returned a non-string');
+  return result;
 }
 
 function verifierRoot() {
@@ -112,33 +186,76 @@ function verifierRoot() {
   );
   const packageRoot = join(repoRoot, 'node_modules', '@aarusso-nyx', 'devai');
   const manifest = json(join(packageRoot, 'package.json'), 'installed DEVAI manifest');
-  if (manifest.name !== identity.package || manifest.version !== identity.version) {
-    fail(`installed DEVAI must be exact ${identity.version}`);
+  if (
+    jsonProperty(manifest, 'name') !== jsonProperty(identity, 'package') ||
+    jsonProperty(manifest, 'version') !== jsonProperty(identity, 'version')
+  ) {
+    fail(`installed DEVAI must be exact ${jsonProperty(identity, 'version')}`);
   }
   const root = join(packageRoot, 'dist', 'runtime', 'evidence-verification');
   if (!existsSync(join(root, 'provenance.json'))) fail('DEVAI evidence verifier is missing');
   return root;
 }
 
+/** @param {unknown} descriptor */
 function selectedRcTasks(descriptor) {
-  const byId = new Map(descriptor.tasks.map((task) => [task.nodeId, task]));
-  const profile = descriptor.profiles.find((entry) => entry.profileId === 'rc');
+  const taskEntries = jsonProperty(descriptor, 'tasks');
+  if (!Array.isArray(taskEntries)) {
+    jsonProperty(taskEntries, 'map');
+    throw new TypeError('descriptor.tasks.map is not a function');
+  }
+  /** @type {unknown[]} */
+  const initialTasks = taskEntries;
+  /** @type {Map<unknown, unknown>} */
+  const byId = new Map(initialTasks.map((task) => [jsonProperty(task, 'nodeId'), task]));
+  const profileEntries = jsonProperty(descriptor, 'profiles');
+  if (!Array.isArray(profileEntries)) {
+    jsonProperty(profileEntries, 'find');
+    throw new TypeError('descriptor.profiles.find is not a function');
+  }
+  /** @type {unknown[]} */
+  const profiles = profileEntries;
+  const profile = profiles.find((entry) => jsonProperty(entry, 'profileId') === 'rc');
   if (!profile) fail('test-tasks.json has no RC profile');
+  /** @type {Set<unknown>} */
   const selected = new Set();
-  const queue = [...profile.requiredNodes];
+  const requiredNodes = jsonProperty(profile, 'requiredNodes');
+  if (typeof requiredNodes !== 'string' && !Array.isArray(requiredNodes)) {
+    throw new TypeError('profile.requiredNodes is not iterable');
+  }
+  /** @type {unknown[]} */
+  const queue = [...requiredNodes];
   for (let index = 0; index < queue.length; index += 1) {
     const nodeId = queue[index];
     if (selected.has(nodeId)) continue;
     const task = byId.get(nodeId);
     if (!task) fail(`RC profile names unknown task ${nodeId}`);
     selected.add(nodeId);
-    queue.push(...task.dependencies);
+    const dependencies = jsonProperty(task, 'dependencies');
+    if (typeof dependencies !== 'string' && !Array.isArray(dependencies)) {
+      if (dependencies === null || dependencies === undefined) {
+        throw new TypeError(
+          `task.dependencies is not iterable (cannot read property ${String(dependencies)})`,
+        );
+      }
+      throw new TypeError('Spread syntax requires ...iterable[Symbol.iterator] to be a function');
+    }
+    queue.push(...dependencies);
   }
-  return descriptor.tasks.filter((task) => selected.has(task.nodeId));
+  const finalEntries = jsonProperty(descriptor, 'tasks');
+  if (!Array.isArray(finalEntries)) {
+    jsonProperty(finalEntries, 'filter');
+    throw new TypeError('descriptor.tasks.filter is not a function');
+  }
+  /** @type {unknown[]} */
+  const finalTasks = finalEntries;
+  return finalTasks.filter((task) => selected.has(jsonProperty(task, 'nodeId')));
 }
 
+/** @param {unknown[]} tasks */
 function actualToolchain(tasks) {
-  const keys = new Set(tasks.flatMap((task) => task.toolchainKeys));
+  const keys = new Set(tasks.flatMap((task) => jsonProperty(task, 'toolchainKeys')));
+  /** @type {Record<string, string>} */
   const values = {};
   if (keys.has('node')) values.node = process.version;
   if (keys.has('pnpm')) values.pnpm = run('pnpm', ['--version']);
@@ -146,18 +263,24 @@ function actualToolchain(tasks) {
   for (const packageName of ['vitest', 'typescript']) {
     if (!keys.has(packageName)) continue;
     const manifest = json(join(repoRoot, 'node_modules', packageName, 'package.json'), packageName);
-    values[packageName] = `${packageName}@${manifest.version}`;
+    values[packageName] = `${packageName}@${jsonProperty(manifest, 'version')}`;
   }
   return Object.fromEntries(
     Object.entries(values).sort(([left], [right]) => left.localeCompare(right)),
   );
 }
 
+/**
+ * Tasks come only from this module's fresh JSON.parse descriptor, so keys have
+ * JSON values, never symbols. String retains native ToPropertyKey coercion here.
+ * @param {unknown[]} tasks
+ * @returns {unknown}
+ */
 function actualEnvironment(tasks) {
-  const keys = [...new Set(tasks.flatMap((task) => task.allowlistedEnv))].sort();
+  const keys = [...new Set(tasks.flatMap((task) => jsonProperty(task, 'allowlistedEnv')))].sort();
   return Object.fromEntries(
     keys.map((key) => {
-      let value = process.env[key];
+      let value = process.env[String(key)];
       if (key === 'DEVAI_AUTHORITY_POLICY_SHA256') {
         value = sha256(readFileSync(join(repoRoot, '.devai/config/authority-policy.json')));
       }
@@ -170,6 +293,7 @@ function rcTasks() {
   return selectedRcTasks(json(join(repoRoot, 'test-tasks.json'), 'task descriptor'));
 }
 
+/** @param {Record<string, string | undefined>} values */
 function controls(values) {
   const outputDirectory = externalPath(values['output-dir'], '--output-dir', { mustExist: false });
   if (process.env.NODE_AUTH_TOKEN !== undefined) {
@@ -190,8 +314,9 @@ function controls(values) {
   );
 }
 
+/** @param {Record<string, string | undefined>} values */
 function prepare(values) {
-  const candidate = values.candidate;
+  const candidate = values.candidate ?? '';
   if (!/^[0-9a-f]{40}$/u.test(candidate ?? '')) fail('--candidate must be one full SHA');
   if (git(['rev-parse', 'HEAD']) !== candidate) fail('candidate must equal clean HEAD');
   if (git(['status', '--porcelain']) !== '') fail('candidate worktree must be clean');
@@ -246,7 +371,11 @@ function prepare(values) {
     'json',
   ]);
   const check = unwrapDevaiCheckReport(JSON.parse(checkOutput));
-  if (!check.receipt?.path || !check.receipt?.digest) fail('DEVAI RC run produced no receipt');
+  if (
+    !optionalJsonProperty(jsonProperty(check, 'receipt'), 'path') ||
+    !optionalJsonProperty(jsonProperty(check, 'receipt'), 'digest')
+  )
+    fail('DEVAI RC run produced no receipt');
 
   const privateKey = externalPath(
     requiredEnvironment('DEVAI_RC_PRIVATE_KEY'),
@@ -257,13 +386,17 @@ function prepare(values) {
     requiredEnvironment('DEVAI_RC_EVIDENCE_DIR'),
     'DEVAI_RC_EVIDENCE_DIR',
   );
-  const outputDirectory = join(outputRoot, candidate, check.receipt.digest);
+  const outputDirectory = receiptOutputDirectory(
+    outputRoot,
+    candidate,
+    jsonProperty(jsonProperty(check, 'receipt'), 'digest'),
+  );
   const exportOutput = run(process.execPath, [
     join(verifier, 'src/export-cli.js'),
     '--repo',
     repoRoot,
     '--receipt',
-    resolve(repoRoot, check.receipt.path),
+    receiptPath(repoRoot, jsonProperty(jsonProperty(check, 'receipt'), 'path')),
     '--results-dir',
     join(repoRoot, '.devai/state/check-cache/v1/results'),
     '--profile',
@@ -285,20 +418,22 @@ function prepare(values) {
     '--output-dir',
     outputDirectory,
   ]);
+  /** @type {unknown} */
   const exported = JSON.parse(exportOutput);
   process.stdout.write(
     `${JSON.stringify({
       ok: true,
       candidate,
       tree,
-      receipt: check.receipt.digest,
-      taskPolicyDigest: exported.taskPolicyDigest,
+      receipt: jsonProperty(jsonProperty(check, 'receipt'), 'digest'),
+      taskPolicyDigest: jsonProperty(exported, 'taskPolicyDigest'),
       bundle: outputDirectory,
       manifest: join(outputDirectory, 'manifest.json'),
     })}\n`,
   );
 }
 
+/** @param {Record<string, string | undefined>} values */
 function publish(values) {
   const manifestPath = externalPath(values.manifest, '--manifest');
   if (manifestPath.split('/').at(-1) !== 'manifest.json')
