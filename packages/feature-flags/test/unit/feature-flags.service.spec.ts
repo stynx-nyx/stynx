@@ -161,31 +161,50 @@ describe('FeatureFlagsService', () => {
   });
 });
 
-
 describe('native JSON feature flag selected values', () => {
-  async function withFile(value: unknown, action: (provider: JsonFileFeatureFlagProvider, path: string) => Promise<void>) {
+  async function withFile(
+    value: unknown,
+    action: (provider: JsonFileFeatureFlagProvider, path: string) => Promise<void>,
+  ) {
     const directory = await mkdtemp(join(tmpdir(), 'stynx-flags-selected-'));
     const path = join(directory, 'flags.json');
     try {
       await writeFile(path, JSON.stringify(value));
       await action(new JsonFileFeatureFlagProvider(path), path);
-    } finally { await rm(directory, { recursive: true, force: true }); }
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   }
   for (const source of ['global', 'environment', 'tenant'] as const) {
-    it.each([null, [], { nested: { value: null } }, {}])(`preserves native ${source} selected value %j`, async (selected) => {
-      const definition = source === 'global' ? { default: selected } : source === 'environment'
-        ? { default: 'global', environments: { production: selected } }
-        : { default: 'global', environments: { production: 'environment' }, tenants: { tenant: selected } };
-      const context = source === 'global' ? {} : source === 'environment' ? { environment: 'production' } : { tenantId: 'tenant', environment: 'production' };
-      await withFile({ flags: { 'test.selected': definition } }, async (provider) => {
-        const fallback = { fallback: true };
-        const result = await provider.evaluate('test.selected', context, fallback);
-        expect(result.source).toBe(source);
-        expect(result.context).toBe(context);
-        if (selected === null && source !== 'global') expect(result.value).toBe(fallback);
-        else expect(result.value).toEqual(selected);
-      });
-    });
+    it.each([null, [], { nested: { value: null } }, {}])(
+      `preserves native ${source} selected value %j`,
+      async (selected) => {
+        const definition =
+          source === 'global'
+            ? { default: selected }
+            : source === 'environment'
+              ? { default: 'global', environments: { production: selected } }
+              : {
+                  default: 'global',
+                  environments: { production: 'environment' },
+                  tenants: { tenant: selected },
+                };
+        const context =
+          source === 'global'
+            ? {}
+            : source === 'environment'
+              ? { environment: 'production' }
+              : { tenantId: 'tenant', environment: 'production' };
+        await withFile({ flags: { 'test.selected': definition } }, async (provider) => {
+          const fallback = { fallback: true };
+          const result = await provider.evaluate('test.selected', context, fallback);
+          expect(result.source).toBe(source);
+          expect(result.context).toBe(context);
+          if (selected === null && source !== 'global') expect(result.value).toBe(fallback);
+          else expect(result.value).toEqual(selected);
+        });
+      },
+    );
   }
   it('returns undefined for a native definition with no default', async () => {
     await withFile({ flags: { 'test.selected': {} } }, async (provider) => {
@@ -195,49 +214,165 @@ describe('native JSON feature flag selected values', () => {
       expect(result.value).toBeUndefined();
     });
   });
-  it.each([false, 0, ''])('preserves fallback for native falsy definition %j', async (definition) => {
-    await withFile({ flags: { 'test.selected': definition } }, async (provider) => {
-      const fallback = { fallback: true };
-      expect(await provider.evaluate('test.selected', {}, fallback)).toMatchObject({ source: 'fallback' });
-      expect((await provider.evaluate('test.selected', {}, fallback)).value).toBe(fallback);
-    });
-  });
+  it.each([false, 0, ''])(
+    'preserves fallback for native falsy definition %j',
+    async (definition) => {
+      await withFile({ flags: { 'test.selected': definition } }, async (provider) => {
+        const fallback = { fallback: true };
+        expect(await provider.evaluate('test.selected', {}, fallback)).toMatchObject({
+          source: 'fallback',
+        });
+        expect((await provider.evaluate('test.selected', {}, fallback)).value).toBe(fallback);
+      });
+    },
+  );
   it('validates the flag name before attempting file access', async () => {
     const provider = new JsonFileFeatureFlagProvider('/nonexistent/stynx-feature-flags.json');
-    await expect(provider.evaluate('invalid', {}, false)).rejects.toThrow('Invalid feature flag name');
-    await expect(provider.evaluate('test.selected', {}, false)).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(provider.evaluate('invalid', {}, false)).rejects.toThrow(
+      'Invalid feature flag name',
+    );
+    await expect(provider.evaluate('test.selected', {}, false)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
   });
   it('retains native parse errors before reading evaluation context', async () => {
     await withFile({}, async (provider, path) => {
       await writeFile(path, '{');
       const read = vi.fn(() => 'tenant');
-      await expect(provider.evaluate('test.selected', { get tenantId() { return read(); } }, false)).rejects.toBeInstanceOf(SyntaxError);
+      await expect(
+        provider.evaluate(
+          'test.selected',
+          {
+            get tenantId() {
+              return read();
+            },
+          },
+          false,
+        ),
+      ).rejects.toBeInstanceOf(SyntaxError);
       expect(read).not.toHaveBeenCalled();
     });
   });
   it('retains missing flags failure before context access', async () => {
     await withFile({}, async (provider) => {
       const read = vi.fn(() => 'tenant');
-      await expect(provider.evaluate('test.selected', { get tenantId() { return read(); } }, false)).rejects.toBeInstanceOf(TypeError);
+      await expect(
+        provider.evaluate(
+          'test.selected',
+          {
+            get tenantId() {
+              return read();
+            },
+          },
+          false,
+        ),
+      ).rejects.toBeInstanceOf(TypeError);
       expect(read).not.toHaveBeenCalled();
     });
   });
   it('reads tenant identity three times and skips environment after tenant selection', async () => {
-    await withFile({ flags: { 'test.selected': { default: 'global', tenants: { tenant: [] } } } }, async (provider) => {
-      const order: string[] = [];
-      const context = { get tenantId() { order.push('tenant'); return 'tenant'; }, get environment() { order.push('environment'); throw new Error('unselected'); } };
-      const result = await provider.evaluate('test.selected', context, false);
-      expect(result.value).toEqual([]);
-      expect(result.context).toBe(context);
-      expect(order).toEqual(['tenant', 'tenant', 'tenant']);
-    });
+    await withFile(
+      { flags: { 'test.selected': { default: 'global', tenants: { tenant: [] } } } },
+      async (provider) => {
+        const order: string[] = [];
+        const context = {
+          get tenantId() {
+            order.push('tenant');
+            return 'tenant';
+          },
+          get environment() {
+            order.push('environment');
+            throw new Error('unselected');
+          },
+        };
+        const result = await provider.evaluate('test.selected', context, false);
+        expect(result.value).toEqual([]);
+        expect(result.context).toBe(context);
+        expect(order).toEqual(['tenant', 'tenant', 'tenant']);
+      },
+    );
   });
   it('forwards rich JSON results through evaluate while boolean and variant methods retain their narrow outputs', async () => {
-    await withFile({ flags: { 'test.selected': { default: [null, { deep: true }] } } }, async (provider) => {
-      const service = new FeatureFlagsService(provider);
-      expect((await service.evaluate('test.selected')).value).toEqual([null, { deep: true }]);
-      await expect(service.isEnabled('test.selected')).resolves.toBe(false);
-      await expect(service.variant('test.selected', {}, 'fallback')).resolves.toBe('fallback');
+    await withFile(
+      { flags: { 'test.selected': { default: [null, { deep: true }] } } },
+      async (provider) => {
+        const service = new FeatureFlagsService(provider);
+        expect((await service.evaluate('test.selected')).value).toEqual([null, { deep: true }]);
+        await expect(service.isEnabled('test.selected')).resolves.toBe(false);
+        await expect(service.variant('test.selected', {}, 'fallback')).resolves.toBe('fallback');
+      },
+    );
+  });
+  it.each<[unknown, string]>([
+    [null, "Cannot read properties of null (reading 'flags')"],
+    [{}, "Cannot read properties of undefined (reading 'test.selected')"],
+    [{ flags: null }, "Cannot read properties of null (reading 'test.selected')"],
+  ])('preserves nullish JSON access errors and skips context for %j', async (document, message) => {
+    await withFile(document, async (provider) => {
+      const read = vi.fn(() => 'tenant');
+      const result = provider.evaluate(
+        'test.selected',
+        {
+          get tenantId() {
+            return read();
+          },
+        },
+        false,
+      );
+      await expect(result).rejects.toBeInstanceOf(TypeError);
+      await expect(result).rejects.toHaveProperty('message', message);
+      expect(read).not.toHaveBeenCalled();
+    });
+  });
+  it('boxes a truthy primitive JSON definition and retains its own undefined result', async () => {
+    await withFile({ flags: { 'test.selected': 7 } }, async (provider) => {
+      const context = {};
+      const result = await provider.evaluate('test.selected', context, false);
+      expect(result.source).toBe('global');
+      expect(result.context).toBe(context);
+      expect(Object.hasOwn(result, 'value')).toBe(true);
+      expect(result.value).toBeUndefined();
+    });
+  });
+  it('selects a native string tenant property with the original context read order', async () => {
+    await withFile(
+      { flags: { 'test.selected': { default: 'global', tenants: 'ab' } } },
+      async (provider) => {
+        const order: string[] = [];
+        const context = {
+          get tenantId() {
+            order.push('tenant');
+            return '0';
+          },
+          get environment() {
+            order.push('environment');
+            throw new Error('unselected');
+          },
+        };
+        const result = await provider.evaluate('test.selected', context, false);
+        expect(result.source).toBe('tenant');
+        expect(result.value).toBe('a');
+        expect(result.context).toBe(context);
+        expect(order).toEqual(['tenant', 'tenant', 'tenant']);
+      },
+    );
+  });
+  it('preserves the thrown context getter identity before any environment read', async () => {
+    await withFile({ flags: { 'test.selected': { default: 'global' } } }, async (provider) => {
+      const sentinel = new Error('context sentinel');
+      const order: string[] = [];
+      const context = {
+        get tenantId(): string {
+          order.push('tenant');
+          throw sentinel;
+        },
+        get environment() {
+          order.push('environment');
+          return 'production';
+        },
+      };
+      await expect(provider.evaluate('test.selected', context, false)).rejects.toBe(sentinel);
+      expect(order).toEqual(['tenant']);
     });
   });
 });
