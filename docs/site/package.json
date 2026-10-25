@@ -30,6 +30,7 @@
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@docusaurus/types": "3.10.2",
     "@lhci/cli": "^0.15.1",
     "@types/node": "24.13.4",
     "typedoc": "^0.28.19",
