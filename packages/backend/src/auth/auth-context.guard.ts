@@ -14,7 +14,14 @@ import type {
   TokenVerifier,
 } from '@stynx-nyx/contracts';
 import { headerToString } from '@stynx-nyx/contracts';
-import { InvalidCredentialError, STYNX_BUILTIN_AUTH_GUARD, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, hasPublicTenantRoute } from '@stynx-nyx/contracts';
+import {
+  InvalidCredentialError,
+  STYNX_BUILTIN_AUTH_GUARD,
+  STYNX_PUBLIC_TENANT_ROUTE,
+  STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL,
+  STYNX_VERIFIED_TENANT_ID,
+  hasPublicTenantRoute,
+} from '@stynx-nyx/contracts';
 import { ModulesContainer, Reflector, ModuleRef } from '@nestjs/core';
 import { STYNX_PUBLIC_TENANT_OPTIONS } from '@stynx-nyx/contracts';
 import { DefaultPrincipalMapper } from './default-principal-mapper.js';
@@ -25,7 +32,6 @@ import {
   STYNX_TOKEN_VERIFIER,
 } from './constants.js';
 import type { RequestLike } from '../common/request-context.js';
-
 
 function isPropertyRecord(value: unknown): value is Record<PropertyKey, unknown> {
   return value !== null && (typeof value === 'object' || typeof value === 'function');
@@ -47,11 +53,14 @@ export class AuthContextGuard implements CanActivate {
   constructor(
     @Inject(STYNX_TOKEN_VERIFIER)
     private readonly tokenVerifier: TokenVerifier,
-    @Optional() @Inject(STYNX_PRINCIPAL_MAPPER)
+    @Optional()
+    @Inject(STYNX_PRINCIPAL_MAPPER)
     principalMapper?: PrincipalMapper,
-    @Optional() @Inject(STYNX_TENANT_RESOLVER)
+    @Optional()
+    @Inject(STYNX_TENANT_RESOLVER)
     private readonly tenantResolver?: TenantResolver,
-    @Optional() @Inject(STYNX_TENANT_ENTITLEMENT_POLICY)
+    @Optional()
+    @Inject(STYNX_TENANT_ENTITLEMENT_POLICY)
     private readonly tenantEntitlementPolicy?: TenantEntitlementPolicy,
     @Optional() private readonly reflector?: Reflector,
     @Optional() private readonly modules?: ModulesContainer,
@@ -65,9 +74,14 @@ export class AuthContextGuard implements CanActivate {
     Reflect.deleteProperty(request, STYNX_VERIFIED_TENANT_ID);
     if (!isPropertyRecord(request)) throw new TypeError('Request state requires an object');
     delete request['stynxClaims'];
-    const targets = [context.getHandler?.(), context.getClass?.()].filter((target) => typeof target === 'function');
-    const publicTenant: unknown = this.reflector?.getAllAndOverride<unknown>(STYNX_PUBLIC_TENANT_ROUTE, targets)
-      ?? targets.map((target): unknown => Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, target)).find((value) => value !== undefined);
+    const targets = [context.getHandler?.(), context.getClass?.()].filter(
+      (target) => typeof target === 'function',
+    );
+    const publicTenant: unknown =
+      this.reflector?.getAllAndOverride<unknown>(STYNX_PUBLIC_TENANT_ROUTE, targets) ??
+      targets
+        .map((target): unknown => Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, target))
+        .find((value) => value !== undefined);
     if (publicTenant !== undefined && publicTenant !== false) {
       Reflect.deleteProperty(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL);
       delete request['stynxClaims'];
@@ -80,8 +94,10 @@ export class AuthContextGuard implements CanActivate {
       delete request.verifiedTenantEntitlement;
       delete request['verifiedTenantClaim'];
       request['publicTenantRoute'] = true;
-      request['publicTenantOptionalAuth'] = publicTenant === true ? false : Boolean(readProperty(publicTenant, 'optionalAuth'));
-      if (!publicTenant || publicTenant === true || !readProperty(publicTenant, 'optionalAuth')) return true;
+      request['publicTenantOptionalAuth'] =
+        publicTenant === true ? false : Boolean(readProperty(publicTenant, 'optionalAuth'));
+      if (!publicTenant || publicTenant === true || !readProperty(publicTenant, 'optionalAuth'))
+        return true;
       const authorization = headerToString(request.headers['authorization']);
       if (!authorization?.match(/^Bearer +\S+$/u)) return true;
       let result: Awaited<ReturnType<TokenVerifier['verifyAuthorizationHeader']>>;
@@ -96,31 +112,52 @@ export class AuthContextGuard implements CanActivate {
         throw new UnauthorizedException('Token verification returned no principal');
       }
       const principal = this.mapper.map(result);
-      if (!principal || typeof principal.id !== 'string' || !principal.id || !Array.isArray(principal.tenants)) {
+      if (
+        !principal ||
+        typeof principal.id !== 'string' ||
+        !principal.id ||
+        !Array.isArray(principal.tenants)
+      ) {
         throw new UnauthorizedException('Token verification returned no principal');
       }
       request.principal = principal;
       const verifiedSessionId = principal.claims?.sid;
       if (typeof verifiedSessionId === 'string') request.verifiedSessionId = verifiedSessionId;
       if (this.tenantEntitlementPolicy) {
-        request.verifiedTenantEntitlement = (tenantId: string) => this.tenantEntitlementPolicy!.isEntitled({ principal, tenantId });
+        request.verifiedTenantEntitlement = (tenantId: string) =>
+          this.tenantEntitlementPolicy!.isEntitled({ principal, tenantId });
       }
-      const tenantClaim = [principal.claims?.tenant_id, principal.claims?.tenantId, principal.claims?.['custom:tenant_id'], principal.claims?.['https://stynx.dev/tenant']]
-        .find((value): value is string => typeof value === 'string' && value.trim().length > 0)
-        ?? (() => {
-          const tenants = [...new Set(principal.tenants.map((value) => value.trim().toLowerCase()).filter(Boolean))];
+      const tenantClaim =
+        [
+          principal.claims?.tenant_id,
+          principal.claims?.tenantId,
+          principal.claims?.['custom:tenant_id'],
+          principal.claims?.['https://stynx.dev/tenant'],
+        ].find((value): value is string => typeof value === 'string' && value.trim().length > 0) ??
+        (() => {
+          const tenants = [
+            ...new Set(
+              principal.tenants.map((value) => value.trim().toLowerCase()).filter(Boolean),
+            ),
+          ];
           return tenants.length === 1 ? tenants[0] : undefined;
         })();
       if (typeof tenantClaim === 'string') {
         request['verifiedTenantClaim'] = tenantClaim;
       }
-      request.user = { id: principal.id, roles: principal.roles, permissions: principal.permissions, tenants: principal.tenants, claims: principal.claims };
+      request.user = {
+        id: principal.id,
+        roles: principal.roles,
+        permissions: principal.permissions,
+        tenants: principal.tenants,
+        claims: principal.claims,
+      };
       request.actor = request.user;
       Reflect.set(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, true);
       return true;
     }
     const result = await this.tokenVerifier.verifyAuthorizationHeader(
-      request.headers['authorization'] as string | string[] | undefined,
+      request.headers['authorization'],
     );
 
     if (!result?.principal) {
@@ -192,7 +229,9 @@ export class AuthContextGuard implements CanActivate {
         principal: request.principal!,
         ...(explicitHeader ? { headerTenantId: explicitHeader } : {}),
         ...(typeof request.headers.host === 'string' ? { host: request.headers.host } : {}),
-        ...((request.originalUrl ?? request.url) ? { path: (request.originalUrl ?? request.url ?? '/').split('?')[0] || '/' } : {}),
+        ...((request.originalUrl ?? request.url)
+          ? { path: (request.originalUrl ?? request.url ?? '/').split('?')[0] || '/' }
+          : {}),
       });
       if (resolved) return resolved;
     }
@@ -210,8 +249,13 @@ export class AuthContextGuard implements CanActivate {
         if (!controller) continue;
         if (hasPublicTenantRoute(controller)) {
           let options: unknown;
-          try { options = this.moduleRef.get(STYNX_PUBLIC_TENANT_OPTIONS, { strict: false }); } catch { /* absent provider */ }
-          if (!options) throw new Error('PublicTenantRoute requires StynxTenancyModule publicTenant options');
+          try {
+            options = this.moduleRef.get(STYNX_PUBLIC_TENANT_OPTIONS, { strict: false });
+          } catch {
+            /* absent provider */
+          }
+          if (!options)
+            throw new Error('PublicTenantRoute requires StynxTenancyModule publicTenant options');
         }
       }
     }

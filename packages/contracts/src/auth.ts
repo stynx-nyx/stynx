@@ -12,7 +12,7 @@ export interface Principal {
 
 export interface AuthVerificationResult {
   principal: Principal;
-  token: string;
+  token: string | Uint8Array;
   issuedAt?: number;
   expiresAt?: number;
   tokenUse?: 'id' | 'access' | string;
@@ -25,7 +25,7 @@ export interface RequestPrincipalContext {
 }
 
 export interface TokenVerifier {
-  verifyAuthorizationHeader(value: string | string[] | undefined): Promise<AuthVerificationResult>;
+  verifyAuthorizationHeader(value: unknown): Promise<AuthVerificationResult>;
 }
 
 export interface PrincipalMapper {

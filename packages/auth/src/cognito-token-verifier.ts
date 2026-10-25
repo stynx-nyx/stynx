@@ -9,9 +9,21 @@ import { URL } from 'node:url';
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import type { JWTPayload, JWTVerifyGetKey } from 'jose';
-import { InvalidCredentialError, type AuthVerificationResult, type Principal, type TokenVerifier } from '@stynx-nyx/contracts';
+import {
+  InvalidCredentialError,
+  type AuthVerificationResult,
+  type Principal,
+  type TokenVerifier,
+} from '@stynx-nyx/contracts';
 
-const INVALID_TOKEN_CODES = new Set(['ERR_JWT_CLAIM_VALIDATION_FAILED', 'ERR_JWT_EXPIRED', 'ERR_JWT_INVALID', 'ERR_JWS_INVALID', 'ERR_JWS_SIGNATURE_VERIFICATION_FAILED', 'ERR_JOSE_ALG_NOT_ALLOWED']);
+const INVALID_TOKEN_CODES = new Set([
+  'ERR_JWT_CLAIM_VALIDATION_FAILED',
+  'ERR_JWT_EXPIRED',
+  'ERR_JWT_INVALID',
+  'ERR_JWS_INVALID',
+  'ERR_JWS_SIGNATURE_VERIFICATION_FAILED',
+  'ERR_JOSE_ALG_NOT_ALLOWED',
+]);
 
 export interface CognitoTokenVerifierOptions {
   issuer: string;
@@ -25,11 +37,49 @@ export interface CognitoTokenVerifierOptions {
 
 function toStringArray(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return value.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0);
+  return value.filter(
+    (entry): entry is string => typeof entry === 'string' && entry.trim().length > 0,
+  );
 }
 
 function getClaim(payload: JWTPayload, key: string): unknown {
-  return (payload as Record<string, unknown>)[key];
+  return payload[key];
+}
+
+function readAuthorizationMethod(value: unknown, key: 'startsWith' | 'slice' | 'trim'): unknown {
+  if (value === null || value === undefined) {
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  }
+  const target: unknown = Object(value);
+  if (target !== null && (typeof target === 'object' || typeof target === 'function')) {
+    return Reflect.get(target, key, value);
+  }
+  throw new TypeError('Authorization method receiver is unavailable');
+}
+
+function hasBearerPrefix(value: unknown): unknown {
+  if (value === null || value === undefined) return undefined;
+  const method = readAuthorizationMethod(value, 'startsWith');
+  if (typeof method !== 'function') {
+    throw new TypeError('authorization?.startsWith is not a function');
+  }
+  return Reflect.apply(method, value, ['Bearer ']);
+}
+
+function sliceBearerToken(value: unknown): unknown {
+  const method = readAuthorizationMethod(value, 'slice');
+  if (typeof method !== 'function') {
+    throw new TypeError('authorization.slice is not a function');
+  }
+  return Reflect.apply(method, value, ['Bearer '.length]);
+}
+
+function trimBearerToken(value: unknown): unknown {
+  const method = readAuthorizationMethod(value, 'trim');
+  if (typeof method !== 'function') {
+    throw new TypeError('authorization.slice(...).trim is not a function');
+  }
+  return Reflect.apply(method, value, []);
 }
 
 export class CognitoTokenVerifier implements TokenVerifier {
@@ -43,24 +93,41 @@ export class CognitoTokenVerifier implements TokenVerifier {
     this.jwksUri = options.jwksUri ?? `${options.issuer}/.well-known/jwks.json`;
     this.roleClaims = options.roleClaims ?? ['cognito:groups', 'roles'];
     this.permissionClaims = options.permissionClaims ?? ['permissions'];
-    this.tenantClaims = options.tenantClaims ?? ['tenants', 'custom:tenant_id', 'https://stynx.dev/tenant'];
+    this.tenantClaims = options.tenantClaims ?? [
+      'tenants',
+      'custom:tenant_id',
+      'https://stynx.dev/tenant',
+    ];
   }
 
-  async verifyAuthorizationHeader(value: string | string[] | undefined): Promise<AuthVerificationResult> {
-    const authorization = Array.isArray(value) ? value[0] : value;
-    if (!authorization?.startsWith('Bearer ')) {
+  async verifyAuthorizationHeader(value: unknown): Promise<AuthVerificationResult> {
+    const authorization: unknown = Array.isArray(value) ? value[0] : value;
+    if (!hasBearerPrefix(authorization)) {
       throw new InvalidCredentialError('Missing bearer token');
     }
 
-    const token = authorization.slice('Bearer '.length).trim();
-    const { jwtVerify } = await import('jose');
+    const extractedToken = trimBearerToken(sliceBearerToken(authorization));
+    const { jwtVerify, errors } = await import('jose');
     const jwks = await this.resolveJwks();
     let verification: Awaited<ReturnType<typeof jwtVerify>>;
+    let token: string | Uint8Array;
     try {
-      verification = await jwtVerify(token, jwks, { issuer: this.options.issuer });
+      const verificationOptions = { issuer: this.options.issuer };
+      if (typeof extractedToken !== 'string' && !(extractedToken instanceof Uint8Array)) {
+        throw new errors.JWSInvalid('Compact JWS must be a string or Uint8Array');
+      }
+      token = extractedToken;
+      verification = await jwtVerify(token, jwks, verificationOptions);
     } catch (error) {
-      if (error && typeof error === 'object' && 'code' in error && INVALID_TOKEN_CODES.has(String(error.code))) {
-        throw new InvalidCredentialError(error instanceof Error ? error.message : 'Invalid bearer token');
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        INVALID_TOKEN_CODES.has(String(error.code))
+      ) {
+        throw new InvalidCredentialError(
+          error instanceof Error ? error.message : 'Invalid bearer token',
+        );
       }
       throw error;
     }
@@ -69,7 +136,8 @@ export class CognitoTokenVerifier implements TokenVerifier {
     this.assertAudience(payload);
     this.assertTokenUse(payload);
 
-    const username = this.readString(payload, 'cognito:username') ?? this.readString(payload, 'username');
+    const username =
+      this.readString(payload, 'cognito:username') ?? this.readString(payload, 'username');
     const email = this.readString(payload, 'email');
 
     const principal: Principal = {
@@ -77,7 +145,7 @@ export class CognitoTokenVerifier implements TokenVerifier {
       roles: this.resolveClaims(payload, this.roleClaims),
       permissions: this.resolveClaims(payload, this.permissionClaims),
       tenants: this.resolveClaims(payload, this.tenantClaims),
-      claims: payload as Record<string, unknown>,
+      claims: payload,
       ...(username ? { username } : {}),
       ...(email ? { email } : {}),
     };
@@ -96,7 +164,10 @@ export class CognitoTokenVerifier implements TokenVerifier {
   }
 
   private resolvePrincipalId(payload: JWTPayload): string {
-    const candidate = payload.sub ?? this.readString(payload, 'cognito:username') ?? this.readString(payload, 'username');
+    const candidate =
+      payload.sub ??
+      this.readString(payload, 'cognito:username') ??
+      this.readString(payload, 'username');
     if (!candidate) {
       throw new InvalidCredentialError('Token missing principal identifier');
     }
