@@ -273,15 +273,28 @@ function checkedString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
+
+function readOptionalProperty(value: unknown, key: PropertyKey): unknown {
+  if (value === null || value === undefined) return undefined;
+  const target: unknown = Object(value);
+  if ((typeof target === 'object' && target !== null) || typeof target === 'function')
+    return Reflect.get(target, key, value);
+  throw new TypeError('Property receiver is unavailable');
+}
+
+function readGuardMetadata(target: object): unknown {
+  return Reflect.getMetadata(GUARDS_METADATA, target);
+}
+
 function isBrandedGuard(guard: unknown): boolean {
-  const constructor = typeof guard === 'function' ? guard : (guard as { constructor?: unknown } | null)?.constructor;
+  const constructor = typeof guard === 'function' ? guard : readOptionalProperty(guard, 'constructor');
   return typeof constructor === 'function'
     && Object.hasOwn(constructor, STYNX_BUILTIN_AUTH_GUARD)
     && Reflect.get(constructor, STYNX_BUILTIN_AUTH_GUARD) === true;
 }
 
 function catchesCommitted(filter: unknown): boolean {
-  const constructor = typeof filter === 'function' ? filter : (filter as { constructor?: unknown } | null)?.constructor;
+  const constructor = typeof filter === 'function' ? filter : readOptionalProperty(filter, 'constructor');
   if (typeof constructor !== 'function') return false;
   const catches = (Reflect.getMetadata(FILTER_CATCH_EXCEPTIONS, constructor) as unknown[] | undefined) ?? [];
   return catches.length === 0 || catches.some((exception) =>
@@ -348,10 +361,10 @@ export class TransactionalCommandInterceptor implements NestInterceptor {
             }
             const publicTenant = this.reflector.getAllAndOverride<unknown>(STYNX_PUBLIC_TENANT_ROUTE, [method, controller]);
             if (publicTenant && !this.tenancyPort) throw new Error('Public transactional command requires STYNX tenancy port');
-            const needsGuard = !publicTenant || (typeof publicTenant === 'object' && Boolean((publicTenant as { optionalAuth?: boolean }).optionalAuth));
+            const needsGuard = !publicTenant || (typeof publicTenant === 'object' && Boolean(readOptionalProperty(publicTenant, 'optionalAuth')));
             if (needsGuard) {
               const routeGuards = [method, controller].flatMap((target) =>
-                (Reflect.getMetadata(GUARDS_METADATA, target) as unknown[] | undefined) ?? []);
+                readGuardMetadata(target) ?? []);
               if (![...routeGuards, ...globalGuards].some(isBrandedGuard)) {
                 throw new Error(`Transactional command ${controller.name}.${name} requires a built-in STYNX auth guard`);
               }

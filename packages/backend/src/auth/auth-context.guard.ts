@@ -14,7 +14,7 @@ import type {
   TokenVerifier,
 } from '@stynx-nyx/contracts';
 import { headerToString } from '@stynx-nyx/contracts';
-import { InvalidCredentialError, STYNX_BUILTIN_AUTH_GUARD, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, hasPublicTenantRoute, type PublicTenantRouteOptions } from '@stynx-nyx/contracts';
+import { InvalidCredentialError, STYNX_BUILTIN_AUTH_GUARD, STYNX_PUBLIC_TENANT_ROUTE, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL, STYNX_VERIFIED_TENANT_ID, hasPublicTenantRoute } from '@stynx-nyx/contracts';
 import { ModulesContainer, Reflector, ModuleRef } from '@nestjs/core';
 import { STYNX_PUBLIC_TENANT_OPTIONS } from '@stynx-nyx/contracts';
 import { DefaultPrincipalMapper } from './default-principal-mapper.js';
@@ -25,6 +25,19 @@ import {
   STYNX_TOKEN_VERIFIER,
 } from './constants.js';
 import type { RequestLike } from '../common/request-context.js';
+
+
+function isPropertyRecord(value: unknown): value is Record<PropertyKey, unknown> {
+  return value !== null && (typeof value === 'object' || typeof value === 'function');
+}
+
+function readProperty(value: unknown, key: PropertyKey): unknown {
+  if (value === null || value === undefined)
+    throw new TypeError(`Cannot read properties of ${value} (reading '${String(key)}')`);
+  const target: unknown = Object(value);
+  if (isPropertyRecord(target)) return Reflect.get(target, key, value);
+  throw new TypeError('Property receiver is unavailable');
+}
 
 @Injectable()
 export class AuthContextGuard implements CanActivate {
@@ -50,13 +63,14 @@ export class AuthContextGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestLike>();
     Reflect.deleteProperty(request, STYNX_VERIFIED_TENANT_ID);
-    delete (request as RequestLike & { stynxClaims?: unknown }).stynxClaims;
-    const targets = [context.getHandler?.(), context.getClass?.()].filter((target) => typeof target === 'function') as Array<(...args: unknown[]) => unknown>;
-    const publicTenant = this.reflector?.getAllAndOverride<PublicTenantRouteOptions | boolean>(STYNX_PUBLIC_TENANT_ROUTE, targets)
-      ?? targets.map((target) => Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, target)).find((value) => value !== undefined);
+    if (!isPropertyRecord(request)) throw new TypeError('Request state requires an object');
+    delete request['stynxClaims'];
+    const targets = [context.getHandler?.(), context.getClass?.()].filter((target) => typeof target === 'function');
+    const publicTenant: unknown = this.reflector?.getAllAndOverride<unknown>(STYNX_PUBLIC_TENANT_ROUTE, targets)
+      ?? targets.map((target): unknown => Reflect.getMetadata(STYNX_PUBLIC_TENANT_ROUTE, target)).find((value) => value !== undefined);
     if (publicTenant !== undefined && publicTenant !== false) {
       Reflect.deleteProperty(request, STYNX_VERIFIED_PUBLIC_TENANT_PRINCIPAL);
-      delete (request as RequestLike & { stynxClaims?: unknown }).stynxClaims;
+      delete request['stynxClaims'];
       delete request.principal;
       delete request.principalContext;
       delete request.user;
@@ -64,10 +78,10 @@ export class AuthContextGuard implements CanActivate {
       delete request.tenantId;
       delete request.verifiedSessionId;
       delete request.verifiedTenantEntitlement;
-      delete (request as RequestLike & { verifiedTenantClaim?: string }).verifiedTenantClaim;
-      (request as RequestLike & { publicTenantRoute: boolean; publicTenantOptionalAuth: boolean }).publicTenantRoute = true;
-      (request as RequestLike & { publicTenantOptionalAuth: boolean }).publicTenantOptionalAuth = publicTenant === true ? false : Boolean(publicTenant.optionalAuth);
-      if (!publicTenant || publicTenant === true || !publicTenant.optionalAuth) return true;
+      delete request['verifiedTenantClaim'];
+      request['publicTenantRoute'] = true;
+      request['publicTenantOptionalAuth'] = publicTenant === true ? false : Boolean(readProperty(publicTenant, 'optionalAuth'));
+      if (!publicTenant || publicTenant === true || !readProperty(publicTenant, 'optionalAuth')) return true;
       const authorization = headerToString(request.headers['authorization']);
       if (!authorization?.match(/^Bearer +\S+$/u)) return true;
       let result: Awaited<ReturnType<TokenVerifier['verifyAuthorizationHeader']>>;
@@ -98,7 +112,7 @@ export class AuthContextGuard implements CanActivate {
           return tenants.length === 1 ? tenants[0] : undefined;
         })();
       if (typeof tenantClaim === 'string') {
-        (request as RequestLike & { verifiedTenantClaim?: string }).verifiedTenantClaim = tenantClaim;
+        request['verifiedTenantClaim'] = tenantClaim;
       }
       request.user = { id: principal.id, roles: principal.roles, permissions: principal.permissions, tenants: principal.tenants, claims: principal.claims };
       request.actor = request.user;

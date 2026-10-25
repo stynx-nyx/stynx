@@ -133,6 +133,8 @@ export class SlaMonitorInterceptor implements NestInterceptor {
     const sorted = [...samples].sort((a, b) => a - b);
     const rank = Math.ceil((p / 100) * sorted.length) - 1;
     const index = Math.max(0, Math.min(rank, sorted.length - 1));
-    return sorted[index] as number;
+    const value = sorted[index];
+    if (value === undefined) throw new TypeError('SLA percentile has no selected sample');
+    return value;
   }
 }

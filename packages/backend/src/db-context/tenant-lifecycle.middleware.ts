@@ -1,6 +1,4 @@
 import { BadRequestException, Injectable, NestMiddleware, Optional } from '@nestjs/common';
-import type { RequestLike } from '../common/request-context.js';
-import type { ResponseLike } from './request-db-client-lifecycle.js';
 
 const RELEASED_FLAG = Symbol('STYNX_TENANT_LIFECYCLE_RELEASED');
 const TENANT_ID_UUID_PATTERN =
@@ -44,6 +42,28 @@ function firstHeaderValue(value: unknown): string | undefined {
   return undefined;
 }
 
+function isPropertyRecord(value: unknown): value is Record<PropertyKey, unknown> {
+  return value !== null && (typeof value === 'object' || typeof value === 'function');
+}
+
+function readProperty(value: unknown, key: PropertyKey): unknown {
+  if (value === null || value === undefined)
+    throw new TypeError(`Cannot read properties of ${value} (reading '${String(key)}')`);
+  const target: unknown = Object(value);
+  if (isPropertyRecord(target)) return Reflect.get(target, key, value);
+  throw new TypeError('Property receiver is unavailable');
+}
+
+function writeProperty(value: unknown, key: PropertyKey, next: unknown): void {
+  if (isPropertyRecord(value)) {
+    value[key] = next;
+    return;
+  }
+  const target: unknown = Object(value);
+  if (isPropertyRecord(target) && Reflect.set(target, key, next, value)) return;
+  throw new TypeError('Cannot write middleware state on a non-object request');
+}
+
 @Injectable()
 export class TenantLifecycleMiddleware implements NestMiddleware {
   private readonly options: typeof DEFAULT_OPTIONS;
@@ -58,8 +78,8 @@ export class TenantLifecycleMiddleware implements NestMiddleware {
   }
 
   use(requestLike: unknown, responseLike: unknown, next: TenantLifecycleNext): void {
-    const request = requestLike as RequestLike & Record<PropertyKey, unknown>;
-    const response = responseLike as ResponseLike | undefined;
+    const request = requestLike;
+    const response = responseLike;
     const tenantId = this.readTenantId(request);
 
     if (!tenantId && this.options.requireTenantHeader) {
@@ -69,21 +89,21 @@ export class TenantLifecycleMiddleware implements NestMiddleware {
       throw new BadRequestException(`${this.options.tenantHeaderName} must be a UUID`);
     }
     if (tenantId) {
-      request.tenantId = tenantId;
+      writeProperty(request, 'tenantId', tenantId);
     }
 
     this.bindReleaseHandlers(request, response);
     next();
   }
 
-  private readTenantId(request: RequestLike): string | undefined {
-    const headers = request.headers ?? {};
-    const direct = firstHeaderValue(headers[this.options.tenantHeaderName]);
+  private readTenantId(request: unknown): string | undefined {
+    const headers = readProperty(request, 'headers') ?? {};
+    const direct = firstHeaderValue(readProperty(headers, this.options.tenantHeaderName));
     if (direct && direct.trim().length > 0) {
       return direct.trim();
     }
     const lower = this.options.tenantHeaderName.toLowerCase();
-    const lowerValue = firstHeaderValue(headers[lower]);
+    const lowerValue = firstHeaderValue(readProperty(headers, lower));
     if (lowerValue && lowerValue.trim().length > 0) {
       return lowerValue.trim();
     }
@@ -91,10 +111,10 @@ export class TenantLifecycleMiddleware implements NestMiddleware {
   }
 
   private bindReleaseHandlers(
-    request: RequestLike & Record<PropertyKey, unknown>,
-    response?: ResponseLike,
+    request: unknown,
+    response?: unknown,
   ): void {
-    if (!response || typeof response.once !== 'function') {
+    if (!response || typeof readProperty(response, 'once') !== 'function') {
       return;
     }
 
@@ -102,18 +122,20 @@ export class TenantLifecycleMiddleware implements NestMiddleware {
       void this.releaseClient(request);
     };
     for (const event of this.options.releaseEvents) {
-      response.once(event, release);
+      const once = readProperty(response, 'once');
+      if (typeof once !== 'function') throw new TypeError('response.once is not a function');
+      Reflect.apply(once, response, [event, release]);
     }
   }
 
-  private async releaseClient(request: RequestLike & Record<PropertyKey, unknown>): Promise<void> {
-    if (request[RELEASED_FLAG]) {
+  private async releaseClient(request: unknown): Promise<void> {
+    if (readProperty(request, RELEASED_FLAG)) {
       return;
     }
 
     let client: unknown;
     for (const key of this.options.requestClientKeys) {
-      const candidate = request[key];
+      const candidate = readProperty(request, key);
       if (candidate) {
         client = candidate;
         break;
@@ -123,11 +145,13 @@ export class TenantLifecycleMiddleware implements NestMiddleware {
       return;
     }
 
-    request[RELEASED_FLAG] = true;
-    const withRelease = client as Record<string, unknown>;
-    const release = withRelease[this.options.releaseMethodName];
+    writeProperty(request, RELEASED_FLAG, true);
+    const release = readProperty(client, this.options.releaseMethodName);
     if (typeof release === 'function') {
-      await (release as () => Promise<void> | void).call(client);
+      const call = readProperty(release, 'call');
+      if (typeof call !== 'function') throw new TypeError('release.call is not a function');
+      const result: unknown = Reflect.apply(call, release, [client]);
+      await result;
     }
   }
 }
