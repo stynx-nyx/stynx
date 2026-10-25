@@ -5,15 +5,29 @@ import { resolve } from 'node:path';
 import { parseNestControllerDeclarations } from './nest-route-declarations.mjs';
 import { pascalCase, operationMethodName } from './sdk-operation-identities.mjs';
 
+/** @typedef {import('./api-coverage.mjs').Operation} Operation */
+/** @typedef {{id: string, controller: {source: string, className: string}, artifactPath: string}} Composition */
+/** @typedef {{method: string, path: string, primaryCompositionId: string, compositionIds: string[]}} Alternative */
+/** @typedef {{source: string, className: string, handler: string, method: string, path: string,
+ * operationId: string, baselineSourceSha256: string}} Compatibility */
+
 const verbs = new Set(['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'trace']);
+/** @param {import("node:crypto").BinaryLike} bytes */
 const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
+/** @param {Operation} operation */
 const key = (operation) => `${operation.method.toUpperCase()} ${operation.path}`;
+/** @param {Operation} operation */
 const identity = (operation) =>
   `${operation.source}:${operation.controller}.${operation.handler}:${key(operation)}`;
 
 /** Read the Architect registry; source discovery remains the population authority. */
+/**
+ * @param {string} repoRoot
+ * @param {Operation[]} operations
+ */
 export function bindHttpApiCompositions(repoRoot, operations) {
   const policyPath = resolve(repoRoot, 'law/policy/http-api-compositions.json');
+  /** @type {unknown} */
   const policy = existsSync(policyPath) ? JSON.parse(readFileSync(policyPath, 'utf8')) : null;
   if (!policy) {
     if (
@@ -23,11 +37,14 @@ export function bindHttpApiCompositions(repoRoot, operations) {
       throw new Error('Governed API composition policy is missing');
     return project(operations, [], [], []);
   }
+  /** @type {unknown} */
   const schema = JSON.parse(
     readFileSync(resolve(repoRoot, 'law/schemas/http-api-compositions.schema.json'), 'utf8'),
   );
   validate(policy, schema, schema, 'http-api-compositions');
+  provePolicyFields(policy);
   const baseline = policy.compatibilityBaseline;
+  /** @param {string} path */
   const historical = (path) =>
     execFileSync('git', ['show', `${baseline.commit}:${path}`], {
       cwd: repoRoot,
@@ -38,10 +55,15 @@ export function bindHttpApiCompositions(repoRoot, operations) {
   const baselineBytes = historical(baseline.path);
   if (digest(baselineBytes) !== baseline.sha256)
     throw new Error('API compatibility baseline digest mismatch');
+  /** @type {unknown} */
   const baselineContract = JSON.parse(baselineBytes.toString('utf8'));
+  /** @type {Map<string, string>} */
   const sources = new Map();
+  /** @type {Map<string, ReturnType<typeof parseNestControllerDeclarations>>} */
   const historicalDeclarations = new Map();
+  /** @type {Set<string>} */
   const mappings = new Set();
+  /** @type {Set<string>} */
   const ids = new Set();
   for (const entry of policy.operationIdCompatibility) {
     safeSource(entry.source);
@@ -58,8 +80,9 @@ export function bindHttpApiCompositions(repoRoot, operations) {
     }
     if (sources.get(entry.source) !== entry.baselineSourceSha256)
       throw new Error(`API compatibility source digest mismatch: ${entry.source}`);
-    const original = historicalDeclarations
-      .get(entry.source)
+    const declarations = historicalDeclarations.get(entry.source);
+    if (!declarations) throw new Error(`API compatibility binding lacks historical handler identity: ${entry.operationId}`);
+    const original = declarations
       .flatMap((controller) =>
         controller.methods.flatMap((member) =>
           member.registrations.flatMap((registration) =>
@@ -87,10 +110,10 @@ export function bindHttpApiCompositions(repoRoot, operations) {
       throw new Error(
         `API compatibility binding lacks historical handler identity: ${entry.operationId}`,
       );
-    const previous = baselineContract.paths?.[entry.path]?.[entry.method.toLowerCase()];
+    const previous = optionalField(optionalField(optionalField(baselineContract, 'paths'), entry.path), entry.method.toLowerCase());
     if (
-      previous?.operationId !== entry.operationId ||
-      previous?.['x-stynx-source'] !== entry.source
+      optionalField(previous, 'operationId') !== entry.operationId ||
+      optionalField(previous, 'x-stynx-source') !== entry.source
     )
       throw new Error(
         `API compatibility ID lacks immutable publication evidence: ${entry.operationId}`,
@@ -102,9 +125,10 @@ export function bindHttpApiCompositions(repoRoot, operations) {
         operation.handler === entry.handler &&
         key(operation) === `${entry.method} ${entry.path}`,
     );
-    if (match.length !== 1)
+    const matched = match[0];
+    if (match.length !== 1 || !matched)
       throw new Error(`API compatibility declaration missing or ambiguous: ${entry.operationId}`);
-    const declaration = identity(match[0]);
+    const declaration = identity(matched);
     if (mappings.has(declaration) || ids.has(entry.operationId))
       throw new Error(`Duplicate API compatibility binding: ${entry.operationId}`);
     mappings.add(declaration);
@@ -116,16 +140,16 @@ export function bindHttpApiCompositions(repoRoot, operations) {
     policy.alternatives,
     policy.operationIdCompatibility,
   );
-  for (const [path, item] of Object.entries(baselineContract.paths ?? {})) {
-    for (const [method, published] of Object.entries(item)) {
+  for (const [path, item] of dataEntries(field(baselineContract, 'paths') ?? {})) {
+    for (const [method, published] of dataEntries(item)) {
       if (!verbs.has(method)) continue;
       const current = result.primary.filter(
         (operation) => operation.path === path && operation.method === method,
       );
       if (
         current.length !== 1 ||
-        current[0].source !== published['x-stynx-source'] ||
-        operationId(current[0]) !== published.operationId
+        !current[0] || current[0].source !== field(published, 'x-stynx-source') ||
+        operationId(current[0]) !== field(published, 'operationId')
       )
         throw new Error(`Published API operation identity lost: ${method.toUpperCase()} ${path}`);
     }
@@ -133,6 +157,9 @@ export function bindHttpApiCompositions(repoRoot, operations) {
   return result;
 }
 
+/**
+ * @param {Operation} operation
+ */
 export function operationId(operation) {
   if (operation.compatibleOperationId) return operation.compatibleOperationId;
   const pathId = operation.path
@@ -152,9 +179,18 @@ export function operationId(operation) {
     .replace(/^-|-$/gu, '');
 }
 
+/**
+ * @param {Operation[]} operations
+ * @param {Composition[]} compositions
+ * @param {Alternative[]} alternatives
+ * @param {Compatibility[]} compatibility
+ */
 function project(operations, compositions, alternatives, compatibility) {
+  /** @type {Set<string>} */
   const compositionIds = new Set();
+  /** @type {Set<string>} */
   const controllers = new Set();
+  /** @type {Set<string>} */
   const artifactPaths = new Set();
   for (const composition of compositions) {
     safeSource(composition.controller.source);
@@ -191,9 +227,13 @@ function project(operations, compositions, alternatives, compatibility) {
           `${entry.method} ${entry.path}` === key(operation),
       )?.operationId ?? null,
   }));
+  /** @type {Map<string, Operation[]>} */
   const groups = new Map();
+  /** @type {Set<string>} */
   const declarations = new Set();
+  /** @type {Set<string>} */
   const operationIds = new Set();
+  /** @type {Set<string>} */
   const sdkIds = new Set();
   for (const operation of bound) {
     if (!verbs.has(operation.method))
@@ -211,6 +251,7 @@ function project(operations, compositions, alternatives, compatibility) {
     group.push(operation);
     groups.set(key(operation), group);
   }
+  /** @type {Map<string, Alternative>} */
   const policyGroups = new Map();
   for (const alternative of alternatives) {
     safeRoute(alternative.path);
@@ -223,20 +264,22 @@ function project(operations, compositions, alternatives, compatibility) {
       throw new Error(`Unbound API alternative composition: ${groupKey}`);
     policyGroups.set(groupKey, alternative);
   }
+  /** @type {Operation[]} */
   const primary = [];
   for (const [groupKey, group] of groups) {
     const alternative = policyGroups.get(groupKey);
-    if (group.length === 1 && !alternative) {
-      primary.push(group[0]);
+    const sole = group[0];
+    if (group.length === 1 && sole !== undefined && !alternative) {
+      primary.push(sole);
       continue;
     }
     const actual = group.map((operation) => operation.compositionId).sort();
     const expected = alternative?.compositionIds.slice().sort();
     if (!alternative || JSON.stringify(actual) !== JSON.stringify(expected))
       throw new Error(`Unregistered or incomplete API operation collision: ${groupKey}`);
-    primary.push(
-      group.find((operation) => operation.compositionId === alternative.primaryCompositionId),
-    );
+    const selected = group.find((operation) => operation.compositionId === alternative.primaryCompositionId);
+    if (!selected) throw new Error(`Unregistered or incomplete API operation collision: ${groupKey}`);
+    primary.push(selected);
     policyGroups.delete(groupKey);
   }
   if (policyGroups.size)
@@ -244,6 +287,9 @@ function project(operations, compositions, alternatives, compatibility) {
   return { operations: bound, primary, groups, compositions };
 }
 
+/**
+ * @param {unknown} path
+ */
 function safeSource(path) {
   if (
     typeof path !== 'string' ||
@@ -254,6 +300,9 @@ function safeSource(path) {
     throw new Error(`Unsafe API registry source/artifact path: ${path}`);
 }
 
+/**
+ * @param {unknown} path
+ */
 function safeRoute(path) {
   if (
     typeof path !== 'string' ||
@@ -268,15 +317,22 @@ function safeRoute(path) {
 
 // This authority schema uses only these JSON Schema assertions. Unknown assertions refuse
 // rather than silently accepting a future schema the installed reader cannot enforce.
+/**
+ * @param {unknown} value
+ * @param {unknown} schema
+ * @param {unknown} root
+ * @param {string} at
+ */
 function validate(value, schema, root, at) {
-  if (schema.$ref) {
+  const reference = field(schema, '$ref');
+  if (reference) {
     if (
-      !/^#\/\$defs\/[A-Za-z][A-Za-z0-9]*$/u.test(schema.$ref) ||
-      !Object.hasOwn(root.$defs ?? {}, schema.$ref.replace('#/$defs/', '')) ||
-      Object.keys(schema).some((key) => !['$ref', 'title', 'description'].includes(key))
+      typeof reference !== 'string' || !/^#\/\$defs\/[A-Za-z][A-Za-z0-9]*$/u.test(reference) ||
+      !Object.hasOwn(dataObject(field(root, '$defs') ?? {}), reference.replace('#/$defs/', '')) ||
+      Object.keys(dataObject(schema)).some((key) => !['$ref', 'title', 'description'].includes(key))
     )
       throw new Error(`Unsupported API registry schema reference at ${at}`);
-    return validate(value, root.$defs[schema.$ref.replace('#/$defs/', '')], root, at);
+    return validate(value, field(field(root, '$defs'), reference.replace('#/$defs/', '')), root, at);
   }
   const supported = new Set([
     '$schema',
@@ -297,37 +353,102 @@ function validate(value, schema, root, at) {
     'pattern',
     'minLength',
   ]);
-  for (const assertion of Object.keys(schema))
+  for (const assertion of Object.keys(dataObject(schema)))
     if (!supported.has(assertion))
       throw new Error(`Unsupported API registry schema assertion ${assertion}`);
+  /** @returns {never} */
   const refuse = () => {
     throw new Error(`Invalid API registry value at ${at}`);
   };
-  if (schema.const !== undefined && value !== schema.const) refuse();
-  if (schema.enum && !schema.enum.includes(value)) refuse();
-  if (schema.type === 'object') {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) refuse();
-    for (const field of schema.required ?? []) if (!Object.hasOwn(value, field)) refuse();
-    for (const [field, item] of Object.entries(value)) {
-      if (!Object.hasOwn(schema.properties ?? {}, field)) {
-        if (schema.additionalProperties === false) refuse();
-      } else validate(item, schema.properties[field], root, `${at}.${field}`);
+  const constant = field(schema, 'const');
+  if (constant !== undefined && value !== constant) refuse();
+  const enumeration = field(schema, 'enum');
+  if (enumeration) {
+    if (!Array.isArray(enumeration)) throw new Error(`Unsupported API registry schema enum at ${at}`);
+    if (!enumeration.includes(value)) refuse();
+  }
+  const type = field(schema, 'type');
+  if (type === 'object') {
+    if (!isRecord(value) || Array.isArray(value)) refuse();
+    const required = field(schema, 'required') ?? [];
+    if (!isStrings(required)) throw new Error(`Unsupported API registry required fields at ${at}`);
+    for (const name of required) if (!Object.hasOwn(value, name)) refuse();
+    for (const [name, item] of Object.entries(value)) {
+      const properties = field(schema, 'properties') ?? {};
+      if (!Object.hasOwn(dataObject(properties), name)) {
+        if (field(schema, 'additionalProperties') === false) refuse();
+      } else validate(item, field(properties, name), root, `${at}.${name}`);
     }
-  } else if (schema.type === 'array') {
-    if (!Array.isArray(value) || value.length < (schema.minItems ?? 0)) refuse();
-    if (
-      schema.uniqueItems &&
-      new Set(value.map((item) => JSON.stringify(item))).size !== value.length
-    )
+  } else if (type === 'array') {
+    if (!Array.isArray(value)) refuse();
+    const minimum = field(schema, 'minItems') ?? 0;
+    if (typeof minimum !== 'number') throw new Error(`Unsupported API registry minimum at ${at}`);
+    if (value.length < minimum) refuse();
+    if (field(schema, 'uniqueItems') && new Set(value.map((item) => JSON.stringify(item))).size !== value.length)
       refuse();
     for (const [index, item] of value.entries())
-      validate(item, schema.items, root, `${at}[${index}]`);
-  } else if (schema.type === 'string') {
-    if (
-      typeof value !== 'string' ||
-      value.length < (schema.minLength ?? 0) ||
-      (schema.pattern && !new RegExp(schema.pattern, 'u').test(value))
-    )
-      refuse();
-  } else if (schema.type) throw new Error(`Unsupported API registry schema type ${schema.type}`);
+      validate(item, field(schema, 'items'), root, `${at}[${index}]`);
+  } else if (type === 'string') {
+    if (typeof value !== 'string') refuse();
+    const minimum = field(schema, 'minLength') ?? 0;
+    if (typeof minimum !== 'number') throw new Error(`Unsupported API registry minimum at ${at}`);
+    if (value.length < minimum) refuse();
+    const pattern = field(schema, 'pattern');
+    if (pattern) {
+      if (typeof pattern !== 'string') throw new Error(`Unsupported API registry pattern at ${at}`);
+      if (!new RegExp(pattern, 'u').test(value)) refuse();
+    }
+  } else if (type) throw new Error(`Unsupported API registry schema type ${type}`);
+}
+
+// Reads from fresh native JSON snapshots; no recursive output normalization.
+/** @param {unknown} value @returns {object} */
+function dataObject(value) {
+  if (value === null || value === undefined) throw new TypeError('Cannot convert undefined or null to object');
+  /** @type {unknown} */
+  const boxed = Object(value);
+  if ((typeof boxed !== 'object' || boxed === null) && typeof boxed !== 'function')
+    throw new TypeError('Invalid native Object result');
+  return boxed;
+}
+/** @param {unknown} value @param {string} name @returns {unknown} */
+function field(value, name) {
+  if (value === null || value === undefined) throw new TypeError(`Cannot read properties of ${value} (reading '${name}')`);
+  return Reflect.get(dataObject(value), name, value);
+}
+/** @param {unknown} value @param {string} name @returns {unknown} */
+function optionalField(value, name) { return value == null ? undefined : field(value, name); }
+/** @param {unknown} value @returns {[string, unknown][]} */
+function dataEntries(value) { return Object.entries(dataObject(value)); }
+/** @param {unknown} value @returns {value is Record<string, unknown>} */
+function isRecord(value) { return typeof value === 'object' && value !== null; }
+/** @param {unknown} value @returns {value is string[]} */
+function isStrings(value) { return Array.isArray(value) && value.every((item) => typeof item === 'string'); }
+/** @param {unknown} value @returns {value is Composition} */
+function isComposition(value) {
+  return isRecord(value) && typeof value.id === 'string' && typeof value.artifactPath === 'string' &&
+    isRecord(value.controller) && typeof value.controller.source === 'string' && typeof value.controller.className === 'string';
+}
+/** @param {unknown} value @returns {value is Alternative} */
+function isAlternative(value) {
+  return isRecord(value) && typeof value.method === 'string' && typeof value.path === 'string' &&
+    typeof value.primaryCompositionId === 'string' && isStrings(value.compositionIds);
+}
+/** @param {unknown} value @returns {value is Compatibility} */
+function isCompatibility(value) {
+  return isRecord(value) && typeof value.source === 'string' && typeof value.className === 'string' &&
+    typeof value.handler === 'string' && typeof value.method === 'string' && typeof value.path === 'string' &&
+    typeof value.operationId === 'string' && typeof value.baselineSourceSha256 === 'string';
+}
+/** @typedef {{compatibilityBaseline: {commit: string, path: string, sha256: string},
+ * compositions: Composition[], alternatives: Alternative[], operationIdCompatibility: Compatibility[]}} ConsumedPolicy */
+/** @param {unknown} value @returns {asserts value is ConsumedPolicy} */
+function provePolicyFields(value) {
+  if (!isRecord(value) || !isRecord(value.compatibilityBaseline) ||
+      typeof value.compatibilityBaseline.commit !== 'string' || typeof value.compatibilityBaseline.path !== 'string' ||
+      typeof value.compatibilityBaseline.sha256 !== 'string' || !Array.isArray(value.compositions) ||
+      !value.compositions.every(isComposition) || !Array.isArray(value.alternatives) ||
+      !value.alternatives.every(isAlternative) || !Array.isArray(value.operationIdCompatibility) ||
+      !value.operationIdCompatibility.every(isCompatibility))
+    throw new Error('Invalid checked API composition policy projection');
 }
