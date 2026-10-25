@@ -51,7 +51,8 @@ export class WorklistStrategyRegistry {
 
   register(strategy: WorklistDistributionStrategy): void {
     const key = strategy.key.trim();
-    if (BUILTIN_WORKLIST_STRATEGY_KEYS.includes(key as BuiltinWorklistStrategyKey)) {
+    const builtinKeys: readonly string[] = BUILTIN_WORKLIST_STRATEGY_KEYS;
+    if (builtinKeys.includes(key)) {
       throw new WorklistStrategyRegistrationError(`Worklist strategy key ${key} is reserved`, key);
     }
     if (this.strategies.has(key)) {

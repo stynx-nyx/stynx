@@ -195,8 +195,8 @@ export function pageLimitOffset(query: { page: number; pageSize: number }): {
 }
 
 export function requireObject(input: unknown): WorklistJsonObject {
-  if (input !== null && typeof input === 'object' && !Array.isArray(input)) {
-    return input as WorklistJsonObject;
+  if (isWorklistJsonObject(input)) {
+    return input;
   }
   throw new WorklistInputError('Input must be an object');
 }
