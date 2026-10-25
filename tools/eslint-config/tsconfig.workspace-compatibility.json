@@ -1,0 +1,23 @@
+{
+  "extends": "../tsconfig/node24.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "maxNodeModuleJsDepth": 2
+  },
+  "files": [
+    "../../tools/braces-safe/index.js",
+    "../../tools/braces-safe/lib/compile.js",
+    "../../tools/braces-safe/lib/constants.js",
+    "../../tools/braces-safe/lib/expand.js",
+    "../../tools/braces-safe/lib/guard.js",
+    "../../tools/braces-safe/lib/parse.js",
+    "../../tools/braces-safe/lib/stringify.js",
+    "../../tools/braces-safe/lib/utils.js",
+    "../../tools/http-cache-semantics-safe/index.js"
+  ],
+  "include": []
+}

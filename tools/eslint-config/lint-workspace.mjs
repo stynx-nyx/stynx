@@ -1,3 +1,6 @@
+import compatibilityProject from './tsconfig.workspace-compatibility.json' with { type: 'json' };
+import docsProject from './tsconfig.workspace-docs-implementation.json' with { type: 'json' };
+import k6Project from './tsconfig.workspace-k6.json' with { type: 'json' };
 import { spawnSync } from 'node:child_process';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,7 +19,13 @@ const paths = [
   'packages-web/sdk/codegen/*.mjs',
   'packages-web/sdk/scripts/*.mjs',
   'packages/cli/engines/*.mjs',
-  ...[...nodeProject.files, ...imageSizeProject.files].map((file) =>
+  ...[
+    ...nodeProject.files,
+    ...imageSizeProject.files,
+    ...compatibilityProject.files,
+    ...docsProject.files,
+    ...k6Project.files,
+  ].map((file) =>
     relative(root, resolve(dirname(fileURLToPath(import.meta.url)), file)).replaceAll('\\', '/'),
   ),
 ];

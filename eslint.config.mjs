@@ -1,3 +1,4 @@
+import { workspaceRuntimeRemaindersConfig } from './tools/eslint-config/workspace-runtime-remainders.mjs';
 import {
   workspaceImageSizeConfig,
   workspaceImageSizeFiles,
@@ -143,4 +144,5 @@ export default [
   ...workspaceToolingConfig,
   ...workspaceImplementationConfig,
   ...workspaceImageSizeConfig,
+  ...workspaceRuntimeRemaindersConfig,
 ];

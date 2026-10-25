@@ -1,0 +1,17 @@
+{
+  "extends": "../../docs/site/tsconfig.json",
+  "compilerOptions": {
+    "checkJs": true,
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "files": [
+    "../../docs/site/docusaurus.config.js",
+    "../../docs/site/scripts/generate-api-reference.mjs",
+    "../../docs/site/scripts/run-lighthouse.mjs",
+    "../../docs/site/scripts/sync-content.mjs",
+    "../../docs/site/scripts/verify-api-reference.mjs"
+  ],
+  "include": []
+}
