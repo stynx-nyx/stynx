@@ -1,5 +1,19 @@
 import { isDeepStrictEqual } from 'node:util';
 
+/**
+ * The release runner constructs Git rows from validated --name-status output,
+ * commit subjects from Git strings, and package names from the validated roster.
+ * Version values, pre-state and root manifests remain opaque parsed JSON.
+ * @typedef {{path: string, status: string}} GitChange
+ * @typedef {{sha: string, subject: string}} GitCommit
+ * @typedef {{name: string, manifestPath: string, baseVersion?: unknown, parentVersion?: unknown, candidateVersion: unknown}} PackageState
+ * @typedef {{path: string, before: unknown, after: unknown, baseVersion: unknown, version: unknown}} StorageArtifact
+ * @typedef {{baseRootVersion: unknown, candidateRootVersion: unknown, versionCommitVersion: string, packageStates: PackageState[], changedManifestPaths: string[], changesetIdsOnDisk: string[], followUpChanges: GitChange[], basePreState: unknown, preState: unknown}} PreModeInput
+ * @typedef {{baseRootVersion: unknown, candidateRootVersion: unknown, basePreState: unknown, markerCommits: GitCommit[], markerParentPreState: unknown, markerChanges: GitChange[], followUpChanges: GitChange[], packageStates: PackageState[], changesetIdsOnDisk: string[], preState: unknown}} FinalInput
+ * @typedef {{baseRootVersion: unknown, markerParentRootVersion: unknown, candidateRootVersion: unknown, markerCommits: GitCommit[], markerChanges: GitChange[], markerParentChangesets: string[], followUpChanges: GitChange[], rootManifestMatchesMarker: boolean, packageStates: PackageState[], changesetIdsOnDisk: string[], preState: unknown, markerParentPreState: unknown, storageVersionArtifacts?: StorageArtifact[], rootManifestAtMarker?: unknown, rootManifestAtHead?: unknown}} PatchInput
+ * @typedef {{baseVersion?: string, parentVersion: string, candidateVersion: string, changesetPaths: readonly string[], markerSubject: string, allowedFollowUpPaths: ReadonlySet<string>, allowedAddedFollowUpPaths?: ReadonlySet<string>, versionSupportPaths?: ReadonlySet<string>}} PatchPolicy
+ */
+
 const fullSha = /^[0-9a-f]{40}$/u;
 const versionCommitSubject = 'ci: version packages';
 const unifiedRebaselineVersion = '1.2.0';
@@ -391,7 +405,64 @@ const allowedSeventhStablePatchFollowUpPaths = new Set([
   'test/scripts/release-version-policy.test.mjs',
 ]);
 
+/**
+ * Preserve native property reads of opaque JSON, including primitive boxing.
+ * Nullish wording follows the pinned Node runtime at the original read position.
+ * @param {unknown} value
+ * @param {string} key
+ * @returns {unknown}
+ */
+function jsonProperty(value, key) {
+  if (value === null) throw new TypeError(`Cannot read properties of null (reading '${key}')`);
+  if (value === undefined)
+    throw new TypeError(`Cannot read properties of undefined (reading '${key}')`);
+  return Reflect.get(jsonObject(value), key, value);
+}
+
+/** @param {unknown} value @param {string} key @returns {unknown} */
+function optionalJsonProperty(value, key) {
+  return value === null || value === undefined ? undefined : jsonProperty(value, key);
+}
+
+/** @param {unknown} value */
+function jsonObject(value) {
+  /** @type {unknown} */
+  const boxed = Object(value);
+  if ((typeof boxed !== 'object' || boxed === null) && typeof boxed !== 'function') {
+    throw new TypeError('native Object boxing returned a non-object');
+  }
+  return boxed;
+}
+
+/**
+ * These reads follow the existing Array.isArray guard of the same fresh JSON
+ * field. The descriptor is neither mutated nor exposed to a writer between them.
+ * @param {unknown} state
+ * @returns {unknown[]}
+ */
+function preChangesets(state) {
+  const changesets = jsonProperty(state, 'changesets');
+  if (!Array.isArray(changesets))
+    throw new TypeError('guarded pre-state changesets ceased to be an array');
+  return changesets;
+}
+
+/**
+ * A successful native RC regexp on fresh JSON can come from a string or an
+ * array's native coercion. Preserve each one's original slice result.
+ * @param {unknown} value
+ * @param {number} end
+ * @returns {unknown}
+ */
+function candidateVersionPrefix(value, end) {
+  if (typeof value !== 'string' && !Array.isArray(value)) {
+    throw new TypeError('matched JSON release candidate has no native slice');
+  }
+  return value.slice(0, end);
+}
+
 export class ReleaseContextError extends Error {
+  /** @param {string} code @param {string} message */
   constructor(code, message) {
     super(message);
     this.name = 'ReleaseContextError';
@@ -399,19 +470,23 @@ export class ReleaseContextError extends Error {
   }
 }
 
+/** @param {string} code @param {string} message @returns {never} */
 function fail(code, message) {
   throw new ReleaseContextError(code, message);
 }
 
+/** @param {string} path */
 function isChangeset(path) {
   return /^\.changeset\/[^/]+\.md$/u.test(path);
 }
 
+/** @param {string} path */
 function packageDirectory(path) {
   const match = /^(packages|packages-web)\/[^/]+\/(package\.json|CHANGELOG\.md)$/u.exec(path);
   return match ? path.slice(0, path.lastIndexOf('/')) : null;
 }
 
+/** @param {GitChange[]} changes @param {StorageArtifact[]} artifacts */
 function validateStorageVersionChanges(changes, artifacts) {
   if (!Array.isArray(artifacts)) {
     fail('RELEASE_CONTEXT_STORAGE_VERSION', 'storage template snapshots must be an array');
@@ -445,16 +520,21 @@ function validateStorageVersionChanges(changes, artifacts) {
     const after = artifact.after.toString('utf8');
     const prefix = `// Generated by scripts/${template.generator}; do not edit.\nexport const ${template.exportName} = {\n`;
     const rows = [...before.matchAll(/^ {2}packageVersion: '([^'\r\n]+)',$/gmu)];
+    const row = rows[0];
     if (
       !artifact.before.equals(Buffer.from(before)) ||
       !artifact.after.equals(Buffer.from(after)) ||
       !before.startsWith(prefix) ||
       rows.length !== 1 ||
-      rows[0][1] !== artifact.baseVersion ||
-      !(stableVersion.test(artifact.baseVersion) || rcVersion.test(artifact.baseVersion)) ||
-      !(stableVersion.test(artifact.version) || rcVersion.test(artifact.version)) ||
+      row === undefined ||
+      row[1] !== artifact.baseVersion ||
+      !(
+        stableVersion.test(String(artifact.baseVersion)) ||
+        rcVersion.test(String(artifact.baseVersion))
+      ) ||
+      !(stableVersion.test(String(artifact.version)) || rcVersion.test(String(artifact.version))) ||
       artifact.baseVersion === artifact.version ||
-      after !== before.replace(rows[0][0], `  packageVersion: '${artifact.version}',`)
+      after !== before.replace(row[0], `  packageVersion: '${artifact.version}',`)
     ) {
       fail(
         'RELEASE_CONTEXT_STORAGE_VERSION',
@@ -464,6 +544,7 @@ function validateStorageVersionChanges(changes, artifacts) {
   }
 }
 
+/** @param {GitChange[]} changes @param {boolean} versionRebaselineValid @param {StorageArtifact[]} storageVersionArtifacts */
 function validateVersionChanges(changes, versionRebaselineValid, storageVersionArtifacts) {
   validateStorageVersionChanges(changes, storageVersionArtifacts);
   const deletedChangesets = [];
@@ -523,6 +604,7 @@ function validateVersionChanges(changes, versionRebaselineValid, storageVersionA
   };
 }
 
+/** @param {GitChange[]} changes @param {boolean} rootManifestFollowUpValid */
 function validateFollowUpChanges(changes, rootManifestFollowUpValid) {
   for (const change of changes) {
     if (!['A', 'M'].includes(change.status) || !allowedVersionFollowUpPaths.has(change.path)) {
@@ -541,6 +623,7 @@ function validateFollowUpChanges(changes, rootManifestFollowUpValid) {
 }
 
 /** A generated, already-versioned RC has no pending Changesets status to draft. */
+/** @param {PreModeInput} input */
 export function isVersionedPreModeCandidate({
   baseRootVersion,
   candidateRootVersion,
@@ -552,17 +635,18 @@ export function isVersionedPreModeCandidate({
   basePreState,
   preState,
 }) {
-  const baseStable = stableVersion.exec(baseRootVersion);
-  const baseRc = rcVersion.exec(baseRootVersion);
-  const candidateRc = rcVersion.exec(candidateRootVersion);
+  const baseStable = stableVersion.exec(String(baseRootVersion));
+  const baseRc = rcVersion.exec(String(baseRootVersion));
+  const candidateRc = rcVersion.exec(String(candidateRootVersion));
   if (
     (!baseStable && !baseRc) ||
     !candidateRc ||
-    versionCommitVersion !== candidateRootVersion.slice(0, -`-rc.${candidateRc[4]}`.length) ||
-    preState?.mode !== 'pre' ||
-    preState.tag !== 'rc' ||
-    !Array.isArray(preState.changesets) ||
-    preState.changesets.length === 0 ||
+    versionCommitVersion !==
+      candidateVersionPrefix(candidateRootVersion, -`-rc.${candidateRc[4]}`.length) ||
+    optionalJsonProperty(preState, 'mode') !== 'pre' ||
+    jsonProperty(preState, 'tag') !== 'rc' ||
+    !Array.isArray(jsonProperty(preState, 'changesets')) ||
+    preChangesets(preState).length === 0 ||
     !Array.isArray(packageStates) ||
     packageStates.length !== 44 ||
     !Array.isArray(changedManifestPaths) ||
@@ -582,19 +666,20 @@ export function isVersionedPreModeCandidate({
     if (
       !candidate.some(
         (part, index) =>
-          part > base[index] &&
+          part > Number(base[index]) &&
           candidate.slice(0, index).every((earlier, i) => earlier === base[i]),
       )
     )
       return false;
   } else {
     if (
+      baseRc === null ||
       baseRc.slice(1, 4).some((part, index) => part !== candidateRc[index + 1]) ||
       Number(candidateRc[4]) <= Number(baseRc[4]) ||
-      basePreState?.mode !== 'pre' ||
-      basePreState.tag !== 'rc' ||
-      !Array.isArray(basePreState.changesets) ||
-      basePreState.changesets.some((id) => !preState.changesets.includes(id))
+      optionalJsonProperty(basePreState, 'mode') !== 'pre' ||
+      jsonProperty(basePreState, 'tag') !== 'rc' ||
+      !Array.isArray(jsonProperty(basePreState, 'changesets')) ||
+      preChangesets(basePreState).some((id) => !preChangesets(preState).includes(id))
     )
       return false;
   }
@@ -602,14 +687,15 @@ export function isVersionedPreModeCandidate({
   const names = new Set(packageStates.map(({ name }) => name));
   const paths = new Set(packageStates.map(({ manifestPath }) => manifestPath));
   const changed = new Set(changedManifestPaths);
-  const consumed = new Set(preState.changesets);
+  const consumed = new Set(preChangesets(preState));
+  /** @type {Set<unknown>} */
   const onDisk = new Set(changesetIdsOnDisk);
   if (
     names.size !== 44 ||
     paths.size !== 44 ||
     changed.size !== 44 ||
     changedManifestPaths.length !== 44 ||
-    consumed.size !== preState.changesets.length ||
+    consumed.size !== preChangesets(preState).length ||
     onDisk.size !== changesetIdsOnDisk.length ||
     consumed.size !== onDisk.size ||
     [...consumed].some((id) => !onDisk.has(id)) ||
@@ -621,13 +707,15 @@ export function isVersionedPreModeCandidate({
     ({ name, baseVersion, candidateVersion }) =>
       candidateVersion === candidateRootVersion &&
       (baseStable
-        ? baseVersion === preState.initialVersions?.[name]
+        ? baseVersion === optionalJsonProperty(jsonProperty(preState, 'initialVersions'), name)
         : baseVersion === baseRootVersion &&
-          basePreState.initialVersions?.[name] === preState.initialVersions?.[name]),
+          optionalJsonProperty(jsonProperty(basePreState, 'initialVersions'), name) ===
+            optionalJsonProperty(jsonProperty(preState, 'initialVersions'), name)),
   );
 }
 
 /** The consolidated final candidate has one exact marker and no pending release inputs. */
+/** @param {FinalInput} input */
 export function isFinalVersionedCandidate({
   baseRootVersion,
   basePreState,
@@ -644,9 +732,9 @@ export function isFinalVersionedCandidate({
     baseRootVersion !== finalBaseVersion ||
     candidateRootVersion !== finalVersion ||
     preState !== null ||
-    basePreState?.mode !== 'pre' ||
-    basePreState.tag !== 'rc' ||
-    !Array.isArray(basePreState.changesets) ||
+    optionalJsonProperty(basePreState, 'mode') !== 'pre' ||
+    jsonProperty(basePreState, 'tag') !== 'rc' ||
+    !Array.isArray(jsonProperty(basePreState, 'changesets')) ||
     !isDeepStrictEqual(markerParentPreState, basePreState) ||
     !Array.isArray(markerCommits) ||
     !Array.isArray(markerChanges) ||
@@ -659,9 +747,11 @@ export function isFinalVersionedCandidate({
     return false;
 
   const markers = markerCommits.filter(({ subject }) => subject === finalVersionCommitSubject);
+  const marker = markers[0];
   if (
     markers.length !== 1 ||
-    markerCommits.indexOf(markers[0]) === 0 ||
+    marker === undefined ||
+    markerCommits.indexOf(marker) === 0 ||
     markerCommits.some(({ sha, subject }) => !fullSha.test(sha) || typeof subject !== 'string') ||
     new Set(markerCommits.map(({ sha }) => sha)).size !== markerCommits.length
   )
@@ -683,11 +773,11 @@ export function isFinalVersionedCandidate({
     return false;
 
   const expected = new Map([['.changeset/pre.json', 'D']]);
-  for (const id of basePreState.changesets) {
+  for (const id of preChangesets(basePreState)) {
     if (typeof id !== 'string' || !/^[a-z0-9-]+$/u.test(id)) return false;
     expected.set(`.changeset/${id}.md`, 'D');
   }
-  if (expected.size !== basePreState.changesets.length + 1) return false;
+  if (expected.size !== preChangesets(basePreState).length + 1) return false;
   // CTG changesets are added as files after the base; the pre state itself is frozen.
   for (const { path, status } of markerChanges) {
     if (status === 'D' && isChangeset(path) && path !== '.changeset/README.md') {
@@ -725,6 +815,7 @@ export function isFinalVersionedCandidate({
   );
 }
 
+/** @param {PatchInput} input @param {PatchPolicy} policy */
 function isExactStablePatchVersionedCandidate(
   {
     baseRootVersion,
@@ -771,9 +862,11 @@ function isExactStablePatchVersionedCandidate(
     return false;
 
   const markers = markerCommits.filter(({ subject }) => subject === markerSubject);
+  const marker = markers[0];
   if (
     markers.length !== 1 ||
-    markerCommits.indexOf(markers[0]) === 0 ||
+    marker === undefined ||
+    markerCommits.indexOf(marker) === 0 ||
     markerCommits.some(({ sha, subject }) => !fullSha.test(sha) || typeof subject !== 'string') ||
     new Set(markerCommits.map(({ sha }) => sha)).size !== markerCommits.length
   )
@@ -817,6 +910,7 @@ function isExactStablePatchVersionedCandidate(
 }
 
 /** The first stable patch remains an exact historical release candidate. */
+/** @param {PatchInput} input */
 export function isStablePatchVersionedCandidate(input) {
   return isExactStablePatchVersionedCandidate(input, {
     parentVersion: '1.5.0',
@@ -828,6 +922,7 @@ export function isStablePatchVersionedCandidate(input) {
 }
 
 /** The merged session policy changeset advances the same fixed group to 1.5.2. */
+/** @param {PatchInput} input */
 export function isSecondStablePatchVersionedCandidate(input) {
   return isExactStablePatchVersionedCandidate(input, {
     parentVersion: '1.5.1',
@@ -843,6 +938,7 @@ export function isSecondStablePatchVersionedCandidate(input) {
  * The unpublished 1.5.2 candidate on main consumes eleven changesets into 1.5.3
  * (ADR-DEVAI-ADOPTION-0011); main itself is the 1.5.2 base.
  */
+/** @param {PatchInput} input */
 export function isThirdStablePatchVersionedCandidate(input) {
   return isExactStablePatchVersionedCandidate(input, {
     baseVersion: '1.5.2',
@@ -858,6 +954,7 @@ export function isThirdStablePatchVersionedCandidate(input) {
  * The published 1.5.3 main consumes four changesets into 1.5.4
  * (ADR-DEVAI-ADOPTION-0012); main itself is the 1.5.3 base.
  */
+/** @param {PatchInput} input */
 export function isFourthStablePatchVersionedCandidate(input) {
   return isExactStablePatchVersionedCandidate(input, {
     baseVersion: '1.5.3',
@@ -873,6 +970,7 @@ export function isFourthStablePatchVersionedCandidate(input) {
  * The unpublished 1.5.4 main consumes one changeset into 1.5.5
  * (ADR-DEVAI-ADOPTION-0015); main itself is the 1.5.4 base.
  */
+/** @param {PatchInput} input */
 export function isFifthStablePatchVersionedCandidate(input) {
   return isExactStablePatchVersionedCandidate(input, {
     baseVersion: '1.5.4',
@@ -888,6 +986,7 @@ export function isFifthStablePatchVersionedCandidate(input) {
  * The published 1.5.5 main consumes the slice-2 changesets into 1.5.6
  * (ADR-DEVAI-ADOPTION-0016); main itself is the 1.5.5 base.
  */
+/** @param {PatchInput} input */
 export function isSixthStablePatchVersionedCandidate(input) {
   return isExactStablePatchVersionedCandidate(input, {
     baseVersion: '1.5.5',
@@ -903,6 +1002,7 @@ export function isSixthStablePatchVersionedCandidate(input) {
  * The published 1.5.6 main consumes the slice-3 changesets into 1.5.7
  * (ADR-DEVAI-ADOPTION-0018); main itself is the 1.5.6 base.
  */
+/** @param {PatchInput} input */
 export function isSeventhStablePatchVersionedCandidate(input) {
   return isExactStablePatchVersionedCandidate(input, {
     baseVersion: '1.5.6',
@@ -915,6 +1015,7 @@ export function isSeventhStablePatchVersionedCandidate(input) {
 }
 
 /** The reviewed 1.6.1 patch retains closed marker and follow-up admission. */
+/** @param {PatchInput} input */
 export function isPatch161VersionedCandidate(input) {
   if (
     !input ||
@@ -923,17 +1024,23 @@ export function isPatch161VersionedCandidate(input) {
     !Array.isArray(input.storageVersionArtifacts) ||
     !input.rootManifestAtMarker ||
     !input.rootManifestAtHead ||
-    input.rootManifestAtMarker.version !== '1.6.1' ||
-    input.rootManifestAtHead.version !== '1.6.1' ||
-    input.rootManifestAtMarker.devDependencies?.['@aarusso-nyx/devai'] !== '2.6.0' ||
-    input.rootManifestAtHead.devDependencies?.['@aarusso-nyx/devai'] !== '2.6.1'
+    jsonProperty(input.rootManifestAtMarker, 'version') !== '1.6.1' ||
+    jsonProperty(input.rootManifestAtHead, 'version') !== '1.6.1' ||
+    optionalJsonProperty(
+      jsonProperty(input.rootManifestAtMarker, 'devDependencies'),
+      '@aarusso-nyx/devai',
+    ) !== '2.6.0' ||
+    optionalJsonProperty(
+      jsonProperty(input.rootManifestAtHead, 'devDependencies'),
+      '@aarusso-nyx/devai',
+    ) !== '2.6.1'
   )
     return false;
 
   const expectedRootManifest = {
-    ...input.rootManifestAtMarker,
+    ...jsonObject(input.rootManifestAtMarker),
     devDependencies: {
-      ...input.rootManifestAtMarker.devDependencies,
+      ...jsonObject(jsonProperty(input.rootManifestAtMarker, 'devDependencies')),
       '@aarusso-nyx/devai': '2.6.1',
     },
   };
@@ -980,6 +1087,7 @@ export function isPatch161VersionedCandidate(input) {
 }
 
 /** The 1.6.2 marker and its reviewed post-marker population are closed. */
+/** @param {PatchInput} input */
 export function isPatch162VersionedCandidate(input) {
   if (
     !input ||
@@ -988,17 +1096,23 @@ export function isPatch162VersionedCandidate(input) {
     !Array.isArray(input.storageVersionArtifacts) ||
     !input.rootManifestAtMarker ||
     !input.rootManifestAtHead ||
-    input.rootManifestAtMarker.version !== '1.6.2' ||
-    input.rootManifestAtHead.version !== '1.6.2' ||
-    input.rootManifestAtMarker.devDependencies?.['@aarusso-nyx/devai'] !== '2.6.1' ||
-    input.rootManifestAtHead.devDependencies?.['@aarusso-nyx/devai'] !== '2.6.2'
+    jsonProperty(input.rootManifestAtMarker, 'version') !== '1.6.2' ||
+    jsonProperty(input.rootManifestAtHead, 'version') !== '1.6.2' ||
+    optionalJsonProperty(
+      jsonProperty(input.rootManifestAtMarker, 'devDependencies'),
+      '@aarusso-nyx/devai',
+    ) !== '2.6.1' ||
+    optionalJsonProperty(
+      jsonProperty(input.rootManifestAtHead, 'devDependencies'),
+      '@aarusso-nyx/devai',
+    ) !== '2.6.2'
   )
     return false;
 
   const expectedRootManifest = {
-    ...input.rootManifestAtMarker,
+    ...jsonObject(input.rootManifestAtMarker),
     devDependencies: {
-      ...input.rootManifestAtMarker.devDependencies,
+      ...jsonObject(jsonProperty(input.rootManifestAtMarker, 'devDependencies')),
       '@aarusso-nyx/devai': '2.6.2',
     },
   };
@@ -1088,6 +1202,7 @@ const major300FollowUpStatuses = new Map([
 ]);
 
 /** The 3.0.0 marker leads its PR and covers the exact 47-package roster. */
+/** @param {PatchInput} input */
 export function isMajor300VersionedCandidate(input) {
   if (
     !input ||
@@ -1165,6 +1280,7 @@ export function isMajor300VersionedCandidate(input) {
   );
 }
 
+/** @param {{baseCommit: string, headCommit: string, commits: GitCommit[], versionParent: string | null, versionChanges: GitChange[], followUpChanges: GitChange[], rootManifestFollowUpValid: boolean, versionRebaselineValid?: boolean, storageVersionArtifacts?: StorageArtifact[]}} input */
 export function classifyReleaseContext({
   baseCommit,
   headCommit,
@@ -1187,11 +1303,11 @@ export function classifyReleaseContext({
     // commit is now simply ordinary.
     return { kind: 'ordinary', baseCommit, headCommit };
   }
-  if (versionCommits.length !== 1) {
+  const versionCommit = versionCommits[0];
+  if (versionCommits.length !== 1 || versionCommit === undefined) {
     fail('RELEASE_CONTEXT_AMBIGUOUS', 'candidate contains multiple version-package commits');
   }
 
-  const versionCommit = versionCommits[0];
   if (commits[0]?.sha !== versionCommit.sha || versionParent !== baseCommit) {
     fail(
       'RELEASE_CONTEXT_BASE_MISMATCH',
