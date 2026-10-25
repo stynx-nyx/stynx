@@ -51,13 +51,16 @@ function parseStynxAccessToken(rawAuthorization: unknown): { sub?: string; tenan
   }
 
   try {
-    const payload = JSON.parse(Buffer.from(parts[1]!, 'base64url').toString('utf8')) as {
-      sub?: unknown;
-      tenant_id?: unknown;
-    };
+    const payload: unknown = JSON.parse(Buffer.from(parts[1]!, 'base64url').toString('utf8'));
+    // Native JSON.parse without a reviver produces data properties. Null alone
+    // reaches the original caught property error; other JSON primitives have no claims.
+    if (payload === null) return null;
+    if (typeof payload !== 'object') return {};
+    const sub: unknown = Reflect.get(payload, 'sub');
+    const tenantId: unknown = Reflect.get(payload, 'tenant_id');
     return {
-      ...(typeof payload.sub === 'string' ? { sub: payload.sub } : {}),
-      ...(typeof payload.tenant_id === 'string' ? { tenantId: payload.tenant_id } : {}),
+      ...(typeof sub === 'string' ? { sub } : {}),
+      ...(typeof tenantId === 'string' ? { tenantId } : {}),
     };
   } catch {
     return null;
@@ -68,16 +71,32 @@ function toTenantId(request: RequestLike): string | undefined {
   return request.tenantId ?? request.stynxClaims?.tenantId ?? parseStynxAccessToken(request.headers.authorization)?.tenantId;
 }
 
-function responseLike(request: RequestLike): {
-  setHeader(name: string, value: string): void;
-} | null {
-  const candidate = (request.res ?? request.response) as { setHeader?: (name: string, value: string) => void } | undefined;
-  if (!candidate?.setHeader) {
+function responseLike(request: RequestLike): { setHeader: unknown } | null {
+  const candidate = request.res ?? request.response;
+  if (candidate === null || candidate === undefined || !readRuntimeProperty(candidate, 'setHeader')) {
     return null;
   }
-  return {
-    setHeader: candidate.setHeader.bind(candidate),
-  };
+  const method = readRuntimeProperty(candidate, 'setHeader');
+  const bind = readRuntimeProperty(method, 'bind');
+  if (typeof bind !== 'function') throw new TypeError('Rate limit header bind is not callable');
+  const setHeader: unknown = Reflect.apply(bind, method, [candidate]);
+  return { setHeader };
+}
+
+function setResponseHeader(method: unknown, response: { setHeader: unknown }, name: string, value: string): void {
+  if (typeof method !== 'function') throw new TypeError('Rate limit header setter is not callable');
+  Reflect.apply(method, response, [name, value]);
+}
+
+function readRuntimeProperty(value: unknown, key: PropertyKey): unknown {
+  if (value === null || value === undefined) {
+    throw new TypeError('Cannot read a nullish rate limit value');
+  }
+  const target: unknown = Object(value);
+  if ((typeof target === 'object' && target !== null) || typeof target === 'function') {
+    return Reflect.get(target, key, value);
+  }
+  throw new TypeError('Invalid rate limit property receiver');
 }
 
 @Injectable()
@@ -214,11 +233,11 @@ export class RateLimitGuard implements CanActivate {
     if (!response) {
       return;
     }
-    response.setHeader('X-RateLimit-Limit', String(decision.limit));
-    response.setHeader('X-RateLimit-Remaining', String(decision.remaining));
-    response.setHeader('X-RateLimit-Reset', String(Math.ceil(decision.resetAtEpochMs / 1000)));
+    setResponseHeader(response.setHeader, response, 'X-RateLimit-Limit', String(decision.limit));
+    setResponseHeader(response.setHeader, response, 'X-RateLimit-Remaining', String(decision.remaining));
+    setResponseHeader(response.setHeader, response, 'X-RateLimit-Reset', String(Math.ceil(decision.resetAtEpochMs / 1000)));
     if (!decision.allowed) {
-      response.setHeader('Retry-After', String(decision.retryAfterSeconds));
+      setResponseHeader(response.setHeader, response, 'Retry-After', String(decision.retryAfterSeconds));
     }
   }
 
@@ -227,6 +246,6 @@ export class RateLimitGuard implements CanActivate {
     if (!response) {
       return;
     }
-    response.setHeader('X-Stynx-RateLimit-Overhead-Ms', durationMs.toFixed(3));
+    setResponseHeader(response.setHeader, response, 'X-Stynx-RateLimit-Overhead-Ms', durationMs.toFixed(3));
   }
 }

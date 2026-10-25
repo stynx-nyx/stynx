@@ -117,7 +117,9 @@ export class RedisSlidingWindowRateLimitStore implements RateLimitStore, OnModul
         member,
       ],
     });
-    const numeric = (result as Array<number | string>).map((value) => Number(value));
+    // This private RESP2 client executes the fixed six-number script above.
+    if (!Array.isArray(result)) throw new TypeError('Rate limit script returned a non-array reply');
+    const numeric = result.map((value: unknown) => Number(value));
     const allowed = numeric[0] ?? 0;
     const limit = numeric[1] ?? context.limit;
     const remaining = numeric[2] ?? Math.max(context.limit - context.cost, 0);
