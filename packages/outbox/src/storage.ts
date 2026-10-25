@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { outboxStorageAdmission, outboxStorageVisibility, outboxStorageRoles, outboxStorageSchema, outboxStorageApplicable, outboxStoragePrivileges, outboxStorageEnforcement, outboxStorageMarker, outboxStorageData, outboxStorageSequence } from './storage.repository.js';
 import { createHash } from 'node:crypto';
 import {
@@ -34,6 +35,37 @@ export interface OutboxStorageArtifact {
   objectsSql: string;
   roleBindingsSql: string;
   manifest: OutboxStorageManifest;
+}
+
+const integerText = z.string().regex(/^-?\d+$/u);
+const clonedCatalogEntrySchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('relation'), name: z.string(), value: z.object({ kind: z.string(), owner: z.string(), rls: z.boolean(), forceRls: z.boolean() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('column'), name: z.string(), value: z.object({ position: z.number().int(), typeSchema: z.string(), type: z.string(), typeModifier: z.number().int(), notNull: z.boolean(), identity: z.string(), generated: z.string(), collationSchema: z.string().nullable(), collation: z.string().nullable(), default: z.string().nullable() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('constraint'), name: z.string(), value: z.object({ kind: z.string(), validated: z.boolean(), deferrable: z.boolean(), deferred: z.boolean(), noInherit: z.boolean(), columns: z.array(z.string()).nullable(), expression: z.string().nullable(), referencedSchema: z.string().nullable(), referencedTable: z.string().nullable(), referencedColumns: z.array(z.string()).nullable(), onUpdate: z.string(), onDelete: z.string(), match: z.string() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('index'), name: z.string(), value: z.object({ table: z.string(), definition: z.string(), valid: z.boolean(), ready: z.boolean(), unique: z.boolean(), primary: z.boolean() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('policy'), name: z.string(), value: z.object({ command: z.string(), permissive: z.boolean(), roles: z.array(z.string()), using: z.string().nullable(), check: z.string().nullable() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('trigger'), name: z.string(), value: z.object({ type: z.number().int(), enabled: z.string(), functionSchema: z.string(), function: z.string(), arguments: z.string(), condition: z.string().nullable() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('function'), name: z.string(), value: z.object({ definition: z.string(), owner: z.string(), securityDefiner: z.boolean(), config: z.array(z.string()).nullable(), volatility: z.string(), strict: z.boolean(), parallel: z.string(), leakproof: z.boolean() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('enum'), name: z.string(), value: z.object({ owner: z.string(), labels: z.array(z.string()) }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('sequence'), name: z.string(), value: z.object({ type: z.string(), start: integerText, increment: integerText, min: integerText, max: integerText, cache: integerText, cycle: z.boolean() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('grant'), name: z.string(), value: z.object({ object: z.string(), grantee: z.string(), privilege: z.string(), grantable: z.boolean() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('default-grant'), name: z.string(), value: z.object({ owner: z.string(), kind: z.string(), grantee: z.string(), privilege: z.string(), grantable: z.boolean() }).passthrough() }).passthrough(),
+]);
+
+type ClonedCatalogEntry = z.infer<typeof clonedCatalogEntrySchema>;
+
+function isClonedCatalogEntry(value: unknown): value is ClonedCatalogEntry {
+  return clonedCatalogEntrySchema.safeParse(value).success;
+}
+
+function isCatalogStringArray(value: unknown): value is string[] {
+  if (!Array.isArray(value)) return false;
+  const entries: unknown[] = value;
+  const length = entries.length;
+  for (let index = 0; index < length; index += 1) {
+    if (!Object.hasOwn(entries, index) || typeof entries[index] !== 'string') return false;
+  }
+  return true;
 }
 
 const DEFAULT_ROLES = ['stynx_owner', 'stynx_app', 'stynx_reader'] as const;
@@ -107,21 +139,23 @@ function bindCatalog(binding: StorageRoleBinding): StorageCatalogEntry[] {
     return value;
   };
   return OUTBOX_STORAGE_CATALOG.entries.flatMap((original) => {
-    const entry = JSON.parse(JSON.stringify(original)) as StorageCatalogEntry;
+    const entry: unknown = JSON.parse(JSON.stringify(original));
+    if (!isClonedCatalogEntry(entry)) throw new TypeError('Invalid storage catalog artifact');
     if (
       binding.readerRole === null &&
       ((['grant', 'default-grant'].includes(entry.kind) &&
         entry.value.grantee === 'stynx_reader') ||
-        (entry.kind === 'policy' && (entry.value.roles as string[]).includes('stynx_reader')))
+        (entry.kind === 'policy' && entry.value.roles.includes('stynx_reader')))
     )
       return [];
     if (entry.kind === 'policy') {
       const dot = entry.name.indexOf('.');
       entry.name =
         entry.name.slice(0, dot + 1) +
-        policyName(entry.name.slice(dot + 1), entry.value.roles as string[], binding);
+        policyName(entry.name.slice(dot + 1), entry.value.roles, binding);
     }
-    const bound = replace(entry) as StorageCatalogEntry;
+    const bound = replace(entry);
+    if (!isClonedCatalogEntry(bound)) throw new TypeError('Invalid storage catalog artifact');
     if (
       entry.kind === 'constraint' &&
       entry.value.referencedSchema === 'tenancy' &&
@@ -228,7 +262,7 @@ export async function verifyOutboxStorage(
     const actual = await collectStorageCatalog(trx, 'outbox');
     // Additional role bindings are allowed. Their grants/policies cannot count
     // as the configured role's required grants or bypass its least-grant check.
-    const relevantRoles = new Set([
+    const relevantRoles: ReadonlySet<unknown> = new Set([
       'PUBLIC',
       binding.ownerRole,
       binding.appRole,
@@ -238,12 +272,17 @@ export async function verifyOutboxStorage(
       [binding.appRole, binding.readerRole],
     );
     const policyRoles = new Set(['PUBLIC', ...applicable.map((row) => row.name)]);
-    const relevant = (entry: StorageCatalogEntry): boolean =>
-      ['grant', 'default-grant'].includes(entry.kind)
-        ? relevantRoles.has(entry.value.grantee as string)
-        : entry.kind === 'policy'
-          ? (entry.value.roles as string[]).some((role) => policyRoles.has(role))
-          : true;
+    const relevant = (entry: StorageCatalogEntry): boolean => {
+      if (['grant', 'default-grant'].includes(entry.kind)) {
+        return relevantRoles.has(entry.value.grantee);
+      }
+      if (entry.kind === 'policy') {
+        const roles = entry.value.roles;
+        if (!isCatalogStringArray(roles)) throw new TypeError('Invalid policy catalog binding');
+        return roles.some((role) => policyRoles.has(role));
+      }
+      return true;
+    };
     const observed = new Map(
       actual.filter(relevant).map((entry) => [`${entry.kind}:${entry.name}`, entry]),
     );
@@ -273,13 +312,13 @@ export async function verifyOutboxStorage(
       [binding.appRole, binding.readerRole],
     );
     for (const row of privileges) {
-      const allowed = expected.some(
-        (entry) =>
-          entry.kind === 'grant' &&
-          [row.object, row.parent].includes(entry.value.object as string) &&
-          [row.role, 'PUBLIC'].includes(entry.value.grantee as string) &&
-          entry.value.privilege === row.privilege,
-      );
+      const allowed = expected.some((entry) => {
+        if (entry.kind !== 'grant') return false;
+        const objects: readonly unknown[] = [row.object, row.parent];
+        if (!objects.includes(entry.value.object)) return false;
+        const grantees: readonly unknown[] = [row.role, 'PUBLIC'];
+        return grantees.includes(entry.value.grantee) && entry.value.privilege === row.privilege;
+      });
       check(
         `effective-grant:${row.role}:${row.object}:${row.privilege}`,
         `outbox.${row.object}`,
@@ -300,14 +339,18 @@ export async function verifyOutboxStorage(
     check('foreign-key-enforcement', 'outbox', true, enforcement[0]?.valid);
     for (const entry of foreignKeys) {
       const table = entry.name.slice(0, entry.name.indexOf('.'));
-      const columns = entry.value.columns as string[];
-      const referenced = entry.value.referencedColumns as string[];
+      const columns = entry.value.columns;
+      const referenced = entry.value.referencedColumns;
       const source = `outbox.${quoteStorageIdentifier(table)}`;
+      const targetSchema = entry.value.referencedSchema;
+      const targetTable = entry.value.referencedTable;
+      if (!isCatalogStringArray(columns) || !isCatalogStringArray(referenced) ||
+          typeof targetSchema !== 'string' || typeof targetTable !== 'string') {
+        throw new TypeError('Invalid foreign-key catalog binding');
+      }
       const orphans = await executeConfiguredQuery(trx, 'catalog.foreign-key-orphans', {
         sourceSchema: 'outbox', sourceTable: table, sourceColumns: columns,
-        targetSchema: entry.value.referencedSchema as string,
-        targetTable: entry.value.referencedTable as string,
-        targetColumns: referenced,
+        targetSchema, targetTable, targetColumns: referenced,
       }, []);
       check(`stored-foreign-key:${entry.name}`, source, '0', orphans.rows[0]?.count);
     }

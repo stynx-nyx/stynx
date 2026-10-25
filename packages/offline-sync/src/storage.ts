@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { createHash } from 'node:crypto';
 import {
   collectStorageCatalog,
@@ -46,6 +47,27 @@ export interface OfflineStorageMigrationsArtifact {
   packageVersion: string;
   binding: StorageRoleBinding;
   migrations: readonly OfflineStorageMigration[];
+}
+
+const integerText = z.string().regex(/^-?\d+$/u);
+const clonedCatalogEntrySchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('relation'), name: z.string(), value: z.object({ kind: z.string(), owner: z.string(), rls: z.boolean(), forceRls: z.boolean() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('column'), name: z.string(), value: z.object({ position: z.number().int(), typeSchema: z.string(), type: z.string(), typeModifier: z.number().int(), notNull: z.boolean(), identity: z.string(), generated: z.string(), collationSchema: z.string().nullable(), collation: z.string().nullable(), default: z.string().nullable() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('constraint'), name: z.string(), value: z.object({ kind: z.string(), validated: z.boolean(), deferrable: z.boolean(), deferred: z.boolean(), noInherit: z.boolean(), columns: z.array(z.string()).nullable(), expression: z.string().nullable(), referencedSchema: z.string().nullable(), referencedTable: z.string().nullable(), referencedColumns: z.array(z.string()).nullable(), onUpdate: z.string(), onDelete: z.string(), match: z.string() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('index'), name: z.string(), value: z.object({ table: z.string(), definition: z.string(), valid: z.boolean(), ready: z.boolean(), unique: z.boolean(), primary: z.boolean() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('policy'), name: z.string(), value: z.object({ command: z.string(), permissive: z.boolean(), roles: z.array(z.string()), using: z.string().nullable(), check: z.string().nullable() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('trigger'), name: z.string(), value: z.object({ type: z.number().int(), enabled: z.string(), functionSchema: z.string(), function: z.string(), arguments: z.string(), condition: z.string().nullable() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('function'), name: z.string(), value: z.object({ definition: z.string(), owner: z.string(), securityDefiner: z.boolean(), config: z.array(z.string()).nullable(), volatility: z.string(), strict: z.boolean(), parallel: z.string(), leakproof: z.boolean() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('enum'), name: z.string(), value: z.object({ owner: z.string(), labels: z.array(z.string()) }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('sequence'), name: z.string(), value: z.object({ type: z.string(), start: integerText, increment: integerText, min: integerText, max: integerText, cache: integerText, cycle: z.boolean() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('grant'), name: z.string(), value: z.object({ object: z.string(), grantee: z.string(), privilege: z.string(), grantable: z.boolean() }).passthrough() }).passthrough(),
+  z.object({ kind: z.literal('default-grant'), name: z.string(), value: z.object({ owner: z.string(), kind: z.string(), grantee: z.string(), privilege: z.string(), grantable: z.boolean() }).passthrough() }).passthrough(),
+]);
+
+type ClonedCatalogEntry = z.infer<typeof clonedCatalogEntrySchema>;
+
+function isClonedCatalogEntry(value: unknown): value is ClonedCatalogEntry {
+  return clonedCatalogEntrySchema.safeParse(value).success;
 }
 
 const DEFAULT_ROLES = ['stynx_owner', 'stynx_app', 'stynx_reader'] as const;
@@ -118,12 +140,13 @@ function bindCatalog(binding: StorageRoleBinding): StorageCatalogEntry[] {
     return value;
   };
   return OFFLINE_STORAGE_CATALOG.entries.flatMap((original) => {
-    const entry = JSON.parse(JSON.stringify(original)) as StorageCatalogEntry;
+    const entry: unknown = JSON.parse(JSON.stringify(original));
+    if (!isClonedCatalogEntry(entry)) throw new TypeError('Invalid storage catalog artifact');
     if (binding.readerRole === null) {
       if (['grant', 'default-grant'].includes(entry.kind) && entry.value.grantee === 'stynx_reader')
         return [];
       if (entry.kind === 'policy') {
-        entry.value.roles = (entry.value.roles as string[]).filter(
+        entry.value.roles = entry.value.roles.filter(
           (role) => role !== 'stynx_reader',
         );
       }
@@ -132,9 +155,10 @@ function bindCatalog(binding: StorageRoleBinding): StorageCatalogEntry[] {
       const dot = entry.name.indexOf('.');
       entry.name =
         entry.name.slice(0, dot + 1) +
-        policyName(entry.name.slice(dot + 1), entry.value.roles as string[], binding);
+        policyName(entry.name.slice(dot + 1), entry.value.roles, binding);
     }
-    const bound = replace(entry) as StorageCatalogEntry;
+    const bound = replace(entry);
+    if (!isClonedCatalogEntry(bound)) throw new TypeError('Invalid storage catalog artifact');
     if (
       entry.kind === 'constraint' &&
       entry.value.referencedSchema === 'tenancy' &&
