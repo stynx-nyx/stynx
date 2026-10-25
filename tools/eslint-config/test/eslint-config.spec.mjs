@@ -586,7 +586,7 @@ test('Node155 normal wrapper delegates exact arguments and cwd to installed nati
   assert.equal(executable, process.execPath);
   assert.ok(existsSync(args[0]));
   assert.match(args[0], /eslint\/bin\/eslint\.js$/u);
-  assert.deepEqual(args.slice(1), ['--config', 'tools/eslint-config/workspace-maintained.mjs', '--max-warnings=0', 'tools/eslint-config/*.mjs', 'packages-web/sdk/codegen/*.mjs', 'packages-web/sdk/scripts/*.mjs', 'packages/cli/engines/*.mjs', ...accepted, ...imageSizeFiles(root), '--format', 'json', '--stdin-filename', 'space name.mjs']);
+  assert.deepEqual(args.slice(1), ['--config', 'tools/eslint-config/workspace-maintained.mjs', '--max-warnings=0', 'tools/eslint-config/*.mjs', 'packages-web/sdk/codegen/*.mjs', 'packages-web/sdk/scripts/*.mjs', 'packages/cli/engines/*.mjs', ...accepted, ...imageSizeFiles(root), ...runtimeRemainderFiles(root), '--format', 'json', '--stdin-filename', 'space name.mjs']);
   assert.equal(realpathSync(options.cwd), realpathSync(root));
   assert.equal(options.stdio, 'inherit');
 });
@@ -748,4 +748,103 @@ test('Image28 root and canonical normal routes keep identical policy and Program
   for (const file of ['dist/inspector.ts', 'build/inspector.ts', 'node_modules/inspector.ts']) assert.equal(normal.ignored[file], direct.ignored[file], file);
   assert.equal(direct.ignored['lib/generated/inspector.ts'], false);
   assert.equal(normal.ignored['lib/generated/inspector.ts'], true);
+});
+
+
+function runtimeRemainderGroups(root) {
+  return {
+    compatibility: ['tools/braces-safe/index.js', ...readdirSync(resolve(root, 'tools/braces-safe/lib')).filter(name => name.endsWith('.js')).sort().map(name => `tools/braces-safe/lib/${name}`), 'tools/http-cache-semantics-safe/index.js'],
+    docs: ['docs/site/docusaurus.config.js', ...readdirSync(resolve(root, 'docs/site/scripts')).filter(name => name.endsWith('.mjs')).sort().map(name => `docs/site/scripts/${name}`)],
+    k6: ['scripts/performance/http-qualification.k6.mjs'],
+  };
+}
+function runtimeRemainderFiles(root) {
+  return Object.values(runtimeRemainderGroups(root)).flat();
+}
+const runtimeRemainderObservations = new Map();
+function observeRuntimeRemainders(mode) {
+  if (!runtimeRemainderObservations.has(mode)) {
+    const root = resolve(import.meta.dirname, '../../..');
+    const child = spawnSync(process.execPath, [resolve(import.meta.dirname, 'support/runtime-remainders-probe.mjs'), root, mode, JSON.stringify(runtimeRemainderFiles(root))], { cwd: root, encoding: 'utf8', timeout: 120000, maxBuffer: 16 * 1024 * 1024 });
+    assert.equal(child.status, 0, child.stdout + child.stderr);
+    runtimeRemainderObservations.set(mode, JSON.parse(child.stdout));
+  }
+  return runtimeRemainderObservations.get(mode);
+}
+test('Remaining15 exact projects preserve independent compatibility docs and k6 populations', () => {
+  const root = resolve(import.meta.dirname, '../../..');
+  const directory = resolve(root, 'tools/eslint-config');
+  const groups = runtimeRemainderGroups(root);
+  assert.deepEqual(Object.values(groups).map(files => files.length), [9, 5, 1]);
+  assert.equal(new Set(Object.values(groups).flat()).size, 15);
+  for (const [group, name] of [['compatibility', 'compatibility'], ['docs', 'docs-implementation'], ['k6', 'k6']]) {
+    const project = JSON.parse(readFileSync(resolve(directory, `tsconfig.workspace-${name}.json`), 'utf8'));
+    assert.deepEqual(project.files.map(file => resolve(directory, file)).sort(), groups[group].map(file => resolve(root, file)).sort());
+    assert.deepEqual(project.include, []);
+    assert.equal(project.compilerOptions.noEmit, true);
+    assert.equal(project.compilerOptions.checkJs, true);
+  }
+  const docs = JSON.parse(readFileSync(resolve(directory, 'tsconfig.workspace-docs-implementation.json'), 'utf8'));
+  assert.equal(resolve(directory, docs.extends), resolve(root, 'docs/site/tsconfig.json'));
+});
+for (const mode of ['root', 'normal']) {
+  test(`Remaining15 ${mode} route supplies genuine Programs and preserves unsafe rejection across module formats`, () => {
+    const actual = observeRuntimeRemainders(mode);
+    assert.equal(actual.rows.length, 15);
+    for (const row of actual.rows) {
+      assert.equal(row.configured, true, row.file);
+      assert.equal(row.error, undefined, `${row.file}: ${JSON.stringify(row.error)}`);
+      assert.equal(row.hasProgram, true, row.file);
+      assert.equal(row.belongs, true, row.file);
+      assert.equal(row.compiler.allowJs, true, row.file);
+      assert.equal(row.compiler.checkJs, true, row.file);
+      assert.equal(row.sourceType, row.file.endsWith('.js') ? 'commonjs' : 'module', row.file);
+      for (const name of actual.unsafeNames) assert.equal(row.rules[name]?.[0], 2, `${row.file}: ${name}`);
+    }
+    const unsafe = actual.witnesses.filter(witness => witness.kind === 'unsafe');
+    assert.equal(unsafe.length, 4);
+    for (const witness of unsafe) {
+      assert.deepEqual(witness.messages.filter(message => message.fatal || message.ruleId === null), []);
+      for (const rule of ['no-unsafe-assignment', 'no-unsafe-call', 'no-unsafe-member-access']) assert.ok(witness.messages.some(message => message.ruleId === `@typescript-eslint/${rule}` && message.severity === 2), `${witness.file}: ${rule}`);
+    }
+    const commonjs = actual.witnesses.filter(witness => witness.kind === 'commonjs');
+    assert.equal(commonjs.length, 3);
+    for (const witness of commonjs) {
+      // Literal native imports may resolve to genuine declarations. Format
+      // admission is separate from the computed require witness below.
+      assert.deepEqual(witness.messages.filter(message => message.fatal || message.ruleId === null || ['@typescript-eslint/no-require-imports', 'stynx/no-authored-cjs', 'no-undef'].includes(message.ruleId)), []);
+    }
+    const dynamic = actual.witnesses.filter(witness => witness.kind === 'dynamic-require');
+    assert.equal(dynamic.length, 3);
+    for (const witness of dynamic) {
+      assert.deepEqual(witness.messages.filter(message => message.fatal || message.ruleId === null), []);
+      assert.ok(witness.messages.some(message => message.ruleId === '@typescript-eslint/no-unsafe-assignment' && message.severity === 2), witness.file);
+    }
+  });
+  test(`Remaining15 ${mode} uses genuine docs and isolated k6 declarations`, () => {
+    const actual = observeRuntimeRemainders(mode);
+    const docs = actual.rows.find(row => row.file === 'docs/site/docusaurus.config.js');
+    assert.equal(docs.docsTypes?.packageId?.name, '@docusaurus/types');
+    assert.equal(docs.docsTypes?.packageId?.version, '3.10.2');
+    assert.equal(docs.docsTypes?.belongs, true);
+    const k6 = actual.rows.find(row => row.file.endsWith('.k6.mjs'));
+    assert.deepEqual(k6.compiler?.types, ['k6']);
+    assert.deepEqual(k6.compiler?.lib, ['lib.es2022.d.ts']);
+    assert.deepEqual(k6.nodeOrDomDeclarations, []);
+    assert.deepEqual(k6.globalSymbols, { __ENV: true, open: true, __VU: true, __ITER: true, process: false, Buffer: false, window: false, document: false });
+    for (const name of ['__ENV', '__VU', '__ITER', 'open', 'console']) assert.equal(k6.globals[name], 'readonly');
+    for (const name of ['process', 'Buffer', 'window', 'document']) assert.equal(k6.globals[name], undefined);
+    assert.equal(k6.k6Modules.length, 5);
+    for (const entry of k6.k6Modules) {
+      assert.equal(entry.packageId?.name, '@types/k6', entry.name);
+      assert.equal(entry.packageId?.version, '0.49.0', entry.name);
+      assert.equal(entry.belongs, true, entry.name);
+    }
+  });
+}
+test('Remaining15 root and normal routes retain identical complete policies and Program membership', () => {
+  const direct = observeRuntimeRemainders('root'), normal = observeRuntimeRemainders('normal');
+  assert.equal(direct.rows.length, 15);
+  assert.ok(direct.rows.every(row => row.hasProgram && row.belongs));
+  assert.deepEqual(normal.rows, direct.rows);
 });

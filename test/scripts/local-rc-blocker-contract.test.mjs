@@ -4078,7 +4078,7 @@ test('D19 production binds the exact default-endpoint classifier without frozen 
   );
   assert.equal(
     createHash('sha256').update(main).digest('hex'),
-    'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
+    '9c110335f238748e85c944ca1a8fdbd0bcd0529c83741c659e701f29295f4d46',
   );
   assert.match(helper, new RegExp(escapeRegExpLiteral(defaultEndpointOutputPrefix), 'u'));
   assert.match(helper, /16384|16_384/u);
@@ -4379,10 +4379,10 @@ test('D21 production binds exact Compose-up terminals without D14-D20 drift', ()
     'utf8',
   );
   const frozenFiles = {
-    'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
+    'reference/api/src/main.ts': '9c110335f238748e85c944ca1a8fdbd0bcd0529c83741c659e701f29295f4d46',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': 'a7878127c8f382651cf7881cc12a4a845492b19a7bdcc7bff261918f62bbd8ad',
+    'package.json': '21c7585db88ca0c7269deebe5b2c446e4a4c1d988e7488dc9fe5481ce690cb91',
     'reference/api/package.json':
       'd87f204aa4cacff01a5d8370ac2f37dfd72571a71bdfef0472193e2b67be2e7c',
     'reference/web/package.json':
@@ -4635,10 +4635,10 @@ test('D22 production binds owned PostgreSQL mapping without D14-D21 drift', () =
     'utf8',
   );
   const frozenFiles = {
-    'reference/api/src/main.ts': 'b0ff35d93b1465e9ab9a878ac7d6a15280b8c39abde0e8c03261213a483ca3be',
+    'reference/api/src/main.ts': '9c110335f238748e85c944ca1a8fdbd0bcd0529c83741c659e701f29295f4d46',
     'reference/web/playwright.config.mjs':
       '853496f0f92b93eaabc7f9ec16b440408910024aa0312e3d8f14e96128e145f4',
-    'package.json': 'a7878127c8f382651cf7881cc12a4a845492b19a7bdcc7bff261918f62bbd8ad',
+    'package.json': '21c7585db88ca0c7269deebe5b2c446e4a4c1d988e7488dc9fe5481ce690cb91',
     'reference/api/package.json':
       'd87f204aa4cacff01a5d8370ac2f37dfd72571a71bdfef0472193e2b67be2e7c',
     'reference/web/package.json':
@@ -4726,7 +4726,7 @@ test('D16.1 freezes main, Playwright, tasks, manifests, ports, timeouts, and D14
     'reference/api/src/main.ts': '95fd04b29c57830982b7669f13c5f4466d11ca54b913241599b6e4685478146f',
     'reference/web/playwright.config.mjs':
       'eab3cb3dedc23a505eebc1e024cd846f5f31c302d674a96a3a634279d9a379f9',
-    'package.json': 'a7878127c8f382651cf7881cc12a4a845492b19a7bdcc7bff261918f62bbd8ad',
+    'package.json': '21c7585db88ca0c7269deebe5b2c446e4a4c1d988e7488dc9fe5481ce690cb91',
     'reference/api/package.json':
       'd87f204aa4cacff01a5d8370ac2f37dfd72571a71bdfef0472193e2b67be2e7c',
     'reference/web/package.json':
