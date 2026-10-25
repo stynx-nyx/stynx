@@ -1,4 +1,4 @@
-import { AuditChainKeyMismatchError } from '@stynx-nyx/data';
+import { AuditChainKeyMismatchError, executeGuardedQueryRows, type Transaction } from '@stynx-nyx/data';
 import { OutboxService } from '../../src/outbox.service.js';
 import {
   OutboxAckQuarantineUnavailableError,
@@ -27,8 +27,14 @@ const eventRow = {
   createdAt: new Date(10),
 };
 
+function checkedTransaction(query: OutboxSqlExecutor['query']) {
+  const runGuarded: Transaction['runGuarded'] = (statement, params, guard) =>
+    executeGuardedQueryRows({ query }, statement, params, guard);
+  return { role: 'app', query, runGuarded };
+}
+
 function databaseFor(query: OutboxSqlExecutor['query'], tenantId: string | null = tenant) {
-  const trx = { role: 'app', query };
+  const trx = checkedTransaction(query);
   return {
     appRoleName: 'stynx_app',
     currentTenantId: () => tenantId,
@@ -133,7 +139,7 @@ describe('OutboxService event append contract', () => {
   it('appends atomically with monotonic tenant time and restores the caller lock timeout', async () => {
     const query = appendQuery();
     const service = new OutboxService(databaseFor(query) as never, { lockTimeoutMs: 250 });
-    const trx = { role: 'app', strictItemMode: true, query };
+    const trx = { ...checkedTransaction(query), strictItemMode: true };
     await expect(service.appendInTransaction(trx as never, event)).resolves.toEqual(eventRow);
     expect(query).toHaveBeenCalledWith(
       expect.stringContaining("set_config('lock_timeout',$1,true)"),
@@ -143,7 +149,7 @@ describe('OutboxService event append contract', () => {
       expect.stringContaining("set_config('lock_timeout',$1,true)"),
       ['7s'],
     );
-    expect(query).toHaveBeenCalledWith('set local transaction_read_only = on');
+    expect(query).toHaveBeenCalledWith('set local transaction_read_only = on', []);
     expect(query.mock.calls.some(([sql]) => String(sql).includes('pg_advisory_xact_lock'))).toBe(
       true,
     );
@@ -153,7 +159,7 @@ describe('OutboxService event append contract', () => {
     const duplicate = appendQuery({ duplicate: true });
     await expect(
       new OutboxService(databaseFor(duplicate) as never, {}).appendInTransaction(
-        { role: 'app', query: duplicate } as never,
+        checkedTransaction(duplicate) as never,
         event,
       ),
     ).resolves.toEqual(eventRow);
@@ -161,7 +167,7 @@ describe('OutboxService event append contract', () => {
     const conflict = appendQuery({ conflict: true });
     await expect(
       new OutboxService(databaseFor(conflict) as never, {}).appendInTransaction(
-        { role: 'app', query: conflict } as never,
+        checkedTransaction(conflict) as never,
         event,
       ),
     ).rejects.toBeInstanceOf(OutboxEventConflictError);
@@ -169,7 +175,7 @@ describe('OutboxService event append contract', () => {
     const withoutMetadata = appendQuery({ duplicate: true });
     await expect(
       new OutboxService(databaseFor(withoutMetadata) as never, {}).appendInTransaction(
-        { role: 'app', query: withoutMetadata } as never,
+        checkedTransaction(withoutMetadata) as never,
         { ...event, metadata: undefined },
       ),
     ).resolves.toEqual(eventRow);
@@ -200,7 +206,7 @@ describe('OutboxService event append contract', () => {
     }) as OutboxSqlExecutor['query'];
     await expect(
       new OutboxService(databaseFor(matching) as never, {}).appendInTransaction(
-        { role: 'app', query: matching } as never,
+        checkedTransaction(matching) as never,
         event,
       ),
     ).resolves.toEqual(eventRow);
@@ -209,7 +215,9 @@ describe('OutboxService event append contract', () => {
     );
 
     const mismatchedKey = appendQuery();
-    mismatchedKey.mockImplementation(async (sql: string) => {
+    mismatchedKey.mockImplementation(async (sql: string, params?: unknown[]) => {
+      if (sql === "select set_config('lock_timeout',$1,true)")
+        return { rows: [{ set_config: params?.[0] }] };
       if (sql.includes("current_setting('app.tenant_id'"))
         return {
           rows: [
@@ -841,17 +849,13 @@ describe('OutboxService owner event dispatch', () => {
 describe('OutboxService legacy message reconciliation', () => {
   it('returns reconciliation-required when a custom-table failure row disappeared', async () => {
     const claimed = {
-      id: eventRow.id,
-      tenant_id: tenant,
-      entity: event.entity,
-      entity_id: event.entityId,
+      ...eventRow,
       status: 'SENT',
       attempts: 1,
-      last_error: null,
-      ack_time: null,
-      next_attempt_at: null,
-      created_at: new Date(10),
-      updated_at: new Date(10),
+      lastError: null,
+      ackTime: null,
+      nextAttemptAt: null,
+      updatedAt: new Date(10),
     };
     const query = vi.fn(async (sql: string) =>
       sql.includes('due as') ? { rows: [claimed] } : { rows: [] },
@@ -878,6 +882,7 @@ describe('OutboxService legacy message reconciliation', () => {
     const failedRow = {
       ...eventRow,
       id: '88888888-8888-4888-8888-888888888888',
+      lastError: null, ackTime: null, nextAttemptAt: null, updatedAt: new Date(10),
       status: 'ERROR',
       attempts: 2,
     };
@@ -925,6 +930,7 @@ describe('OutboxService legacy message reconciliation', () => {
     const sent = {
       ...eventRow,
       id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+      lastError: null, ackTime: null, nextAttemptAt: null, updatedAt: new Date(10),
       status: 'SENT' as const,
       attempts: 1,
     };
@@ -963,7 +969,7 @@ describe('OutboxService legacy message reconciliation', () => {
         : { rows: [] },
     ) as OutboxSqlExecutor['query'];
     const db = databaseFor(query) as ReturnType<typeof databaseFor>;
-    await expect(new OutboxService(db as never, {}).retry('legacy-id')).rejects.toBeInstanceOf(
+    await expect(new OutboxService(db as never, {}).retry('cccccccc-cccc-4ccc-8ccc-cccccccccccc')).rejects.toBeInstanceOf(
       OutboxLegacyCutoverError,
     );
   });
@@ -975,10 +981,11 @@ describe('OutboxService legacy message reconciliation', () => {
       migratedEventId: eventRow.id,
       attempts: 2,
     };
-    const updated = { ...eventRow, id: target.id, status: 'ACKED' as const };
+    const updated = { ...eventRow, id: target.id, status: 'ACKED' as const, attempts: 2,
+      lastError: null, ackTime: new Date(10), nextAttemptAt: null, updatedAt: new Date(10) };
     const query = vi.fn(async (sql: string) => {
       if (sql.includes('where entity = $1 and entity_id = $2')) return { rows: [target] };
-      if (sql.includes('update outbox.messages')) return { rows: [updated] };
+      if (sql.includes('update "outbox"."messages"')) return { rows: [updated] };
       return { rows: [] };
     }) as OutboxSqlExecutor['query'];
     await expect(
@@ -1003,18 +1010,19 @@ describe('OutboxService custom table compatibility', () => {
     const pending = {
       ...eventRow,
       id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+      lastError: null, ackTime: null, nextAttemptAt: null, updatedAt: new Date(10),
       status: 'SENT' as const,
       attempts: 1,
     };
     const failed = { ...pending, status: 'ERROR' as const, lastError: 'offline' };
     const query = vi.fn(async (sql: string) => {
       if (sql.includes('due as')) return { rows: [pending] };
-      if (sql.includes('update tenant.messages') && sql.includes("status = 'ERROR'"))
+      if (sql.includes('update "tenant"."messages"') && sql.includes("status = 'ERROR'"))
         return { rows: [failed] };
       if (sql.includes('select attempts')) return { rows: [{ attempts: 1 }] };
       if (sql.includes('where entity = $1'))
         return { rows: [{ id: pending.id, tenantId: tenant, attempts: 1, migratedEventId: null }] };
-      if (sql.includes('update tenant.messages')) return { rows: [failed] };
+      if (sql.includes('update "tenant"."messages"')) return { rows: [failed] };
       return { rows: [] };
     }) as OutboxSqlExecutor['query'];
     const service = new OutboxService(
