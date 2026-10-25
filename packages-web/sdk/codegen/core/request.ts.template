@@ -299,14 +299,14 @@ export const catchErrorCodes = (options: ApiRequestOptions, result: ApiResult): 
  * Request method
  * @param config The OpenAPI configuration object
  * @param options The request options from the service
- * @returns CancelablePromise<T>
+ * @returns CancelablePromise<unknown>
  * @throws ApiError
  */
-export const request = <T>(
+export const request = (
   config: OpenAPIConfig,
   options: ApiRequestOptions,
-): CancelablePromise<T> => {
-  return new CancelablePromise(async (resolve, reject, onCancel) => {
+): CancelablePromise<unknown> => {
+  return new CancelablePromise<unknown>(async (resolve, reject, onCancel) => {
     try {
       const url = getUrl(config, options);
       const formData = getFormData(options);

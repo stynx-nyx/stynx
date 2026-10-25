@@ -220,13 +220,11 @@ function renderOperation(operation) {
   }${operation.description ? ` * ${escapeComment(operation.description)}\n` : ''}${operation.results
     .map(
       (result) =>
-        ` * @returns ${result.type} ${result.description ? escapeComment(result.description) : ''}\n`,
+        ` * @returns unknown ${result.description ? escapeComment(result.description) : ''}\n`,
     )
     .join('')} * @throws ApiError\n */\npublic ${operation.name}(${renderParameters(
     operation.parameters,
-  )}): CancelablePromise<${
-    operation.results.length ? operation.results.map(renderType).join(' | ') : 'void'
-  }> {\nreturn this.httpRequest.request({\nmethod: '${operation.method}',\nurl: '${operation.path}',\n${group(
+  )}): CancelablePromise<unknown> {\nreturn this.httpRequest.request({\nmethod: '${operation.method}',\nurl: '${operation.path}',\n${group(
     'path',
     operation.parametersPath,
   )}${group('cookies', operation.parametersCookie)}${group(
@@ -249,8 +247,14 @@ function renderOperation(operation) {
 
 /** @param {Service} service */
 function renderService(service) {
+  const inputImports = new Set(
+    service.operations.flatMap((operation) =>
+      operation.parameters.flatMap((parameter) => parameter.imports),
+    ),
+  );
   return compact(
     `${header}\n${service.imports
+      .filter((name) => inputImports.has(name))
       .map((name) => `import type { ${name} } from '../models/${name}';\n`)
       .join(
         '',
