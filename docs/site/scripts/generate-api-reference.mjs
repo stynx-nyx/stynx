@@ -29,7 +29,7 @@ function readJsonProperty(value, key) {
   }
   /** @type {unknown} */
   const boxed = Object(value);
-  if (typeof boxed !== 'object' || boxed === null) {
+  if ((typeof boxed !== 'object' || boxed === null) && typeof boxed !== 'function') {
     throw new TypeError('Object conversion did not produce an object');
   }
   /** @type {unknown} */
@@ -37,24 +37,56 @@ function readJsonProperty(value, key) {
   return result;
 }
 
-/** @param {unknown} manifest @returns {string} */
-function selectedPackageName(manifest) {
+/** @param {unknown} manifest @returns {unknown} */
+function packageSlug(manifest) {
   const name = readJsonProperty(manifest, 'name');
-  if (typeof name !== 'string') {
-    throw new TypeError('Selected package name is not a string');
+  const firstReplace = readJsonProperty(name, 'replace');
+  if (typeof firstReplace !== 'function') {
+    throw new TypeError('pkg.manifest.name.replace is not a function');
   }
-  return name;
+  /** @type {unknown} */
+  const first = Reflect.apply(firstReplace, name, [/^@/u, '']);
+  const secondReplace = readJsonProperty(first, 'replace');
+  if (typeof secondReplace !== 'function') {
+    throw new TypeError('pkg.manifest.name.replace(...).replace is not a function');
+  }
+  /** @type {unknown} */
+  const slug = Reflect.apply(secondReplace, first, [/\//gu, '-']);
+  return slug;
 }
 
-/** @param {unknown} value @returns {Record<string, unknown>} */
+/** @param {string} base @param {unknown} slug @param {...string} rest @returns {string} */
+function resolvePackageSlug(base, slug, ...rest) {
+  /** @type {unknown} */
+  const result = Reflect.apply(resolve, undefined, [base, slug, ...rest]);
+  if (typeof result !== 'string') throw new TypeError('Path resolution did not return a string');
+  return result;
+}
+
+/** @param {unknown} value @returns {Record<PropertyKey, unknown>} */
 function spreadJsonProperties(value) {
   if (value === null || value === undefined) return {};
   /** @type {unknown} */
   const boxed = Object(value);
-  if (typeof boxed !== 'object' || boxed === null) {
+  if ((typeof boxed !== 'object' || boxed === null) && typeof boxed !== 'function') {
     throw new TypeError('Object conversion did not produce an object');
   }
-  return Object.fromEntries(Object.entries(boxed));
+  /** @type {Record<PropertyKey, unknown>} */
+  const result = {};
+  for (const key of Reflect.ownKeys(boxed)) {
+    const descriptor = Reflect.getOwnPropertyDescriptor(boxed, key);
+    if (descriptor?.enumerable) {
+      /** @type {unknown} */
+      const propertyValue = Reflect.get(boxed, key);
+      Object.defineProperty(result, key, {
+        value: propertyValue,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
+    }
+  }
+  return result;
 }
 
 /**
@@ -102,8 +134,8 @@ function renderIndex(packages) {
   ];
 
   for (const pkg of packages) {
-    const slug = selectedPackageName(pkg.manifest).replace(/^@/u, '').replace(/\//gu, '-');
-    lines.push(`- [${selectedPackageName(pkg.manifest)}](./${slug}/)`);
+    const slug = packageSlug(pkg.manifest);
+    lines.push(`- [${readJsonProperty(pkg.manifest, 'name')}](./${slug}/)`);
   }
 
   lines.push('');
@@ -152,10 +184,10 @@ function ensurePackageIndex(pkg, targetDir) {
     indexPath,
     [
       '---',
-      `title: ${JSON.stringify(selectedPackageName(pkg.manifest))}`,
+      `title: ${JSON.stringify(readJsonProperty(pkg.manifest, 'name'))}`,
       '---',
       '',
-      `# ${selectedPackageName(pkg.manifest)}`,
+      `# ${readJsonProperty(pkg.manifest, 'name')}`,
       '',
       'TypeDoc did not emit public API pages for this package in the current build.',
       '',
@@ -241,7 +273,7 @@ function writeTypeDocTsconfig(pkg) {
   const targetPath = resolve(targetDir, 'tsconfig.json');
   const extendsPath = relative(targetDir, tsconfigPath).split(sep).join('/');
   const compilerOptions = { ignoreDeprecations: '6.0' };
-  if (selectedPackageName(pkg.manifest) === '@stynx-nyx/notifications') {
+  if (readJsonProperty(pkg.manifest, 'name') === '@stynx-nyx/notifications') {
     /** @type {unknown} */
     const inherited = JSON.parse(readFileSync(tsconfigPath, 'utf8'));
     const paths = readJsonProperty(readJsonProperty(inherited, 'compilerOptions'), 'paths');
@@ -268,7 +300,7 @@ function writeTypeDocTsconfig(pkg) {
 
 /** @param {{dirPath: string, manifest: unknown}} pkg */
 function typeDocOptionsFor(pkg) {
-  if (selectedPackageName(pkg.manifest) === '@stynx-nyx/backend') {
+  if (readJsonProperty(pkg.manifest, 'name') === '@stynx-nyx/backend') {
     return [
       '--intentionallyNotExported',
       'src/identity-admin/pg-local-sync.adapter.ts:QueryResult',
@@ -277,11 +309,11 @@ function typeDocOptionsFor(pkg) {
     ];
   }
 
-  if (selectedPackageName(pkg.manifest) === '@stynx-nyx/data') {
+  if (readJsonProperty(pkg.manifest, 'name') === '@stynx-nyx/data') {
     return ['--intentionallyNotExported', 'src/schema/index.ts:schema'];
   }
 
-  if (selectedPackageName(pkg.manifest) === '@stynx-nyx/sdk') {
+  if (readJsonProperty(pkg.manifest, 'name') === '@stynx-nyx/sdk') {
     return [
       '--intentionallyNotExported',
       'src/generated/core/ApiRequestOptions.ts:ApiRequestOptions',
@@ -321,8 +353,8 @@ const typedocTempDirs = [];
 let failure = null;
 
 for (const pkg of packages) {
-  const slug = selectedPackageName(pkg.manifest).replace(/^@/u, '').replace(/\//gu, '-');
-  const targetDir = resolve(apiOutDir, slug);
+  const slug = packageSlug(pkg.manifest);
+  const targetDir = resolvePackageSlug(apiOutDir, slug);
   const typedocTsconfig = writeTypeDocTsconfig(pkg);
   typedocTempDirs.push(typedocTsconfig.dirPath);
   mkdirSync(targetDir, { recursive: true });
@@ -352,7 +384,7 @@ for (const pkg of packages) {
   );
 
   if (result.status !== 0) {
-    failure = new Error(`TypeDoc failed for ${selectedPackageName(pkg.manifest)}`);
+    failure = new Error(`TypeDoc failed for ${readJsonProperty(pkg.manifest, 'name')}`);
     break;
   }
 
@@ -370,8 +402,8 @@ if (failure !== null) {
 }
 
 for (const pkg of packages) {
-  const slug = selectedPackageName(pkg.manifest).replace(/^@/u, '').replace(/\//gu, '-');
-  ensurePackageIndex(pkg, resolve(apiOutDir, slug));
+  const slug = packageSlug(pkg.manifest);
+  ensurePackageIndex(pkg, resolvePackageSlug(apiOutDir, slug));
 }
 
 rewriteMissingLocalMarkdownLinks(apiOutDir);

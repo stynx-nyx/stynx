@@ -15,7 +15,7 @@ function readJsonProperty(value, key) {
   }
   /** @type {unknown} */
   const boxed = Object(value);
-  if (typeof boxed !== 'object' || boxed === null) {
+  if ((typeof boxed !== 'object' || boxed === null) && typeof boxed !== 'function') {
     throw new TypeError('Object conversion did not produce an object');
   }
   /** @type {unknown} */
@@ -23,13 +23,30 @@ function readJsonProperty(value, key) {
   return result;
 }
 
-/** @param {unknown} manifest @returns {string} */
-function selectedPackageName(manifest) {
+/** @param {unknown} manifest @returns {unknown} */
+function packageSlug(manifest) {
   const name = readJsonProperty(manifest, 'name');
-  if (typeof name !== 'string') {
-    throw new TypeError('Selected package name is not a string');
+  const firstReplace = readJsonProperty(name, 'replace');
+  if (typeof firstReplace !== 'function') {
+    throw new TypeError('pkg.manifest.name.replace is not a function');
   }
-  return name;
+  /** @type {unknown} */
+  const first = Reflect.apply(firstReplace, name, [/^@/u, '']);
+  const secondReplace = readJsonProperty(first, 'replace');
+  if (typeof secondReplace !== 'function') {
+    throw new TypeError('pkg.manifest.name.replace(...).replace is not a function');
+  }
+  /** @type {unknown} */
+  const slug = Reflect.apply(secondReplace, first, [/\//gu, '-']);
+  return slug;
+}
+
+/** @param {string} base @param {unknown} slug @param {...string} rest @returns {string} */
+function resolvePackageSlug(base, slug, ...rest) {
+  /** @type {unknown} */
+  const result = Reflect.apply(resolve, undefined, [base, slug, ...rest]);
+  if (typeof result !== 'string') throw new TypeError('Path resolution did not return a string');
+  return result;
 }
 
 /**
@@ -70,10 +87,10 @@ const packages = [
 
 const missing = [];
 for (const pkg of packages) {
-  const slug = selectedPackageName(pkg.manifest).replace(/^@/u, '').replace(/\//gu, '-');
-  const indexPath = resolve(apiOutDir, slug, 'index.md');
+  const slug = packageSlug(pkg.manifest);
+  const indexPath = resolvePackageSlug(apiOutDir, slug, 'index.md');
   if (!existsSync(indexPath)) {
-    missing.push(`${selectedPackageName(pkg.manifest)} -> ${indexPath}`);
+    missing.push(`${readJsonProperty(pkg.manifest, 'name')} -> ${indexPath}`);
   }
 }
 

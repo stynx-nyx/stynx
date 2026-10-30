@@ -27,7 +27,7 @@ function readJsonProperty(value, key) {
   }
   /** @type {unknown} */
   const boxed = Object(value);
-  if (typeof boxed !== 'object' || boxed === null) {
+  if ((typeof boxed !== 'object' || boxed === null) && typeof boxed !== 'function') {
     throw new TypeError('Object conversion did not produce an object');
   }
   /** @type {unknown} */
