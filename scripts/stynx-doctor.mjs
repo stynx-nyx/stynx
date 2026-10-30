@@ -5,12 +5,14 @@ import { join, relative } from 'node:path';
 
 const rootDir = process.cwd();
 const jsonOutput = process.argv.includes('--json') || !process.stdout.isTTY;
+/** @type {Array<{name: string, ok: boolean, message?: string}>} */
 const checks = [];
 const todoPermissionSentinel = 'TODO' + '_PERMISSION';
 const includeReferenceApps =
   process.env.STYNX_DOCTOR_INCLUDE_REFERENCE_APPS === 'true' ||
   process.argv.includes('--include-reference-apps');
 
+/** @param {string} name @param {() => void} fn */
 function runCheck(name, fn) {
   try {
     fn();
@@ -21,6 +23,7 @@ function runCheck(name, fn) {
   }
 }
 
+/** @param {string} dir @param {(fullPath: string, relativePath: string) => void} visitor */
 function walk(dir, visitor) {
   for (const entry of readdirSync(dir)) {
     const fullPath = join(dir, entry);
@@ -86,6 +89,7 @@ runCheck('migration-linter', () => {
 });
 
 runCheck('object-operations-through-storage', () => {
+  /** @type {string[]} */
   const offenders = [];
   for (const scope of ['apps', 'backend', 'frontend', 'packages', 'packages-web']) {
     const scopePath = join(rootDir, scope);
@@ -118,6 +122,7 @@ runCheck('object-operations-through-storage', () => {
 });
 
 runCheck('todo-permission-sentinels', () => {
+  /** @type {string[]} */
   const matches = [];
   for (const scope of [
     'apps',
@@ -158,6 +163,7 @@ runCheck('todo-permission-sentinels', () => {
 });
 
 runCheck('package-lock-cleanup', () => {
+  /** @type {string[]} */
   const packageLocks = [];
   walk(rootDir, (_fullPath, relativePath) => {
     if (relativePath.endsWith('package-lock.json')) {
