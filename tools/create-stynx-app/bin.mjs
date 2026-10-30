@@ -20,7 +20,9 @@ Options:
 `;
 }
 
+/** @param {string[]} argv */
 function parseArgs(argv) {
+  /** @type {Set<string>} */
   const flags = new Set();
   const positional = [];
 
@@ -42,6 +44,7 @@ function parseArgs(argv) {
   };
 }
 
+/** @param {string} appName */
 function packageNameFor(appName) {
   const baseName = path.basename(appName);
   return baseName
@@ -51,6 +54,7 @@ function packageNameFor(appName) {
     .replace(/^-+|-+$/gu, '') || 'stynx-app';
 }
 
+/** @param {string} filePath */
 async function exists(filePath) {
   try {
     await access(filePath, fsConstants.F_OK);
@@ -60,12 +64,14 @@ async function exists(filePath) {
   }
 }
 
+/** @param {string} content @param {{appName: string, packageName: string}} values */
 function replacePlaceholders(content, values) {
   return content
     .replaceAll('__APP_NAME__', values.appName)
     .replaceAll('__PACKAGE_NAME__', values.packageName);
 }
 
+/** @param {string} fromDir @param {string} toDir @param {{appName: string, packageName: string}} values */
 async function copyTemplate(fromDir, toDir, values) {
   await mkdir(toDir, { recursive: true });
   const entries = await readdir(fromDir, { withFileTypes: true });
@@ -88,6 +94,7 @@ async function copyTemplate(fromDir, toDir, values) {
   }
 }
 
+/** @param {string} targetDir */
 function runInstall(targetDir) {
   const result = spawnSync('pnpm', ['install'], {
     cwd: targetDir,
@@ -103,6 +110,7 @@ function runInstall(targetDir) {
   }
 }
 
+/** @param {string} targetDir @param {boolean} force */
 async function assertTarget(targetDir, force) {
   if (!(await exists(targetDir))) {
     return;
