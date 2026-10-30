@@ -17,12 +17,18 @@ import { isDeepStrictEqual, types } from 'node:util';
 import { readHttpQualificationArtifact } from './http-qualification-artifacts.mjs';
 import { readHttpOriginalExecutable } from './http-original-artifacts.mjs';
 
+/** @typedef {{directory: string, ancestry: ReturnType<typeof ancestry> | null, rows: Array<ReturnType<typeof write>>, identities: Map<string, import('node:fs').BigIntStats>, failed: boolean, observation?: unknown}} AcquisitionState */
+/** @typedef {AcquisitionState & {ancestry: ReturnType<typeof ancestry>}} AncestryBoundState */
+/** @type {WeakMap<object, AncestryBoundState>} */
 const acquisitions = new WeakMap();
 const nativeFetch = globalThis.fetch;
+/** @type {unknown} */
 const typedArrayPrototype = Object.getPrototypeOf(Uint8Array.prototype);
 const nativeLength = Object.getOwnPropertyDescriptor(typedArrayPrototype, 'length').get;
 const nativeBuffer = Object.getOwnPropertyDescriptor(typedArrayPrototype, 'buffer').get;
+/** @type {Array<keyof import('node:fs').BigIntStats>} */
 const identityKeys = ['dev', 'ino', 'mode', 'uid', 'gid', 'nlink', 'size', 'mtimeNs', 'ctimeNs'];
+/** @param {Buffer} bytes */
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const release = 'https://github.com/grafana/k6/releases/download/v0.49.0/';
 const pins = Object.freeze({
@@ -35,6 +41,7 @@ const pins = Object.freeze({
   executableBytes: 54863762,
   executableSha256: '2122f2c450279d9f12424954e283d914c17e2cd31ec13ab8b6c83df847c2a80f',
 });
+/** @returns {never} */
 function refuse() {
   const error = new Error('Fixed official original k6 acquisition refused');
   error.code = 'HTTP_ORIGINAL_OFFICIAL_K6_INVALID';
@@ -44,6 +51,7 @@ function refuse() {
 /** Exact pinned ZIP decoding only. This does not authenticate its supplied bytes
  * or execute/admit a native image; live transport custody is acquired separately.
  */
+/** @param {unknown} input */
 export function inspectHttpOriginalOfficialK6Archive(input) {
   if (
     arguments.length !== 1 ||
@@ -84,10 +92,18 @@ export function inspectHttpOriginalOfficialK6Archive(input) {
   return executable;
 }
 
+/**
+ * @param {AncestryBoundState} state
+ * @param {string} name
+ * @param {number} expectedBytes
+ * @param {string} expectedSha256
+ */
 async function download(state, name, expectedBytes, expectedSha256) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 120_000);
-  let response, reader, bytes, result, failure;
+  let response, bytes, result, failure;
+  /** @type {ReadableStreamDefaultReader<Uint8Array> | undefined} */
+  let reader;
   let offset = 0;
   const hops = [];
   try {
@@ -192,6 +208,7 @@ async function download(state, name, expectedBytes, expectedSha256) {
   return result;
 }
 
+/** @param {string} directory */
 function ancestry(directory) {
   const result = [];
   for (let path = directory; ; path = dirname(path)) {
@@ -209,9 +226,17 @@ function ancestry(directory) {
     if (dirname(path) === path) return result;
   }
 }
+/**
+ * @param {AncestryBoundState} state
+ * @param {string} name
+ * @param {Buffer} bytes
+ * @param {number} mode
+ */
 function write(state, name, bytes, mode) {
   const path = join(state.directory, name);
+  /** @type {number[]} */
   const descriptors = [];
+  /** @type {number | undefined} */
   let file;
   let failure;
   const check = () => {
@@ -223,7 +248,9 @@ function write(state, name, bytes, mode) {
       const fd = openSync(row.path, constants.O_RDONLY | constants.O_NOFOLLOW);
       descriptors.push(fd);
       const stat = fstatSync(fd, { bigint: true });
-      if (['dev', 'ino', 'mode', 'uid', 'gid'].some((key) => row[key] !== stat[key])) refuse();
+      /** @type {Array<'dev' | 'ino' | 'mode' | 'uid' | 'gid'>} */
+      const directoryKeys = ['dev', 'ino', 'mode', 'uid', 'gid'];
+      if (directoryKeys.some((key) => row[key] !== stat[key])) refuse();
     }
     file = openSync(
       path,
@@ -247,6 +274,7 @@ function write(state, name, bytes, mode) {
   } catch (error) {
     failure = error;
   } finally {
+    /** @param {() => void} operation */
     const attempt = (operation) => {
       try {
         operation();
@@ -255,11 +283,11 @@ function write(state, name, bytes, mode) {
       }
     };
     if (file !== undefined) {
-      attempt(() => fsyncSync(file));
-      attempt(() => closeSync(file));
+      const openFile = file;
+      attempt(() => fsyncSync(openFile));
+      attempt(() => closeSync(openFile));
     }
-    for (let index = 0; index < Math.min(2, descriptors.length); index++)
-      attempt(() => fsyncSync(descriptors[index]));
+    for (const fd of descriptors.slice(0, 2)) attempt(() => fsyncSync(fd));
     for (const fd of descriptors.reverse()) attempt(() => closeSync(fd));
   }
   if (failure) throw failure;
@@ -280,18 +308,21 @@ function write(state, name, bytes, mode) {
 export async function acquireHttpOriginalOfficialK6() {
   if (arguments.length !== 0 || process.platform !== 'darwin' || process.arch !== 'arm64') refuse();
   const directory = mkdtempSync(join(realpathSync(tmpdir()), 'stynx original official k6 '));
-  const state = { directory, ancestry: null, rows: [], identities: new Map(), failed: false };
+  /** @type {Array<ReturnType<typeof write>>} */
+  const rows = [];
+  /** @type {{directory: string, ancestry: ReturnType<typeof ancestry> | null, rows: Array<ReturnType<typeof write>>, identities: Map<string, import('node:fs').BigIntStats>, failed: boolean, observation?: unknown}} */
+  const state = { directory, ancestry: null, rows, identities: new Map(), failed: false };
   try {
-    state.ancestry = ancestry(directory);
+    const readyState = Object.assign(state, { ancestry: ancestry(directory) });
     const root = lstatSync(directory, { bigint: true });
     if ((root.mode & 0o7777n) !== 0o700n || root.uid !== BigInt(process.getuid())) refuse();
     const checksum = await download(
-      state,
+      readyState,
       pins.checksumName,
       pins.checksumBytes,
       pins.checksumSha256,
     );
-    state.rows.push(write(state, pins.checksumName, checksum.bytes, 0o600));
+    readyState.rows.push(write(readyState, pins.checksumName, checksum.bytes, 0o600));
     if (
       checksum.bytes
         .toString('utf8')
@@ -299,27 +330,30 @@ export async function acquireHttpOriginalOfficialK6() {
         .filter((line) => line === `${pins.archiveSha256}  ${pins.archiveName}`).length !== 1
     )
       refuse();
-    const archive = await download(state, pins.archiveName, pins.archiveBytes, pins.archiveSha256);
-    state.rows.push(write(state, pins.archiveName, archive.bytes, 0o600));
-    state.rows.push(write(state, 'k6', inspectHttpOriginalOfficialK6Archive(archive.bytes), 0o700));
-    state.observation = {
+    const archive = await download(readyState, pins.archiveName, pins.archiveBytes, pins.archiveSha256);
+    readyState.rows.push(write(readyState, pins.archiveName, archive.bytes, 0o600));
+    readyState.rows.push(write(readyState, 'k6', inspectHttpOriginalOfficialK6Archive(archive.bytes), 0o700));
+    readyState.observation = {
       pins,
       release,
       checksumHops: checksum.hops,
       archiveHops: archive.hops,
       directory,
-      files: structuredClone(state.rows),
+      files: structuredClone(readyState.rows),
       nativeExecuted: false,
       nativeImageClosure: false,
       runtimeCustodyComplete: false,
       performanceQualified: false,
       readinessPromoting: false,
     };
-    state.rows.push(
-      write(state, 'acquisition.json', Buffer.from(JSON.stringify(state.observation)), 0o600),
+    readyState.rows.push(
+      write(readyState, 'acquisition.json', Buffer.from(JSON.stringify(readyState.observation)), 0o600),
     );
-    const handle = Object.freeze(Object.create(null));
-    acquisitions.set(handle, state);
+    // Native Object.create(null) produces a new object without a prototype.
+    /** @type {{create(prototype: null): object}} */
+    const nullPrototypeFactory = Object;
+    const handle = Object.freeze(nullPrototypeFactory.create(null));
+    acquisitions.set(handle, readyState);
     return handle;
   } catch (error) {
     state.failed = true;
@@ -328,34 +362,61 @@ export async function acquireHttpOriginalOfficialK6() {
   }
 }
 
+/**
+ * @overload
+ * @param {ReturnType<typeof write>} row
+ * @param {'path' | 'sha256'} key
+ * @returns {string}
+ */
+/**
+ * @overload
+ * @param {ReturnType<typeof write>} row
+ * @param {'byteLength'} key
+ * @returns {number}
+ */
+/** @param {ReturnType<typeof write>} row @param {'path' | 'sha256' | 'byteLength'} key */
+function rowField(row, key) {
+  if (row === undefined) throw new TypeError(`Cannot read properties of undefined (reading '${key}')`);
+  return row[key];
+}
+
+/** @param {unknown} value @returns {value is object} */
+function isHandleCandidate(value) {
+  return value !== null && (typeof value === 'object' || typeof value === 'function');
+}
+
+/** @param {unknown} handle */
 export function observeHttpOriginalOfficialK6(handle) {
   if (arguments.length !== 1) refuse();
-  const state = acquisitions.get(handle);
+  const state = isHandleCandidate(handle) ? acquisitions.get(handle) : undefined;
   if (!state || state.failed) refuse();
   try {
     if (!isDeepStrictEqual(ancestry(state.directory), state.ancestry)) refuse();
     for (const row of state.rows) {
-      const path = join(state.directory, row.path);
-      const identity = state.identities.get(row.path);
+      const path = join(state.directory, rowField(row, 'path'));
+      const identity = state.identities.get(rowField(row, 'path'));
       if (
         !identity ||
         identityKeys.some((key) => lstatSync(path, { bigint: true })[key] !== identity[key])
       )
         refuse();
       const actual =
-        row.path === 'k6'
+        rowField(row, 'path') === 'k6'
           ? readHttpOriginalExecutable(state.directory, path)
           : readHttpQualificationArtifact(state.directory, path);
       if (
-        actual.row.sha256 !== row.sha256 ||
-        actual.row.byteLength !== row.byteLength ||
+        rowField(actual.row, 'sha256') !== rowField(row, 'sha256') ||
+        rowField(actual.row, 'byteLength') !== rowField(row, 'byteLength') ||
         identityKeys.some((key) => lstatSync(path, { bigint: true })[key] !== identity[key])
       )
         refuse();
     }
     if (!isDeepStrictEqual(ancestry(state.directory), state.ancestry)) refuse();
+    /** @type {{assign(target: object, source: unknown): Record<string, unknown>}} */
+    const objectAssign = Object;
+    const observation = objectAssign.assign({}, state.observation);
     return structuredClone({
-      ...state.observation,
+      ...observation,
       executable: join(state.directory, 'k6'),
       acquisitionReceipt: state.rows.at(-1),
     });
