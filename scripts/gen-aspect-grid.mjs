@@ -16,11 +16,16 @@
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 
+/** @type {{resolve(path: string | undefined): string}} */
+const pathResolver = { resolve };
+
+/** @param {string[]} argv */
 function parseArgs(argv) {
+  /** @type {{repoRoot: string, outPath: string | null}} */
   const out = { repoRoot: process.cwd(), outPath: null };
   for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === '--repo-root') out.repoRoot = resolve(argv[++i]);
-    else if (argv[i] === '--out') out.outPath = resolve(argv[++i]);
+    if (argv[i] === '--repo-root') out.repoRoot = pathResolver.resolve(argv[++i]);
+    else if (argv[i] === '--out') out.outPath = pathResolver.resolve(argv[++i]);
   }
   return out;
 }
@@ -58,16 +63,19 @@ const NA_CELLS = new Map([
  *   # Sensor: `spec-alignment` → F1 × T4
  * Returns { sensor, substrate, transversal } or null.
  */
+/** @param {string} content */
 function parseSensorNote(content) {
   const m = content.match(/^#\s+Sensor:\s+`([^`]+)`\s*→\s*(F[1-5])\s*[×x]\s*(T[1-9])/m);
   if (!m) return null;
   return { sensor: m[1], substrate: m[2], transversal: m[3] };
 }
 
+/** @param {string} repoRoot @returns {Map<string, Array<{sensor: string | undefined, note: string}>>} */
 function loadSensorMappings(repoRoot) {
   const dir = join(repoRoot, 'docs/framework/arch/sensors');
   let entries;
   try { entries = readdirSync(dir); } catch { return new Map(); }
+  /** @type {Map<string, Array<{sensor: string | undefined, note: string}>>} */
   const cellMap = new Map();
   for (const entry of entries) {
     if (!entry.endsWith('.md') || entry === 'README.md') continue;
@@ -85,12 +93,14 @@ function loadSensorMappings(repoRoot) {
   return cellMap;
 }
 
+/** @param {string} cellKey @param {Array<{sensor: string | undefined, note: string}>} sensors */
 function renderCell(cellKey, sensors) {
   if (NA_CELLS.has(cellKey)) return `N/A — ${NA_CELLS.get(cellKey)}`;
   if (sensors.length === 0) return 'UNKNOWN';
   return sensors.map(s => `[\`${s.sensor}\`](arch/sensors/${s.note.replace(/\.md$/, '')})`).join('<br/>');
 }
 
+/** @param {{repoRoot: string}} options */
 export function buildAspectGrid({ repoRoot }) {
   const cellMap = loadSensorMappings(repoRoot);
   const lines = [];
