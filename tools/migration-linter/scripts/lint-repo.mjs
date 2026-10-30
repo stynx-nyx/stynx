@@ -35,6 +35,7 @@ function lintTargets() {
 }
 const cliPath = join(packageRoot, 'dist', 'src', 'cli.js');
 
+/** @param {string[]} args */
 function git(args, options = {}) {
   return spawnSync('git', args, {
     cwd: repoRoot,
@@ -44,6 +45,7 @@ function git(args, options = {}) {
   });
 }
 
+/** @param {string[]} args */
 function revision(args) {
   const result = git(args);
   return result.status === 0 ? result.stdout.toString('utf8').trim() || null : null;
@@ -74,6 +76,7 @@ function resolveBase() {
   return { sha: tip, how: 'origin/main tip (shallow checkout)' };
 }
 
+/** @param {string} sha @param {string} baseDir */
 function materialize(sha, baseDir) {
   const listed = git(['ls-tree', '-r', '-z', '--name-only', sha, '--', ...migrationRoots]);
   if (listed.status !== 0)
