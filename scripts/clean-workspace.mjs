@@ -27,14 +27,17 @@ if (unknownArgs.length > 0) {
   process.exit(2);
 }
 
+/** @param {string} path */
 function slashPath(path) {
   return path.split(sep).join('/');
 }
 
+/** @param {string} path */
 function cleanRelativePath(path) {
   return slashPath(path).replace(/^\.\//, '').replace(/\/+$/, '');
 }
 
+/** @param {string} path */
 function assertInsideWorkspace(path) {
   const relativePath = relative(rootDir, path);
   if (relativePath === '' || (!relativePath.startsWith('..') && !isAbsolute(relativePath))) {
@@ -61,8 +64,10 @@ function readTrackedFiles() {
 
 const trackedFiles = readTrackedFiles();
 const trackedFileSet = new Set(trackedFiles);
+/** @type {Set<string>} */
 const candidates = new Set();
 const planned = [];
+/** @type {Set<string>} */
 const plannedSet = new Set();
 const skipped = [];
 
@@ -134,10 +139,12 @@ const generatedDirectoryNames = new Set([
   'tmp',
 ]);
 
+/** @param {string} relativePath */
 function isTracked(relativePath) {
   return trackedFileSet.has(cleanRelativePath(relativePath));
 }
 
+/** @param {string} relativePath */
 function containsTrackedFile(relativePath) {
   const cleanPath = cleanRelativePath(relativePath);
   const prefix = cleanPath === '' ? '' : `${cleanPath}/`;
@@ -146,6 +153,7 @@ function containsTrackedFile(relativePath) {
   );
 }
 
+/** @param {string} entry @param {string} relativePath */
 function shouldRemoveDirectory(entry, relativePath) {
   const cleanPath = cleanRelativePath(relativePath);
   return (
@@ -155,6 +163,7 @@ function shouldRemoveDirectory(entry, relativePath) {
   );
 }
 
+/** @param {string} entry @param {string} relativePath */
 function shouldRemoveFile(entry, relativePath) {
   const cleanPath = cleanRelativePath(relativePath);
   return (
@@ -175,6 +184,7 @@ function shouldRemoveFile(entry, relativePath) {
   );
 }
 
+/** @param {string} relativePath */
 function addCandidate(relativePath) {
   const cleanPath = cleanRelativePath(relativePath);
   if (cleanPath === '' || cleanPath === '.git') {
@@ -183,6 +193,7 @@ function addCandidate(relativePath) {
   candidates.add(cleanPath);
 }
 
+/** @param {string} directory */
 function walkForCandidates(directory) {
   let entries;
   try {
@@ -216,6 +227,7 @@ function walkForCandidates(directory) {
   }
 }
 
+/** @param {string} relativePath */
 function recordRemoval(relativePath) {
   if (plannedSet.has(relativePath)) {
     return false;
@@ -227,6 +239,7 @@ function recordRemoval(relativePath) {
   return true;
 }
 
+/** @param {string} absolutePath @param {string} relativePath */
 function removePath(absolutePath, relativePath) {
   const shouldRemove = recordRemoval(relativePath);
   if (!dryRun) {
@@ -237,6 +250,7 @@ function removePath(absolutePath, relativePath) {
   }
 }
 
+/** @param {string} absoluteDirectory @param {string} relativeDirectory */
 function cleanMixedDirectory(absoluteDirectory, relativeDirectory) {
   let entries;
   try {
@@ -263,6 +277,7 @@ function cleanMixedDirectory(absoluteDirectory, relativeDirectory) {
   }
 }
 
+/** @param {string} relativePath */
 function cleanCandidate(relativePath) {
   const cleanPath = cleanRelativePath(relativePath);
   const absolutePath = resolve(rootDir, cleanPath);
