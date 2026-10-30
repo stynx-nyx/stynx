@@ -2,6 +2,7 @@ import { isDeepStrictEqual, types } from 'node:util';
 
 // Structural components only. Actual module/source/registry/application custody
 // stays with the fixed worker and parent; constructed inputs grant no authority.
+/** @returns {never} */
 function refuse() {
   const error = new Error('Original lifecycle component refused');
   error.code = 'HTTP_ORIGINAL_LIFECYCLE_CONTROL_INVALID';
@@ -31,6 +32,7 @@ export function assertOriginalProfileInheritance(input) {
     keys.some((key) => !Object.hasOwn(descriptors[key], 'value') || !descriptors[key].enumerable)
   )
     refuse();
+  /** @type {Record<string, unknown>} */
   const values = Object.fromEntries(keys.map((key) => [key, descriptors[key].value]));
   const { mountedConstructor, declaringConstructor, instance, mountedMetatype, targetCallback } =
     values;
@@ -43,7 +45,9 @@ export function assertOriginalProfileInheritance(input) {
     types.isProxy(instance)
   )
     refuse();
+  /** @type {unknown} */
   const mounted = Object.getOwnPropertyDescriptor(mountedConstructor, 'prototype')?.value;
+  /** @type {unknown} */
   const declaring = Object.getOwnPropertyDescriptor(declaringConstructor, 'prototype')?.value;
   if (
     !mounted ||
@@ -56,6 +60,7 @@ export function assertOriginalProfileInheritance(input) {
     Object.getPrototypeOf(mounted) !== declaring ||
     Object.getPrototypeOf(instance) !== mounted ||
     mountedMetatype !== mountedConstructor ||
+    (typeof mounted !== 'object' && typeof mounted !== 'function') ||
     Object.hasOwn(mounted, 'profile') ||
     Object.hasOwn(instance, 'profile')
   )
@@ -64,9 +69,11 @@ export function assertOriginalProfileInheritance(input) {
   if (!handler || !Object.hasOwn(handler, 'value') || handler.value !== targetCallback) refuse();
 }
 
+/** @type {WeakMap<object, {deadline: bigint, promise: Promise<unknown> | null}>} */
 const budgets = new WeakMap();
 const now = process.hrtime.bigint.bind(process.hrtime);
 const shutdownNanoseconds = 30_000_000_000n;
+/** @param {object} handle */
 function budget(handle) {
   const state = budgets.get(handle);
   if (!state) refuse();
@@ -78,12 +85,17 @@ function budget(handle) {
  */
 export function createOriginalShutdownBudget() {
   if (arguments.length !== 0) refuse();
-  const handle = Object.freeze(Object.create(null));
+  // The native Object.create(null) result is an object with no prototype.
+  /** @type {{create(prototype: null): object}} */
+  const nullPrototypeFactory = Object;
+  const handle = Object.freeze(nullPrototypeFactory.create(null));
   budgets.set(handle, { deadline: now() + shutdownNanoseconds, promise: null });
   return handle;
 }
 
-/** Remaining total budget, clamped at zero; observation never resets it. */
+/** Remaining total budget, clamped at zero; observation never resets it.
+ * @param {object} handle
+ */
 export function originalShutdownRemainingMilliseconds(handle) {
   if (arguments.length !== 1) refuse();
   return Math.max(0, Number(budget(handle).deadline - now()) / 1_000_000);
@@ -91,6 +103,8 @@ export function originalShutdownRemainingMilliseconds(handle) {
 
 /** Retain one actual Promise identity supplied by production's private guard.
  * Promise identity is not proof of an application's close or native cleanup.
+ * @param {object} handle
+ * @param {unknown} promise
  */
 export function retainOriginalShutdownClosePromise(handle, promise) {
   if (arguments.length !== 2 || !types.isPromise(promise) || types.isProxy(promise)) refuse();
@@ -101,7 +115,9 @@ export function retainOriginalShutdownClosePromise(handle, promise) {
   state.promise = promise;
 }
 
-/** The same pending/resolved/rejected Promise is retained without substitution. */
+/** The same pending/resolved/rejected Promise is retained without substitution.
+ * @param {object} handle
+ */
 export function originalShutdownClosePromise(handle) {
   if (arguments.length !== 1) refuse();
   return budget(handle).promise;
