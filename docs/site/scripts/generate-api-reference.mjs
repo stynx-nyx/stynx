@@ -11,6 +11,8 @@ import { dirname, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
+const NativeRegExp = RegExp;
+
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const siteRoot = resolve(scriptDir, '..');
 const repoRoot = resolve(siteRoot, '..', '..');
@@ -51,7 +53,7 @@ function packageSlug(manifest) {
     throw new TypeError('pkg.manifest.name.replace(...).replace is not a function');
   }
   /** @type {unknown} */
-  const slug = Reflect.apply(secondReplace, first, [/\//gu, '-']);
+  const slug = Reflect.apply(secondReplace, first, [new NativeRegExp('[\\/]', 'gu'), '-']);
   return slug;
 }
 
