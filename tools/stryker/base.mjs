@@ -47,6 +47,7 @@ import { join } from 'node:path';
 
 import { getMutationThresholds } from '../repo-config/test-thresholds.mjs';
 
+/** @param {string} tempDirName */
 function cleanStrykerBackups(tempDirName) {
   const tempDir = join(process.cwd(), tempDirName);
   if (!existsSync(tempDir)) {
@@ -60,6 +61,7 @@ function cleanStrykerBackups(tempDirName) {
   }
 }
 
+/** @param {{packageName: string, threshold?: unknown, checkers?: string[], concurrency?: number, vitestConfig?: string, mutate?: string[], timeoutMS?: number, ignoreStatic?: boolean, incremental?: boolean}} options */
 export function createStrykerConfig({
   packageName,
   threshold,
