@@ -23,10 +23,17 @@ export const originalStreamLimits = Object.freeze({
   records: 10_000_000,
   deadlineMs: 120_000,
 });
+/** @type {Array<keyof import('node:fs').BigIntStats>} */
 const identityFields = ['dev', 'ino', 'mode', 'uid', 'gid', 'nlink', 'size', 'mtimeNs', 'ctimeNs'];
+/** @param {import('node:fs').BigIntStats} a @param {import('node:fs').BigIntStats} b */
 const same = (a, b) => identityFields.every((field) => a[field] === b[field]);
-const sameDirectory = (a, b) =>
-  ['dev', 'ino', 'mode', 'uid', 'gid'].every((field) => a[field] === b[field]);
+/** @param {import('node:fs').BigIntStats} a @param {import('node:fs').BigIntStats} b */
+const sameDirectory = (a, b) => {
+  /** @type {Array<keyof import('node:fs').BigIntStats>} */
+  const fields = ['dev', 'ino', 'mode', 'uid', 'gid'];
+  return fields.every((field) => a[field] === b[field]);
+};
+/** @param {string} message @returns {never} */
 function refuse(message) {
   throw new Error(`HTTP_ORIGINAL_STREAM_REFUSED: ${message}`);
 }
@@ -35,6 +42,7 @@ function refuse(message) {
 // origin verifier; the parent must retain and corroborate the actual file.
 // The return value is deliberately unavailable until gzip EOF/trailer,
 // descriptor EOF and the entire saved path chain have all been checked.
+/** @param {unknown} root @param {unknown} path */
 export async function* readHttpOriginalMetricStream(root, path) {
   if (arguments.length !== 2 || typeof root !== 'string' || typeof path !== 'string')
     refuse('closed root/path arguments');
@@ -44,6 +52,7 @@ export async function* readHttpOriginalMetricStream(root, path) {
   if (!name || name === '..' || name.startsWith(`..${sep}`) || isAbsolute(name))
     refuse('containment');
   if (realpathSync(root) !== root || realpathSync(path) !== path) refuse('linked path');
+  /** @type {{directory: string, stat: import('node:fs').BigIntStats}[]} */
   const chain = [];
   const parts = name.split(sep);
   let directory = root;
@@ -66,6 +75,7 @@ export async function* readHttpOriginalMetricStream(root, path) {
     refuse('no safe open flags');
   let descriptor;
   let source;
+  /** @type {import('node:zlib').Gunzip | undefined} */
   let gunzip;
   let pumping;
   let timeout;
@@ -104,18 +114,23 @@ export async function* readHttpOriginalMetricStream(root, path) {
       })(),
     );
     gunzip = createGunzip({ chunkSize: 64 * 1024 });
+    const decoder = gunzip;
+    // This private decoder has no encoding or object mode; Node emits Buffers.
+    /** @type {AsyncIterable<Buffer>} */
+    const decoded = decoder;
     pumping = pipeline(source, gunzip);
     // A consumer may stop early or throw; never leave a rejected pump unhandled.
     pumping.catch(() => {});
     timeout = setTimeout(
-      () => gunzip.destroy(new Error('HTTP_ORIGINAL_STREAM_REFUSED: deadline')),
+      () => decoder.destroy(new Error('HTTP_ORIGINAL_STREAM_REFUSED: deadline')),
       originalStreamLimits.deadlineMs,
     );
     let decodedBytes = 0;
     let recordCount = 0;
+    /** @type {Buffer[]} */
     let fragments = [];
     let fragmentBytes = 0;
-    for await (const chunk of gunzip) {
+    for await (const chunk of decoded) {
       decodedBytes += chunk.length;
       if (decodedBytes > originalStreamLimits.decodedBytes || performance.now() >= deadline)
         refuse('decoded size/deadline');

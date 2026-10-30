@@ -21,19 +21,34 @@ const limits = Object.freeze({
   journal: 64 * 1024 * 1024,
   executable: 64 * 1024 * 1024,
 });
+/** @type {Array<keyof import('node:fs').BigIntStats>} */
 const fileKeys = ['dev', 'ino', 'mode', 'uid', 'gid', 'nlink', 'size', 'mtimeNs', 'ctimeNs'];
+/** @type {Array<keyof import('node:fs').BigIntStats>} */
 const directoryKeys = ['dev', 'ino', 'mode', 'uid', 'gid'];
 const chunkBytes = 8 * 1024 * 1024;
+/** @param {import('node:fs').BigIntStats} left @param {import('node:fs').BigIntStats} right @param {Array<keyof import('node:fs').BigIntStats>} keys */
 const same = (left, right, keys) => keys.every((key) => left[key] === right[key]);
+/** @param {string} role @returns {role is keyof typeof limits} */
+function hasRole(role) {
+  return Object.hasOwn(limits, role);
+}
+
+/** @returns {never} */
 function refuse() {
   const error = new Error('Original raw artifact is oversized, linked, changed or incomplete');
   error.code = 'HTTP_ORIGINAL_ARTIFACT_INVALID';
   throw error;
 }
+/**
+ * @param {unknown} root
+ * @param {unknown} path
+ * @param {unknown} role
+ * @param {(bytes: Buffer, index: number) => unknown} consume
+ */
 function acquire(root, path, role, consume) {
   if (
     typeof role !== 'string' ||
-    !Object.hasOwn(limits, role) ||
+    !hasRole(role) ||
     typeof root !== 'string' ||
     typeof path !== 'string' ||
     !isAbsolute(root) ||
@@ -54,6 +69,7 @@ function acquire(root, path, role, consume) {
     (rootIdentity.mode & 0o7777n) !== 0o700n
   )
     refuse();
+  /** @type {{path: string, identity: import('node:fs').BigIntStats, fd: number}[]} */
   const ancestors = [];
   let descriptor;
   let result;
