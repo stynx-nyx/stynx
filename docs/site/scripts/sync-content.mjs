@@ -1,5 +1,4 @@
 import {
-  cpSync,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -16,11 +15,34 @@ const siteRoot = resolve(scriptDir, '..');
 const repoRoot = resolve(siteRoot, '..', '..');
 const outDir = resolve(siteRoot, '.generated/site-docs');
 
+/**
+ * Read a JSON-derived value with ordinary property lookup semantics.
+ * @param {unknown} value
+ * @param {string} key
+ * @returns {unknown}
+ */
+function readJsonProperty(value, key) {
+  if (value === null || value === undefined) {
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  }
+  /** @type {unknown} */
+  const boxed = Object(value);
+  if (typeof boxed !== 'object' || boxed === null) {
+    throw new TypeError('Object conversion did not produce an object');
+  }
+  /** @type {unknown} */
+  const result = Reflect.get(boxed, key, value);
+  return result;
+}
+
 function resetOutDir() {
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });
 }
 
+/**
+ * @param {string} name
+ */
 function titleFromName(name) {
   return name
     .replace(/^STYNX[- ]?/u, '')
@@ -29,6 +51,9 @@ function titleFromName(name) {
     .replace(/\b\w/gu, (char) => char.toUpperCase());
 }
 
+/**
+ * @param {string} sourceText
+ */
 function sanitizeMdxContent(sourceText) {
   return sourceText
     .split(/(```[\s\S]*?```)/gu)
@@ -46,6 +71,10 @@ function sanitizeMdxContent(sourceText) {
     .join('');
 }
 
+/**
+ * @param {string} sourceText
+ * @param {unknown} title
+ */
 function ensureFrontMatter(sourceText, title) {
   if (sourceText.startsWith('---\n')) {
     return sourceText;
@@ -53,12 +82,23 @@ function ensureFrontMatter(sourceText, title) {
   return `---\ntitle: ${JSON.stringify(title)}\n---\n\n${sourceText}`;
 }
 
+/**
+ * @param {string} relativeTarget
+ * @param {string} content
+ * @param {unknown} title
+ */
 function writeDoc(relativeTarget, content, title) {
   const target = resolve(outDir, relativeTarget);
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, ensureFrontMatter(content, title));
 }
 
+/**
+ * @param {string} sourcePath
+ * @param {string} relativeTarget
+ * @param {(content: string, relativePath: string) => string} transform
+ * @param {string} title
+ */
 function writeReadmeDoc(sourcePath, relativeTarget, transform, title) {
   if (!existsSync(sourcePath)) {
     return;
@@ -66,21 +106,20 @@ function writeReadmeDoc(sourcePath, relativeTarget, transform, title) {
   writeDoc(relativeTarget, transform(readFileSync(sourcePath, 'utf8'), 'README.md'), title);
 }
 
+/**
+ * @param {string} sourcePath
+ * @param {string} relativeTarget
+ * @param {string} title
+ */
 function writeSpecificDoc(sourcePath, relativeTarget, title) {
   writeReadmeDoc(sourcePath, relativeTarget, (content) => publicMarkdownContent(content), title);
 }
 
-function copyMarkdownDir(sourceDir, targetDir) {
-  if (!existsSync(sourceDir)) {
-    return;
-  }
-
-  cpSync(sourceDir, resolve(outDir, targetDir), {
-    recursive: true,
-    filter: (src) => ['.md', '.mdx', ''].includes(extname(src)) || !extname(src),
-  });
-}
-
+/**
+ * @param {string} sourceDir
+ * @param {string} targetDir
+ * @param {(content: string, relativePath: string) => string} transform
+ */
 function copyMarkdownDirTransformed(sourceDir, targetDir, transform) {
   if (!existsSync(sourceDir)) {
     return;
@@ -104,6 +143,11 @@ function copyMarkdownDirTransformed(sourceDir, targetDir, transform) {
   }
 }
 
+/**
+ * @param {string} sourceDir
+ * @param {string} targetDir
+ * @param {(content: string, relativePath: string) => string} transform
+ */
 function copyMarkdownDirTransformedWithIndex(sourceDir, targetDir, transform) {
   if (!existsSync(sourceDir)) {
     return;
@@ -130,6 +174,11 @@ function copyMarkdownDirTransformedWithIndex(sourceDir, targetDir, transform) {
   }
 }
 
+/**
+ * @param {string} sourceDir
+ * @param {string} targetDir
+ * @param {string} title
+ */
 function copyJsonDirAsDocs(sourceDir, targetDir, title) {
   if (!existsSync(sourceDir)) {
     return;
@@ -154,6 +203,10 @@ function copyJsonDirAsDocs(sourceDir, targetDir, title) {
   }
 }
 
+/**
+ * @param {string} sourceDir
+ * @param {string} targetDir
+ */
 function copySchemaJsonDirAsDocs(sourceDir, targetDir) {
   if (!existsSync(sourceDir)) {
     return;
@@ -163,9 +216,10 @@ function copySchemaJsonDirAsDocs(sourceDir, targetDir) {
     .filter((entry) => entry.isFile() && entry.name.endsWith('.schema.json'))
     .sort((left, right) => left.name.localeCompare(right.name));
   const rows = entries.map((entry) => {
+    /** @type {unknown} */
     const schema = JSON.parse(readFileSync(resolve(sourceDir, entry.name), 'utf8'));
     const slug = entry.name.replace(/\.schema\.json$/u, '');
-    return `| [\`${slug}\`](./${slug}) | ${schema.title ?? slug} | ${schema.description ?? ''} |`;
+    return `| [\`${slug}\`](./${slug}) | ${readJsonProperty(schema, 'title') ?? slug} | ${readJsonProperty(schema, 'description') ?? ''} |`;
   });
   writeDoc(
     join(targetDir, 'index.md'),
@@ -173,16 +227,20 @@ function copySchemaJsonDirAsDocs(sourceDir, targetDir) {
     'Schemas',
   );
   for (const entry of entries) {
+    /** @type {unknown} */
     const schema = JSON.parse(readFileSync(resolve(sourceDir, entry.name), 'utf8'));
     const slug = entry.name.replace(/\.schema\.json$/u, '');
     writeDoc(
       join(targetDir, `${slug}.md`),
-      `# ${schema.title ?? titleFromName(slug)}\n\n${schema.description ?? ''}\n\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n`,
-      schema.title ?? titleFromName(slug),
+      `# ${readJsonProperty(schema, 'title') ?? titleFromName(slug)}\n\n${readJsonProperty(schema, 'description') ?? ''}\n\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\n\`\`\`\n`,
+      readJsonProperty(schema, 'title') ?? titleFromName(slug),
     );
   }
 }
 
+/**
+ * @param {string} filePath
+ */
 function isTrackedFile(filePath) {
   const relativePath = relative(repoRoot, filePath).split('\\').join('/');
   const result = spawnSync('git', ['ls-files', '--error-unmatch', '--', relativePath], {
@@ -192,6 +250,9 @@ function isTrackedFile(filePath) {
   return result.status === 0;
 }
 
+/**
+ * @param {string} content
+ */
 function sanitizePublicReferences(content) {
   return content
     .replace(/`docs\/work\/[^`]*`/gu, '`internal work note (not published)`')
@@ -210,10 +271,16 @@ function sanitizePublicReferences(content) {
     .replace(/\balign\/stynx\/[^\s`'",)]+/gu, 'internal round-tracking note');
 }
 
+/**
+ * @param {string} content
+ */
 function publicMarkdownContent(content) {
   return sanitizePublicReferences(rewriteGeneratedDocLinks(sanitizeMdxContent(content)));
 }
 
+/**
+ * @param {string} content
+ */
 function rewriteGeneratedDocLinks(content) {
   return content
     .replace(
@@ -240,8 +307,8 @@ function rewriteGeneratedDocLinks(content) {
     .replace(/\]\(\.\.\/invariants\/?\)/gu, '](/docs/law/invariants/)')
     .replace(/\]\(draft\/blueprints\/?\)/gu, '](/docs/product/drafts/blueprints/)')
     .replace(/\]\((?:\.\.\/)+meta\/adr\/?\)/gu, '](/docs/adr/)')
-    .replace(/\]\((?:\.\.\/)+meta\/adr\/([^\)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adr/$1$2)')
-    .replace(/\]\((?:\.\.\/)+law\/adr\/([^\)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adr/$1$2)')
+    .replace(/\]\((?:\.\.\/)+meta\/adr\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adr/$1$2)')
+    .replace(/\]\((?:\.\.\/)+law\/adr\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu, '](/docs/adr/$1$2)')
     .replace(/\]\(\.\.\/arch\/invariants\/?\)/gu, '](/docs/framework/arch/invariants)')
     .replace(/\]\(\.\.\/arch\/README\.md((?:#[^)]+)?)\)/gu, '](/docs/arch$1)')
     .replace(
@@ -308,6 +375,11 @@ function rewriteGeneratedDocLinks(content) {
     )
     .replace(
       /\]\(\.\.\/\.\.\/specs\/([^)\s#]+)\.md((?:#[^)]+)?)\)/gu,
+      /**
+       * @param {string} _match
+       * @param {string} filename
+       * @param {string} hash
+       */
       (_match, filename, hash = '') => {
         return `](/docs/specifications/${filename.toLowerCase()}${hash})`;
       },
@@ -441,6 +513,10 @@ function rewriteGeneratedDocLinks(content) {
     .replace(/\/docs\/meta\/adr\/?/gu, '/docs/adr/');
 }
 
+/**
+ * @param {string} content
+ * @param {string} targetDir
+ */
 function rewritePackageReadmeLinks(content, targetDir) {
   const updated = rewriteGeneratedDocLinks(content)
     .replace(
@@ -472,6 +548,10 @@ function rewritePackageReadmeLinks(content, targetDir) {
   return sanitizePublicReferences(updated);
 }
 
+/**
+ * @param {string} content
+ * @param {string} relativePath
+ */
 function syncRfcContent(content, relativePath) {
   const slug = relativePath.replace(/\.mdx?$/u, '');
   const body = sanitizePublicReferences(
@@ -493,6 +573,11 @@ function syncRfcContent(content, relativePath) {
   return `---\nslug: /rfcs/${slug}\n---\n\n${body}`;
 }
 
+/**
+ * @param {string} baseDir
+ * @param {string} targetDir
+ * @param {(name: unknown) => boolean} prefixMatcher
+ */
 function syncPackageReadmes(baseDir, targetDir, prefixMatcher) {
   const basePath = resolve(repoRoot, baseDir);
   for (const entry of readdirSync(basePath)) {
@@ -501,25 +586,25 @@ function syncPackageReadmes(baseDir, targetDir, prefixMatcher) {
     if (!existsSync(manifestPath) || !isTrackedFile(manifestPath)) {
       continue;
     }
+    /** @type {unknown} */
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-    if (!prefixMatcher(manifest.name)) {
+    if (!prefixMatcher(readJsonProperty(manifest, 'name'))) {
       continue;
     }
     const readmePath = resolve(packageDir, 'README.md');
-    const title =
-      `${manifest.name} ${manifest.description ? `- ${manifest.description}` : ''}`.trim();
+    `${readJsonProperty(manifest, 'name')} ${readJsonProperty(manifest, 'description') ? `- ${readJsonProperty(manifest, 'description')}` : ''}`.trim();
     if (existsSync(readmePath)) {
       writeDoc(
         join(targetDir, `${entry}.md`),
         rewritePackageReadmeLinks(sanitizeMdxContent(readFileSync(readmePath, 'utf8')), targetDir),
-        manifest.name,
+        readJsonProperty(manifest, 'name'),
       );
       continue;
     }
     writeDoc(
       join(targetDir, `${entry}.md`),
-      `# ${manifest.name}\n\n${manifest.description ?? 'No README has been authored for this package yet.'}\n\n- Package path: \`${relative(repoRoot, packageDir)}\`\n- Version: \`${manifest.version}\`\n`,
-      manifest.name,
+      `# ${readJsonProperty(manifest, 'name')}\n\n${readJsonProperty(manifest, 'description') ?? 'No README has been authored for this package yet.'}\n\n- Package path: \`${relative(repoRoot, packageDir)}\`\n- Version: \`${readJsonProperty(manifest, 'version')}\`\n`,
+      readJsonProperty(manifest, 'name'),
     );
   }
 }

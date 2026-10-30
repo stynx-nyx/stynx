@@ -1,8 +1,30 @@
 const { readFileSync } = require('node:fs');
 const { resolve } = require('node:path');
 
+/**
+ * Read a JSON-derived value with ordinary property lookup semantics.
+ * @param {unknown} value
+ * @param {string} key
+ * @returns {unknown}
+ */
+function readJsonProperty(value, key) {
+  if (value === null || value === undefined) {
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  }
+  /** @type {unknown} */
+  const boxed = Object(value);
+  if (typeof boxed !== 'object' || boxed === null) {
+    throw new TypeError('Object conversion did not produce an object');
+  }
+  /** @type {unknown} */
+  const result = Reflect.get(boxed, key, value);
+  return result;
+}
+
 const corePackageJsonPath = resolve(__dirname, '../../packages/core/package.json');
-const corePackageVersion = JSON.parse(readFileSync(corePackageJsonPath, 'utf8')).version;
+/** @type {unknown} */
+const corePackageJson = JSON.parse(readFileSync(corePackageJsonPath, 'utf8'));
+const corePackageVersion = readJsonProperty(corePackageJson, 'version');
 const coreMajorLabel = `v${String(corePackageVersion).split('.')[0] ?? '0'}`;
 
 function suppressKnownWebpackWarnings() {

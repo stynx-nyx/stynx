@@ -22,20 +22,63 @@ const typeDocBin = resolve(
   process.platform === 'win32' ? 'typedoc.cmd' : 'typedoc',
 );
 
+/** @param {unknown} value @param {string} key @returns {unknown} */
+function readJsonProperty(value, key) {
+  if (value === null || value === undefined) {
+    throw new TypeError(`Cannot read properties of ${value} (reading '${key}')`);
+  }
+  /** @type {unknown} */
+  const boxed = Object(value);
+  if (typeof boxed !== 'object' || boxed === null) {
+    throw new TypeError('Object conversion did not produce an object');
+  }
+  /** @type {unknown} */
+  const result = Reflect.get(boxed, key, value);
+  return result;
+}
+
+/** @param {unknown} manifest @returns {string} */
+function selectedPackageName(manifest) {
+  const name = readJsonProperty(manifest, 'name');
+  if (typeof name !== 'string') {
+    throw new TypeError('Selected package name is not a string');
+  }
+  return name;
+}
+
+/** @param {unknown} value @returns {Record<string, unknown>} */
+function spreadJsonProperties(value) {
+  if (value === null || value === undefined) return {};
+  /** @type {unknown} */
+  const boxed = Object(value);
+  if (typeof boxed !== 'object' || boxed === null) {
+    throw new TypeError('Object conversion did not produce an object');
+  }
+  return Object.fromEntries(Object.entries(boxed));
+}
+
+/**
+ * @param {string} baseDir
+ * @param {(name: unknown) => boolean} matcher
+ */
 function collectPackages(baseDir, matcher) {
   const resolvedBase = resolve(repoRoot, baseDir);
   return readdirSync(resolvedBase)
     .map((entry) => resolve(resolvedBase, entry))
     .filter((dirPath) => existsSync(resolve(dirPath, 'package.json')))
     .filter((dirPath) => isTrackedFile(resolve(dirPath, 'package.json')))
-    .map((dirPath) => ({
-      dirPath,
-      manifest: JSON.parse(readFileSync(resolve(dirPath, 'package.json'), 'utf8')),
-    }))
-    .filter(({ manifest }) => matcher(manifest.name))
+    .map((dirPath) => {
+      /** @type {unknown} */
+      const manifest = JSON.parse(readFileSync(resolve(dirPath, 'package.json'), 'utf8'));
+      return { dirPath, manifest };
+    })
+    .filter(({ manifest }) => matcher(readJsonProperty(manifest, 'name')))
     .filter(({ dirPath }) => existsSync(resolve(dirPath, 'src/index.ts')));
 }
 
+/**
+ * @param {string} filePath
+ */
 function isTrackedFile(filePath) {
   const relativePath = relative(repoRoot, filePath).split(sep).join('/');
   const result = spawnSync('git', ['ls-files', '--error-unmatch', '--', relativePath], {
@@ -45,6 +88,7 @@ function isTrackedFile(filePath) {
   return result.status === 0;
 }
 
+/** @param {{dirPath: string, manifest: unknown}[]} packages */
 function renderIndex(packages) {
   const lines = [
     '---',
@@ -58,14 +102,18 @@ function renderIndex(packages) {
   ];
 
   for (const pkg of packages) {
-    const slug = pkg.manifest.name.replace(/^@/u, '').replace(/[\/]/gu, '-');
-    lines.push(`- [${pkg.manifest.name}](./${slug}/)`);
+    const slug = selectedPackageName(pkg.manifest).replace(/^@/u, '').replace(/\//gu, '-');
+    lines.push(`- [${selectedPackageName(pkg.manifest)}](./${slug}/)`);
   }
 
   lines.push('');
   return `${lines.join('\n')}\n`;
 }
 
+/**
+ * @param {string} dirPath
+ * @returns {string[]}
+ */
 function collectMarkdownFiles(dirPath) {
   const entries = readdirSync(dirPath, { withFileTypes: true });
   const files = [];
@@ -82,6 +130,9 @@ function collectMarkdownFiles(dirPath) {
   return files;
 }
 
+/**
+ * @param {string} targetDir
+ */
 function normalizePackageIndex(targetDir) {
   const readmePath = resolve(targetDir, 'README.md');
   const indexPath = resolve(targetDir, 'index.md');
@@ -90,6 +141,7 @@ function normalizePackageIndex(targetDir) {
   }
 }
 
+/** @param {{dirPath: string, manifest: unknown}} pkg @param {string} targetDir */
 function ensurePackageIndex(pkg, targetDir) {
   const indexPath = resolve(targetDir, 'index.md');
   if (existsSync(indexPath)) {
@@ -100,10 +152,10 @@ function ensurePackageIndex(pkg, targetDir) {
     indexPath,
     [
       '---',
-      `title: ${JSON.stringify(pkg.manifest.name)}`,
+      `title: ${JSON.stringify(selectedPackageName(pkg.manifest))}`,
       '---',
       '',
-      `# ${pkg.manifest.name}`,
+      `# ${selectedPackageName(pkg.manifest)}`,
       '',
       'TypeDoc did not emit public API pages for this package in the current build.',
       '',
@@ -111,6 +163,9 @@ function ensurePackageIndex(pkg, targetDir) {
   );
 }
 
+/**
+ * @param {string} targetDir
+ */
 function rewriteReadmeLinks(targetDir) {
   const files = collectMarkdownFiles(targetDir);
   for (const filePath of files) {
@@ -127,6 +182,9 @@ function rewriteReadmeLinks(targetDir) {
   }
 }
 
+/**
+ * @param {string} rootDir
+ */
 function rewriteMissingLocalMarkdownLinks(rootDir) {
   const files = collectMarkdownFiles(rootDir);
   const existingFiles = new Set(files.map((filePath) => resolve(filePath)));
@@ -136,13 +194,18 @@ function rewriteMissingLocalMarkdownLinks(rootDir) {
     const original = readFileSync(filePath, 'utf8');
     const updated = original.replace(
       /\[([^\]\n]+)\]\(([^)\s]+\.md(?:#[^)]+)?)\)/gu,
+      /**
+       * @param {string} match
+       * @param {string} label
+       * @param {string} target
+       */
       (match, label, target) => {
         if (/^(?:https?:|mailto:|#|\/)/u.test(target)) {
           return match;
         }
 
         const [targetPath] = target.split('#');
-        let decodedTargetPath = targetPath;
+        let decodedTargetPath;
         try {
           decodedTargetPath = decodeURIComponent(targetPath);
         } catch {
@@ -171,16 +234,19 @@ function rewriteMissingLocalMarkdownLinks(rootDir) {
   }
 }
 
+/** @param {{dirPath: string, manifest: unknown}} pkg */
 function writeTypeDocTsconfig(pkg) {
   const tsconfigPath = resolve(pkg.dirPath, 'tsconfig.json');
   const targetDir = resolve(pkg.dirPath, '.typedoc');
   const targetPath = resolve(targetDir, 'tsconfig.json');
   const extendsPath = relative(targetDir, tsconfigPath).split(sep).join('/');
   const compilerOptions = { ignoreDeprecations: '6.0' };
-  if (pkg.manifest.name === '@stynx-nyx/notifications') {
+  if (selectedPackageName(pkg.manifest) === '@stynx-nyx/notifications') {
+    /** @type {unknown} */
     const inherited = JSON.parse(readFileSync(tsconfigPath, 'utf8'));
+    const paths = readJsonProperty(readJsonProperty(inherited, 'compilerOptions'), 'paths');
     compilerOptions.paths = {
-      ...inherited.compilerOptions.paths,
+      ...spreadJsonProperties(paths),
       '@stynx-nyx/auth': ['packages/auth/src/index.ts'],
       '@stynx-nyx/sessions': ['packages/sessions/src/index.ts'],
     };
@@ -200,8 +266,9 @@ function writeTypeDocTsconfig(pkg) {
   return { dirPath: targetDir, tsconfigPath: targetPath };
 }
 
+/** @param {{dirPath: string, manifest: unknown}} pkg */
 function typeDocOptionsFor(pkg) {
-  if (pkg.manifest.name === '@stynx-nyx/backend') {
+  if (selectedPackageName(pkg.manifest) === '@stynx-nyx/backend') {
     return [
       '--intentionallyNotExported',
       'src/identity-admin/pg-local-sync.adapter.ts:QueryResult',
@@ -210,11 +277,11 @@ function typeDocOptionsFor(pkg) {
     ];
   }
 
-  if (pkg.manifest.name === '@stynx-nyx/data') {
+  if (selectedPackageName(pkg.manifest) === '@stynx-nyx/data') {
     return ['--intentionallyNotExported', 'src/schema/index.ts:schema'];
   }
 
-  if (pkg.manifest.name === '@stynx-nyx/sdk') {
+  if (selectedPackageName(pkg.manifest) === '@stynx-nyx/sdk') {
     return [
       '--intentionallyNotExported',
       'src/generated/core/ApiRequestOptions.ts:ApiRequestOptions',
@@ -254,7 +321,7 @@ const typedocTempDirs = [];
 let failure = null;
 
 for (const pkg of packages) {
-  const slug = pkg.manifest.name.replace(/^@/u, '').replace(/[\/]/gu, '-');
+  const slug = selectedPackageName(pkg.manifest).replace(/^@/u, '').replace(/\//gu, '-');
   const targetDir = resolve(apiOutDir, slug);
   const typedocTsconfig = writeTypeDocTsconfig(pkg);
   typedocTempDirs.push(typedocTsconfig.dirPath);
@@ -285,7 +352,7 @@ for (const pkg of packages) {
   );
 
   if (result.status !== 0) {
-    failure = new Error(`TypeDoc failed for ${pkg.manifest.name}`);
+    failure = new Error(`TypeDoc failed for ${selectedPackageName(pkg.manifest)}`);
     break;
   }
 
@@ -303,7 +370,7 @@ if (failure !== null) {
 }
 
 for (const pkg of packages) {
-  const slug = pkg.manifest.name.replace(/^@/u, '').replace(/[\/]/gu, '-');
+  const slug = selectedPackageName(pkg.manifest).replace(/^@/u, '').replace(/\//gu, '-');
   ensurePackageIndex(pkg, resolve(apiOutDir, slug));
 }
 
