@@ -164,6 +164,7 @@ for (const file of files(dir)) {
     }
     return null;
   };
+  /** @param {import('typescript').Node} node */
   const visit = (node) => {
     if (
       ts.isBinaryExpression(node) &&
