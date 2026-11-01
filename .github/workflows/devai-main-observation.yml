@@ -93,7 +93,7 @@ jobs:
           writeFileSync(join(root, 'github-provenance.json'), JSON.stringify(document, null, 2) + '\n');
           NODE
       - id: observation-artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: devai-main-observation-${{ github.sha }}
           path: .devai/state/audit-observations/${{ github.sha }}/
@@ -159,7 +159,7 @@ jobs:
           };
           writeFileSync(join('.devai/state/audit-receipts', process.env.GITHUB_SHA, 'github-provenance-receipt.json'), JSON.stringify(document, null, 2) + '\n');
           NODE
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: devai-main-observation-receipt-${{ github.sha }}
           path: .devai/state/audit-receipts/${{ github.sha }}/github-provenance-receipt.json
