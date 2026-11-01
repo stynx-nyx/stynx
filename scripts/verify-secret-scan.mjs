@@ -36,6 +36,7 @@ const textExtensions = new Set([
   '.yaml',
   '.yml',
 ]);
+/** @type {Array<[string, RegExp]>} */
 const patterns = [
   ['private key', /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/u],
   ['aws access key id', /(?<![A-Z0-9])AKIA[0-9A-Z]{16}(?![A-Z0-9])/u],

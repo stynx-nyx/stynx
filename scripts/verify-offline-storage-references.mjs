@@ -89,6 +89,7 @@ for (const entry of OFFLINE_STORAGE_CATALOG.entries) {
   if (entry.kind === 'sequence')
     columns.set(entry.name, new Set(['last_value', 'log_cnt', 'is_called']));
 }
+/** @param {string} file @param {string} name */
 function metadata(file, name) {
   const source = ts.createSourceFile(
     file,
