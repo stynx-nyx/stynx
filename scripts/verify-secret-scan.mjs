@@ -36,6 +36,7 @@ const textExtensions = new Set([
   '.yaml',
   '.yml',
 ]);
+/** @type {Array<[string, RegExp]>} */
 const patterns = [
   ['private key', /-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----/u],
   ['aws access key id', /(?<![A-Z0-9])AKIA[0-9A-Z]{16}(?![A-Z0-9])/u],
@@ -66,6 +67,7 @@ if (findings.length > 0) {
 
 console.log('[secret-scan] OK: high-confidence secret patterns not found');
 
+/** @param {string} dir @returns {string[]} */
 function walk(dir) {
   const files = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -82,6 +84,7 @@ function walk(dir) {
   return files;
 }
 
+/** @param {string} path @returns {boolean} */
 function shouldRead(path) {
   const lastDot = path.lastIndexOf('.');
   const extension = lastDot === -1 ? '' : path.slice(lastDot);

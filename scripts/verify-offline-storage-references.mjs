@@ -89,6 +89,7 @@ for (const entry of OFFLINE_STORAGE_CATALOG.entries) {
   if (entry.kind === 'sequence')
     columns.set(entry.name, new Set(['last_value', 'log_cnt', 'is_called']));
 }
+/** @param {string} file @param {string} name */
 function metadata(file, name) {
   const source = ts.createSourceFile(
     file,
@@ -114,6 +115,7 @@ function metadata(file, name) {
       );
     throw new Error('Closed SQL metadata must be literal');
   };
+  /** @param {import('typescript').Node} node */
   const visit = (node) => {
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === name)
       found = value(node.initializer);
@@ -312,6 +314,7 @@ function checkSql(sql, file) {
       failures.push(`${file}: unknown offline function signature ${parts[1]}/${arity}`);
   });
 }
+/** @param {string} directory @returns {string[]} */
 function files(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = resolve(directory, entry.name);

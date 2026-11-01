@@ -21,6 +21,7 @@ const contentTypes = new Map([
   ['.jpeg', 'image/jpeg'],
 ]);
 
+/** @param {string} requestPath */
 function resolveFile(requestPath) {
   const cleanPath = requestPath.split('?')[0] || '/';
   const normalized = cleanPath === '/' ? '/index.html' : cleanPath;

@@ -159,6 +159,7 @@ try {
 let shuttingDown = false;
 let composeDownComplete = false;
 let suppressExitCleanupRetry = false;
+/** @type {import('node:child_process').ChildProcess | undefined} */
 let composeDownProcess;
 let apiProcess;
 let startupStateIndex = 0;
@@ -265,6 +266,7 @@ function startCleanupWatchdog() {
   watchdog.unref();
 }
 
+/** @param {import('node:child_process').ChildProcess} child */
 function waitForExit(child) {
   if (child.exitCode !== null || child.signalCode !== null) {
     return Promise.resolve({ code: child.exitCode, signal: child.signalCode });
