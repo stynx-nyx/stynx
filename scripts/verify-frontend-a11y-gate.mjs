@@ -52,6 +52,7 @@ for (const category of requiredCategories) {
   }
 }
 
+/** @type {string[]} */
 const staleComments = [];
 walk(resolve(webRoot, 'test/e2e'), staleComments);
 if (staleComments.length > 0) {
@@ -68,6 +69,7 @@ if (failures.length > 0) {
 
 console.log('[frontend-a11y-gate] OK: reference web Playwright accessibility gate is wired');
 
+/** @param {string} dir @param {string[]} staleComments @returns {void} */
 function walk(dir, staleComments) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);

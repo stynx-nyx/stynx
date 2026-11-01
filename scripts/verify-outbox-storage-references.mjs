@@ -115,6 +115,7 @@ function checkSql(sql, file) {
     }
   });
 }
+/** @param {string} directory @returns {string[]} */
 function files(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = resolve(directory, entry.name);
@@ -136,6 +137,7 @@ for (const file of files(dir)) {
   const text = readFileSync(file, 'utf8');
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
   const declarations = new Map();
+  /** @param {import('typescript').Node} node */
   const register = (node) => {
     if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer)
       declarations.set(node.name.text, node.initializer);

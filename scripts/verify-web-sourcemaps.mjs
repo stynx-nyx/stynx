@@ -17,10 +17,12 @@ const localNpmDir = resolve(repoRoot, '.release/local-npm');
 const failures = [];
 let checkedMaps = 0;
 
+/** @param {string} path */
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
 
+/** @param {string} dir @param {(path: string) => boolean} predicate @returns {string[]} */
 function walk(dir, predicate) {
   if (!existsSync(dir)) return [];
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -30,6 +32,7 @@ function walk(dir, predicate) {
   });
 }
 
+/** @param {string} path @returns {boolean} */
 function isJavaScriptSourceMap(path) {
   return path.endsWith('.js.map') || path.endsWith('.mjs.map');
 }
@@ -42,6 +45,7 @@ function hasSourcesContent(map) {
   );
 }
 
+/** @param {string} mapPath @param {string} sourceRoot @returns {void} */
 function validateMap(mapPath, sourceRoot) {
   checkedMaps += 1;
   const map = readJson(mapPath);

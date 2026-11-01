@@ -47,6 +47,10 @@ function createAccessToken({ email, tenantId }) {
   ].join('.');
 }
 
+/**
+ * @param {import('node:http').ServerResponse} response
+ * @param {number} status
+ */
 function sendJson(response, status, body) {
   response.writeHead(status, {
     'access-control-allow-origin': '*',
@@ -57,6 +61,7 @@ function sendJson(response, status, body) {
   response.end(JSON.stringify(body));
 }
 
+/** @param {import('node:http').IncomingMessage} request */
 async function readJson(request) {
   const chunks = [];
   for await (const chunk of request) {

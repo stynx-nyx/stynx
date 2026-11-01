@@ -68,12 +68,15 @@ console.log(
   `[license-policy] OK: ${checked.size} direct external dependencies checked across ${releaseManifests.length} release manifests`,
 );
 
+/** @param {string} root @returns {string[]} */
 function discoverPackageManifests(root) {
+  /** @type {string[]} */
   const results = [];
   walk(root, results);
   return results.sort((left, right) => left.localeCompare(right));
 }
 
+/** @param {string} dir @param {string[]} results @returns {void} */
 function walk(dir, results) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (
@@ -91,6 +94,7 @@ function walk(dir, results) {
   }
 }
 
+/** @param {string} path */
 function readJson(path) {
   return JSON.parse(readFileSync(path, 'utf8'));
 }
@@ -104,6 +108,7 @@ function dependencyNames(manifest) {
   ].sort((left, right) => left.localeCompare(right));
 }
 
+/** @param {string} packageName @param {string} declaringManifestPath */
 function resolveInstalledManifest(packageName, declaringManifestPath) {
   const candidates = [
     resolve(dirname(declaringManifestPath), 'node_modules', packageName, 'package.json'),
@@ -114,6 +119,7 @@ function resolveInstalledManifest(packageName, declaringManifestPath) {
   return path ? readJson(path) : null;
 }
 
+/** @returns {string[]} */
 function extractLicenseIds(value) {
   if (typeof value === 'string') {
     return value

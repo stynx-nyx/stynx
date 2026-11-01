@@ -66,6 +66,7 @@ if (findings.length > 0) {
 
 console.log('[secret-scan] OK: high-confidence secret patterns not found');
 
+/** @param {string} dir @returns {string[]} */
 function walk(dir) {
   const files = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -82,6 +83,7 @@ function walk(dir) {
   return files;
 }
 
+/** @param {string} path @returns {boolean} */
 function shouldRead(path) {
   const lastDot = path.lastIndexOf('.');
   const extension = lastDot === -1 ? '' : path.slice(lastDot);
